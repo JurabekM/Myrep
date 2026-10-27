@@ -22,7 +22,7 @@ function renderScreen() {
 }
 
 async function fill(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText("Qarz beruvchi"), "Gʻayrat");
+  await user.type(screen.getByLabelText("Qarz beruvchi"), "Ulugʻbek");
   await user.type(screen.getByLabelText("Qarz oluvchi"), "Karim");
   await user.type(screen.getByLabelText("Qarz summasi"), "2 000 000");
   await user.type(screen.getByLabelText("Joy (shahar, mahalla)"), "Toshkent");

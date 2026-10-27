@@ -59,7 +59,7 @@ fn report(locale: PdfLocale) -> VentureReport {
                 "30.11.2026",
                 "EXPENSE",
                 Some("WAGE"),
-                "Zamira",
+                "Kamola",
                 "−2 000 000 soʻm",
             ),
             entry(
@@ -72,7 +72,7 @@ fn report(locale: PdfLocale) -> VentureReport {
         ],
         parties: vec![
             ReportParty {
-                name: "Dilshod Tursunov".into(),
+                name: "Laziz Tursunov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 share: "3 200 000 soʻm".into(),
                 recovered: "0 soʻm".into(),
@@ -91,7 +91,7 @@ fn report(locale: PdfLocale) -> VentureReport {
             },
         ],
         buyout: Some(ReportBuyout {
-            seller: "Dilshod Tursunov".into(),
+            seller: "Laziz Tursunov".into(),
             buyer: "Feruza Karimova".into(),
             paid: "1, 2".into(),
             unpaid: "—".into(),

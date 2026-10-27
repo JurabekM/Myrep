@@ -1,7 +1,7 @@
 # LOYIHA PROMPTI — «BARAKA DASTUR» (UY MAKONI)
 ### O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillaridagi) shaxsiy moliya Android ilovasi
 
-> Versiya: v0.8 · Ilhom manbasi: halol boylik haqidagi «7 qonun» suhbatlarining ma'nosi (`docs/BARAKA_OILASI.md` 2.1). Boshqa mualliflarning matni, personajlari va brendi ishlatilmaydi.
+> Versiya: v0.9 · Ilhom manbasi: halol boylik haqidagi «qonunlar» suhbatlarining ma'nosi (`docs/BARAKA_OILASI.md` 2.1). Boshqa mualliflarning matni, personajlari va brendi ishlatilmaydi.
 > Bu prompt AI-dasturchi (Claude Code va h.k.) uchun yozilgan. Har bir yangi matndan keyin yangilanadi.
 
 ---
@@ -18,13 +18,13 @@ Sen — senior mobil va backend dasturchisan, FinTech, xavfsizlik va Android pla
 - **Asosiy tamoyil:** «Ilm o'qiganniki emas, amal qilganniki». Har bir bob ichida bajariladigan amallar bor. Miqdordan ko'ra odat muhimroq.
 
 ### 1.1. Kontent tuzilmasi
-- 12 ta qisqa dars (bob) bor va ular 7 ta tamoyilni ochib beradi. Matnlar — o'zimiz yozganlari.
+- Qisqa darslar (boblar) 8 ta tamoyilni ochib beradi. Matnlar — o'zimiz yozganlari.
 - Har bir bob ichida quyidagilar bo'ladi:
   - qisqa hikoya yoki misol (o'zimiz yozgan; matn va ixtiyoriy audio);
   - «Daftar sahifasi», ya'ni foydalanuvchi tamoyilni o'z qo'li bilan yozadigan raqamli sahifa;
   - shu haftalik 3 ta amaliy vazifa.
 - Ritm haftalik, juma kunlari. Har juma yangi bob ochiladi va o'tgan haftadagi vazifalar tekshiriladi.
-- Kontent: o'zimiz yozgan matnlar. G'oya «7 qonun» suhbatlarining ma'nosidan ilhomlangan (`BARAKA_OILASI.md` 2.1).
+- Kontent: o'zimiz yozgan matnlar. G'oya «qonunlar» suhbatlarining ma'nosidan ilhomlangan (`BARAKA_OILASI.md` 2.1).
 
 ### 1.2. Personajlar (persona = foydalanuvchi segmenti)
 | Personaj | Segment | Moliyaviy xulq | Ilova nimani yechishi kerak |
@@ -295,7 +295,7 @@ Tamoyilning mazmuni:
 - ⚠️ 2D.5 dagi kabi: shartnomaning yuridik kuchi va islomiy muvofiqligi yurist va ulamo tomonidan ko'rib chiqiladi. Shablonlar faqat tasdiqlangandan keyin production'ga chiqadi.
 
 ### 2E.3. Sheriklik kassa daftari (venture ledger)
-- Har bir sheriklik uchun **alohida hisob**: kirim (buyurtmalar), xarajatlar (mato, ip, ish haqi, masalan yordamchi Zamira uchun), sof foyda (davr bo'yicha).
+- Har bir sheriklik uchun **alohida hisob**: kirim (buyurtmalar), xarajatlar (mato, ip, ish haqi, masalan yordamchi Kamola uchun), sof foyda (davr bo'yicha).
 - **Biznes pulini uy pulidan ajratish shart.** Sheriklik daftari xonadon byudjetiga faqat taqsimlangan foyda ulushi orqali bog'lanadi.
 - Davr oxirida foyda yoki zarar 2E.1 qoidalari bo'yicha avtomatik taqsimlanadi. Taqsimot yozuvi ikkala tomonga ko'rinadi.
 - **Shaffoflik:** kapital egasi ledgerni faqat o'qish (read-only) rejimida ko'radi. Har bir yozuvga chek yoki rasm biriktirish mumkin.
@@ -438,6 +438,64 @@ Dasturchi uchun bobning asosiy saboqlari:
 ### 2F.11. Kontent eslatmasi
 - Bobda Qur'on oyati (Baqara 282, mazmunan tarjima) va hadis («Musulmonlar o'z shartlari ustida turadilar») keltirilgan. Ular `religiousReviewStatus` jarayonidan o'tadi: manba, tarjima matni va ulamo tasdig'i talab qilinadi.
 
+## 2G. 8-TAMOYIL: «O'ZINGIZGA SARMOYA QILING» — FUNKSIONAL TALABLAR (U16)
+> Mahsulot egasi qarori, 2026-10-27: uchala makonda (Uy — U16, Kasb-kor — K9, Musofir — M6); oylik daromad avtomatik taklif qilinadi va tahrirlanadi; o'qish xarajati «Sarmoya» belgisi bilan; kurs tekshiruvi, «Ilm zakoti» yozuvi va natijani o'lchash kiradi.
+
+Tamoyilning mazmuni: mehnat soatlarini cheksiz ko'paytirib bo'lmaydi — kunda soat ham, kuch ham chegaralangan. Daromadni oshirishning chegarasi yo'q yo'li — **bir soat mehnatning qiymatini oshirish**, ya'ni bilim va malaka. Bilim olish uchun sarflangan pul iste'mol emas, **o'zingizga sarmoya**; uni hech kim tortib ololmaydi va narx oshganda ham yechim topishga yordam beradi. O'rganganingizni boshqaga o'rgatish — bilimning «zakoti»: o'rgatgan odamning o'z bilimi ham mustahkamlanadi. Pul faqat haqiqiy hunar va bilim uchun to'lanadi, «tez boyish» orzusini sotadiganlarga emas.
+
+### 2G.1. «Bir soatim qancha?» (`HourValue`)
+- Har bir a'zo uchun hisoblanadi: **oylik halol daromad ÷ oylik ish soatlari**.
+- Oylik daromad: ilova shu a'zoning oxirgi 3 to'liq oydagi daromad yozuvlari o'rtachasini **taklif qiladi** (yozuv kamroq oyda bo'lsa — borlarining o'rtachasi, umuman bo'lmasa — bo'sh). Foydalanuvchi qiymatni o'zgartira oladi; qaysi manba ishlatilgani saqlanadi (`AUTO` / `MANUAL`).
+- Ish vaqti: kuniga soat (daqiqa aniqligida) × oyda ish kunlari (1–31). Yadro daqiqalarda hisoblaydi.
+- Natija: 1 soat qiymati (tiyingacha, yaxlitlash qoidasi vektor bilan qotiriladi) va **«ikki barobar maqsad»** — shu qiymatning 2 hissasi.
+- **Soat chegarasi** eslatmasi: kuniga 10 soatdan ko'p yoki oyiga 260 soatdan ko'p ishlansa, maslahatchi soatni yana oshirish o'rniga soat qiymatini oshirish yo'lini taklif qiladi (ayblamasdan).
+- Daromad yoki vaqt 0 bo'lsa natija chiqmaydi va sababi aytiladi.
+
+### 2G.2. «Bilim rejasi» (`LearningPlan`)
+- Maydonlar: a'zo; ko'nikma; u qaysi ishni yoki soatni qimmatlashtirishi; yo'l (`BOOK` kitob, `MENTOR` ustoz, `COURSE` kurs, `PRACTICE` amaliyot — bir nechtasi); byudjet (`Money`, ixtiyoriy); haftalik o'qish vaqti; boshlanish sanasi; ko'rik sanasi (standart: +3 oy); holat (`ACTIVE`, `PAUSED`, `DONE`, `DROPPED`).
+- Reja ochilganda 2G.1 dagi soat qiymati **boshlang'ich nuqta** sifatida saqlanadi (2G.5 uchun).
+- Diqqat tarqalmasligi uchun bir a'zoda bir vaqtda ko'pi bilan **2 ta faol reja**.
+- Juma ritmi: «Bu hafta necha soat o'qidingiz?» — o'qish vaqti yozuvi (daqiqa). Reja kartasida jami vaqt va byudjetdan sarflangani ko'rinadi.
+- Pul manbasi: «Kelajagim» va zaxira pulga tegilmaydi; o'qish puli joriy byudjetdan yoki «o'sadigan pul» ulushidan (2C.3). O'qish uchun qarz olish rag'batlantirilmaydi — 2D.6 friction so'rovi amal qiladi.
+
+### 2G.3. «Sarmoya» belgisi
+- Xarajat toifasi (Zarur / Kerak / Havas) o'zgarmaydi; xarajatga qo'shimcha **«O'zimga sarmoya»** belgisi qo'yiladi va u bilim rejasiga bog'lanishi mumkin.
+- Belgili xarajat **havas chegarasiga** (2B.3) kirmaydi.
+- Oylik hisobotda alohida qator: «O'zimga sarmoya: X so'm — daromadning Y %» (bazis punktlarda, vektor bilan).
+- Tavsiya qilingan majburiy foiz yo'q; ilova o'qishdan keyin daromad oshishini **va'da qilmaydi**.
+
+### 2G.4. Kurs yoki ustoz taklifini tekshirish
+- 2E.5 taklif detektorining kurs turi (`COURSE`). Tekshiruv belgilari:
+  - `FAST_RICH` — qisqa muddatda boylik yoki katta daromad va'dasi;
+  - `SECRET_FORMULA` — «sir», «hech kim aytmaydigan usul» kabi da'vo;
+  - `INCOME_GUARANTEE` — kursdan keyin daromad yoki ish kafolati;
+  - `NO_SYLLABUS` — dastur va amaliy natija (nimani qila olishingiz) yozilmagan;
+  - `UNVERIFIABLE_TEACHER` — o'qituvchining amaliy ishini ko'rib, tekshirib bo'lmaydi;
+  - `PRESSURE` — «bugun oxirgi kun», shoshiltiruvchi chegirma;
+  - `RECRUIT` — boshqalarni olib kelsangiz pulingiz qaytadi;
+  - `NO_TRIAL_OR_REFUND` — sinov darsi ham, pulni qaytarish sharti ham yo'q.
+- Natija: belgi yo'q — yashil; bitta belgi — sariq («aniqlashtiring»); 2 va undan ko'p belgi yoki `INCOME_GUARANTEE` / `RECRUIT` ning o'zi — qizil («pul to'lamang»). Har bir belgi izohlanadi. Qaror jadvali vektor bilan qotiriladi.
+- Bilim rejasida `COURSE` yo'li tanlansa, tekshiruv taklif qilinadi.
+
+### 2G.5. Natijani o'lchash
+- Ko'rik sanasida (yoki foydalanuvchi istagan paytda) soat qiymati 2G.1 bo'yicha qayta hisoblanadi va boshlang'ich nuqta bilan solishtiriladi: farq so'mda va bazis punktlarda (vektor bilan).
+- O'sish bo'lmasa yoki pasaysa, uyaltirilmaydi: rejani davom ettirish, o'zgartirish yoki yopish taklif qilinadi.
+- Boshlang'ich qiymat 0 bo'lsa foiz chiqmaydi, faqat yangi qiymat ko'rsatiladi.
+
+### 2G.6. «Ilm zakoti» — o'rgatish yozuvi (`TeachingLog`)
+- Yozuv: sana, kimga (ixtiyoriy, ism yoki «qo'shni», «xodim»), nimani o'rgatdi, qancha vaqt.
+- Juma ritmida eslatma: «Bu hafta bilganingizdan biror narsani kimgadir o'rgatdingizmi?» Oylik hisobotda soni ko'rinadi. Pul hisobi yo'q.
+
+### 2G.7. Bob va haftalik vazifalar
+- Bob matni, misollari va hikoyasi — o'zimiz yozganlari (personaj — mavjud persona: taksichi, tikuvchi va h.k.).
+- Haftalik 3 vazifa:
+  1. Bir soatingiz qiymatini hisoblang va uni ikki barobar qila oladigan bitta ko'nikmani yozing.
+  2. Shu ko'nikmaga olib boradigan bitta yo'lni tanlang; pullik kurs bo'lsa — avval tekshiruvdan o'tkazing.
+  3. Bilganingizdan bir narsani shu hafta bir kishiga o'rgating va yozib qo'ying.
+
+### 2G.8. Kontent eslatmasi
+- Bobda ilm o'rganish va ishni puxta bajarish haqidagi diniy matnlar keltirilsa, ular `religiousReviewStatus` jarayonidan o'tadi (manba, tarjima, ulamo tasdig'i).
+
 ## 3. MAHSULOT CHEKLOVLARI (qat'iy)
 - Ilovada foizli kredit, mikroqarz yoki «tez pul» reklamalari va integratsiyalari **bo'lmaydi**.
 - Kreditlar faqat qarzdan chiqish maqsadida kuzatiladi. Yangi qarz olish rag'batlantirilmaydi.
@@ -545,7 +603,7 @@ _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik
 - Xarajatlar Zarur / Kerak / Havas ranglari bilan ajratiladi. Havas uchun qizil emas, neytral rang ishlatiladi (havas «gunoh» emas).
 - Oila kengashi ekrani: kategoriyalarni toifalarga ajratish va havas chegarasini birgalikda tasdiqlash.
 
-## 10. 7 TAMOYIL — HOLAT
+## 10. 8 TAMOYIL — HOLAT
 | # | Tamoyil | Holat |
 |---|---|---|
 | 1 | O'zingizga avval to'lang — har daromaddan ulush | ✅ Spetsifikatsiya yozildi |
@@ -555,6 +613,7 @@ _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik
 | 5 | Pulni halol ishga soling — savdo va sheriklik | ✅ Spetsifikatsiya yozildi |
 | 6 | Kelishuvni yozing — 9 savollik shartnoma | ✅ Spetsifikatsiya yozildi |
 | 7 | Firibgarlik va shoshilinch katta qarorlardan saqlaning | ✅ Musofir makonida (M3, M5): sovutish davri, besh xavf belgisi; Uy U12 «Taklifni tekshirish» bilan umumiy |
+| 8 | O'zingizga sarmoya qiling — soat qiymatini bilim bilan oshiring | 📝 Spetsifikatsiya yozildi (2G); reja: U16a/b/c, K9, M6 |
 
 ## 11. ISHLAB CHIQISH BOSQICHLARI
 - **MVP-1:** daromad va xarajatni kiritish, «Kelajagim» virtual jamg'armasi va avto-ulush, «Kimning puli?», oylik audit, 1-bob kontenti va haftalik vazifalar.
@@ -564,6 +623,7 @@ _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik
 - **MVP-5:** sheriklik moduli (mudoraba / musharaka validatsiyasi bilan), shartnoma ustasi (PDF va ko'p tomonlama tasdiq), venture ledger va avtomatik foyda/zarar taqsimoti, buyout jadvali, «Hunardan ishga» rejalovchisi, «kafolatlangan foyda» detektori, zaxira pul maqsadi 6 oyga oshirildi, 5-bob kontenti.
 - **MVP-6:** umumiy kelishuv dvigateli (9 savol, to'liqlik indikatori, turlar), tilxat va sheriklik shartnomasini shu dvigatelga ko'chirish, vazifalar va «bajarilmadi» oqimi, oylik ochiq hisob ko'rigi va bayonnomalar, append-only jurnal va xesh-zanjir, «katta foyda» ogohlantirishi, nizo va hakam papkasi, og'zaki kelishuvni yozib olish, oilaviy kelishuvlar, 6-bob kontenti.
 - **Keyinroq:** bank tranzaksiyalaridan obunalarni avtomatik aniqlash, rasmiy CPI bilan taqqoslash, sertifikatlangan islomiy moliya hamkorlari, yosh oila jamg'armasiga real pul o'tkazmalari (hamkor bank), e'lon saytlariga eksport.
+- **MVP-8 (U16):** «Bir soatim qancha?», bilim rejasi, «Sarmoya» belgisi, kurs tekshiruvi, natijani o'lchash, «Ilm zakoti» yozuvi, 8-bob kontenti.
 - **Keyingi bosqichlar:** keyingi tamoyillar bo'yicha qo'shiladi.
 - **Amaliy reja:** MVP-1…6 offline holatda birlashtirilib, 17 ta vazifaga bo'lingan (6-tamoyil uchun 9A va 14A vazifalari qo'shilgan). Batafsil reja `docs/MVP_PLAN.md` da (`MVP_5_QONUN.md`). Backend talab qiladigan funksiyalar MVP'da qurilma ichidagi muqobil bilan almashtiriladi: ikkinchi tomonning tasdig'i (2D.5), to'lovchini taklif qilish (2D.4) va sherik uchun read-only ko'rinish (2E.3).
 

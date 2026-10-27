@@ -94,7 +94,7 @@ fn capital(kind: &str, description: &str, amount: &str) -> CapitalItemInput {
     }
 }
 
-/// Dilshod Tursunov tikuv uskunasi va mato puli beradi, Feruza (shu oila) tikadi — mudoraba 50/50.
+/// Laziz Tursunov tikuv uskunasi va mato puli beradi, Feruza (shu oila) tikadi — mudoraba 50/50.
 fn mudaraba(me_is_worker: bool) -> PartnershipInput {
     PartnershipInput {
         kind: "MUDARABA".into(),
@@ -102,7 +102,7 @@ fn mudaraba(me_is_worker: bool) -> PartnershipInput {
         parties: vec![
             PartnerInput {
                 id: "P1".into(),
-                full_name: "Dilshod Tursunov".into(),
+                full_name: "Laziz Tursunov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 profit_share_bp: 5000,
                 is_me: !me_is_worker,
@@ -303,7 +303,7 @@ fn incidents_review_protocol_and_tamper_detection() {
         party_id: "P2".into(),
         reason: "Kasal boʻldim, 3 kun ishlay olmayman".into(),
         occurred_on: on.into(),
-        proposed_solution: Some("Zamira oʻrnimga tikadi".into()),
+        proposed_solution: Some("Kamola oʻrnimga tikadi".into()),
     };
     let err = |i: IncidentInput| app.report_duty_incident(uy, &p.id, i).unwrap_err().code;
     assert_eq!(err(incident("d9", "01.12.2026")), "UNKNOWN_DUTY");
@@ -439,7 +439,7 @@ fn incidents_review_protocol_and_tamper_detection() {
             uy,
             &p.id,
             &iid,
-            "Zamira 3 kun tikdi, buyurtma vaqtida topshirildi",
+            "Kamola 3 kun tikdi, buyurtma vaqtida topshirildi",
         )
         .unwrap();
     assert_eq!(g.incidents[0].resolved_on.as_deref(), Some("2026-12-02"));

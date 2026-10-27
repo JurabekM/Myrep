@@ -56,7 +56,7 @@ const ledger = (writable: boolean) => ({
   ],
   periods: [],
   balances: [
-    { partyId: "P1", name: "Dilshod Tursunov", role: "CAPITAL_PROVIDER", isMe: false, capital: money("30 000 000 soʻm", "3000000000"), carriedLoss: zero },
+    { partyId: "P1", name: "Laziz Tursunov", role: "CAPITAL_PROVIDER", isMe: false, capital: money("30 000 000 soʻm", "3000000000"), carriedLoss: zero },
     { partyId: "P2", name: "Feruza Karimova", role: "WORKER", isMe: true, capital: zero, carriedLoss: zero },
   ],
   buyout: null,
@@ -97,7 +97,7 @@ describe("LedgerView", () => {
         result: money("8 000 000 soʻm", "800000000"),
         recovered: zero,
         distributable: money("8 000 000 soʻm", "800000000"),
-        parties: [party("P1", "Dilshod Tursunov", "CAPITAL_PROVIDER", false, "4 000 000 soʻm", "7 000 000 soʻm", "27 000 000 soʻm"), party("P2", "Feruza Karimova", "WORKER", true, "4 000 000 soʻm", "1 000 000 soʻm", "3 000 000 soʻm")],
+        parties: [party("P1", "Laziz Tursunov", "CAPITAL_PROVIDER", false, "4 000 000 soʻm", "7 000 000 soʻm", "27 000 000 soʻm"), party("P2", "Feruza Karimova", "WORKER", true, "4 000 000 soʻm", "1 000 000 soʻm", "3 000 000 soʻm")],
         buyout: { paid: [1], unpaid: [], amount: money("3 000 000 soʻm", "300000000"), capital: money("3 000 000 soʻm", "300000000") },
         lossPolicy: "CAPITAL_FIRST",
         negligentParty: null,

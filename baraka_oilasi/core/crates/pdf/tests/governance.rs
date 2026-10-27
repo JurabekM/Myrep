@@ -54,7 +54,7 @@ fn incident() -> IncidentLine {
         duty: "Buyurtmalarni tikish va topshirish".into(),
         party: "Feruza Karimova".into(),
         reason: "Kasal bo'ldim, 3 kun ishlay olmayman".into(),
-        solution: "Zamira o'rnimga tikadi".into(),
+        solution: "Kamola o'rnimga tikadi".into(),
         status: "OPEN".into(),
     }
 }
@@ -91,7 +91,7 @@ fn protocol(locale: PdfLocale) -> ReviewProtocol {
         incidents: vec![incident()],
         acks: vec![
             AckLine {
-                party: "Dilshod Tursunov".into(),
+                party: "Laziz Tursunov".into(),
                 verdict: "AGREE".into(),
                 note: String::new(),
             },
@@ -115,12 +115,12 @@ fn folder(locale: PdfLocale) -> ArbiterFolder {
         kind: "MUDARABA".into(),
         arbiter: "Hamid Yusupov".into(),
         opened_on: "03.01.2027".into(),
-        opened_by: "Dilshod Tursunov".into(),
+        opened_by: "Laziz Tursunov".into(),
         subject: "Dekabr foydasi taqsimoti".into(),
         clauses: "4, 5".into(),
         claims: vec![
             FolderClaim {
-                party: "Dilshod Tursunov".into(),
+                party: "Laziz Tursunov".into(),
                 claim: "Fors-major zarari mehnat egasining beparvoligidan".into(),
             },
             FolderClaim {
@@ -131,7 +131,7 @@ fn folder(locale: PdfLocale) -> ArbiterFolder {
         terms: vec![
             (
                 "folder.term.parties".into(),
-                "Dilshod Tursunov 40%, Feruza Karimova 60%".into(),
+                "Laziz Tursunov 40%, Feruza Karimova 60%".into(),
             ),
             ("folder.term.capital".into(), "30 000 000 soʻm".into()),
         ],
@@ -174,7 +174,7 @@ fn folder(locale: PdfLocale) -> ArbiterFolder {
             held_on: "02.01.2027".into(),
             acks: vec![
                 AckLine {
-                    party: "Dilshod Tursunov".into(),
+                    party: "Laziz Tursunov".into(),
                     verdict: "AGREE".into(),
                     note: String::new(),
                 },

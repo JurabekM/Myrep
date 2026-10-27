@@ -58,7 +58,7 @@ fn capital(kind: &str, description: &str, amount: &str) -> CapitalItemInput {
     }
 }
 
-/// Dilshod Tursunov tikuv uskunasi va mato puli beradi, Feruza (shu oila) tikadi — mudoraba 50/50.
+/// Laziz Tursunov tikuv uskunasi va mato puli beradi, Feruza (shu oila) tikadi — mudoraba 50/50.
 fn mudaraba(me_is_worker: bool) -> PartnershipInput {
     PartnershipInput {
         kind: "MUDARABA".into(),
@@ -66,7 +66,7 @@ fn mudaraba(me_is_worker: bool) -> PartnershipInput {
         parties: vec![
             PartnerInput {
                 id: "P1".into(),
-                full_name: "Dilshod Tursunov".into(),
+                full_name: "Laziz Tursunov".into(),
                 role: "CAPITAL_PROVIDER".into(),
                 profit_share_bp: 5000,
                 is_me: !me_is_worker,
@@ -233,7 +233,7 @@ fn ledger_close_buyout_and_immutability() {
             Some("WAGE"),
             "2 000 000",
             "30.11.2026",
-            Some("Zamira"),
+            Some("Kamola"),
         ),
     ] {
         app.add_venture_entry(&uy, &p.id, e).unwrap();
@@ -484,7 +484,7 @@ fn ideas_payback_draft_and_offer_check() {
             &uy,
             &idea.id,
             IdeaDraftInput {
-                capital_provider_name: "Dilshod Tursunov".into(),
+                capital_provider_name: "Laziz Tursunov".into(),
                 my_name: "Feruza Karimova".into(),
             },
         )

@@ -267,6 +267,23 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 - **Zakot:** «Zakot kuni» — egasi tanlagan hijriy oy va kun; hijriy sana jadvalli kalendar bo'yicha (kuzatilgan oydan ±1–2 kun farq qilishi mumkin — ekranda aytiladi); eslatma 30 kun oldin. Baza = tovar (standart — qayta tiklash narxida, OQ-D5) + naqd kassa va karta (manfiylari 0) + umidli nasiya − ta'minotchilarga qarz − xodimlarga hozir to'lanadigan haq (OQ-D7). Oltin narxi kiritilmasa zakot hisoblanmaydi (`GOLD_PRICE_MISSING`). Hawl ilova tomonidan taklif qilinadi (oxirgi saqlangan hisobdan yoki birinchi yozuvdan bir qamariy yil), egasi tasdiqlaydi. Saqlangan hisob — `kk_zakat_calcs` dagi o'zgarmas snapshot (umumiy `asset_snapshots` emas: Kasb-kor makoniga bog'liq kiritmalar bilan). Diniy izoh — `shared/content/religious/kk_zakat.json`, `APPROVED` bo'lmaguncha ko'rsatilmaydi.
 - **Inventarizatsiya:** bitta forma — har tovar uchun sanalgan miqdor (bo'sh — sanalmadi) va umumiy sabab; farqi borlari bitta tranzaksiyada K5 dagi `COUNT` harakati bo'ladi, yozuvda tovarlar soni, farqlilar soni va qiymat oldin/keyin saqlanadi.
 
+## 8A. 8-TAMOYIL: «O'ZINGIZGA SARMOYA QILING» — FUNKSIONAL TALABLAR (K9)
+> Mahsulot egasi qarori, 2026-10-27. Umumiy mazmun — `docs/uy/SPEC.md` 2G.
+
+### 8A.1. Egasining soat qiymati
+- Egasi topgani = egasiga to'langan maosh + haqiqiy foyda (3.1; manfiy bo'lsa 0). Oxirgi 3 yopilgan oy («Hisob kuni») o'rtachasi taklif qilinadi, egasi o'zgartira oladi.
+- Egasining oylik ish vaqti (kuniga soat × kun) kiritiladi. Natija — egasining 1 soati qiymati va «ikki barobar maqsad» (Uy 2G.1 bilan bir xil formula va yaxlitlash).
+
+### 8A.2. «O'zim qilaymi yoki o'rgatib topshiraymi?»
+- Kiritiladi: ish turi, unga oyiga ketadigan egasining soatlari, yordamchi yoki xodimning 1 soati narxi, bir martalik o'rgatish xarajati (pul) va o'rgatishga ketadigan egasining soatlari.
+- Hisob: oylik naf = soatlar × (egasining soat qiymati − yordamchi soat narxi); o'rgatishning to'liq narxi = pul + o'rgatish soatlari × egasining soat qiymati; qoplanish muddati = to'liq narx ÷ oylik naf (oy, yuqoriga yaxlitlanadi). Naf 0 yoki manfiy bo'lsa — «hozircha o'zingiz qilganingiz arzon». Vektor: `kk_delegate`.
+- Qaror xodim kartochkasiga (K6) bog'lanishi mumkin; ilova ish haqi miqdorini tavsiya qilmaydi.
+
+### 8A.3. Biznes uchun o'qish va o'rgatish
+- Biznes chiqimiga «Sarmoya (o'qish)» belgisi: chiqim haqiqiy foydani baribir kamaytiradi, lekin «Hisob kuni»da alohida qator bo'lib ko'rinadi.
+- Xodimga hunar o'rgatish — «Ilm zakoti» yozuvi (Uy 2G.6) bilan bir xil, «kimga» maydoni xodim kartochkasidan tanlanadi.
+- Kurs tekshiruvi — Uy 2G.4 bilan umumiy jadval.
+
 ## 9. DOMEN MODELI VA VEKTOR SUITE'LARI
 ### 9.1. Yangi tushunchalar (taxminiy; aniq sxema — K1+ sessiyalarida, `BARAKA_OILASI.md` 8)
 | Tushuncha | Mazmun | Mavjud asos |
@@ -325,7 +342,7 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 - Hisobchi qurilmasi biznesning hamma yozuvini oladi (Uy makonisiz) va faqat o'qiydi — yozish baza darajasida to'xtatiladi.
 - Bekor qilingan qurilma bilan fayl almashilmaydi; undagi mavjud ma'lumot masofadan o'chirilmaydi.
 
-## 13. ISH REJASI (K1–K8)
+## 13. ISH REJASI (K1–K9)
 | # | Mavzu | Bo'limlar | Qabul mezonlari (asosiylari) |
 |---|---|---|---|
 | K1 | Ikki cho'ntak, tushum/chiqim, egasi oldi, maosh, makonlararo o'tkazma | 2 | o'tkazma atomik (test); «egasi oldi» foydani kamaytirmaydi; bosh ekran 2-raqami |
@@ -336,6 +353,7 @@ Zakot = percent_of(Baza, 250 bp)   — agar Baza ≥ nisob va hawl to'lgan bo'ls
 | K6 | Xodimlar va avans, `EMPLOYMENT`, `SUPPLY` | 7 | shablonlar `reviewStatus` bilan; avansda jarima yo'q |
 | K7 | Kengayish darvozasi, soliq zaxirasi, zakot, inventarizatsiya, tarozi | 6, 8 | `kk_expansion_gate`, `kk_zakat`; diniy matnlar `APPROVED` siz ko'rinmaydi |
 | K8 | Ko'p qurilma va rollar | 12 | avval ADR; sotuvchi qurilmasida foyda ma'lumoti yo'q (test) |
+| K9 | 8-tamoyil: egasining soat qiymati, «o'zim qilaymi yoki o'rgatib topshiraymi?», biznes o'qish xarajati | 8A | `hour_value`, `kk_delegate` yashil; Uy U16 bilan umumiy formula va kurs tekshiruvi |
 
 Har bir K-vazifa uch qismda (a — yadro va vektorlar, b — saqlash va use-case'lar, c — desktop UI, FRB, E2E, hujjatlar), Uy vazifalari kabi.
 

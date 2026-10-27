@@ -488,7 +488,7 @@ mod tests {
             result: uzs(result),
             partners: vec![
                 Partner {
-                    id: "dilshod".into(),
+                    id: "laziz".into(),
                     role: PartnerRole::CapitalProvider,
                     profit_share_bp: 5000,
                     capital: uzs(800_000_000),
@@ -564,7 +564,7 @@ mod tests {
         });
         assert_eq!(distribute(&i), Ok(vec![uzs(0), uzs(-200_000_000)]));
         i.negligence = Some(Negligence {
-            partner_id: "dilshod".into(),
+            partner_id: "laziz".into(),
             note: "x".into(),
         });
         assert_eq!(

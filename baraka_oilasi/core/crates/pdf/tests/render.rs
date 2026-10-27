@@ -13,7 +13,7 @@ fn receipt(locale: PdfLocale) -> LoanReceipt {
     LoanReceipt {
         ident: "agr-0192a000".into(),
         locale,
-        lender: "Gʻayrat Oʻgʻilov".into(),
+        lender: "Ulugʻbek Oʻgʻilov".into(),
         borrower: "Karim Rahmonov".into(),
         amount: "2 000 000 soʻm".into(),
         issued_on: "15.10.2026".into(),

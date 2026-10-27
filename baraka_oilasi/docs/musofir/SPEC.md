@@ -164,6 +164,14 @@ Maslahat ovozi — moliyaviy maslahatchi (Uy va Kasb-kor bilan bir xil, ismsiz):
 - **«Qal'a devori»:** qaytgandan keyin olib kelingandan oilaning **6 oylik ro'zg'ori** ajratiladi = Uy makonining oxirgi to'liq oylardagi (yozuvi borlari, ko'pi bilan 3 ta) o'rtacha xarajati × 6 (`mf_wall`). Katta qaror «erkin pul»dan (olib kelingan − devor) oshsa — `FORTRESS_WALL` (qizil), **sovutish davridan tashqarida ham**. Uy xarajati tarixi bo'lmasa — devor yo'q.
 - **Olib kelingan summa valyutada:** «Qaytdim»da summa istalgan valyutada (masalan, 18 000 USD) va kurs bilan; foiz va devor — uy valyutasida (`convert`). Uy valyutasida bo'lsa kurs kerak emas.
 
+### 6.9. 8-tamoyil: «O'zingizga sarmoya qiling» (M6; mahsulot egasi qarori, 2026-10-27)
+Umumiy mazmun — `docs/uy/SPEC.md` 2G.
+- **Soat qiymati ish valyutasida:** chet eldagi oylik maosh (oxirgi 3 oy o'rtachasi taklif qilinadi, tahrirlanadi) ÷ oylik ish soatlari. Uy valyutasida ham ko'rsatiladi — faqat kiritilgan kurs bilan (4.1; kurssiz — taxmin yo'q, 30 kunlik eskirish ogohlantirishi).
+- **Bilim rejasining ikki maqsadi:** (a) chet eldagi soatni qimmatlashtirish (masalan, ish joyidagi til, malaka toifasi, guvohnoma); (b) qaytgandan keyin uyda daromad beradigan hunar — 6.2 «Qaytgandan keyingi ish rejasi» va «Hunardan ishga» (6.6) bilan bog'lanadi.
+- **O'qish xarajati** chet eldagi xarajatlarda «Sarmoya» belgisi bilan (Uy 2G.3 kabi); «o'z ulushi» va qaytish jamg'armasiga tegilmaydi.
+- **Kurs tekshiruvi:** Uy 2G.4 jadvali va «besh xavf belgisi» (6.8) birga; qo'shimcha belgi `JOB_ABROAD_PROMISE` — «kursdan keyin chet elda ish kafolati» (qizil).
+- **«Ilm zakoti»:** yangi kelgan hamyurtlarga ish, til yoki hujjat bo'yicha yordam ham o'rgatish yozuvi sifatida qayd etiladi.
+
 ## 7. MAHSULOT CHEKLOVLARI (qat'iy)
 - `docs/uy/SPEC.md` 3 va `BARAKA_OILASI.md` 2.3 dagi barcha cheklovlar.
 - Kurs prognozi, «qachon ayirboshlash foydali», o'tkazma xizmatlarini reklama qilish yoki reytingi yo'q.
@@ -196,6 +204,7 @@ Maslahat ovozi — moliyaviy maslahatchi (Uy va Kasb-kor bilan bir xil, ismsiz):
 | M3 | Yo'l qarzi, sovutish davri, kengaytirilgan taklif detektori | 6 | 90 kunlik sovutish; detektor vektorlari |
 | M4 | Zaxira pul (OQ-MF3), ish boshlash summasi va «Hunardan ishga» havolasi, qaror natijasi | 6.4, 6.6 | `mf_month` (zaxira harakatlari), `mf_reserve`, `mf_startup` yashil; ulush avval zaxiraga |
 | M5 | Firibgarlik belgilari va qaytish xavfsizligi: «besh xavf belgisi», qal'a devori, valyutada olib kelingan summa | 6.8 | `offer_check`, `mf_cooling`, `mf_wall` yashil; namunaviy «kafolatli foyda» taklifi — qizil |
+| M6 | 8-tamoyil: soat qiymati ish valyutasida, ikki maqsadli bilim rejasi, «Sarmoya» belgisi, kurs tekshiruvi | 6.9 | `hour_value` (valyuta va kurs bilan), `course_check` yashil; kurssiz uy valyutasidagi qiymat yo'q |
 
 Har bir M-vazifa uch qismda (a — yadro va vektorlar, b — saqlash va use-case'lar, c — desktop UI, FRB, E2E, hujjatlar).
 
