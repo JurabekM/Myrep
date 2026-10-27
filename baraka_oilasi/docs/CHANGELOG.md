@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-10-27
+
+8-tamoyil — «Oʻzingizga sarmoya qiling» — uchala makonda (Uy, Kasb-kor, Musofir): «Bir soatim qancha?», bilim rejalari, «Sarmoya» belgisi, kurs taklifini tekshirish, «Ilm zakoti», juma eslatmalari. Sxema v25 (migratsiyalar 023–025); 1.1.0 ustidan yangilanadi — eski maʼlumotlar va jurnal zanjiri oʻzgarmaydi (`app/tests/upgrade_1_1.rs`). Shuningdek: «Ilova haqida» va mualliflik (LICENSE), demo yigʻma, vaqt mintaqasi tuzatishi, ilhom manbasi nomlari repodan olib tashlandi.
+
 ### Qo'shildi — 1.2.0 oldidan: juma ritmi eslatmalari, o'qish puli qoidasi va 1.1.0 → 1.2.0 yangilanish testi (uy/SPEC 2G.9)
 - **Juma eslatmalari (yadro, `home_nudges`):** `domain-uy::nudge::weekly_check_window` — eslatma juma, shanba va yakshanba (xonadon mintaqasi bo'yicha); uch kunning hammasida bitta hafta — dushanba–yakshanba (eslatma kunlarining oxirgisi bilan tugaydigan 7 kun); haftalar ustma-ust emas — shanba yozuvi o'tayotgan haftaga kiradi va keyingi jumadagi eslatmani yashirmaydi. Uy: `STUDY_WEEK` (faol rejasi bor, o'qish vaqti yozilmagan a'zolar) va `TEACH_WEEK` (rejasi yoki soat qiymati bor, o'rgatish yozuvi yo'q a'zolar) — `NudgeDto.members` da ismlar; Kasb-kor: `KK_TEACH_WEEK` (egasining soat qiymati bor, o'rgatish yo'q); Musofir: `MF_TEACH_WEEK` (reja yoki soat qiymati bor, o'rgatish yo'q). Kasb-kor va Musofir'da o'qish vaqti yozuvi yo'q — faqat «Ilm zakoti». Eslatma faqat shu qurilmada «Ilm zakoti» yozib bo'lsa — `*_teaching_add` bilan bitta qoida (`learning_write_scope`: makon, rol, faqat o'qish rejimi): sotuvchida bosh sahifa eslatmalari yopiq, hisobchida yo'q, Musofir eslatmasi uydagi oila qurilmasida (`HOME`) yo'q. Har makonning kiritmalari bitta o'qishda, bor-yo'qligi `EXISTS` so'rovlari bilan. Kasb-kor va Musofir makonida `home_nudges` endi faqat juma eslatmalarini qaytaradi (daromad, qarz va zaxira nusxa — Uy'da).
 - **Desktop va Android:** Kasb-kor va Musofir bosh sahifalarida ham eslatmalar (Uy'dagi bilan bitta komponent: `Nudges` / `useNudges`, Android `Nudges` / `nudgesQuery`); juma eslatmasida «Kim uchun: …» qatori, tugma shu makonning «O'zimga sarmoya» ekranini ochadi.
