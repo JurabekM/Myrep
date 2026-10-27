@@ -2,6 +2,10 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: SemVer (tag `sector-verify/vX.Y.Z`).
 
+## [Unreleased]
+### O'zgardi
+- targetSdk va compileSdk 36 (Google Play talabi), AGP 8.10.1; instrumental testlar API 34 va 36 emulyatorlarida (ADR-017).
+
 ## [1.0.0-rc1] — 2026-10-26
 ### Qo'shildi
 - RF reja CSV importi (validatsiya, o'zbekcha/ruscha/inglizcha xatolar, qator raqami bilan).

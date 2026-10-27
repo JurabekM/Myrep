@@ -30,7 +30,7 @@
 - [x] Hujjatlar: README, USER_GUIDE_uz/ru, ARCHITECTURE, ALGORITHM, PLAY_STORE, DISTRIBUTION_APK, privacy uz/ru/en, CHANGELOG.
 
 ## 3. Ochiq savollar / xavflar
-1. **targetSdk 36** — Play 2026-08-31 dan talab qiladi; prompt 35 deydi. Play'ga chiqishdan oldin ko'tarish (yangi xatti-harakatlarni sinash bilan).
+1. **targetSdk 36** — bajarildi (ADR-017); CI'da API 36 emulyatorida tekshiriladi. Haqiqiy Android 16 telefonda H1 da ham sinash tavsiya etiladi.
 2. **Haqiqiy qurilmalar** (AC-05) — ba'zi chipsetlar qo'shni RSRP yoki TA bermasligi mumkin; `docs/DEVICES.md` H1 dan keyin to'ldiriladi.
 3. **Kalibrlash** — standart chegaralar faqat simulyatsiyada tasdiqlangan; pilotdan (H2) keyin `sv-replay calibrate`.
 4. Xatosiz simulyatsiyalarda sayt PASS ≈ 40% (sektor PASS ≈ 81%) — qolganlari INCONCLUSIVE; pilotda kuzatish kerak.

@@ -6,7 +6,7 @@
 
 ## Bajarilgan
 ### 0-bosqich
-- ✅ Muhit: JDK 21 (bytecode 17, ADR-003), Android SDK (platform 35, build-tools 35/34), git. `adb` bor, emulyator/KVM yo'q.
+- ✅ Muhit: JDK 21 (bytecode 17, ADR-003), Android SDK (platform 35/36, build-tools 34/35/36), git. `adb` bor, emulyator/KVM yo'q.
 - ✅ Gradle wrapper 8.11.1 (`gradlew`, `gradlew.bat`), version catalog, `build-logic` konventsiya plaginlari.
 - ✅ 13 modul (4.1 + `:core:format`, `:core:ui` — ADR-002), detekt, ktlint, Kover, Android Lint (`abortOnError = true`).
 - ✅ `.gitignore`, CI (`.github/workflows/sector-verify.yml`, ADR-001), `CLAUDE.md`, `README.md`, `docs/DECISIONS.md`.
@@ -79,9 +79,10 @@ Pilotdan keyin kalibrlashda (4-bosqich, H2) shu ko'rsatkichni ham kuzatish kerak
 - 2026-10-26: CI run #5 (`20209e6`): `check` ✅, `instrumented` (emulyator API 34) ✅ — EncryptedDatabase (4), KeystoreSigner, PdfReportWriter, ReportGenerator.
 - 2026-10-26: `./gradlew check` lokal ✅ (barcha modullar, Robolectric UI testlari bilan).
 - 2026-10-26: CI run #8 (`046a49e`) to'liq yashil (release smoke: OK); self-review tuzatishlaridan keyin `./gradlew check` lokal ✅.
+- 2026-10-27: targetSdk 36 — `./gradlew check :app:assembleRelease :app:bundleRelease :app:lintRelease` lokal ✅; APK `targetSdkVersion:'36'`, `.so` 16 KB tekislangan.
 
 ## Ochiq savollar
-1. **targetSdk:** prompt 35 ni talab qiladi. Google Play 2026-08-31 dan yangi ilova va yangilanishlar uchun targetSdk 36 ni talab qiladi. Play orqali tarqatilsa 36 ga ko'tarish kerak (APK orqali tarqatishga ta'sir qilmaydi). Hozircha 35.
+1. **targetSdk:** ✅ 36 ga ko'tarildi (2026-10-27, foydalanuvchi qarori, ADR-017): AGP 8.10.1, CI'da API 34 va 36 emulyatorlari.
 2. **Tag push:** bulut sessiyasining git proksisi faqat ishchi branch'ga push qilishga ruxsat beradi; `sector-verify/phase-N-done` tag'lari lokal yaratilgan, lekin GitHub'ga chiqmadi. Inson: `git push origin --tags` (yoki tag'larni PR merge'dan keyin qo'ying).
 3. **Instrumental testlar:** bu muhitda emulyator yo'q (KVM yo'q) — CI'dagi emulyator job'ida yoki H1 da ishga tushiriladi.
 

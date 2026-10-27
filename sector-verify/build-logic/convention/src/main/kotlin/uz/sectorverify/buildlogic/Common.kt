@@ -15,8 +15,8 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 internal object Sdk {
-    const val COMPILE = 35
-    const val TARGET = 35
+    const val COMPILE = 36
+    const val TARGET = 36
     const val MIN = 29
 }
 

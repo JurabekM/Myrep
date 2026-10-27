@@ -1,7 +1,6 @@
 # Google Play talablari (agar Play orqali tarqatilsa)
 
-> **Diqqat (ochiq savol):** Google Play 2026-08-31 dan yangi ilova va yangilanishlar uchun **targetSdk 36** ni talab qiladi.
-> Prompt targetSdk 35 ni belgilagan; Play'ga chiqarishdan oldin 36 ga ko'tarish kerak (APK orqali tarqatishga ta'sir qilmaydi).
+> **targetSdk 36** (ADR-017): Google Play 2026-08-31 dan talab qiladigan daraja bajarilgan. Native kutubxonalar 16 KB sahifaga tekislangan.
 
 ## 1. Foreground service (location) deklaratsiyasi
 Play Console → App content → **Foreground service permissions** → `FOREGROUND_SERVICE_LOCATION`.
