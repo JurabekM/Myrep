@@ -22,7 +22,7 @@ class SyncReport {
 /// - Navbat (`sync_outbox`) SQLite triggerlari bilan to'ladi; har bir yozuv `op_id` bilan — qayta yuborish xavfsiz
 ///   (server takrorni o'tkazib yuboradi), javob yo'qolsa ham hech narsa ikki marta yozilmaydi.
 /// - Paket tartibi: audit hodisalari (seq bo'yicha) birinchi, keyin jadvallar ota-bola tartibida; protokol o'z hujjati
-///   bilan bir paketda. Paket rad etilsa — navbat saqlanadi, xato yuqoriga uzatiladi.
+///   bilan bir paketda. Paket rad etilsa — navbat saqlanadi, pull bajariladi, xato ([SyncRejected]) yuqoriga uzatiladi.
 /// - Pull: `server_rev` kursori; metadata — last-writer-wins (`updated_at`, keyin `rev`), append-only — faqat qo'shiladi.
 ///   Serverdan kelgan o'zgarish navbatga tushmaydi (`sync.applying` belgisi).
 class SyncEngine {
@@ -40,7 +40,31 @@ class SyncEngine {
   Future<int> pendingCount() async =>
       (await db.customSelect('SELECT count(*) AS n FROM sync_outbox').getSingle()).read<int>('n');
 
+  /// Push, keyin pull. Paket rad etilsa ([SyncRejected]) — pull baribir bajariladi, so'ng xato uzatiladi: bitta qotgan
+  /// yozuv qurilmani boshqalarning o'zgarishlaridan uzib qo'ymaydi (ADR-0014). Tarmoq xatosi — darhol uzatiladi.
   Future<SyncReport> run({DateTime? now}) async {
+    var pushed = 0, duplicates = 0, stale = 0;
+    SyncRejected? rejected;
+    try {
+      (pushed, duplicates, stale) = await _push();
+    } on ServerException catch (e) {
+      if (e.code != 'push_rejected') rethrow;
+      rejected = await _describe(e);
+    }
+    final pulled = await pull();
+    if (rejected != null) throw rejected;
+    await _prefs.set(lastSyncKey, (now ?? DateTime.now()).toUtc().toIso8601String());
+    return SyncReport(pushed: pushed, duplicates: duplicates, stale: stale, pulled: pulled);
+  }
+
+  Future<SyncRejected> _describe(ServerException e) async {
+    final op = e.opId == null
+        ? null
+        : await (db.select(db.syncOutbox)..where((o) => o.opId.equals(e.opId!))).getSingleOrNull();
+    return SyncRejected(e, table: op?.tableName_, rowId: op?.rowId);
+  }
+
+  Future<(int, int, int)> _push() async {
     var pushed = 0, duplicates = 0, stale = 0;
     for (final batch in await _batches()) {
       final statuses = await transport.push([for (final e in batch) e.op]);
@@ -60,9 +84,7 @@ class SyncEngine {
         }
       });
     }
-    final pulled = await pull();
-    await _prefs.set(lastSyncKey, (now ?? DateTime.now()).toUtc().toIso8601String());
-    return SyncReport(pushed: pushed, duplicates: duplicates, stale: stale, pulled: pulled);
+    return (pushed, duplicates, stale);
   }
 
   /// Serverdagi o'zgarishlarni oladi va qo'llaydi; qo'llangan qatorlar soni.

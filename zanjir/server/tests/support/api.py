@@ -71,7 +71,7 @@ class Api:
 
     async def org(self) -> dict[str, User]:
         """Bir tashkilotda har bir roldan bittadan foydalanuvchi."""
-        admin = await self.register("ADMIN")
+        admin = await self.register("ADMIN", license_no="EL-1", license_valid_until="2027-12-31T00:00:00.000Z")
         users = {"ADMIN": admin}
         for role in ("LEAD", "ENGINEER", "VIEWER"):
             users[role] = await self.member(admin, role)

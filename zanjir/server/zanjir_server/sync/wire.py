@@ -18,6 +18,7 @@ from sqlalchemy import BigInteger, Boolean, DateTime, Float, Integer, LargeBinar
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql.schema import Column, Table
 
+from zanjir_server.crypto.canonical import canonical_json_bytes
 from zanjir_server.db.models import SYNC_MODELS, Base
 
 HIDDEN = {"server_rev"}
@@ -85,6 +86,10 @@ def _parse(table: str, c: Column[Any], v: Any) -> Any:
         want = list if c.name in LIST_COLUMNS else dict
         if not isinstance(v, want):
             raise WireError(f"type:{name}")
+        try:
+            canonical_json_bytes(v)  # NaN/Infinity, 2^53 dan katta son — hash'lab bo'lmaydi (ADR-0014)
+        except ValueError as e:
+            raise WireError(f"type:{name}") from e
         return v
     if isinstance(t, LargeBinary):
         if not isinstance(v, str):

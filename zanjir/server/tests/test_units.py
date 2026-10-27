@@ -218,3 +218,22 @@ def test_roles() -> None:
     assert Role.ADMIN.at_least(Role.LEAD) and not Role.VIEWER.at_least(Role.ENGINEER)
     assert INVITABLE[Role.LEAD] == {Role.ENGINEER, Role.VIEWER}
     assert not INVITABLE[Role.ENGINEER]
+
+
+def test_login_guard_memory_bounded() -> None:
+    """L5: tekshiruv yozuv yaratmaydi; chegaradan oshganda muddati o'tgan kalitlar tozalanadi."""
+    from zanjir_server.security.login_guard import LoginGuard
+
+    now = [0.0]
+    g = LoginGuard(max_failures=2, window_seconds=60, clock=lambda: now[0])
+    assert not g.blocked("+998900000000")
+    assert g._failures == {}
+    for i in range(100_001):
+        g.failed(f"k{i}")
+    now[0] = 120.0
+    g.failed("yangi")
+    assert list(g._failures) == ["yangi"]
+    g.failed("yangi")
+    assert g.blocked("yangi")
+    g.succeeded("yangi")
+    assert not g.blocked("yangi")

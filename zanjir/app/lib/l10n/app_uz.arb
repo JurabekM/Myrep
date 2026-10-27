@@ -601,6 +601,20 @@
       }
     }
   },
+  "syncRejectedRow": "Server yozuvni rad etdi: {table} {id} ({reason}). Boshqa o'zgarishlar olinishda davom etadi; bu o'zgarish qurilmada saqlangan — administratorga murojaat qiling.",
+  "@syncRejectedRow": {
+    "placeholders": {
+      "table": {
+        "type": "String"
+      },
+      "id": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "createInvite": "Taklif kodi yaratish",
   "inviteCodeTitle": "Taklif kodi",
   "inviteCodeHint": "Kodni xodimga bering. U bir marta ishlatiladi va 72 soat amal qiladi.",

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:test/test.dart';
 import 'package:zanjir_core/zanjir_core.dart';
@@ -54,6 +56,10 @@ void main() {
     await expectLater(plans().completeStep(p.id, 1, ok), rule('invalid_transition'));
     final approved = await plans().approve(p.id);
     expect((approved.status, approved.approvedBy), ('APPROVED', org.user.id));
+    // Tasdiq hodisasi aynan shu qadamlarga bog'langan (server tekshiradi, ADR-0014).
+    final ev = (await org.repos.audit.events()).lastWhere((e) => e.eventType == 'PLAN_APPROVED');
+    expect(ev.payloadHash, payloadHash(planApprovalPayload(approved)));
+    expect(planApprovalPayload(approved)['steps_sha256'], sha256Hex(utf8.encode(canonicalJson(p.steps))));
     await expectLater(plans().execute(p.id), rule('steps_incomplete'));
     await completeAll(p);
     final done = await plans().doneSteps(p.id);

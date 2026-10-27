@@ -149,16 +149,34 @@ void main() {
       expect(server.table('measurement'), hasLength(1));
     });
 
-    test('rad etilgan paket — navbat saqlanadi, xato uzatiladi', () async {
-      await orgA.repos.sites.create(name: 'X');
-      server.rejectNext = const ServerException(422, 'push_rejected', reason: 'audit_chain:bad_signature');
-      final engine = SyncEngine(a, server);
-      final n = await engine.pendingCount();
+    test('rad etilgan paket — navbat saqlanadi, pull baribir bajariladi, qotgan yozuv aniqlanadi', () async {
+      final engineA = SyncEngine(a, server);
+      await engineA.run();
+      final b = memoryDb();
+      addTearDown(b.close);
+      final engineB = SyncEngine(b, server);
+      await engineB.run();
+      final mine = await SiteRepository(DataContext(db: b, orgId: orgA.ctx.orgId)).create(name: 'B obyekti');
+      final theirs = await orgA.repos.sites.create(name: 'A obyekti');
+      await engineA.run();
+
+      final op = (await (b.select(b.syncOutbox)..where((o) => o.rowId.equals(mine.id))).getSingle()).opId;
+      server.rejectNext = ServerException(422, 'push_rejected', reason: 'audit_chain:bad_signature', opId: op);
+      final n = await engineB.pendingCount();
       await expectLater(
-        engine.run(),
-        throwsA(isA<ServerException>().having((e) => e.reason, 'reason', 'audit_chain:bad_signature')),
+        engineB.run(),
+        throwsA(
+          isA<SyncRejected>()
+              .having((e) => e.reason, 'reason', 'audit_chain:bad_signature')
+              .having((e) => e.table, 'table', 'site')
+              .having((e) => e.rowId, 'rowId', mine.id),
+        ),
       );
-      expect(await engine.pendingCount(), n);
+      expect(await engineB.pendingCount(), n, reason: 'navbat saqlanadi');
+      expect(await SiteRepository(DataContext(db: b, orgId: orgA.ctx.orgId)).get(theirs.id), isNotNull);
+      // Tarmoq xatosi — pull ham bajarilmaydi, xato o'zgarishsiz.
+      server.rejectNext = const ServerException(0, 'unavailable');
+      await expectLater(engineB.run(), throwsA(isNot(isA<SyncRejected>())));
     });
 
     test('LWW: yangiroq o\'zgarish ikkala qurilmada yutadi; eskisi navbatdan olinadi', () async {

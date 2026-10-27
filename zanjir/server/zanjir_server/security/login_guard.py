@@ -24,12 +24,15 @@ class LoginGuard:
         return q
 
     def blocked(self, key: str) -> bool:
+        if key not in self._failures:  # tekshiruvning o'zi yozuv yaratmaydi (xotira o'smaydi)
+            return False
         return len(self._prune(key)) >= self._max
 
     def failed(self, key: str) -> None:
         self._prune(key).append(self._clock())
         if len(self._failures) > 100_000:
-            for k in [k for k, q in self._failures.items() if not q]:
+            # Xotira chegarasi: muddati o'tgan yozuvlar har bir kalitda tozalanadi (faqat bo'sh navbatlar emas).
+            for k in [k for k in self._failures if not self._prune(k)]:
                 del self._failures[k]
 
     def succeeded(self, key: str) -> None:

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'canonical_json.dart';
@@ -28,6 +29,12 @@ class ProtocolSignature {
 
 Uint8List protocolMessage(String payloadSha256, String pdfSha256) =>
     Uint8List.fromList([...hexDecode(payloadSha256), ...hexDecode(pdfSha256)]);
+
+/// QR token (ADR-0014): `qr_sig = Ed25519("zanjir.qr/1\n<org_id>\n<raqam>")`, `qr_token = sha256(qr_sig)[:32]`.
+/// Token qurilma kalitisiz yasalmaydi va oldindan bilinmaydi — boshqa tashkilot uni "band qila" olmaydi.
+Uint8List qrTokenMessage(String orgId, String number) => utf8.encode('zanjir.qr/1\n$orgId\n$number');
+
+String qrTokenFromSignature(String qrSigHex) => sha256Hex(hexDecode(qrSigHex)).substring(0, 32);
 
 Future<ProtocolSignature> signProtocol({
   required Object? payload,

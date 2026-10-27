@@ -183,10 +183,12 @@ class ServerApi implements SyncTransport {
     bool retried = false,
   }) async {
     final headers = {'content-type': 'application/json'};
+    String? access;
     if (auth) {
       final t = await tokens.read();
       if (t == null) throw const ServerException(401, 'not_authenticated');
-      headers['authorization'] = 'Bearer ${t.access}';
+      access = t.access;
+      headers['authorization'] = 'Bearer $access';
     }
     final req = http.Request(method, _base.resolve(path))..headers.addAll(headers);
     if (body != null) req.body = jsonEncode(body);
@@ -202,13 +204,24 @@ class ServerApi implements SyncTransport {
     }
     if (r.statusCode < 400) return r;
     final err = _error(r);
-    if (auth && !retried && r.statusCode == 401 && err.code == 'invalid_token' && await _refresh()) {
+    if (auth && !retried && r.statusCode == 401 && err.code == 'invalid_token' && await _refresh(access!)) {
       return _send(method, path, body: body, auth: auth, retried: true);
     }
     throw err;
   }
 
-  Future<bool> _refresh() async {
+  Future<bool>? _refreshing;
+
+  /// Bir vaqtda bitta refresh (ADR-0014): parallel so'rovlar bir xil refresh tokenni ikki marta yuborsa, server buni
+  /// o'g'irlik deb biladi (reuse detection) va sessiyani yopadi. Token boshqa so'rov tomonidan allaqachon yangilangan
+  /// bo'lsa — refresh'siz qayta urinish.
+  Future<bool> _refresh(String staleAccess) async {
+    final current = await tokens.read();
+    if (current != null && current.access != staleAccess) return true;
+    return _refreshing ??= _rotate().whenComplete(() => _refreshing = null);
+  }
+
+  Future<bool> _rotate() async {
     final t = await tokens.read();
     if (t == null) return false;
     try {

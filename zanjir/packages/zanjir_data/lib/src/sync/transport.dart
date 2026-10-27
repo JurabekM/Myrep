@@ -34,3 +34,14 @@ class ServerException implements Exception {
   @override
   String toString() => 'ServerException($status, $code${reason == null ? '' : ', $reason'})';
 }
+
+/// Server paketni rad etdi (`push_rejected`, ADR-0012/0014): qaysi navbat yozuvi ([table], [rowId]) va nima uchun.
+/// Navbat saqlanadi; pull baribir bajariladi — qurilma boshqalarning o'zgarishlarini olishda davom etadi.
+class SyncRejected extends ServerException {
+  SyncRejected(ServerException e, {this.table, this.rowId}) : super(e.status, e.code, reason: e.reason, opId: e.opId);
+  final String? table;
+  final String? rowId;
+
+  @override
+  String toString() => 'SyncRejected($reason, $table/$rowId)';
+}

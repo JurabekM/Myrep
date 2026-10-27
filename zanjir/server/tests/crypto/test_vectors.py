@@ -13,7 +13,7 @@ import pytest
 from zanjir_server.crypto.canonical import canonical_json, canonical_json_bytes
 from zanjir_server.crypto.hash_chain import AuditEvent, compute_event_hash, payload_hash, verify_chain
 from zanjir_server.crypto.hashing import sha256_hex
-from zanjir_server.crypto.protocol import protocol_message, verify_protocol
+from zanjir_server.crypto.protocol import protocol_message, qr_token_from_signature, qr_token_message, verify_protocol
 from zanjir_server.crypto.signing import Ed25519Signer, UnsupportedSigAlgError, verify_signature
 
 VECTORS = Path(__file__).resolve().parents[3] / "tools" / "vectors"
@@ -192,3 +192,14 @@ def test_protocol_signature_or_hash_substitution_detected() -> None:
     other_pdf = b"%PDF-1.7\nboshqa\n%%EOF\n"
     forged = _proto_kwargs(pdf=other_pdf, pdf_sha256=sha256_hex(other_pdf))
     assert verify_protocol(**forged) == "bad_signature"
+
+
+def test_qr_token_vector() -> None:
+    qr = PROTO["qr_token"]
+    message = qr_token_message(qr["org_id"], qr["number"])
+    assert message.hex() == qr["message_hex"]
+    assert Ed25519Signer(bytes.fromhex(CHAIN["device_seed"])).sign(message).hex() == qr["qr_sig"]
+    assert verify_signature(
+        sig_alg="Ed25519", public_key_hex=PROTO["public_key"], message=message, signature_hex=qr["qr_sig"]
+    )
+    assert qr_token_from_signature(qr["qr_sig"]) == qr["qr_token"]

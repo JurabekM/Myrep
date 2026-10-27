@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
 ## [Unreleased]
 
 ### Qo'shildi
+- 10-faza — mustahkamlash (ADR-0014): `docs/SECURITY.md` (STRIDE tahdid modeli, OWASP MASVS L1, topilmalar reestri F-01…F-19,
+  qoldiq xavflar R-01…R-10); bog'liqliklar auditi `tools/audit/osv_audit.py` (OSV.dev, istisnolar muddat bilan) va CI
+  `zanjir-audit`; unumdorlik testlari (2000 tugunli obyekt, 2900 yozuvli sync, server push); accessibility testlari
+  (Android/yorliq/kontrast guideline'lari, ×2 shrift); `key.properties.example`.
 - 9-faza — ajratish rejasi (ADR-0013): yadroda bajarish qoidalari (`checkStepCompletion`, `StepConfirmation`,
   `PlanStep/PlanWarning.fromJson`); `IsolationPlanRepository` — qadamlarni ketma-ket bajarish (`PLAN_STEP_DONE` audit
   hodisalari), barcha qadamlar bajarilgandagina yakunlash, rollar, STALE; ilovada rejalar ro'yxati, qoralama saqlash,
@@ -58,6 +62,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
   normalar schema tekshiruvi, release darvozasi.
 
 ### O'zgardi
+- Xavfsizlik (10-faza): Android `allowBackup=false`, faqat HTTPS (`network_security_config`), release imzo faqat
+  `key.properties` dan; server `/metrics` token bilan, hisob bo'yicha kirish cheklovi, xavfsizlik sarlavhalari, `clock_skew`
+  (faqat LWW jadvallari). Ajratish rejasi: server holat o'tishlarini va mazmunni qulflaydi, tasdiq — LEAD/ADMIN ning qadamlar
+  hash'iga imzolangan `PLAN_APPROVED` hodisasi bilan. Protokol: server qoidalarni bazadagi yozuvlar bo'yicha tekshiradi
+  (o'lchovlarni tushirib qoldirib bo'lmaydi); QR token qurilma imzosidan (`qr_sig`), raqam qurilma belgisi bilan. Sync:
+  rad etilganda ham pull, qotgan yozuv UI'da (`SyncRejected`), bitta oqimli refresh; tashkilot/sozlama o'zgarishi — imzolangan
+  hodisa bilan; NaN va katta sonlar aniq rad etiladi.
 - `IsolationPlanRepository.approve(id)` — tasdiqlovchi joriy foydalanuvchi (`approvedBy` parametri olib tashlandi);
   serverda `PLAN_APPROVED` hodisasi faqat LEAD/ADMIN dan.
 - Ilovadagi vaqtinchalik `AuthGateway` (oflayn shlyuz) olib tashlandi — kirish `ServerAccount` orqali.

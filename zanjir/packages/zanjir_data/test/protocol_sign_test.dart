@@ -28,8 +28,6 @@ void main() {
   late ZanjirDatabase db;
   late Org org;
   final fonts = testFonts();
-  var token = 0;
-  String nextToken() => (++token).toRadixString(16).padLeft(32, '0');
 
   /// Boshqa foydalanuvchi (rol) yoki soat bilan — shu qurilma va kalit.
   Future<Repositories> reposAs({String? role, DateTime Function()? clock}) async {
@@ -43,7 +41,7 @@ void main() {
       )).id;
     }
     final ctx = DataContext(db: db, orgId: org.ctx.orgId, clock: clock ?? steppingClock(DateTime.utc(2026, 10, 27)));
-    return Repositories(ctx, signer: org.signer, deviceId: org.device.id, actorId: actor, newQrToken: nextToken);
+    return Repositories(ctx, signer: org.signer, deviceId: org.device.id, actorId: actor);
   }
 
   setUp(() async {
@@ -65,6 +63,17 @@ void main() {
       expect(protocol['number'], '2026-${dev.substring(dev.length - 6)}-001');
       expect(protocol['verify_url'], 'https://example.test/v/${protocol['qr_token']}');
       expect(protocol['qr_token'], matches(RegExp(r'^[0-9a-f]{32}$')));
+      // Token qurilma imzosidan: imzo shu qurilma kaliti bilan tekshiriladi (ADR-0014).
+      expect(protocol['qr_token'], qrTokenFromSignature(protocol['qr_sig']! as String));
+      expect(
+        await verifySignature(
+          sigAlg: 'Ed25519',
+          publicKeyHex: org.signer.publicKeyHex,
+          message: qrTokenMessage(org.ctx.orgId, protocol['number']! as String),
+          signatureHex: protocol['qr_sig']! as String,
+        ),
+        isTrue,
+      );
       expect((p['measurements']! as List).single, containsPair('verdict', 'PASS'));
       expect((p['measurements']! as List).single, containsPair('node_label', 'XS1'));
       expect((p['measurements']! as List).single, containsPair('norm_id', isNotNull));

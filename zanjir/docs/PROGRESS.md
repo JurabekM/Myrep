@@ -1,7 +1,7 @@
 # ZANJIR — PROGRESS
 
-**Joriy holat:** 9-faza tayyor. 🛑 1-inson darvozasi (`docs/NORMS_REVIEW.md`) va S11–S14 hali ochiq — 1-darvoza yopilmaguncha
-protokol imzolash bloklangan (ilovada ham, serverda ham). Keyingi — 10-faza (mustahkamlash: xavfsizlik ko'rigi, tahdid modeli, MASVS, bog'liqliklar auditi, unumdorlik, accessibility).
+**Joriy holat:** 10-faza tayyor. 🛑 1-inson darvozasi (`docs/NORMS_REVIEW.md`) va S11–S14 hali ochiq — 1-darvoza yopilmaguncha
+protokol imzolash bloklangan (ilovada ham, serverda ham). Keyingi — 11-faza (deploy), 🛑 2-darvozadan keyin (domen, server, SMTP/SMS — `.env`).
 **Oxirgi yangilanish:** 2026-10-27
 
 ## Fazalar
@@ -19,7 +19,7 @@ protokol imzolash bloklangan (ilovada ham, serverda ham). Keyingi — 10-faza (m
 | 7 | Server: auth, RBAC, RLS, sync, `/v/{qr_token}` | ✅ Tayyor (194 pytest, testcontainers PG16, RBAC 22 endpoint × 5 rol, qamrov 97%) | 2026-10-27 | be7544a |
 | 8 | Sinxronlash integratsiyasi (E2E) | ✅ Tayyor (E2E 6 stsenariy: Dart ↔ FastAPI + PostgreSQL; ilova 30, data 74 test) | 2026-10-27 | 7793f63 |
 | 9 | Ajratish rejasi UI, tasdiqlash, STALE | ✅ Tayyor (oqim testi + integration_test, ketma-ket qadamlar, kuchlanish tekshiruvi — 2 tasdiq, E2E 7) | 2026-10-27 | 5f62aa4 |
-| 10 | Mustahkamlash: xavfsizlik, audit, accessibility | ⏳ | | |
+| 10 | Mustahkamlash: xavfsizlik, audit, accessibility | ✅ Tayyor (SECURITY.md: STRIDE, MASVS, F-01…F-19 — "yuqori"lar yopilgan; OSV auditi 0; unumdorlik byudjetlari; a11y testlari) | 2026-10-27 | |
 | 11 | Deploy (staging + prod) | ⏳ | | |
 | 12 | Release (AAB, Play internal) | ⏳ | | |
 

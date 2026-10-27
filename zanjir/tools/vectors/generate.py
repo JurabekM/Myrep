@@ -18,7 +18,7 @@ from typing import Any
 from zanjir_server.crypto.canonical import canonical_json, canonical_json_bytes
 from zanjir_server.crypto.hash_chain import GENESIS_HASH, AuditEvent, compute_event_hash, payload_hash, verify_chain
 from zanjir_server.crypto.hashing import sha256_hex
-from zanjir_server.crypto.protocol import protocol_message
+from zanjir_server.crypto.protocol import protocol_message, qr_token_from_signature, qr_token_message
 from zanjir_server.crypto.signing import SIG_ALG_ED25519, Ed25519Signer, verify_signature
 
 OUT = Path(__file__).resolve().parent
@@ -423,6 +423,22 @@ def protocol_vectors() -> dict[str, Any]:
         "pdf_sha256": pdf_sha,
         "message_hex": message.hex(),
         "signature": signer.sign(message).hex(),
+        "qr_token": qr_vector(signer),
+    }
+
+
+def qr_vector(signer: Ed25519Signer) -> dict[str, str]:
+    org_id, number = "01920000-0000-7000-8000-0000000000a1", "2026-0005E1-001"
+    message = qr_token_message(org_id, number)
+    qr_sig = signer.sign(message).hex()
+    return {
+        "description": 'QR token (ADR-0014): qr_sig = Ed25519("zanjir.qr/1\\n<org_id>\\n<number>"), '
+        "qr_token = sha256(qr_sig)[:32 hex]",
+        "org_id": org_id,
+        "number": number,
+        "message_hex": message.hex(),
+        "qr_sig": qr_sig,
+        "qr_token": qr_token_from_signature(qr_sig),
     }
 
 

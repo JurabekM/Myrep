@@ -10,10 +10,17 @@ from typing import Any
 from zanjir_server.crypto.canonical import canonical_json, canonical_json_bytes
 from zanjir_server.crypto.hash_chain import GENESIS_HASH, compute_event_hash, payload_hash
 from zanjir_server.crypto.hashing import sha256_hex
-from zanjir_server.crypto.protocol import protocol_message
+from zanjir_server.crypto.protocol import protocol_message, qr_token_from_signature, qr_token_message
 from zanjir_server.crypto.signing import Ed25519Signer
 from zanjir_server.sync.service import measurement_audit_payload, protocol_audit_payload
 from zanjir_server.sync.wire import iso
+
+NORMS = 'schema_version: 1\nversion: "0.1.1"\nreviewed_by: "{rb}"\nreviewed_at: "{ra}"\nmargin_pct: 0\nnorms: []\n'
+REVIEWER = "TEST FIXTURE — haqiqiy tekshiruv emas"
+
+
+def norms_yaml(reviewed: bool) -> str:
+    return NORMS.format(rb=REVIEWER, ra="2026-10-01") if reviewed else NORMS.format(rb="", ra="")
 
 
 def new_id() -> str:
@@ -36,6 +43,7 @@ class Field:
         self.prev = GENESIS_HASH
         self.t = datetime(2026, 10, 26, 7, 0, tzinfo=UTC)
         self.n = 0
+        self.protocols = 0
 
     def snapshot(self) -> tuple[int, str]:
         """Zanjir holati — rad etilgan paketdan keyin qaytarish uchun (serverda hech narsa saqlanmagan)."""
@@ -150,7 +158,13 @@ class Field:
         )
 
     def measurement(
-        self, session_id: str, node_id: str, instrument_id: str, verdict: str = "PASS", zs: float = 0.84
+        self,
+        session_id: str,
+        node_id: str,
+        instrument_id: str,
+        verdict: str = "PASS",
+        zs: float = 0.84,
+        supersedes_id: str | None = None,
     ) -> list[dict[str, Any]]:
         row = self.base(
             session_id=session_id,
@@ -163,11 +177,29 @@ class Field:
             norm_id="LOOP-TN-FINAL" if verdict != "NEEDS_REVIEW" else None,
             norm_set_version="0.1.1",
             eval_detail={"reason": None},
-            supersedes_id=None,
+            supersedes_id=supersedes_id,
         )
         return [self.event("MEASUREMENT_ADDED", row["id"], measurement_audit_payload(row)), self.op("measurement", row)]
 
+    def norm_set(self, reviewed: bool = True) -> dict[str, Any]:
+        yaml = norms_yaml(reviewed)
+        return self.op(
+            "norm_set",
+            self.base(
+                version="0.1.1",
+                sha256=sha256_hex(yaml.encode()),
+                yaml=yaml,
+                reviewed_by=REVIEWER if reviewed else None,
+                reviewed_at="2026-10-01" if reviewed else None,
+                deleted=False,
+            ),
+        )
+
     # --- protokol ---
+
+    @property
+    def device_tag(self) -> str:
+        return self.device_id.replace("-", "")[-6:].upper()
 
     def protocol_payload(
         self,
@@ -177,15 +209,21 @@ class Field:
         *,
         signer_role: str = "LEAD",
         lead_comment: str | None = None,
-        reviewed_by: str | None = "TEST FIXTURE — haqiqiy tekshiruv emas",
+        reviewed: bool = True,
         qr_token: str | None = None,
-        number: str = "2026-ABCDEF-001",
+        number: str | None = None,
     ) -> dict[str, Any]:
+        if number is None:
+            self.protocols += 1
+            number = f"2026-{self.device_tag}-{self.protocols:03d}"
+        qr_sig = self.signer.sign(qr_token_message(self.org_id, number)).hex()
+        norms = norms_yaml(reviewed)
         return {
             "schema": "zanjir.protocol/1",
             "protocol": {
                 "number": number,
-                "qr_token": qr_token or uuid.uuid4().hex,
+                "qr_token": qr_token or qr_token_from_signature(qr_sig),
+                "qr_sig": qr_sig,
                 "verify_url": "zanjir://app/v/x",
                 "language": "uz",
             },
@@ -197,13 +235,13 @@ class Field:
             },
             "session": {"id": session["id"]},
             "signer": {"id": self.user_id, "role": signer_role},
-            "signed_at": "2026-10-27T08:00:00.000Z",
+            "signed_at": self.now(),
             "lead_comment": lead_comment,
             "norm_set": {
                 "version": "0.1.1",
-                "sha256": "a" * 64,
-                "reviewed_by": reviewed_by,
-                "reviewed_at": "2026-10-01",
+                "sha256": sha256_hex(norms.encode()),
+                "reviewed_by": REVIEWER if reviewed else None,
+                "reviewed_at": "2026-10-01" if reviewed else None,
             },
             "instruments": [{"id": i["id"], "verified_until": i["verified_until"]} for i in instruments],
             "measurements": [

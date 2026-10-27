@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:drift/drift.dart';
 import 'package:zanjir_core/zanjir_core.dart';
@@ -67,15 +66,13 @@ class ProtocolRepository {
     required this._signer,
     required this._normSets,
     required this._measurements,
-    String Function()? newQrToken,
-  }) : _newQrToken = newQrToken ?? _secureToken;
+  });
 
   final DataContext _ctx;
   final AuditRepository _audit;
   final Signer _signer;
   final NormSetRepository _normSets;
   final MeasurementRepository _measurements;
-  final String Function() _newQrToken;
   ZanjirDatabase get _db => _ctx.db;
 
   /// Imzolay oladigan rollar. ADMIN — tashkilot boshqaruvchisi, VIEWER — faqat ko'radi.
@@ -95,13 +92,17 @@ class ProtocolRepository {
     String verifyBaseUrl = defaultVerifyBaseUrl,
   }) => _db.transaction(() async {
     final now = _ctx.now();
-    final token = _newQrToken();
+    final number = await _nextNumber(now);
+    // QR token — qurilma imzosidan (ADR-0014): oldindan bilinmaydi, server uni shu qurilma kaliti bilan tekshiradi.
+    final qrSig = hexEncode(await _signer.sign(qrTokenMessage(_ctx.orgId, number)));
+    final token = qrTokenFromSignature(qrSig);
     return _build(
       sessionId: sessionId,
       language: language,
       leadComment: leadComment,
-      number: await _nextNumber(now),
+      number: number,
       qrToken: token,
+      qrSig: qrSig,
       verifyUrl: '$verifyBaseUrl$token',
       signedAt: now,
     );
@@ -124,6 +125,7 @@ class ProtocolRepository {
         leadComment: p['lead_comment'] as String?,
         number: protocol['number']! as String,
         qrToken: protocol['qr_token']! as String,
+        qrSig: protocol['qr_sig']! as String,
         verifyUrl: protocol['verify_url']! as String,
         signedAt: signedAt,
       );
@@ -259,6 +261,7 @@ class ProtocolRepository {
     required String? leadComment,
     required String number,
     required String qrToken,
+    required String qrSig,
     required String verifyUrl,
     required DateTime signedAt,
   }) async {
@@ -336,7 +339,13 @@ class ProtocolRepository {
     };
     final payload = <String, Object?>{
       'schema': protocolPayloadSchema,
-      'protocol': {'number': number, 'qr_token': qrToken, 'verify_url': verifyUrl, 'language': language},
+      'protocol': {
+        'number': number,
+        'qr_token': qrToken,
+        'qr_sig': qrSig,
+        'verify_url': verifyUrl,
+        'language': language,
+      },
       'lab': {
         'org_id': org.id,
         'name': org.name,
@@ -430,8 +439,3 @@ DateTime _day(DateTime t) {
 }
 
 String? _iso(DateTime? t) => t == null ? null : isoUtcMillis(t);
-
-String _secureToken() {
-  final r = Random.secure();
-  return hexEncode(Uint8List.fromList(List.generate(16, (_) => r.nextInt(256))));
-}

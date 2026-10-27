@@ -292,6 +292,17 @@ void main() {
       final other = utf8.encode('%PDF-1.7\nboshqa\n%%EOF\n');
       expect(await verify(pdfBytes: other, pdfSha: sha256Hex(other)), 'bad_signature');
     });
+
+    test('QR token: qurilma imzosidan hosil qilinadi (ADR-0014)', () async {
+      final qr = (proto['qr_token']! as Map).cast<String, Object?>();
+      final message = qrTokenMessage(qr['org_id']! as String, qr['number']! as String);
+      expect(hexEncode(message), qr['message_hex']);
+      final signer = await Ed25519Signer.fromSeed(hexDecode(chain['device_seed']! as String));
+      final sig = hexEncode(await signer.sign(message));
+      expect(sig, qr['qr_sig']);
+      expect(qrTokenFromSignature(sig), qr['qr_token']);
+      expect(qrTokenFromSignature(sig), matches(RegExp(r'^[0-9a-f]{32}$')));
+    });
   });
 
   group('hex', () {

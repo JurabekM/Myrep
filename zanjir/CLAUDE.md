@@ -94,6 +94,8 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Bloklash kodlari (`ProtocolBlocker.code`) — barqaror inglizcha; UI matni `labels.dart` `blockerText`. Yangi shart qo'shilsa —
   ARB, `labels_test.dart` `blockerCodes`, ADR.
 - Testlarda tekshirilgan normalar faqat test nusxasi ("TEST FIXTURE", versiya `0.1.1`); `norms/v0.yaml` ga tegilmaydi.
+- QR token — qurilma imzosidan: `qr_sig = Ed25519("zanjir.qr/1\n<org_id>\n<raqam>")`, `qr_token = sha256(qr_sig)[:32]`
+  (yadro `qrTokenMessage`/`qrTokenFromSignature`, vektor `protocol_signature.json`, ADR-0014). Tasodifiy token yaratilmaydi.
 
 ## Server (`server/`, ADR-0011) xaritasi
 - `zanjir_server/db/` — modellar (ustunlar ilova bilan bir xil), `session.py` (`org_session` — RLS, `lookup_org`),
@@ -101,19 +103,24 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - `api/` — `auth` (kirish, refresh rotatsiya, taklif, ro'yxatdan o'tish), `org` (takliflar, foydalanuvchilar, qurilmalar),
   `sync`, `public` (`/v/{qr_token}`, health, metrics); `deps.py` — `Viewer/Engineer/Lead/Admin` rol talablari.
 - `sync/` — `wire.py` (sim formati), `service.py` (push qoidalari, pull), `protocol_rules.py` (6-qoida serverda).
+  Protokol qoidalari serverdagi yozuvlar bo'yicha (payload o'lchovlari = sessiyaning amaldagi o'lchovlari); reja holat
+  o'tishlari va mazmuni qulflangan; tashkilot/sozlama o'zgarishi — imzolangan hodisa bilan (ADR-0014). Yangi audit
+  payload'i ilova bilan bir xil yordamchi funksiyada (`*_audit_payload`, `plan_approval_payload`).
 - Yangi endpoint → `tests/test_rbac_matrix.py` `MATRIX` va `docs/SECURITY.md` jadvali (aks holda test yiqiladi).
 - Testlar: `tests/support/api.py` (tashkilot/rollar), `tests/support/field.py` (dala qurilmasi taqlidi: audit zanjiri, imzo).
 
 ## Ajratish rejasi (ADR-0006, ADR-0013)
 - Yadro: `solver/execution.dart` — qadamlar faqat ketma-ket, aniq tasdiq bilan; kuchlanish tekshiruvi — 2 tasdiq.
 - `IsolationPlanRepository`: `save` → `approve` (LEAD/ADMIN) → `completeStep` (audit `PLAN_STEP_DONE`, `<reja>#<tartib>`) →
-  `execute`; `refreshStale`. Ilova: `/sites/:id/plans`, `/plans/:id`, quruvchi `/sites/:id/isolation`; oqim testi
+  `execute`; `refreshStale`. `PLAN_APPROVED` payload'i — `planApprovalPayload` (qadamlar hash'i bilan; server tasdiqni
+  shunga bog'laydi). Ilova: `/sites/:id/plans`, `/plans/:id`, quruvchi `/sites/:id/isolation`; oqim testi
   `test/flow/isolation_flow.dart` (widget + `integration_test`).
 
 ## Sinxronlash (ADR-0012)
 - `zanjir_data/lib/src/sync/`: `sync_engine.dart` (navbat → push, pull bitta tranzaksiyada, LWW), `wire.dart` (Drift ↔ sim
   formati), `server_api.dart` (HTTP, refresh), `account.dart` (ro'yxatdan o'tish, taklif, kirish). Navbat — SQLite triggerlari
   (`triggers.drift`); yangi sinxron jadval qo'shilsa: trigger, `syncTables`, server modeli, `sync_schema.json`.
+- Paket rad etilsa — `SyncRejected` (jadval, ID, sabab), pull baribir bajariladi; refresh bitta oqimda (ADR-0014).
 - Ilova: `core/sync_controller.dart` (fon va qo'lda), sozlamalar "Server" bo'limi, `/login`, `/join`; testlarda
   `test/support/fake_http_server.dart`.
 
@@ -123,6 +130,10 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - `lib/features/*` — ekranlar; `lib/l10n/app_{uz,ru}.arb` + `labels.dart` (domen kodlari → matn).
 - Testlar: `test/support/harness.dart` (xotiradagi baza, `startWithSession`, `goTo`, `settle`, `reveal`); asosiy oqim —
   `test/flow/main_flow.dart` (widget testi va `integration_test/`). `assets/norms/v0.yaml` = `norms/v0.yaml` (test nazoratida).
+
+## Xavfsizlik (ADR-0014)
+- `docs/SECURITY.md` — tahdid modeli, MASVS, RBAC, topilmalar reestri (F-*) va qoldiq xavflar (R-*). Yangi topilma yoki
+  qabul qilingan xavf — reestrga. Bog'liqliklar: `python3 -I tools/audit/osv_audit.py` (istisno — `allowlist.json`, muddat bilan).
 
 ## UI
 - Standart mavzu — Myrep dark tokenlari (`../CLAUDE.md` jadvali), light — ixtiyoriy. Shrift: ilova ichidagi Noto Sans.

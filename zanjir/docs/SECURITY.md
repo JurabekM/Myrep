@@ -62,14 +62,14 @@ obyektlar sxemasi va ajratish rejalari (xavfsizlikka ta'sir qiladi), normalar to
 | T1 | S — boshqa foydalanuvchi nomidan kirish | parol tanlash, o'g'irlangan refresh token | argon2id; IP bo'yicha va hisob bo'yicha cheklov (10 xato / 15 daq); refresh rotatsiya + qayta ishlatishda oila bekor; access 15 daq | SMS OTP/2FA yo'q (MVP) |
 | T2 | S — boshqa qurilma nomidan audit/protokol | soxta imzo, boshqa qurilma ID si | Ed25519 imzo, qurilma — faqat o'z egasi, bekor qilingan qurilma rad | seed qurilmada (Keystore) — root qilingan qurilmada o'g'irlanishi mumkin |
 | T3 | T — o'lchov/protokolni o'zgartirish | natijani PASS ga almashtirish | append-only (ilova + DB trigger + huquqlar), audit hash-zanjiri, o'lchov ↔ imzolangan audit hodisasi, protokol payload ↔ serverdagi o'lchovlar, PDF/payload hash, `/ID` | qurilmada sync dan oldin root egasi o'z ma'lumotini o'zgartirishi mumkin — server zanjir bo'yicha aniqlaydi (E2E testi) |
-| T4 | T — LWW ni "kelajak" vaqt bilan egallash | soati oldinda qurilma | server `updated_at > hozir + 10 daq` ni rad etadi (`clock_skew`) | soati orqada qurilma o'zgarishi yutqazishi mumkin |
+| T4 | T — LWW ni "kelajak" vaqt bilan egallash | soati oldinda qurilma | server LWW jadvallarida `updated_at > hozir + 10 daq` ni rad etadi (`clock_skew`); append-only imzolangan yozuvlar LWW'da qatnashmaydi | soati orqada qurilma o'zgarishi yutqazishi mumkin; qurilma soatini orqaga surib imzo sanasini "eskirtirish" (offline-first'ning o'zi) |
 | T5 | R — "men imzolamaganman" | protokol, reja tasdig'i, qadam | har amal — imzolangan audit hodisasi (aktor, qurilma, vaqt), zanjir serverda tekshiriladi | — |
 | T6 | I — boshqa tashkilot ma'lumoti | ID ni taxmin qilish, SQL | RLS + kodda `org_id` filtri; ilova imtiyozsiz rol; kompozit FK; ORM/parametrlangan SQL | — |
-| T7 | I — ochiq sahifa orqali shaxsiy ma'lumot | QR token | 128 bit token; sahifada faqat imzolovchi F.I.Sh. va tashkilot; `noindex`, `no-store` | PDF (QR egasi uchun hujjatning o'zi) manzil va ismlarni o'z ichiga oladi — qabul qilingan |
+| T7 | I — ochiq sahifa orqali shaxsiy ma'lumot | QR token | 128 bit token, qurilma imzosidan (oldindan bilinmaydi, boshqa tashkilot band qila olmaydi); sahifada faqat imzolovchi F.I.Sh. va tashkilot; `noindex`, `no-store` | PDF (QR egasi uchun hujjatning o'zi) manzil va ismlarni o'z ichiga oladi — qabul qilingan |
 | T8 | I — qurilmadagi ma'lumot sizishi | zaxira nusxa, ekranshot, log | `allowBackup=false` + `dataExtractionRules`; FLAG_SECURE imzolash ekranida; logda sir yo'q | SQLite shifrlanmagan (Android FBE ga tayanadi) — M-xavf, reestrda |
 | T9 | I — tarmoqda tinglash | ochiq Wi-Fi | faqat HTTPS (ilova URL tekshiruvi + `cleartextTrafficPermitted=false`, faqat tizim CA); serverda HSTS — Caddy (11-faza) | sertifikat pinning yo'q (L2) |
 | T10 | D — serverni band qilish | ko'p so'rov, katta paket | rate limiting, 5 MB chegara, push ≤ 500 op, pull sahifalari | bitta jarayon xotirasidagi cheklovlar (ko'p nusxada Redis) |
-| T11 | E — rolni oshirish | ENGINEER sozlama/tasdiq yuboradi | API rol talablari (matritsa testi), sync jadval/hodisa rollari, rol bazadan har so'rovda | — |
+| T11 | E — rolni oshirish | ENGINEER sozlama/tasdiq yuboradi, rejani o'zi "tasdiqlaydi" | API rol talablari (matritsa testi), sync jadval/hodisa rollari, rol bazadan har so'rovda; reja tasdig'i — LEAD/ADMIN ning aynan shu qadamlarga imzolangan hodisasi, holat o'tishlari va mazmun serverda qulflangan | — |
 | T12 | E — xavfli ish ruxsati | reja qadamini o'tkazib yuborish | qadamlar ketma-ket, kuchlanish tekshiruvi — 2 aniq tasdiq (yadro + repozitoriy + UI testlari); ilova "xavfsiz" demaydi | javobgarlik — naryad beruvchi va ish rahbarida (1-qoida) |
 
 ## OWASP MASVS L1 checklist (MASVS v2)
@@ -109,6 +109,21 @@ Daraja: **Y** — yuqori, **O** — o'rta, **P** — past. Mezon: barcha "yuqori
 | F-06 | O | Soati oldinda qurilma LWW da doim yutadi | ✅ tuzatildi: `clock_skew` (> 10 daq kelajak — rad) |
 | F-07 | P | API javoblarida `nosniff`, `no-store`, `X-Frame-Options` yo'q | ✅ tuzatildi: `SecurityHeadersMiddleware` |
 | F-08 | P | Katta shriftda (×2) sozlamalar ekrani layout xatosi (accessibility) | ✅ tuzatildi; ×2 shrift testi |
+| F-09 | Y | ENGINEER sinxronlash orqali rejani "tasdiqlay" olardi (`approved_by` ga LEAD ID sini yozib), tasdiqlangan rejaning qadamlarini almashtira yoki bekor qilinganini qayta tiriltira olardi — xavfli ish ruxsatiga ta'sir qiladi | ✅ tuzatildi: holat o'tishlari, imzolangan `PLAN_APPROVED` (`actor_id = approved_by`, qadamlar hash'i), EXECUTED — barcha qadamlar bilan, mazmun qulflangan; testlar `test_plan_*` |
+| F-10 | O | Protokolni server qayta tekshirishini o'lchovni payload'dan tushirib qoldirib (masalan, NEEDS_REVIEW) yoki asbob/litsenziya/norma ma'lumotini payload'da "to'g'rilab" chetlab o'tish mumkin edi | ✅ tuzatildi: payload o'lchovlari = sessiyaning amaldagi o'lchovlari (ID, natija, qiymat, asbob, vaqt); qoida kirishlari bazadan; `signed_at` oynasi |
+| F-11 | O | QR token mijoz tanlaydi va global yagona — chop etilgan QR'ni ko'rgan boshqa tashkilot uni oldinroq band qilib, haqiqiy protokolni bloklashi va ochiq sahifada o'z hujjatini ko'rsatishi mumkin edi; raqamni ham band qilish mumkin edi | ✅ tuzatildi: `qr_token = sha256(Ed25519(org, raqam))[:32]`, imzo qurilma kaliti bilan tekshiriladi; raqam qurilma belgisi bilan (belgi 6 hex — to'qnashuv uchun ~16 mln qurilma ro'yxatdan o'tkazish kerak, R-10) |
+| F-12 | O | Doimiy rad etish qurilmani to'liq to'xtatardi (pull ham); `clock_skew` imzolangan append-only yozuvga ham qo'llanib, uni abadiy rad etardi | ✅ tuzatildi: `clock_skew` faqat LWW jadvallariga; rad etilsa ham pull; qotgan yozuv (jadval, ID, sabab) UI'da |
+| F-13 | P | `PROTOCOL_SIGNED` hodisasi imzolovchi va qurilmaga bog'lanmagan edi | ✅ tuzatildi: hodisa `actor_id = signed_by`, `device_id` mos |
+| F-14 | P | Parallel so'rovlarda ikki marta refresh — server reuse detection'i sessiyani yopib, foydalanuvchini chiqarib yuborardi | ✅ tuzatildi: bitta oqimli refresh, token allaqachon yangilangan bo'lsa refresh'siz; test `server_api_test` |
+| F-15 | P | `Content-Disposition` (PDF fayl nomi) tekshirilmagan `number` dan | ✅ tuzatildi: raqam push'da `^[0-9]{4}-[0-9A-F]{6}-[0-9]{3,9}$` (faqat ASCII) |
+| F-16 | P | NaN/Infinity yoki 2^53 dan katta son JSON ustunda — 500 xato | ✅ tuzatildi: sim formatida kanonik JSON tekshiruvi, payload'da `parse_constant` — aniq rad etish |
+| F-17 | P | Hisob bo'yicha kirish cheklovi tekshiruvning o'zida yozuv yaratardi va tozalash zaif edi (xotira o'sishi); cheklov orqali begona hisobni vaqtincha bloklash (lockout DoS) | ✅ xotira qismi tuzatildi; lockout DoS — R-08 |
+| F-18 | P | Telefon raqami o'chirilgan foydalanuvchilar bilan birga global yagona — o'chirilgan xodim raqamini qayta ishlatib bo'lmaydi | ⏳ R-09 (11-faza, OTP bilan birga) |
+| F-19 | P | Laboratoriya rekvizitlari va sozlamalari o'zgarishi audit hodisasini talab qilmasdi | ✅ tuzatildi: imzolangan `LAB_UPDATED` / `SETTINGS_CHANGED` hodisasi (payload hash) talab qilinadi |
+
+Ko'rik ikki bosqichda: F-01…F-08 — o'z ko'rigim, F-09…F-19 — mustaqil ko'rik (alohida agent, koddan; ADR-0014).
+Tasdiqlangan to'g'ri qismlar: tashkilotlar ajratilishi (RLS), append-only, `server_rev`, audit zanjiri, push atomarligi,
+taklif kodlari, refresh rotatsiyasi, JWT, ochiq sahifa, loglar, ilova xotirasi, HTTPS, zaxira.
 
 **Qabul qilingan qoldiq xavflar (R):**
 - R-01 (O) Sertifikat pinning yo'q — L2; domen va sertifikat siyosati 11-fazada ko'rib chiqiladi.
@@ -119,3 +134,9 @@ Daraja: **Y** — yuqori, **O** — o'rta, **P** — past. Mezon: barcha "yuqori
 - R-05 (P) Ilovaga kirishda lokal PIN/biometrik yo'q — qurilma qulfi tashkilot siyosati.
 - R-06 (P) Majburiy yangilash yo'q — Play in-app update keyingi bosqichda.
 - R-07 (P) Ochiq PDF QR egasiga hujjatdagi shaxsiy ma'lumotni ko'rsatadi — protokolning maqsadi (buyurtmachiga beriladi).
+- R-08 (P) Hisob cheklovi (10 xato / 15 daq) begona hisobni vaqtincha bloklash uchun ishlatilishi mumkin — oyna qisqa,
+  IP cheklovi ham bor; SMS OTP/CAPTCHA 11-fazada ko'rib chiqiladi.
+- R-09 (P) O'chirilgan foydalanuvchining telefoni qayta ishlatilmaydi (F-18) — qisman yagona indeks va migratsiya OTP bilan
+  birga (11-faza); hozircha administrator yangi raqam bilan qo'shadi.
+- R-10 (P) Protokol raqamidagi qurilma belgisi 6 hex — shu tashkilotdagi ENGINEER ~16 mln qurilma ro'yxatdan o'tkazib
+  boshqa qurilma raqamini band qilishi nazariy jihatdan mumkin (rate limiting bilan amalda yo'q).

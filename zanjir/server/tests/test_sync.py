@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -10,7 +11,7 @@ from typing import Any
 import pytest
 
 from tests.support.api import Api, User
-from tests.support.field import Field, fake_pdf, rows
+from tests.support.field import NORMS, Field, fake_pdf, rows
 from zanjir_server.crypto.hash_chain import payload_hash
 
 
@@ -60,14 +61,14 @@ async def env(api: Api) -> Env:
     return Env(api, users, field)
 
 
-async def graph(e: Env) -> dict[str, Any]:
-    """Obyekt, tugun, asbob, yopilgan sessiya — push qilingan."""
+async def graph(e: Env, reviewed: bool = True, verified_until: str | None = None) -> dict[str, Any]:
+    """Normalar to'plami, obyekt, tugun, asbob, yopilgan sessiya — push qilingan."""
     f = e.field
     site = f.site()
     node = f.node(site["row"]["id"])
-    inst = f.instrument()
+    inst = f.instrument(verified_until) if verified_until else f.instrument()
     ses = f.session(site["row"]["id"])
-    await e.ok([site, node, inst, ses])
+    await e.ok([f.norm_set(reviewed), site, node, inst, ses])
     return {"site": site["row"], "node": node["row"], "inst": inst["row"], "ses": ses["row"]}
 
 
@@ -269,38 +270,160 @@ async def test_organization_and_settings_by_lead(env: Env) -> None:
         "rev": org["rev"] + 1,
         "name": "Lab 2",
     }
-    await env.ok([f.op("organization", upd)])
+    lab = {"name": "Lab 2", "license_no": "EL-42", "license_valid_until": "2027-12-31T00:00:00.000Z"}
+    # Rekvizitlar o'zgarishi imzolangan LAB_UPDATED hodisasisiz yoki boshqa qiymatli hodisa bilan — rad (ADR-0014).
+    await env.rejected([f.op("organization", upd)], "missing_audit_event")
+    state = f.snapshot()
+    await env.rejected(
+        [f.event("LAB_UPDATED", org["id"], {**lab, "name": "Boshqa"}), f.op("organization", upd)],
+        "missing_audit_event",
+    )
+    f.restore(state)
+    await env.ok([f.event("LAB_UPDATED", org["id"], lab), f.op("organization", upd)])
     after = (await env.all_rows("organization"))[0]
     assert (after["license_no"], after["name"]) == ("EL-42", "Lab 2")
-    await env.ok([f.op("org_setting", f.base(k_corr=0.8, margin_pct=5.0, active_norm_set_version="0.1.1"))])
+    setting = f.op("org_setting", f.base(k_corr=0.8, margin_pct=5.0, active_norm_set_version="0.1.1"))
+    await env.rejected([setting], "missing_audit_event")
+    changed = {"k_corr": 0.8, "margin_pct": 5.0, "active_norm_set_version": "0.1.1"}
+    await env.ok([f.event("SETTINGS_CHANGED", org["id"], changed), setting])
     bad = f.op("org_setting", f.base(k_corr=1.5, margin_pct=5.0, active_norm_set_version=None))
-    await env.rejected([bad], "constraint_violation")
+    ev = f.event("SETTINGS_CHANGED", org["id"], {"k_corr": 1.5, "margin_pct": 5.0, "active_norm_set_version": None})
+    await env.rejected([ev, bad], "constraint_violation")
 
 
-async def test_session_cannot_reopen_and_plan_approval(env: Env) -> None:
+async def test_session_cannot_reopen(env: Env) -> None:
     g = await graph(env)
     f = env.field
     reopen = f.op(
         "measurement_session", {**g["ses"], "closed_at": None, "updated_at": "2026-10-27T08:05:00.000Z", "rev": 2}
     )
     await env.rejected([reopen], "session_reopen")
-    plan = f.base(
-        site_id=g["site"]["id"],
-        target_node_ids=[g["node"]["id"]],
-        solver_version="1",
-        graph_snapshot_hash="a" * 64,
-        steps=[],
-        warnings=[],
-        status="APPROVED",
-        approved_by=env.users["ENGINEER"].id,
-        deleted=False,
+
+
+STEPS = [{"order": 1, "kind": "SWITCH_OFF"}, {"order": 2, "kind": "VERIFY_NO_VOLTAGE"}]
+
+
+def plan_row(f: Field, g: dict[str, Any], **kw: Any) -> dict[str, Any]:
+    return (
+        f.base(
+            site_id=g["site"]["id"],
+            target_node_ids=[g["node"]["id"]],
+            solver_version="1",
+            graph_snapshot_hash="a" * 64,
+            steps=STEPS,
+            warnings=[],
+            status="DRAFT",
+            approved_by=None,
+            deleted=False,
+        )
+        | kw
     )
-    await env.rejected([f.op("isolation_plan", plan)], "approval_requires_lead")
-    plan["approved_by"] = env.users["LEAD"].id
-    await env.ok([f.op("isolation_plan", plan)])
 
 
-NORMS = 'schema_version: 1\nversion: "0.1.1"\nreviewed_by: "{rb}"\nreviewed_at: "{ra}"\nmargin_pct: 0\nnorms: []\n'
+def bump(row: dict[str, Any], **kw: Any) -> dict[str, Any]:
+    """Keyingi LWW versiya (yangiroq `updated_at`, `rev` + 1)."""
+    minute = 1 + row["rev"]
+    return {**row, "updated_at": f"2026-10-27T08:0{minute}:00.000Z", "rev": row["rev"] + 1, **kw}
+
+
+async def engineer_field(env: Env) -> tuple[User, Field]:
+    eng = env.users["ENGINEER"]
+    ef = Field(eng.org_id, eng.id, "66666666-6666-4666-8666-" + eng.id[-12:], seed=13)
+    await env.api.device(eng, ef.public_key, ef.device_id)
+    return eng, ef
+
+
+async def test_plan_approval_cannot_be_forged_by_engineer(env: Env) -> None:
+    """H1 (ADR-0014): tasdiq — faqat LEAD/ADMIN ning aynan shu qadamlarga imzolangan PLAN_APPROVED hodisasi bilan."""
+    from zanjir_server.sync.service import plan_approval_payload
+
+    g = await graph(env)
+    eng, ef = await engineer_field(env)
+    lead = env.users["LEAD"]
+    draft = plan_row(ef, g)
+    await env.ok([ef.op("isolation_plan", draft)], user=eng)
+    # O'zini tasdiqlovchi deb ko'rsatish, LEAD nomidan tasdiq (hodisasiz), o'zi PLAN_APPROVED yozish — rad.
+    await env.rejected(
+        [ef.op("isolation_plan", bump(draft, status="APPROVED", approved_by=eng.id))], "approval_requires_lead", eng
+    )
+    forged = bump(draft, status="APPROVED", approved_by=lead.id)
+    await env.rejected([ef.op("isolation_plan", forged)], "missing_audit_event", eng)
+    state = ef.snapshot()
+    await env.rejected(
+        [ef.event("PLAN_APPROVED", draft["id"], plan_approval_payload(forged)), ef.op("isolation_plan", forged)],
+        "forbidden_role",
+        eng,
+    )
+    ef.restore(state)
+    # Yangi qator darhol APPROVED/EXECUTED holatida ham xuddi shunday.
+    fresh = plan_row(ef, g, status="EXECUTED", approved_by=lead.id)
+    await env.rejected([ef.op("isolation_plan", fresh)], "missing_audit_event", eng)
+
+    # LEAD boshqa qadamlarga tasdiq bergan bo'lsa — mos emas.
+    f = env.field
+    other = plan_approval_payload({**forged, "steps": STEPS[:1]})
+    state = f.snapshot()
+    await env.rejected(
+        [f.event("PLAN_APPROVED", draft["id"], other), f.op("isolation_plan", forged)], "missing_audit_event"
+    )
+    f.restore(state)
+    st = await env.ok(
+        [f.event("PLAN_APPROVED", draft["id"], plan_approval_payload(forged)), f.op("isolation_plan", forged)]
+    )
+    assert set(st.values()) == {"applied"}
+
+
+async def test_plan_content_frozen_and_terminal_states_win(env: Env) -> None:
+    from zanjir_server.sync.service import plan_approval_payload
+
+    g = await graph(env)
+    eng, ef = await engineer_field(env)
+    f = env.field
+    lead = env.users["LEAD"]
+    approved = plan_row(f, g, status="APPROVED", approved_by=lead.id)
+    await env.ok(
+        [f.event("PLAN_APPROVED", approved["id"], plan_approval_payload(approved)), f.op("isolation_plan", approved)]
+    )
+    # Tasdiqdan keyin qadamlar, maqsad yoki tasdiqlovchi almashtirilmaydi.
+    changes: list[dict[str, Any]] = [{"steps": STEPS[:1]}, {"target_node_ids": []}, {"approved_by": eng.id}]
+    for change in [*changes, {"deleted": True}]:
+        await env.rejected([ef.op("isolation_plan", bump(approved, **change))], "plan_immutable", eng)
+    # Bajarish — barcha qadamlar va PLAN_EXECUTED hodisasi bilan.
+    executed = bump(approved, status="EXECUTED")
+    state = ef.snapshot()
+    await env.rejected(
+        [
+            ef.event("PLAN_STEP_DONE", f"{approved['id']}#1", {}),
+            ef.event("PLAN_EXECUTED", approved["id"], {}),
+            ef.op("isolation_plan", executed),
+        ],
+        "plan_steps_incomplete",
+        eng,
+    )
+    ef.restore(state)
+    events = [ef.event("PLAN_STEP_DONE", f"{approved['id']}#{n}", {"order": n}) for n in (1, 2)]
+    await env.ok(
+        [*events, ef.event("PLAN_EXECUTED", approved["id"], {"id": approved["id"]}), ef.op("isolation_plan", executed)],
+        eng,
+    )
+    # Yakuniy holatdan chiqish (masalan, boshqa qurilmadagi eskirgan CANCELLED) — server versiyasi yutadi.
+    cancelled = bump(executed, status="CANCELLED")
+    st = await env.ok([ef.op("isolation_plan", cancelled)], eng)
+    assert set(st.values()) == {"stale"}
+    row = next(r for r in await env.all_rows("isolation_plan") if r["id"] == approved["id"])
+    assert row["status"] == "EXECUTED"
+    assert (row["updated_at"], row["rev"]) > (cancelled["updated_at"], cancelled["rev"])  # pull'da qurilmaga qaytadi
+
+
+async def test_cancelled_plan_cannot_be_resurrected(env: Env) -> None:
+    g = await graph(env)
+    eng, ef = await engineer_field(env)
+    draft = plan_row(ef, g)
+    cancelled = bump(draft, status="CANCELLED")
+    await env.ok([ef.op("isolation_plan", draft), ef.op("isolation_plan", cancelled)], eng)
+    st = await env.ok([ef.op("isolation_plan", bump(cancelled, status="DRAFT"))], eng)
+    assert set(st.values()) == {"stale"}
+    assert next(r for r in await env.all_rows("isolation_plan") if r["id"] == draft["id"])["status"] == "CANCELLED"
 
 
 async def test_norm_set_review_is_bound_to_yaml(env: Env) -> None:
@@ -342,9 +465,9 @@ async def test_norm_set_review_is_bound_to_yaml(env: Env) -> None:
 
 
 async def signable(
-    env: Env, verdicts: tuple[str, ...] = ("PASS",)
+    env: Env, verdicts: tuple[str, ...] = ("PASS",), **graph_kwargs: Any
 ) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any]]:
-    g = await graph(env)
+    g = await graph(env, **graph_kwargs)
     f = env.field
     ops: list[dict[str, Any]] = []
     for i, v in enumerate(verdicts):
@@ -394,12 +517,12 @@ async def test_protocol_signature_checked(env: Env) -> None:
 @pytest.mark.parametrize(
     ("verdicts", "kwargs", "reason"),
     [
-        (("PASS",), {"reviewed_by": None}, "protocol_rule:norms_not_reviewed"),
+        (("PASS",), {"reviewed": False}, "protocol_rule:norms_not_reviewed"),
         (("PASS", "NEEDS_REVIEW"), {"signer_role": "LEAD"}, "protocol_rule:lead_comment_required"),
     ],
 )
 async def test_protocol_rules(env: Env, verdicts: tuple[str, ...], kwargs: dict[str, Any], reason: str) -> None:
-    g, ms, inst = await signable(env, verdicts)
+    g, ms, inst = await signable(env, verdicts, reviewed=kwargs.get("reviewed", True))
     f = env.field
     payload = f.protocol_payload(g["ses"], ms, [inst], **kwargs)
     await env.rejected(f.protocol(g["ses"]["id"], payload), reason)
@@ -419,16 +542,98 @@ async def test_protocol_needs_review_signed_by_engineer_rejected(env: Env, api: 
 
 
 async def test_protocol_expired_instrument_and_tampered_payload(env: Env) -> None:
-    g, ms, inst = await signable(env)
+    g, ms, inst = await signable(env, verified_until="2026-01-01T00:00:00.000Z")
     f = env.field
-    expired = {**inst, "verified_until": "2026-01-01T00:00:00.000Z"}
-    payload = f.protocol_payload(g["ses"], ms, [expired])
     state = f.snapshot()
-    await env.rejected(f.protocol(g["ses"]["id"], payload), "protocol_rule:instrument_expired")
+    await env.rejected(
+        f.protocol(g["ses"]["id"], f.protocol_payload(g["ses"], ms, [inst])), "protocol_rule:instrument_expired"
+    )
+    f.restore(state)
+    # Payload asbobni "amalda" deb ko'rsatadi — qoida serverdagi asbob yozuvi bo'yicha (ADR-0014, M1).
+    valid = {**inst, "verified_until": "2027-12-31T00:00:00.000Z"}
+    await env.rejected(
+        f.protocol(g["ses"]["id"], f.protocol_payload(g["ses"], ms, [valid])), "protocol_rule:instrument_expired"
+    )
     f.restore(state)
     # Payload'dagi natija serverdagidan farq qiladi (FAIL ni PASS qilib ko'rsatish urinishi).
     lie = f.protocol_payload(g["ses"], [{**ms[0], "values": {"pair": "L1-PE", "zs_ohm": 0.01}}], [inst])
     await env.rejected(f.protocol(g["ses"]["id"], lie), "payload_measurement_mismatch")
+
+
+async def test_protocol_payload_must_cover_current_measurements(env: Env) -> None:
+    """M1 (ADR-0014): o'lchovni tushirib qoldirib (masalan, NEEDS_REVIEW) qoidani chetlab o'tib bo'lmaydi."""
+    g, ms, inst = await signable(env, ("PASS", "NEEDS_REVIEW"))
+    f = env.field
+    state = f.snapshot()
+    only_pass = f.protocol_payload(g["ses"], [m for m in ms if m["verdict"] == "PASS"], [inst])
+    await env.rejected(f.protocol(g["ses"]["id"], only_pass), "payload_measurement_mismatch")
+    f.restore(state)
+    moved = f.protocol_payload(g["ses"], [{**ms[0], "created_at": "2026-10-20T00:00:00.000Z"}, ms[1]], [inst])
+    await env.rejected(f.protocol(g["ses"]["id"], moved), "payload_measurement_mismatch")
+    f.restore(state)
+    full = f.protocol_payload(g["ses"], ms, [inst], lead_comment="Tekshirildi")
+    await env.ok(f.protocol(g["ses"]["id"], full))
+
+
+async def test_protocol_superseded_measurement_excluded(env: Env) -> None:
+    g, ms, inst = await signable(env)
+    f = env.field
+    old = ms[0]
+    redo = f.measurement(g["ses"]["id"], g["node"]["id"], g["inst"]["id"], zs=0.7, supersedes_id=old["id"])
+    new = rows(redo, "measurement")[0]
+    await env.ok(redo)
+    state = f.snapshot()
+    stale = f.protocol_payload(g["ses"], [old, new], [inst])
+    await env.rejected(f.protocol(g["ses"]["id"], stale), "payload_measurement_mismatch")
+    f.restore(state)
+    await env.ok(f.protocol(g["ses"]["id"], f.protocol_payload(g["ses"], [new], [inst])))
+
+
+async def test_protocol_norm_set_and_signed_at_from_server(env: Env) -> None:
+    g, ms, inst = await signable(env, reviewed=False)
+    f = env.field
+    state = f.snapshot()
+    # Payload normalarni "tekshirilgan" deb ko'rsatadi, serverdagi to'plam esa tekshirilmagan.
+    await env.rejected(
+        f.protocol(g["ses"]["id"], f.protocol_payload(g["ses"], ms, [inst])), "payload_norm_set_mismatch"
+    )
+    f.restore(state)
+    old_sig = f.protocol_payload(g["ses"], ms, [inst], reviewed=False) | {"signed_at": "2026-10-01T00:00:00.000Z"}
+    await env.rejected(f.protocol(g["ses"]["id"], old_sig), "protocol_rule:signed_at_mismatch")
+
+
+async def test_protocol_qr_token_and_number_bound_to_device(env: Env) -> None:
+    """M2/L3 (ADR-0014): QR token qurilma imzosidan; raqam — shu qurilma belgisi bilan va qat'iy formatda."""
+    g, ms, inst = await signable(env)
+    f = env.field
+    state = f.snapshot()
+    chosen = f.protocol_payload(g["ses"], ms, [inst], qr_token="0" * 32)
+    await env.rejected(f.protocol(g["ses"]["id"], chosen), "qr_token_invalid")
+    f.restore(state)
+    foreign = f.protocol_payload(g["ses"], ms, [inst])
+    foreign["protocol"]["qr_sig"] = Field(f.org_id, f.user_id, f.device_id, seed=99).signer.sign(b"x").hex()
+    await env.rejected(f.protocol(g["ses"]["id"], foreign), "qr_token_invalid")
+    for number in (
+        "2026-ABCDEF-001",
+        f'2026-{f.device_tag}-001"\r\nX: y',
+        f"26-{f.device_tag}-001",
+        f"٢٠٢٦-{f.device_tag}-001",
+    ):
+        f.restore(state)
+        bad = f.protocol_payload(g["ses"], ms, [inst], number=number)
+        await env.rejected(f.protocol(g["ses"]["id"], bad), "protocol_number_invalid")
+
+
+async def test_protocol_event_bound_to_signer_and_device(env: Env) -> None:
+    """L1: PROTOCOL_SIGNED hodisasi imzolovchi va uning qurilmasidan bo'lishi shart."""
+    from zanjir_server.sync.service import protocol_audit_payload
+
+    g, ms, inst = await signable(env)
+    eng, ef = await engineer_field(env)
+    f = env.field
+    _, proto, doc = f.protocol(g["ses"]["id"], f.protocol_payload(g["ses"], ms, [inst]))
+    ev = ef.event("PROTOCOL_SIGNED", proto["row"]["id"], protocol_audit_payload(proto["row"]))
+    await env.rejected([ev, proto, doc], "missing_audit_event", eng)
 
 
 async def test_protocol_pdf_checks(env: Env) -> None:
@@ -445,6 +650,10 @@ async def test_protocol_pdf_checks(env: Env) -> None:
     sha = sha256_hex(canonical_json_bytes(payload))
     ops = f.protocol(g["ses"]["id"], payload, pdf=fake_pdf(sha))
     doc = ops[2]
+    good_payload = doc["row"]["payload_json"]
+    doc["row"]["payload_json"] = '{"x": NaN}'
+    await env.rejected(ops, "invalid_payload")
+    doc["row"]["payload_json"] = good_payload
     doc["row"]["pdf"] = "AAAA"  # boshqa bayt — hash mos emas
     await env.rejected(ops, "pdf_hash_mismatch")
 
@@ -497,3 +706,30 @@ async def test_future_timestamps_rejected(env: Env) -> None:
     ok = f.site()
     ok["row"]["updated_at"] = "2026-10-27T08:09:00.000Z"
     await env.ok([ok])
+
+
+async def test_future_append_only_rows_accepted(env: Env) -> None:
+    """M3: append-only (imzolangan) yozuvlar LWW'da qatnashmaydi — soat oldinda bo'lsa ham qurilma to'xtab qolmaydi."""
+    from datetime import UTC, datetime
+
+    g = await graph(env)
+    f = env.field
+    f.t = datetime(2026, 10, 27, 9, 0, tzinfo=UTC)  # server soati 08:00
+    st = await env.ok(f.measurement(g["ses"]["id"], g["node"]["id"], g["inst"]["id"]))
+    assert set(st.values()) == {"applied"}
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("inf"), 2**60])
+async def test_unhashable_json_rejected(env: Env, bad: object) -> None:
+    """L4: NaN/Infinity va 2^53 dan katta son — 500 emas, aniq rad etish."""
+    f = env.field
+    site = f.site()
+    node = f.node(site["row"]["id"])
+    node["row"]["attrs"] = {"x": bad}
+    r = await env.api.c.post(
+        "/sync/push",
+        content=json.dumps({"ops": [site, node]}),  # NaN/Infinity — Python json'da ruxsat etilgan kengaytma
+        headers={**env.users["LEAD"].headers, "content-type": "application/json"},
+    )
+    assert r.status_code == 422, r.text
+    assert r.json()["detail"]["reason"] == "type:node.attrs"

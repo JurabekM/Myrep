@@ -371,5 +371,25 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
   6. **Accessibility:** barcha asosiy ekranlar va dialoglar Flutter guideline'lari bilan testlanadi (Android tugma ≥ 48 dp,
      yorliqli tugmalar — TalkBack, matn kontrasti); tizim shrifti ×2 da toshib chiqish yo'q; rang juftliklari WCAG AA
      (≥ 4,5:1) hisoblab tekshiriladi.
-- **Oqibat:** SQLite shifrlanmagan, sertifikat pinning va lokal PIN yo'q — qoldiq xavflar (R-01…R-07), pilotdan keyin
+  7. **Mustaqil ko'rik tuzatishlari (F-09…F-19):**
+     - *Ajratish rejasi:* holat o'tishlari server tomonida (DRAFT → APPROVED/EXECUTED/CANCELLED/STALE,
+       APPROVED → EXECUTED/CANCELLED/STALE; EXECUTED, CANCELLED, STALE — yakuniy). APPROVED/EXECUTED — LEAD/ADMIN ning
+       imzolangan `PLAN_APPROVED` hodisasi bilan (`actor_id = approved_by`, payload `{id, graph_snapshot_hash,
+       steps_sha256}`); EXECUTED — barcha `PLAN_STEP_DONE` va `PLAN_EXECUTED` bilan. Mazmun ustunlari (qadamlar,
+       maqsad, graf hash'i, `deleted`, tasdiqlovchi) yaratilgandan keyin o'zgarmaydi (`plan_immutable`). Yakuniy holatdan
+       chiqish urinishi rad etilmaydi — server versiyasi yutadi (`rev` oshiriladi, pull'da qurilmaga qaytadi): ikki qurilma
+       bir vaqtda bajarsa/bekor qilsa, serverga birinchi yetgani qoladi va qurilma to'xtab qolmaydi.
+     - *Protokol:* qoidalar serverdagi yozuvlar bo'yicha — payload'dagi o'lchovlar sessiyaning amaldagi (almashtirilmagan)
+       o'lchovlariga aynan teng (ID, natija, qiymat, asbob, vaqt); asbob guvohnomasi, litsenziya muddati, norma tekshiruvi
+       bazadan; `signed_at` protokol yaratilishidan ≤ 16 daq oldin. QR token = `sha256(qr_sig)[:32]`,
+       `qr_sig = Ed25519("zanjir.qr/1\n<org_id>\n<raqam>")` (vektor `protocol_signature.json`): token oldindan
+       bilinmaydi va boshqa tashkilot uni band qila olmaydi. Raqam formati qat'iy va qurilma belgisi bilan.
+       `PROTOCOL_SIGNED` — imzolovchi va uning qurilmasidan.
+     - *Sinxronlash:* `clock_skew` faqat LWW jadvallariga (append-only imzolangan yozuvni rad etish qurilmani abadiy
+       to'xtatardi); paket rad etilsa ham pull bajariladi va qotgan yozuv (`SyncRejected`: jadval, ID, sabab) UI'da
+       ko'rsatiladi; refresh bitta oqimda (parallel so'rovlar reuse detection'ni ishga tushirmaydi); NaN/Infinity va
+       2^53 dan katta son — aniq rad etish (500 emas); laboratoriya rekvizitlari va sozlamalari o'zgarishi imzolangan
+       `LAB_UPDATED`/`SETTINGS_CHANGED` hodisasisiz qabul qilinmaydi.
+- **Oqibat:** SQLite shifrlanmagan, sertifikat pinning va lokal PIN yo'q — qoldiq xavflar (R-01…R-10), pilotdan keyin
   qayta ko'riladi. Android sozlamalari (zaxira, cleartext, imzo) bu muhitda build qilinmagan — 12-fazada tekshiriladi.
+  QR token formati o'zgardi (tasodifiy → imzodan) — ilova va server bir vaqtda yangilanadi (hali production yo'q).

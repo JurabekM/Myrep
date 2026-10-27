@@ -22,7 +22,7 @@ from zanjir_server.crypto.canonical import canonical_json_bytes
 from zanjir_server.crypto.hash_chain import AuditEvent as ChainEvent
 from zanjir_server.crypto.hash_chain import payload_hash, verify_chain
 from zanjir_server.crypto.hashing import sha256_hex
-from zanjir_server.crypto.protocol import protocol_message
+from zanjir_server.crypto.protocol import protocol_message, qr_token_from_signature, qr_token_message
 from zanjir_server.crypto.signing import UnsupportedSigAlgError, verify_signature
 from zanjir_server.db.models import (
     APPEND_ONLY,
@@ -31,14 +31,18 @@ from zanjir_server.db.models import (
     AuditEvent,
     Base,
     Device,
+    Instrument,
+    IsolationPlan,
     Measurement,
     MeasurementSession,
+    NormSet,
+    Organization,
     Protocol,
     SyncOp,
 )
 from zanjir_server.security.roles import EDITORS, SIGNERS, Role
 from zanjir_server.sync.protocol_rules import protocol_payload_violation
-from zanjir_server.sync.wire import WireError, from_wire, normalized, to_wire
+from zanjir_server.sync.wire import WireError, from_wire, iso, normalized, to_wire
 
 # Qaysi jadvalni kim yuboradi (`app_user`, `device` — faqat API orqali).
 PUSH_ROLES: dict[str, Role] = {
@@ -59,7 +63,18 @@ PUSH_ROLES: dict[str, Role] = {
 # Muharrir rolini talab qiladigan audit hodisalari (ADR-0009, ADR-0010, ADR-0013).
 EDITOR_EVENTS = {"PROTOCOL_REVOKED", "SETTINGS_CHANGED", "LAB_UPDATED", "PLAN_APPROVED"}
 ORGANIZATION_FIELDS = ("name", "license_no", "license_valid_until")
+SETTING_FIELDS = ("k_corr", "margin_pct", "active_norm_set_version")
 _PDF_ID = re.compile(rb"/ID\s*\[\s*<([0-9a-fA-F]{64})>\s*<([0-9a-fA-F]{64})>\s*\]")
+# `YYYY-XXXXXX-NNN`: yil, qurilma ID sining oxirgi 6 belgisi, tartib raqami (ilovadagi `_nextNumber`).
+_NUMBER = re.compile(r"[0-9]{4}-([0-9A-F]{6})-[0-9]{3,9}")  # faqat ASCII (`\d` Unicode raqamlarni ham oladi)
+
+# Ajratish rejasi (ADR-0013, ADR-0014): ruxsat etilgan holat o'tishlari. EXECUTED, CANCELLED, STALE — yakuniy.
+PLAN_TRANSITIONS: dict[str, set[str]] = {
+    "DRAFT": {"DRAFT", "APPROVED", "EXECUTED", "CANCELLED", "STALE"},  # oflayn: tasdiq va bajarish bitta push'da
+    "APPROVED": {"APPROVED", "EXECUTED", "CANCELLED", "STALE"},
+}
+# Reja yaratilgandan keyin o'zgarmaydigan ustunlar — tasdiq aynan shu qadamlarga beriladi.
+PLAN_FROZEN = ("site_id", "target_node_ids", "solver_version", "graph_snapshot_hash", "steps", "warnings", "deleted")
 
 
 class PushRejected(Exception):
@@ -149,9 +164,10 @@ class PushService:
             org = values["id"] if table == "organization" else values["org_id"]
             if org != self.p.org_id:
                 raise PushRejected("wrong_org", op_id)
-            # Qurilma soati oldinda bo'lsa LWW'da "kelajak" vaqt abadiy yutib qolardi (ADR-0014).
+            # Qurilma soati oldinda bo'lsa LWW'da "kelajak" vaqt abadiy yutib qolardi (ADR-0014). Append-only yozuvlar
+            # LWW'da qatnashmaydi va imzolangan — ularni rad etish qurilmani abadiy to'xtatib qo'yardi.
             latest = self.now + self.max_skew
-            if values["created_at"] > latest or values["updated_at"] > latest:
+            if table not in APPEND_ONLY and (values["created_at"] > latest or values["updated_at"] > latest):
                 raise PushRejected("clock_skew", op_id)
             ops.append(Op(op_id, table, row, values))
         return ops
@@ -221,17 +237,23 @@ class PushService:
             raise PushRejected("device_revoked", op_id)
         return d
 
-    async def _has_event(self, event_type: str, entity_id: str, phash: str) -> bool:
-        row = (
-            await self.s.execute(
-                select(AuditEvent.id).where(
-                    AuditEvent.event_type == event_type,
-                    AuditEvent.entity_id == entity_id,
-                    AuditEvent.payload_hash == phash,
-                )
-            )
-        ).first()
-        return row is not None
+    async def _has_event(
+        self,
+        event_type: str,
+        entity_id: str,
+        phash: str | None = None,
+        *,
+        actor_id: str | None = None,
+        device_id: str | None = None,
+    ) -> bool:
+        q = select(AuditEvent.id).where(AuditEvent.event_type == event_type, AuditEvent.entity_id == entity_id)
+        if phash is not None:
+            q = q.where(AuditEvent.payload_hash == phash)
+        if actor_id is not None:
+            q = q.where(AuditEvent.actor_id == actor_id)
+        if device_id is not None:
+            q = q.where(AuditEvent.device_id == device_id)
+        return (await self.s.execute(q.limit(1))).first() is not None
 
     # --- append-only ---
 
@@ -256,8 +278,15 @@ class PushService:
 
     async def _check_protocol(self, o: Op, batch: list[Op]) -> None:
         v = o.values
-        if not await self._has_event("PROTOCOL_SIGNED", v["id"], payload_hash(protocol_audit_payload(v))):
+        phash = payload_hash(protocol_audit_payload(v))
+        if not await self._has_event(
+            "PROTOCOL_SIGNED", v["id"], phash, actor_id=v["signed_by"], device_id=v["device_id"]
+        ):
             raise PushRejected("missing_audit_event", o.client_op_id)
+        # Raqam formati (PDF fayl nomi shundan) va qurilma belgisi — boshqa qurilma raqamini band qilib bo'lmaydi.
+        m = _NUMBER.fullmatch(v["number"])
+        if m is None or m[1] != v["device_id"].replace("-", "")[-6:].upper():
+            raise PushRejected("protocol_number_invalid", o.client_op_id)
         device = await self._device(v["device_id"], o.client_op_id)
         if device.user_id != v["signed_by"]:
             raise PushRejected("signer_device_mismatch", o.client_op_id)
@@ -285,12 +314,13 @@ class PushService:
         if protocol is None:
             raise PushRejected("unknown_protocol", o.client_op_id)
         try:
-            payload = json.loads(v["payload_json"])
-        except json.JSONDecodeError as e:
+            payload = json.loads(v["payload_json"], parse_constant=_reject_constant)
+            payload_sha = sha256_hex(canonical_json_bytes(payload))
+        except ValueError as e:  # JSONDecodeError, NaN/Infinity, 2^53 dan katta son
             raise PushRejected("invalid_payload", o.client_op_id) from e
         if not isinstance(payload, dict):
             raise PushRejected("invalid_payload", o.client_op_id)
-        if sha256_hex(canonical_json_bytes(payload)) != protocol.payload_sha256:
+        if payload_sha != protocol.payload_sha256:
             raise PushRejected("payload_hash_mismatch", o.client_op_id)
         if sha256_hex(v["pdf"]) != protocol.pdf_sha256:
             raise PushRejected("pdf_hash_mismatch", o.client_op_id)
@@ -305,34 +335,85 @@ class PushService:
             or session.get("id") != protocol.session_id
         ):
             raise PushRejected("payload_protocol_mismatch", o.client_op_id)
+        await self._check_qr_token(protocol, meta.get("qr_sig"), o.client_op_id)
+        signed_at = _datetime(payload.get("signed_at"))
+        if signed_at is None or not -CLOCK_JITTER <= protocol.created_at - signed_at <= SIGN_WINDOW:
+            raise PushRejected("protocol_rule:signed_at_mismatch", o.client_op_id)
         user = await self._user(protocol.signed_by)
-        violation = protocol_payload_violation(payload, user.role if user else "")
+        # Qoidalar serverdagi yozuvlar bo'yicha tekshiriladi (payload'ning o'z da'volari emas, ADR-0014).
+        effective = await self._effective_payload(payload, protocol.session_id, o.client_op_id)
+        violation = protocol_payload_violation(effective, user.role if user else "")
         if violation:
             raise PushRejected(f"protocol_rule:{violation}", o.client_op_id)
-        await self._check_payload_measurements(payload, protocol.session_id, o.client_op_id)
 
-    async def _check_payload_measurements(self, payload: dict[str, Any], session_id: str, op_id: str) -> None:
-        """Payload'dagi o'lchovlar (natija, qiymatlar) serverdagilar bilan bir xil — PDF shu ma'lumotdan."""
-        items = [m for m in payload["measurements"] if isinstance(m, dict)]
-        stored = {
-            m.id: m
-            for m in (
-                await self.s.execute(
-                    select(Measurement).where(
-                        Measurement.session_id == session_id, Measurement.id.in_([m.get("id") for m in items])
-                    )
-                )
-            ).scalars()
-        }
-        for m in items:
-            row = stored.get(m.get("id"))  # type: ignore[arg-type]
-            if row is None or row.verdict != m.get("verdict") or row.values != m.get("values"):
-                raise PushRejected("payload_measurement_mismatch", op_id)
+    async def _check_qr_token(self, protocol: Protocol, qr_sig: object, op_id: str) -> None:
+        """`qr_token = sha256(qr_sig)[:32]`, `qr_sig` — imzolagan qurilma kaliti bilan (ADR-0014)."""
+        device = await self._device(protocol.device_id, op_id)
+        try:
+            ok = isinstance(qr_sig, str) and verify_signature(
+                sig_alg=protocol.sig_alg,
+                public_key_hex=device.public_key_ed25519,
+                message=qr_token_message(protocol.org_id, protocol.number),
+                signature_hex=qr_sig,
+            )
+        except (UnsupportedSigAlgError, ValueError):
+            ok = False
+        if not ok or qr_token_from_signature(str(qr_sig)) != protocol.qr_token:
+            raise PushRejected("qr_token_invalid", op_id)
+
+    async def _effective_payload(self, payload: dict[str, Any], session_id: str, op_id: str) -> dict[str, Any]:
+        """Payload'dagi o'lchovlar sessiyaning amaldagi (almashtirilmagan) o'lchovlari bilan aynan bir xil bo'lishi
+        shart — PDF shu ma'lumotdan. Qoidalar uchun asbob guvohnomasi, litsenziya va norma tekshiruvi serverdagi
+        yozuvlardan olinadi."""
         session = (
             await self.s.execute(select(MeasurementSession).where(MeasurementSession.id == session_id))
         ).scalar_one_or_none()
         if session is None or session.closed_at is None:
             raise PushRejected("protocol_rule:session_open", op_id)
+        rows = list((await self.s.execute(select(Measurement).where(Measurement.session_id == session_id))).scalars())
+        replaced = {m.supersedes_id for m in rows if m.supersedes_id}
+        current = {m.id: m for m in rows if m.id not in replaced}
+        items = payload.get("measurements")
+        if not isinstance(items, list) or not all(isinstance(m, dict) and isinstance(m.get("id"), str) for m in items):
+            raise PushRejected("invalid_payload", op_id)
+        if sorted(m["id"] for m in items) != sorted(current):
+            raise PushRejected("payload_measurement_mismatch", op_id)
+        for m in items:
+            row = current[m["id"]]
+            if (m.get("verdict"), m.get("values"), m.get("instrument_id"), m.get("created_at")) != (
+                row.verdict,
+                row.values,
+                row.instrument_id,
+                iso(row.created_at),
+            ):
+                raise PushRejected("payload_measurement_mismatch", op_id)
+        used = {m.instrument_id for m in current.values()}
+        instruments = (await self.s.execute(select(Instrument).where(Instrument.id.in_(used)))).scalars()
+        org = (await self.s.execute(select(Organization).where(Organization.id == self.p.org_id))).scalar_one()
+        versions = {m.norm_set_version for m in current.values()}
+        norm = None
+        if len(versions) == 1:
+            norm = (
+                await self.s.execute(select(NormSet).where(NormSet.version == next(iter(versions))))
+            ).scalar_one_or_none()
+        claimed = _section(payload, "norm_set")
+        if norm is None or (claimed.get("version"), claimed.get("sha256"), claimed.get("reviewed_by")) != (
+            norm.version,
+            norm.sha256,
+            norm.reviewed_by,
+        ):
+            raise PushRejected("payload_norm_set_mismatch", op_id)
+        lab = _section(payload, "lab")
+        return {
+            **payload,
+            "lab": {**lab, "license_valid_until": _iso_or_none(org.license_valid_until)},
+            "norm_set": {"reviewed_by": norm.reviewed_by if norm else None},
+            "instruments": [{"id": i.id, "verified_until": _iso_or_none(i.verified_until)} for i in instruments],
+            "measurements": [
+                {"id": m.id, "instrument_id": m.instrument_id, "created_at": iso(m.created_at), "verdict": m.verdict}
+                for m in current.values()
+            ],
+        }
 
     async def _user(self, user_id: str) -> AppUser | None:
         return (await self.s.execute(select(AppUser).where(AppUser.id == user_id))).scalar_one_or_none()
@@ -349,11 +430,21 @@ class PushService:
         if old is None:
             if o.table == "organization":
                 raise PushRejected("wrong_org", o.client_op_id)  # o'z tashkiloti doim mavjud
+            if o.table == "isolation_plan":
+                await self._check_plan_status(o, None)
+            await self._check_audited_change(o, None)
             self.s.add(model(**v))
             return
         if (v["updated_at"], v["rev"]) <= (old.updated_at, old.rev):  # type: ignore[attr-defined]
             o.status = "stale"
             return
+        if o.table == "isolation_plan" and not await self._check_plan_status(o, old):  # type: ignore[arg-type]
+            # Yakuniy holatdan chiqib bo'lmaydi: server versiyasi yutadi va pull'da qurilmaga qaytadi.
+            old.updated_at = max(old.updated_at, v["updated_at"])  # type: ignore[attr-defined]
+            old.rev = max(old.rev, v["rev"]) + 1  # type: ignore[attr-defined]
+            o.status = "stale"
+            return
+        await self._check_audited_change(o, old)
         fields = ORGANIZATION_FIELDS if o.table == "organization" else [k for k in v if k not in ("id", "org_id")]
         for k in (*fields, "updated_at", "rev"):
             setattr(old, k, v[k])
@@ -363,12 +454,62 @@ class PushService:
         if o.table == "measurement_session" and old is not None:
             if old.closed_at is not None and v["closed_at"] is None:  # type: ignore[attr-defined]
                 raise PushRejected("session_reopen", o.client_op_id)
-        elif o.table == "isolation_plan" and v["status"] in ("APPROVED", "EXECUTED"):
+        elif o.table == "isolation_plan" and old is not None:
+            frozen = [*PLAN_FROZEN, *(("approved_by",) if old.approved_by is not None else ())]  # type: ignore[attr-defined]
+            if any(normalized(o.table, v)[k] != to_wire(o.table, old)[k] for k in frozen):
+                raise PushRejected("plan_immutable", o.client_op_id)
+        elif o.table == "norm_set":
+            await self._check_norm_set(o, old)
+
+    async def _check_plan_status(self, o: Op, old: IsolationPlan | None) -> bool:
+        """Holat o'tishi ruxsat etilganmi (False — yakuniy holatdan chiqish: server versiyasi qoladi). APPROVED va
+        EXECUTED — LEAD/ADMIN ning aynan shu qadamlarga imzolangan `PLAN_APPROVED` hodisasi bilan; EXECUTED — barcha
+        qadamlar va `PLAN_EXECUTED` hodisasi bilan. Aks holda paket rad etiladi."""
+        v = o.values
+        new = v["status"]
+        if old is not None and new not in PLAN_TRANSITIONS.get(old.status, {old.status}):
+            return False
+        if new in ("APPROVED", "EXECUTED") and (old is None or old.status == "DRAFT" or new == "EXECUTED"):
             approver = await self._user(v["approved_by"]) if v["approved_by"] else None
             if approver is None or Role(approver.role) not in EDITORS:
                 raise PushRejected("approval_requires_lead", o.client_op_id)
-        elif o.table == "norm_set":
-            await self._check_norm_set(o, old)
+            if not await self._has_event(
+                "PLAN_APPROVED", v["id"], payload_hash(plan_approval_payload(v)), actor_id=v["approved_by"]
+            ):
+                raise PushRejected("missing_audit_event", o.client_op_id)
+        if new == "EXECUTED" and (old is None or old.status != "EXECUTED"):
+            orders = [st.get("order") if isinstance(st, dict) else None for st in v["steps"]]
+            if not await self._has_event("PLAN_EXECUTED", v["id"]) or not await self._steps_done(v["id"], orders):
+                raise PushRejected("plan_steps_incomplete", o.client_op_id)
+        return True
+
+    async def _steps_done(self, plan_id: str, orders: list[object]) -> bool:
+        if not all(isinstance(n, int) and not isinstance(n, bool) for n in orders):
+            return False
+        want = {f"{plan_id}#{n}" for n in orders}
+        done = {
+            e
+            for (e,) in await self.s.execute(
+                select(AuditEvent.entity_id).where(
+                    AuditEvent.event_type == "PLAN_STEP_DONE", AuditEvent.entity_id.in_(want)
+                )
+            )
+        }
+        return done == want
+
+    async def _check_audited_change(self, o: Op, old: Base | None) -> None:
+        """Laboratoriya rekvizitlari va sozlamalari o'zgarishi — imzolangan audit hodisasi bilan (ADR-0014)."""
+        if o.table == "organization":
+            event, fields = "LAB_UPDATED", ORGANIZATION_FIELDS
+        elif o.table == "org_setting":
+            event, fields = "SETTINGS_CHANGED", SETTING_FIELDS
+        else:
+            return
+        v = o.values
+        if old is not None and all(normalized(o.table, v)[k] == to_wire(o.table, old)[k] for k in fields):
+            return
+        if not await self._has_event(event, self.p.org_id, payload_hash({k: v[k] for k in fields})):
+            raise PushRejected("missing_audit_event", o.client_op_id)
 
     async def _check_norm_set(self, o: Op, old: Base | None) -> None:
         v = o.values
@@ -387,6 +528,40 @@ class PushService:
                 raise PushRejected("norm_set_review_mismatch", o.client_op_id)
         if old is not None and old.sha256 != v["sha256"]:  # type: ignore[attr-defined]
             raise PushRejected("norm_set_conflict", o.client_op_id)
+
+
+def plan_approval_payload(v: dict[str, Any]) -> dict[str, Any]:
+    """Ilovadagi `planApprovalPayload` bilan bir xil (zanjir_data)."""
+    return {
+        "id": v["id"],
+        "graph_snapshot_hash": v["graph_snapshot_hash"],
+        "steps_sha256": sha256_hex(canonical_json_bytes(v["steps"])),
+    }
+
+
+# Ilovada qoralama 15 daqiqada eskiradi (`ProtocolRepository.draftTtl`); bir oz zaxira bilan.
+SIGN_WINDOW = timedelta(minutes=16)
+CLOCK_JITTER = timedelta(
+    minutes=1
+)  # tayyorlash va imzolash orasida qurilma soati biroz orqaga tuzatilishi mumkin (NTP)
+
+
+def _datetime(v: object) -> datetime | None:
+    if not isinstance(v, str):
+        return None
+    try:
+        d = datetime.fromisoformat(v.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return d if d.tzinfo is not None else None
+
+
+def _reject_constant(name: str) -> object:
+    raise ValueError(name)
+
+
+def _iso_or_none(t: datetime | None) -> str | None:
+    return iso(t) if t is not None else None
 
 
 def _section(payload: dict[str, Any], key: str) -> dict[str, Any]:

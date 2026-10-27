@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:zanjir_core/zanjir_core.dart';
 
@@ -81,11 +83,7 @@ class IsolationPlanRepository {
   Future<IsolationPlanRow> approve(String id) => _fresh(id, const {'DRAFT'}, (plan) async {
     await requireRole(_ctx, _audit.actorId, SettingsRepository.editorRoles);
     final row = await _setStatus(plan, 'APPROVED', approvedBy: Value(_audit.actorId));
-    await _audit.append(
-      eventType: 'PLAN_APPROVED',
-      entityId: id,
-      payload: {'id': id, 'graph_snapshot_hash': plan.graphSnapshotHash},
-    );
+    await _audit.append(eventType: 'PLAN_APPROVED', entityId: id, payload: planApprovalPayload(plan));
     return row;
   });
 
@@ -220,6 +218,14 @@ class IsolationPlanRepository {
     return row;
   }
 }
+
+/// `PLAN_APPROVED` audit payload'i: tasdiqlangan qadamlar hash'i bilan — server tasdiqni aynan shu qadamlarga bog'laydi
+/// (ADR-0014; tasdiqdan keyin qadamlar almashtirilsa, imzolangan hodisa mos kelmaydi).
+Map<String, Object?> planApprovalPayload(IsolationPlanRow plan) => {
+  'id': plan.id,
+  'graph_snapshot_hash': plan.graphSnapshotHash,
+  'steps_sha256': sha256Hex(utf8.encode(canonicalJson(plan.steps))),
+};
 
 /// `PLAN_STEP_DONE` audit payload'i (hash shu xaritadan).
 Map<String, Object?> stepPayload(String planId, PlanStep step, StepConfirmation c) => {
