@@ -1,0 +1,103 @@
+# Sector Verify imzolangan reliz (H3, ADR-019): `sector-verify/v*` tag push qilinganda imzolangan APK + AAB,
+# imzo/versiya tekshiruvi, artefaktlar va draft GitHub Release. Kalit faqat `sector-verify-release` environment
+# secret'larida — PR'lar va oddiy branch push'lari unga kira olmaydi. Sozlash: sector-verify/docs/H3_RELEASE_SIGNING.md, 10-bo'lim.
+name: sector-verify-release
+
+on:
+  push:
+    tags:
+      - "sector-verify/v*"
+
+concurrency:
+  group: sector-verify-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  signed-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: sector-verify-release
+    permissions:
+      contents: write # draft GitHub Release yaratish uchun
+    defaults:
+      run:
+        working-directory: sector-verify
+    env:
+      SV_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # versionCode = commit soni, versionName = git tag
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      # Kesh o'chiq: imzo sozlamalari (parollar) Gradle task kirishlari — ular keshga yozilmasin.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true
+      - name: Kalitni tiklash
+        shell: bash
+        env:
+          SV_KEYSTORE_BASE64: ${{ secrets.SV_KEYSTORE_BASE64 }}
+          SV_KEYSTORE_PASSWORD: ${{ secrets.SV_KEYSTORE_PASSWORD }}
+          SV_KEY_ALIAS: ${{ secrets.SV_KEY_ALIAS }}
+          SV_KEY_PASSWORD: ${{ secrets.SV_KEY_PASSWORD }}
+          SV_CERT_SHA256: ${{ vars.SV_CERT_SHA256 }}
+        run: |
+          missing=""
+          for v in SV_KEYSTORE_BASE64 SV_KEYSTORE_PASSWORD SV_KEY_ALIAS SV_KEY_PASSWORD SV_CERT_SHA256; do
+            [ -n "${!v:-}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::sector-verify-release environment'da yo'q:$missing (H3_RELEASE_SIGNING.md, 10-bo'lim)"
+            exit 1
+          fi
+          printf '%s' "$SV_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/sv-release.p12"
+          chmod 600 "$RUNNER_TEMP/sv-release.p12"
+          echo "SV_KEYSTORE_PATH=$RUNNER_TEMP/sv-release.p12" >> "$GITHUB_ENV"
+          echo "SV_VERSION=${SV_TAG#sector-verify/v}" >> "$GITHUB_ENV"
+      - name: Imzolangan release build
+        env:
+          SV_KEYSTORE_PASSWORD: ${{ secrets.SV_KEYSTORE_PASSWORD }}
+          SV_KEY_ALIAS: ${{ secrets.SV_KEY_ALIAS }}
+          SV_KEY_PASSWORD: ${{ secrets.SV_KEY_PASSWORD }}
+        run: ./gradlew --no-build-cache check :app:bundleRelease :app:assembleRelease :app:lintRelease
+      - name: Imzo va versiyani tekshirish
+        env:
+          SV_CERT_SHA256: ${{ vars.SV_CERT_SHA256 }}
+        run: |
+          ./scripts/verify-release.sh app/build/outputs/apk/release/app-release.apk "$SV_VERSION" "$SV_CERT_SHA256"
+          ./scripts/verify-release.sh app/build/outputs/bundle/release/app-release.aab "$SV_VERSION" "$SV_CERT_SHA256"
+      - name: Reliz fayllari
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk "dist/sector-verify-$SV_VERSION.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "dist/sector-verify-$SV_VERSION.aab"
+          cp app/build/outputs/mapping/release/mapping.txt "dist/mapping-$SV_VERSION.txt"
+          (cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          # CHANGELOG'dagi shu versiya bo'limi — reliz izohi.
+          awk -v v="$SV_VERSION" '$0 ~ "^## \\[" v "\\]" {on=1; next} on && /^## \[/ {exit} on' CHANGELOG.md > dist/notes.md
+          [ -s dist/notes.md ] || echo "Sector Verify $SV_VERSION" > dist/notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sector-verify-signed-${{ env.SV_VERSION }}
+          path: sector-verify/dist/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          files="dist/sector-verify-$SV_VERSION.apk dist/sector-verify-$SV_VERSION.aab dist/mapping-$SV_VERSION.txt dist/SHA256SUMS.txt"
+          if gh release view "$SV_TAG" > /dev/null 2>&1; then
+            gh release upload "$SV_TAG" $files --clobber
+          else
+            gh release create "$SV_TAG" $files --draft --verify-tag --title "Sector Verify $SV_VERSION" --notes-file dist/notes.md
+          fi
+      - name: Kalitni o'chirish
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sv-release.p12"

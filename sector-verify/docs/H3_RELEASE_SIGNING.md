@@ -110,7 +110,8 @@ cd sector-verify
 apksigner verify --verbose --print-certs app\build\outputs\apk\release\app-release.apk
 ```
 
-- `Verified using v2 scheme (APK Signature Scheme v2): true` va `v3 ... : true` bo'lsin.
+- `Verified using v3 scheme (APK Signature Scheme v3): true` bo'lsin. minSdk 29 bo'lgani uchun v1 va v2 `false` — bu normal
+  (Android 9+ faqat v3 ni o'qiydi, `apksigner` ortiqcha imzo qo'shmaydi).
 - `Signer #1 certificate SHA-256 digest` — 1-bo'limda yozgan barmoq izi bilan **aynan bir xil**.
 - AAB: `jarsigner -verify -verbose app\build\outputs\bundle\release\app-release.aab` → `jar verified.`
 - Versiya: `aapt2 dump badging app-release.apk | findstr "versionName targetSdk"` → `versionName='1.0.0'`, `targetSdkVersion:'36'`.
@@ -146,18 +147,66 @@ tekshirgach Production'ga. R8 mapping AAB ichida bor — Play uni crash hisobotl
 | **Yo'qoldi** (zaxira ham yo'q) | yangilab bo'lmaydi; yangi kalit = yangi ilova (foydalanuvchilar o'chirib, qayta o'rnatadi) | Play Console → upload kalitini tiklash so'rovi (yangi upload kaliti) |
 | **Oshkor bo'ldi** | **eski kalit bor bo'lsa**: `apksigner rotate` bilan yangi kalitga o'tish (APK Signature Scheme v3) va yangi relizni yangi kalit bilan imzolash; tarqatish kanalida ogohlantirish | upload kalitini darhol almashtirish (Play qo'llab-quvvatlash); app signing kaliti Google'da, unga ta'sir qilmaydi |
 
-## 10. CI'da imzolash (ixtiyoriy, keyinroq)
+## 10. CI'da imzolash (`sector-verify-release` workflow)
 
-Hozir CI release'ni **imzosiz** yig'adi (artefakt — faqat tekshiruv uchun). Imzoni CI'ga o'tkazish — alohida qaror:
-kalit GitHub Secrets'da saqlanadi (`SV_KEYSTORE_BASE64`, `SV_KEYSTORE_PASSWORD`, `SV_KEY_ALIAS`, `SV_KEY_PASSWORD`) va
-faqat tag push qilinganda ishlaydigan job uni ochadi. B yo'lida bu xavfsizroq (CI'da faqat upload kaliti bo'ladi).
-Kerak bo'lsa ayting — workflow'ni men tayyorlayman, secret'larni esa siz o'zingiz kiritasiz.
+Qo'lda yig'ish (3–7-bo'limlar) o'rniga reliz CI'da imzolanishi mumkin: **tag push qilasiz — qolganini CI qiladi.**
+
+**Ish tartibi** (`.github/workflows/sector-verify-release.yml`, faqat `sector-verify/v*` tag push qilinganda):
+1. siz tasdiqlaysiz (environment'ning *Required reviewer* so'rovi);
+2. `check` + imzolangan `bundleRelease`, `assembleRelease`, `lintRelease`;
+3. `scripts/verify-release.sh` tekshiradi: APK v3 imzo, debug kalit emas, sertifikat SHA-256 = `SV_CERT_SHA256`,
+   `versionName` = tag, targetSdk 36; AAB imzo va sertifikat. Bittasi mos kelmasa — reliz chiqmaydi;
+4. artefakt (90 kun) va **draft** GitHub Release: `sector-verify-<versiya>.apk`, `.aab`, `mapping-<versiya>.txt`,
+   `SHA256SUMS.txt`, izoh — `CHANGELOG.md` dagi shu versiya bo'limi. Draft'ni siz tekshirib **Publish** qilasiz.
+
+**Xavfsizlik:** kalit faqat `sector-verify-release` environment secret'larida — PR'lar, fork'lar va oddiy branch
+push'lari unga kira olmaydi. Kalit fayli runner'ning vaqtinchalik papkasida tiklanadi va job oxirida (xato bo'lsa ham)
+o'chiriladi; parollar faqat Gradle qadamiga beriladi; Gradle keshi bu job'da o'chiq (parollar kesh yozuvlariga tushmasin).
+B yo'lida (Play) CI'ga faqat **upload kaliti** qo'yiladi — app signing kaliti Google'da qoladi.
+
+### Sozlash (bir marta, ~10 daqiqa)
+1. GitHub → repo → **Settings → Environments → New environment** → nomi aynan `sector-verify-release`.
+2. **Deployment branches and tags** → *Selected branches and tags* → **Add deployment branch or tag rule** →
+   *Ref type: Tag* → `sector-verify/v*`.
+3. **Required reviewers** → o'zingizni qo'shing (har reliz oldidan "Approve" so'raladi).
+4. **Environment secrets** (*Add environment secret*):
+
+   | Nomi | Qiymati |
+   |---|---|
+   | `SV_KEYSTORE_BASE64` | PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\keys\sv-release.p12")) \| Set-Clipboard` → Ctrl+V |
+   | `SV_KEYSTORE_PASSWORD` | ombor paroli |
+   | `SV_KEY_ALIAS` | `sectorverify` |
+   | `SV_KEY_PASSWORD` | o'sha parol (PKCS12) |
+
+5. **Environment variables** (*Add environment variable*): `SV_CERT_SHA256` = 1-bo'limdagi `SHA256:` qiymati
+   (`AB:CD:…` ko'rinishida ham bo'ladi). Bu maxfiy emas — u noto'g'ri kalit bilan reliz chiqishidan himoya qiladi.
+6. Clipboard tarixini tozalang (Win+V → *Clear all*).
+
+### Har reliz
+```
+git checkout master && git pull
+git tag sector-verify/v1.0.0
+git push origin sector-verify/v1.0.0
+```
+→ GitHub **Actions → sector-verify-release** → *Review deployments* → **Approve** → ~10 daqiqa →
+**Releases** → draft → APK'ni yuklab, haqiqiy telefonda sinab (6-bo'lim oxiri) → **Publish release**.
+7-bo'limdagi arxiv uchun draft'dagi fayllarni yuklab oling.
+
+| Xato | Sabab |
+|---|---|
+| `environment'da yo'q: SV_…` | secret/variable nomi xato yoki boshqa environment'ga qo'yilgan |
+| `sertifikat SHA-256 mos emas` | boshqa kalit yuklangan yoki `SV_CERT_SHA256` xato |
+| `versionName '1.0.0-2-g…' (kutilgan '1.0.0')` | tag reliz commit'ida emas yoki tag'dan keyin commit bor |
+| `debug kalit bilan imzolangan` / `v3 imzo yo'q` | kalit build'ga ulanmadi (secret qiymatlari) |
+
+Linux/macOS (yoki WSL) da qo'lda tekshirish uchun ham shu skript:
+`./scripts/verify-release.sh app/build/outputs/apk/release/app-release.apk 1.0.0 <SHA256>`.
 
 ## 11. H3 tugadi, qachonki
 
 - [ ] Kalit yaratilgan, 2 ta zaxira bor, barmoq izi `RELEASE_CHECKLIST.md` da.
 - [ ] `sector-verify/v1.0.0` tag'i reliz commit'ida, GitHub'da.
-- [ ] Imzolangan APK/AAB, `apksigner verify` OK, versiya `1.0.0`, targetSdk 36.
+- [ ] Imzolangan APK/AAB, `apksigner verify` OK, versiya `1.0.0`, targetSdk 36 (yoki CI: `sector-verify-release` yashil, draft Release).
 - [ ] Haqiqiy telefonda release: o'lchov → hisobot → `sv-replay verify` OK.
 - [ ] Arxiv: APK/AAB, `mapping.txt`, SHA-256.
 - [ ] Tarqatildi (A: e'lon + SHA-256; B: Internal testing → Production).
