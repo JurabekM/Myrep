@@ -28,6 +28,6 @@ SQLite busy-handler'ida uxlab kutdi: p99 ~1 s, 83 so'rov/s.
 ## Ko'rib chiqilgan muqobillar
 
 * **Alohida yozuvchi (1) va o'quvchi (N) hovuzlari** — yaxshiroq, lekin Vault/emitent kodida har
-  so'rovni ajratish kerak; production DB tanlovi (`TODO(spec):` PostgreSQL) bilan birga qayta ko'riladi.
+  so'rovni ajratish kerak. Production DB — PostgreSQL (ADR-0018), u yerda bu cheklov yo'q.
 * **`synchronous = NORMAL`** — o'lchovda atigi +30 %, elektr uzilishida oxirgi commit'lar yo'qolishi
   mumkin; to'lov ma'lumoti uchun rad etildi.

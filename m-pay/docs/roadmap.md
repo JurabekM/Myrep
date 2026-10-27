@@ -2,13 +2,14 @@
 
 Sana: 2026-10-24. 0-faza boshlang'ich topshiriqda belgilangan; 1–4-fazalar 0-faza yakunidagi ochiq
 ishlar (`TODO(spec):`, ADR'lar, hisobotlar) asosida taklif qilingan va 2026-10-24 da qabul qilingan.
-Har faza tugaganda `docs/PROGRESS.md` ga hisobot yoziladi.
+Har faza tugaganda `docs/PROGRESS.md` ga hisobot yoziladi. Production'gacha qolgan ishlarning yagona
+ro'yxati (kim, qachon, pilotga chiqish mezoni) — `docs/production-checklist.md`.
 
 | Faza | Nomi | Holat | Kimga bog'liq |
 |---|---|---|---|
 | 0 | Pay Sandbox | ✅ tayyor (M0–M7) | — |
 | 1 | Xavfsizlikni kuchaytirish | ✅ (P1.8 radio — qurilmalar kerak) | jamoa (tashqi ma'lumot kerak emas) |
-| 2 | Pilot tayyorgarligi | ishda (virtual muhitda) | pilot bank: TPS/SLA, HSM modeli, infratuzilma |
+| 2 | Pilot tayyorgarligi | ✅ virtual muhitda (P2.1–P2.7) | pilot bank: TPS/SLA, HSM modeli, infratuzilma |
 | 3 | Pilot | reja | bank, mustaqil auditor |
 | 4 | Sertifikatsiya va production | reja | to'lov sxemasi, regulyator, yuristlar |
 
@@ -61,6 +62,8 @@ Pilot bank hali tanlanmagan — 2-faza **virtual muhitda** sinaladi (2026-10-25 
 | P2.7 | Mahsulot siyosatlari: REVIEW, CVM, token muddati, karta–qurilma | konfiguratsiya | ✅ (ADR-0022; qiymatlar bank bilan `TODO(spec)`) |
 
 ## 3-faza — Pilot
+
+Pilotga chiqish mezoni va har band egasi — `docs/production-checklist.md` §8.
 
 * Bitta bank bilan cheklangan ishga tushirish (yopiq foydalanuvchilar guruhi).
 * Shield'ni real ma'lumotda qayta o'qitish, chegaralarni kalibrlash, MCC va geo belgilar.

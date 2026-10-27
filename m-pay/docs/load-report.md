@@ -65,8 +65,8 @@ uchun teng og'irlikda. Faqat tasdiq yo'li (balans yechish bilan) — stub qatori
 
 ## 5. Cheklovlar va keyingi qadamlar
 
-* `TODO(spec):` production DB (PostgreSQL yoki bir avtorizatsiyani bitta tranzaksiyada yozish);
-  bank kutayotgan TPS va kechikish SLA talablari.
+* ~~Production DB~~ — PostgreSQL, §8 (P2.3). `TODO(spec):` bank kutayotgan TPS va kechikish SLA
+  talablari.
 * HSM (PKCS#11) kechikishi o'lchanmagan — `memory` KeyStore. SoftHSM bilan alohida o'lchash kerak
   (har avtorizatsiyada KDF/CMAC chaqiruvlari).
 * TLS o'chiq (sandbox HTTP); TLS handshake keep-alive tufayli faqat ulanish boshida.

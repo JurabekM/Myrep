@@ -31,6 +31,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: m-pay
+      - name: TODO(spec) belgilari production checklist indeksida
+        if: matrix.os == 'ubuntu-24.04'
+        run: bash scripts/check-todo-spec.sh
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace

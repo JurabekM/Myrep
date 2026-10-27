@@ -2,7 +2,8 @@
 //! qirralarning birinchi ko'rilgan vaqti.
 //!
 //! Tugunlar — `DeviceId` va `PanFingerprint` (kalitsiz qaytarib bo'lmaydigan HMAC). Graf faqat
-//! xotirada (sandbox); `TODO(spec):` ko'p instansiyali deployment uchun tashqi graf ombori.
+//! xotirada; API instansiyalari uni Shield roli orqali bo'lishadi (ADR-0019). `TODO(spec):` holatni
+//! davriy saqlash va zaxira instansiya (`docs/production-checklist.md` JM-4).
 //!
 //! Qurilma kaliti almashtirilsa (ADR-0015) yangi ID eski qurilma tuguniga **taxallus** bo'ladi:
 //! alohida tugun yaratilmaydi, kartalar soni ikki barobar bo'lmaydi va `card_device_count` oshmaydi.

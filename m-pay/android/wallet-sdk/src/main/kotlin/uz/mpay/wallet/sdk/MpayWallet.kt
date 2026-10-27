@@ -38,7 +38,6 @@ class MpayWallet private constructor(context: Context) {
     private val app = context.applicationContext
     val store = WalletStore(app)
     val cdcvm = CdcvmState(app)
-    var integrity: IntegrityProvider = StubIntegrityProvider
 
     /** Ulanishdan oldin o'rnatiladi; standart — pin yo'q va TOFU o'chiq (xavfsiz rad). */
     var config: WalletConfig = WalletConfig()

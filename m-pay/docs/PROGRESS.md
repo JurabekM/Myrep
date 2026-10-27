@@ -147,10 +147,11 @@ GREEN/YELLOW/RED, LUK berish va to'ldirish, lifecycle, xesh-zanjirli audit) va `
 
 **Ochiq savollar**
 
-* `TODO(spec):` token muddati: hozir `min(karta muddati, hozir + 36 oy)`; real sxema qoidasi kerak.
-* `TODO(spec):` bir karta bir nechta qurilmada — hozir cheklanmagan (Shield M5 da `existing_tokens_for_pan`
-  bo'yicha qaror qiladi).
-* `TODO(spec):` OTP kanali (SMS/push/bank ilovasi) — sandbox'da faqat operator endpointi.
+* `TODO(spec):` token muddati: hozir `min(karta muddati, hozir + 36 oy)`; real sxema qoidasi kerak
+  (keyin: UTC+5 va yangilash — ADR-0022 §4).
+* ~~Bir karta bir nechta qurilmada — hozir cheklanmagan~~ — ✅ `max_devices_per_card` (ADR-0022, P2.7).
+* ~~OTP kanali — sandbox'da faqat operator endpointi~~ — ✅ virtual SMS shlyuzi (ADR-0016, P2.1);
+  `TODO(spec):` haqiqiy shlyuz.
 
 **Keyingi bosqich (M4)**: `mpay-issuer` (ISO 8583 `0100`/`0110`, ARQC/ARPC, UZS test hisoblar,
 javob kodlari), `mpay-terminal-sim` (APDU transport trait, loopback soft-karta, terminal yadrosi,
@@ -208,9 +209,9 @@ bir rad kodi).
 
 **Ochiq savollar**
 
-* `TODO(spec):` issuer tomonidagi CVM siyosati (CDCVM bo'lmagan yuqori summalar) — M6.
-* `TODO(spec):` takroriy STAN/RRN ni acquirer darajasida rad etish (hozir faqat ATC replay himoyasi).
-* `TODO(spec):` REVIEW uchun standart siyosat (hozir `approve`, konfiguratsiyada `decline`).
+* ~~Issuer tomonidagi CVM siyosati~~ — ✅ ADR-0022 (P2.7).
+* ~~Takroriy STAN/RRN ni acquirer darajasida rad etish~~ — ✅ ADR-0010 (P1.2).
+* ~~REVIEW uchun standart siyosat~~ — ✅ `step_up` (ADR-0022, P2.7).
 
 ## M0–M4 yakuni
 
@@ -265,7 +266,8 @@ p99 < 50 ms benchmark) va `shield-ml` (sintetik fraud stsenariylari, LightGBM �
 
 * `TODO(spec):` real ma'lumotlar bilan qayta o'qitish va chegaralarni kalibrlash; sintetik natijalar
   optimistik (`shield-report.md` §3).
-* `TODO(spec):` taqsimlangan feature store/graf (ko'p instansiya), MCC va terminal geo-koordinatalari.
+* `TODO(spec):` taqsimlangan feature store/graf (ko'p instansiya; keyin — Shield roli, ADR-0019), MCC va
+  terminal geo-koordinatalari.
 
 **Keyingi bosqich (M6)**: Android `wallet-sdk`, `wallet-demo`, `terminal-app`.
 
@@ -318,8 +320,9 @@ p99 < 50 ms benchmark) va `shield-ml` (sintetik fraud stsenariylari, LightGBM �
   Rust emitentiga qarshi sinalgan; `IsoDep`/`HostApduService` qatlami sinalmagan.
   Qo'lda sinov tartibi: `docs/android-testing.md` §3.
 * `terminal-app` `/v1/authorizations` ni sandbox'da ochiq HTTP orqali yuboradi (terminal kaliti
-  tarmoqda ko'rinadi). `TODO(spec):` TLS + pinlash, terminal kalitini Keystore'da saqlash.
-* `TODO(spec):` Play Integrity, bank ilovasida build vaqtida pinlangan server barmoq izi (TOFU o'rniga).
+  tarmoqda ko'rinadi). ~~TLS + pinlash, terminal kalitini Keystore'da saqlash~~ — ✅ P1.4.
+* `TODO(spec):` Play Integrity (keyin: server tomoni va SDK — ADR-0021, P2.6; haqiqiy Google ochiq).
+  ~~Build vaqtida pinlangan server barmoq izi~~ — ✅ P1.5.
 
 ## M7 — fuzz kampaniyasi, yuk sinovi, bank namoyishi (2026-10-24)
 
@@ -364,8 +367,8 @@ p99 < 50 ms benchmark) va `shield-ml` (sintetik fraud stsenariylari, LightGBM �
 * **M6 qabul mezoni — ikki telefon orasida haqiqiy NFC tap — sinalmagan** (qurilmalar yo'q);
   namoyishning telefon qismi ixtiyoriy va oldindan repetitsiya talab qiladi.
 * CI'dagi yangi `fuzz` job'i va demo qadami hali GitHub'da yugurtirilmagan (branch push qilinmagan).
-* `TODO(spec):` production DB va TPS/SLA talablari; HSM kechikishi bilan yuk sinovi;
-  HTTP API fuzzing; Kotlin tomoni uchun Jazzer.
+* `TODO(spec):` TPS/SLA talablari. Keyin yopilgan: production DB (P2.3), HSM bilan yuk sinovi (P2.2),
+  HTTP API fuzzing va Kotlin Jazzer (`docs/fuzz-report.md` §5).
 
 ## Phase 0 (M0–M7) yakuni
 
@@ -402,7 +405,8 @@ Reja: `docs/roadmap.md`. Branch: `claude/mpay-faza1`.
 
 **Ochiq**
 
-* `TODO(spec):` teskari proksi ortida `X-Forwarded-For` uchun ishonchli proksi ro'yxati.
+* ~~Teskari proksi ortida `X-Forwarded-For` uchun ishonchli proksi ro'yxati~~ — ✅ 1-faza qo'shimcha
+  ishlari.
 * O'tkazuvchanlik −27 % — 2-fazada (bitta tranzaksiya / PostgreSQL).
 
 ### P1.3 — ichki API uchun mTLS (2026-10-24)
@@ -652,7 +656,8 @@ PR #16 ni Claude ko'rib chiqdi (Codex limiti tugagan); topilmalar shu branch'da 
   qaytadan). Tashlab ketilgan `PENDING_IDV` (challenge muddati o'tgan/bloklangan) limitlarni egallamaydi.
   Testlar `concurrent_provisioning_respects_device_limit`, `abandoned_pending_tokens_do_not_count`.
 * **Emitent:** pul yechish va avtorizatsiya yozuvi bitta tranzaksiyada (`BEGIN IMMEDIATE`).
-  `TODO(spec):` LUK/ATC iste'moli (Vault) bilan umumiy tranzaksiya — 2-faza P2.3 (PostgreSQL).
+  LUK/ATC iste'moli (Vault) bilan umumiy tranzaksiya — ADR-0018 da ataylab rad etildi (emitent alohida
+  tizim).
 * **Detokenizatsiya auditi:** alohida commit o'rniga iste'mol tranzaksiyasida (`DETOKENIZED_LUK_USED`).
 * PKCS#11 sessiya pool'i va qayta login — 2-faza P2.2 (SoftHSM yuk sinovi) bilan birga.
 
@@ -937,3 +942,16 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
 * Tekshirildi (emulyator, `android-testing.md` §9): ochilishda `mInputShown=false`; teginishda raqamli
   klaviatura (`inputType=0x2`); "✓", bo'sh joy va tugma bosilganda yopiladi, "To'lov qabul qilish" bitta
   bosishda ishlaydi; pastdagi maydon klaviatura ustiga aylanadi. Hamyon demo'da muammo yo'q edi.
+
+### Production nazorat ro'yxati (2026-10-27)
+
+* `docs/production-checklist.md` — production'gacha qolgan ishlarning yagona ro'yxati: sxema (SX), bank
+  (BK), jamoa (JM), mobil (MB), audit (AU), regulyator (RG); har band uchun kim (jamoa, bank, sxema,
+  regulyator, auditor) va qachon (pilotdan oldin yoki production'dan oldin), pilotga chiqish mezoni.
+* `TODO(spec):` belgilari tozalandi: 80 → 66 (38 fayl). Bajarilgan ishlarga qaragan eskilari o'chirildi
+  yoki `PROGRESS.md` da ✅ bilan yopildi (ko'p instansiya sessiyalari, PostgreSQL, global chegara, CVM va
+  REVIEW siyosati, STAN/RRN, ishonchli proksilar, P1.4/P1.5 va boshqalar). Ishlatilmaydigan Kotlin
+  `IntegrityProvider`/`StubIntegrityProvider` stub'i o'chirildi (o'rnini P2.6 da `IntegrityTokenProvider`
+  egallagan).
+* `scripts/check-todo-spec.sh` (CI `check` job'i): belgisi bor fayllar va ro'yxat indeksi ikki tomonlama
+  solishtiriladi. Tekshirildi: yangi belgi va yopilgan belgi ikkalasi ham xato beradi.

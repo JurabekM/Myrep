@@ -17,7 +17,8 @@ Server sessiyalarni xotirada TTL bilan saqlaydi.
 
 * PQ Link TLS'dan mustaqil: TLS buzilsa ham (yoki TLS proksi'da ochilsa ham) PAN va LUK himoyalangan.
 * So'rov-javob tartibi yozuvlar `seq` ni qat'iy monoton qiladi — replay oddiy tekshiriladi.
-* Ko'p instansiyali deployment'da sessiyalar umumiy saqlanishi kerak (`TODO(spec):`).
+* Ko'p instansiyali deployment'da sessiyalar umumiy saqlanadi — ADR-0019 (PostgreSQL, KEK bilan
+  shifrlangan).
 
 ## Muqobillar
 

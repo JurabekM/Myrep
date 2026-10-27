@@ -56,8 +56,7 @@ P2.4 dan keyin `mpay-server` ko'p instansiyada ishlay oladi, lekin uni ishga tus
   to'liq sinov: yuk nginx orqali (TLS + mTLS), o'rtada `api-1` to'xtatiladi, `MpayInstanceDown`
   kutiladi, zaxira → tiklash → audit, loglarda PAN/sir yo'qligi. Natija: `docs/load-report.md` §10.
 * IP chegarasi load balancer ortida ishlaydi (e2e `p2_deploy`: bitta proksi ortidagi ikki mijozning
-  chegarasi alohida). Har instansiyada mahalliy — `N × qiymat` (ADR-0019), global chegara
-  `TODO(spec)`.
+  chegarasi alohida). Global chegara — umumiy DB token bucket (ADR-0019 §4, 2026-10-26).
 * Metrikalar jarayon bo'yicha global (Prometheus odati); bir jarayondagi bir nechta server
   (testlar) hisoblagichlari qo'shiladi.
 * SoftHSM tokeni hajm orqali instansiyalar orasida bo'linadi — faqat sandbox; production'da

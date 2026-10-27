@@ -44,4 +44,5 @@ Qurilmada sinash tartibi: `docs/android-testing.md`.
   `terminal-app` "Virtual tap" (`docs/android-testing.md` §5). Release'da yo'qligi —
   `scripts/check-release-apk.sh`.
 * Release ham debug kaliti bilan imzolanadi (sandbox) — haqiqiy imzo kaliti repoga tushmaydi.
-* `TODO(spec):` Play Integrity (`IntegrityProvider` hozircha stub) — 2-faza.
+* Play Integrity: SDK'da `IntegrityTokenProvider`, server tekshiruvi (ADR-0021); sandbox'da mock token.
+  `TODO(spec):` haqiqiy Google (Play Console, Cloud loyihasi) — `docs/production-checklist.md` BK-11.
