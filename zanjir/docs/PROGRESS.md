@@ -18,7 +18,7 @@ protokol imzolash bloklangan (ilovada ham, serverda ham). Keyingi — 10-faza (m
 | 6 | Deterministik PDF, QR, imzolash | ✅ Tayyor (baytma-bayt bir xil PDF, 12 ta bloklash sharti testlangan, sxema v3) | 2026-10-27 | 9c7738b |
 | 7 | Server: auth, RBAC, RLS, sync, `/v/{qr_token}` | ✅ Tayyor (194 pytest, testcontainers PG16, RBAC 22 endpoint × 5 rol, qamrov 97%) | 2026-10-27 | be7544a |
 | 8 | Sinxronlash integratsiyasi (E2E) | ✅ Tayyor (E2E 6 stsenariy: Dart ↔ FastAPI + PostgreSQL; ilova 30, data 74 test) | 2026-10-27 | 7793f63 |
-| 9 | Ajratish rejasi UI, tasdiqlash, STALE | ✅ Tayyor (oqim testi + integration_test, ketma-ket qadamlar, kuchlanish tekshiruvi — 2 tasdiq, E2E 7) | 2026-10-27 | _commit_ |
+| 9 | Ajratish rejasi UI, tasdiqlash, STALE | ✅ Tayyor (oqim testi + integration_test, ketma-ket qadamlar, kuchlanish tekshiruvi — 2 tasdiq, E2E 7) | 2026-10-27 | 5f62aa4 |
 | 10 | Mustahkamlash: xavfsizlik, audit, accessibility | ⏳ | | |
 | 11 | Deploy (staging + prod) | ⏳ | | |
 | 12 | Release (AAB, Play internal) | ⏳ | | |
