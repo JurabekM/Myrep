@@ -1,7 +1,7 @@
 {
   "suite": "offer_check",
   "version": 1,
-  "description": "«Kafolatlangan foyda» detektori: 9 savol → bayroqlar; «besh xavf belgisi»dan ikkitasi — TWO_SIGNS; qizil bo'lsa QIZIL, sariq bo'lsa SARIQ, aks holda YASHIL",
+  "description": "Taklif detektori. INVESTMENT (standart): 9 savol → bayroqlar; «besh xavf belgisi»dan ikkitasi — TWO_SIGNS. COURSE (8-tamoyil): 8 savol (+ ixtiyoriy jobAbroad), har aniq bayroq — belgi, ikkitasi — TWO_SIGNS. Qizil bo'lsa QIZIL, sariq bo'lsa SARIQ, aks holda YASHIL",
   "generatedBy": "spec/oracle/oracle.py",
   "cases": [
     {
@@ -413,6 +413,392 @@
       },
       "expected": {
         "error": "INVALID_ANSWER"
+      }
+    },
+    {
+      "id": "course-001-green",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "NO",
+          "secretFormula": "NO",
+          "incomeGuarantee": "NO",
+          "syllabus": "YES",
+          "teacherVerifiable": "YES",
+          "urgency": "NO",
+          "recruitment": "NO",
+          "trialOrRefund": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "GREEN",
+        "flags": [],
+        "signs": 0
+      }
+    },
+    {
+      "id": "course-002-one-sign",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "NO",
+          "secretFormula": "NO",
+          "incomeGuarantee": "NO",
+          "syllabus": "YES",
+          "teacherVerifiable": "YES",
+          "urgency": "YES",
+          "recruitment": "NO",
+          "trialOrRefund": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          {
+            "code": "URGENCY",
+            "level": "YELLOW"
+          }
+        ],
+        "signs": 1
+      }
+    },
+    {
+      "id": "course-003-fast-rich-and-secret",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "YES",
+          "secretFormula": "YES",
+          "incomeGuarantee": "NO",
+          "syllabus": "YES",
+          "teacherVerifiable": "YES",
+          "urgency": "NO",
+          "recruitment": "NO",
+          "trialOrRefund": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "FAST_RICH",
+            "level": "YELLOW"
+          },
+          {
+            "code": "SECRET_FORMULA",
+            "level": "YELLOW"
+          },
+          {
+            "code": "TWO_SIGNS",
+            "level": "RED"
+          }
+        ],
+        "signs": 2
+      }
+    },
+    {
+      "id": "course-004-income-guarantee-alone",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "NO",
+          "secretFormula": "NO",
+          "incomeGuarantee": "YES",
+          "syllabus": "YES",
+          "teacherVerifiable": "YES",
+          "urgency": "NO",
+          "recruitment": "NO",
+          "trialOrRefund": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "INCOME_GUARANTEE",
+            "level": "RED"
+          }
+        ],
+        "signs": 1
+      }
+    },
+    {
+      "id": "course-005-recruit-alone",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "NO",
+          "secretFormula": "NO",
+          "incomeGuarantee": "NO",
+          "syllabus": "YES",
+          "teacherVerifiable": "YES",
+          "urgency": "NO",
+          "recruitment": "YES",
+          "trialOrRefund": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "RECRUITMENT_REQUIRED",
+            "level": "RED"
+          }
+        ],
+        "signs": 1
+      }
+    },
+    {
+      "id": "course-006-unknowns-only",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "NO",
+          "secretFormula": "NO",
+          "incomeGuarantee": "NO",
+          "syllabus": "UNKNOWN",
+          "teacherVerifiable": "UNKNOWN",
+          "urgency": "NO",
+          "recruitment": "NO",
+          "trialOrRefund": "UNKNOWN"
+        }
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          {
+            "code": "SYLLABUS_UNKNOWN",
+            "level": "YELLOW"
+          },
+          {
+            "code": "TEACHER_UNKNOWN",
+            "level": "YELLOW"
+          },
+          {
+            "code": "TRIAL_UNKNOWN",
+            "level": "YELLOW"
+          }
+        ],
+        "signs": 0
+      }
+    },
+    {
+      "id": "course-007-typical-scam",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "YES",
+          "secretFormula": "YES",
+          "incomeGuarantee": "YES",
+          "syllabus": "NO",
+          "teacherVerifiable": "NO",
+          "urgency": "YES",
+          "recruitment": "NO",
+          "trialOrRefund": "NO"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "FAST_RICH",
+            "level": "YELLOW"
+          },
+          {
+            "code": "SECRET_FORMULA",
+            "level": "YELLOW"
+          },
+          {
+            "code": "INCOME_GUARANTEE",
+            "level": "RED"
+          },
+          {
+            "code": "NO_SYLLABUS",
+            "level": "YELLOW"
+          },
+          {
+            "code": "UNVERIFIABLE_TEACHER",
+            "level": "YELLOW"
+          },
+          {
+            "code": "URGENCY",
+            "level": "YELLOW"
+          },
+          {
+            "code": "NO_TRIAL_OR_REFUND",
+            "level": "YELLOW"
+          },
+          {
+            "code": "TWO_SIGNS",
+            "level": "RED"
+          }
+        ],
+        "signs": 7
+      }
+    },
+    {
+      "id": "course-008-no-syllabus-no-refund",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "NO",
+          "secretFormula": "NO",
+          "incomeGuarantee": "NO",
+          "syllabus": "NO",
+          "teacherVerifiable": "YES",
+          "urgency": "NO",
+          "recruitment": "NO",
+          "trialOrRefund": "NO"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "NO_SYLLABUS",
+            "level": "YELLOW"
+          },
+          {
+            "code": "NO_TRIAL_OR_REFUND",
+            "level": "YELLOW"
+          },
+          {
+            "code": "TWO_SIGNS",
+            "level": "RED"
+          }
+        ],
+        "signs": 2
+      }
+    },
+    {
+      "id": "course-009-job-abroad",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "NO",
+          "secretFormula": "NO",
+          "incomeGuarantee": "NO",
+          "syllabus": "YES",
+          "teacherVerifiable": "YES",
+          "urgency": "NO",
+          "recruitment": "NO",
+          "trialOrRefund": "YES",
+          "jobAbroad": "YES"
+        }
+      },
+      "expected": {
+        "verdict": "RED",
+        "flags": [
+          {
+            "code": "JOB_ABROAD_PROMISE",
+            "level": "RED"
+          }
+        ],
+        "signs": 1
+      }
+    },
+    {
+      "id": "course-010-job-abroad-asked-no",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "NO",
+          "secretFormula": "NO",
+          "incomeGuarantee": "NO",
+          "syllabus": "YES",
+          "teacherVerifiable": "YES",
+          "urgency": "NO",
+          "recruitment": "NO",
+          "trialOrRefund": "YES",
+          "jobAbroad": "NO"
+        }
+      },
+      "expected": {
+        "verdict": "GREEN",
+        "flags": [],
+        "signs": 0
+      }
+    },
+    {
+      "id": "course-011-job-abroad-unknown-plus-sign",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "NO",
+          "secretFormula": "NO",
+          "incomeGuarantee": "NO",
+          "syllabus": "YES",
+          "teacherVerifiable": "YES",
+          "urgency": "YES",
+          "recruitment": "NO",
+          "trialOrRefund": "YES",
+          "jobAbroad": "UNKNOWN"
+        }
+      },
+      "expected": {
+        "verdict": "YELLOW",
+        "flags": [
+          {
+            "code": "URGENCY",
+            "level": "YELLOW"
+          },
+          {
+            "code": "JOB_ABROAD_UNKNOWN",
+            "level": "YELLOW"
+          }
+        ],
+        "signs": 1
+      }
+    },
+    {
+      "id": "course-neg-001-missing",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "NO"
+        }
+      },
+      "expected": {
+        "error": "MISSING_ANSWER"
+      }
+    },
+    {
+      "id": "course-neg-002-invalid",
+      "input": {
+        "kind": "COURSE",
+        "answers": {
+          "fastRich": "MAYBE",
+          "secretFormula": "NO",
+          "incomeGuarantee": "NO",
+          "syllabus": "YES",
+          "teacherVerifiable": "YES",
+          "urgency": "NO",
+          "recruitment": "NO",
+          "trialOrRefund": "YES"
+        }
+      },
+      "expected": {
+        "error": "INVALID_ANSWER"
+      }
+    },
+    {
+      "id": "offer-neg-003-kind",
+      "input": {
+        "kind": "LOTTERY",
+        "answers": {
+          "guaranteed": "NO",
+          "lossShared": "YES",
+          "realActivity": "YES",
+          "recruitment": "NO",
+          "urgency": "NO",
+          "written": "YES",
+          "licensed": "YES",
+          "inspection": "YES",
+          "exitEasy": "YES"
+        }
+      },
+      "expected": {
+        "error": "INVALID_KIND"
       }
     }
   ]

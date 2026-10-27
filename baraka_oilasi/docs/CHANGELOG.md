@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Qo'shildi — U16a: 8-tamoyil yadrosi va vektorlari (uy/SPEC 2G)
+- **Vektorlar (avval oracle):** `hour_value` (16 case: qo'lda va AUTO — oxirgi ≤3 oy o'rtachasi, yaxlitlash, soat chegarasi — kuniga > 600 yoki oyiga > 15 600 daqiqa, chegarada emas; xatolar `NO_INCOME`, `INVALID_TIME`, `INVALID_DAYS`, `AMOUNT_NEGATIVE`, `TOO_MANY_MONTHS`), `hour_value_change` (7 case: ikki barobar = 10 000 bp, pasayish, boshlang'ich 0 — foiz yo'q), `self_invest_share` (7 case: daromad 0 — ulush yo'q, daromaddan oshgan), `offer_check` ga `COURSE` turi (13 case: belgisiz yashil, bitta belgi sariq, ikki belgi `TWO_SIGNS`, `INCOME_GUARANTEE` / `RECRUITMENT_REQUIRED` / `JOB_ABROAD_PROMISE` ning o'zi qizil, «bilmayman» — sariq, belgi emas; noma'lum tur — `INVALID_KIND`). Mavjud `INVESTMENT` case'lari o'zgarmadi.
+- **`domain-uy::learning`:** `hour_value`, `hour_value_change`, `self_invest_share`; bilim rejasi — `validate_plan` (ko'nikma majburiy, ≤120 belgi; yo'llar takrorsiz; byudjet ≥ 0; haftalik vaqt 1–10 080 daqiqa; ko'rik sanasi standart +3 oy va boshlanishdan keyin), holat o'tishlari (`DONE`/`DROPPED` yopiq), faol rejalar chegarasi 2 — yangi ochishda ham, `PAUSED → ACTIVE` da ham (`ACTIVE_PLAN_LIMIT`).
+- **`domain-uy::venture::course_check`:** umumiy taklif detektorining `COURSE` turi (`CourseAnswers`, Musofir uchun ixtiyoriy `job_abroad`).
+
 ### Qo'shildi
 - **Mualliflik:** `LICENSE` (© 2026 Joʻrabek Mashgʻulatov, barcha huquqlar himoyalangan, uz/en); README'da eslatma; Android va desktop Sozlamalarida «Ilova haqida» bo'limi (nom, © yozuvi, disklеymer); Windows o'rnatuvchisida `publisher` va `copyright`.
 - **Android demo versiya** (`-P baraka.demo=true --dart-define=BARAKA_DEMO=true`): alohida paket nomi `uz.baraka.oilasi.demo` va «Baraka Dastur DEMO» nomi, har doim debug kalit bilan imzolanadi, har ekranda «DEMO» belgisi, `BARAKA_DEMO_EXPIRES` kunidan keyin ochilmaydi, PDF va `.baraka` fayllarni saqlash/yuborish o'chirilgan. Buyruq — `apps/android/README.md`; CI'ning `android` job'i har push'da `baraka-android-demo` artefaktini (arm64, 30 kun) ham yig'adi.

@@ -32,6 +32,7 @@ use baraka_domain_uy::{
     emergency::emergency_target,
     gate::{evaluate_gate, GateInput, GatePolicy, InterestDebtPolicy},
     inflation::{personal_index, BasketPoint},
+    learning::{hour_value as learn_hour_value, hour_value_change, self_invest_share, HourInput},
     partnership::{
         buyout_schedule, check_rules, distribute, BuyoutInput, CapitalItem, CapitalKind,
         DistributionInput, LossRule, Negligence, Partner, PartnerRole, PartnerTerms,
@@ -46,9 +47,9 @@ use baraka_domain_uy::{
     spike::{profit_spike, SpikePolicy},
     streak::compute_streak,
     venture::{
-        close_period, offer_check, venture_idea, BuyoutDue, EntryKind as VentureEntryKind,
-        IdeaInput, IdeaScenario, Installment, LossPolicy, OfferAnswers, PeriodEntry, PeriodInput,
-        Reply, ScenarioName,
+        close_period, course_check, offer_check, venture_idea, BuyoutDue, CourseAnswers,
+        EntryKind as VentureEntryKind, IdeaInput, IdeaScenario, Installment, LossPolicy,
+        OfferAnswers, PeriodEntry, PeriodInput, Reply, ScenarioName,
     },
 };
 use baraka_journal::{
@@ -171,6 +172,9 @@ pub fn run(suite: &str, input: &Value) -> Value {
         "mf_reserve" => mf_reserve(input),
         "mf_startup" => mf_startup(input),
         "mf_wall" => mf_wall(input),
+        "hour_value" => hour(input),
+        "hour_value_change" => hour_change(input),
+        "self_invest_share" => invest_share(input),
         other => Err(E(format!("UNKNOWN_SUITE:{other}"))),
     };
     r.unwrap_or_else(|E(code)| json!({ "error": code }))
@@ -1003,7 +1007,37 @@ fn offer(v: &Value) -> R {
         let t = a[k].as_str().ok_or_else(|| E("MISSING_ANSWER".into()))?;
         Reply::parse(t).ok_or_else(|| E("INVALID_ANSWER".into()))
     };
-    let r = offer_check(&OfferAnswers {
+    let r = match v["kind"].as_str().unwrap_or("INVESTMENT") {
+        "INVESTMENT" => offer_investment(&q)?,
+        "COURSE" => course_check(&CourseAnswers {
+            fast_rich: q("fastRich")?,
+            secret_formula: q("secretFormula")?,
+            income_guarantee: q("incomeGuarantee")?,
+            syllabus: q("syllabus")?,
+            teacher_verifiable: q("teacherVerifiable")?,
+            urgency: q("urgency")?,
+            recruitment: q("recruitment")?,
+            trial_or_refund: q("trialOrRefund")?,
+            job_abroad: if a.get("jobAbroad").is_some() {
+                Some(q("jobAbroad")?)
+            } else {
+                None
+            },
+        }),
+        _ => return Err(E("INVALID_KIND".into())),
+    };
+    let flags: Vec<Value> = r
+        .flags
+        .iter()
+        .map(|f| json!({ "code": f.code, "level": f.level.as_str() }))
+        .collect();
+    Ok(json!({ "verdict": r.verdict.as_str(), "flags": flags, "signs": r.signs }))
+}
+
+fn offer_investment(
+    q: &dyn Fn(&str) -> Result<Reply, E>,
+) -> Result<baraka_domain_uy::venture::OfferVerdict, E> {
+    Ok(offer_check(&OfferAnswers {
         guaranteed: q("guaranteed")?,
         loss_shared: q("lossShared")?,
         real_activity: q("realActivity")?,
@@ -1013,13 +1047,48 @@ fn offer(v: &Value) -> R {
         licensed: q("licensed")?,
         inspection: q("inspection")?,
         exit_easy: q("exitEasy")?,
-    });
-    let flags: Vec<Value> = r
-        .flags
+    }))
+}
+
+fn hour(v: &Value) -> R {
+    let income = if v["income"].is_null() {
+        None
+    } else {
+        Some(int_str(&v["income"])?)
+    };
+    let totals: Vec<i64> = match v["monthTotals"].as_array() {
+        Some(a) => a.iter().map(int_str).collect::<Result<_, _>>()?,
+        None => Vec::new(),
+    };
+    let h = learn_hour_value(&HourInput {
+        income,
+        month_totals: &totals,
+        minutes_per_day: u32::try_from(i(v, "minutesPerDay")?)
+            .map_err(|_| E("INVALID_TIME".into()))?,
+        days: u32::try_from(i(v, "days")?).map_err(|_| E("INVALID_DAYS".into()))?,
+    })?;
+    Ok(json!({
+        "income": h.income.to_string(),
+        "incomeSource": h.source.as_str(),
+        "monthlyMinutes": h.monthly_minutes,
+        "hourValue": h.hour_value.to_string(),
+        "doubleTarget": h.double_target.to_string(),
+        "overCeiling": h.over_ceiling,
+    }))
+}
+
+fn hour_change(v: &Value) -> R {
+    let c = hour_value_change(int_str(&v["base"])?, int_str(&v["new"])?)?;
+    Ok(json!({ "diff": c.diff.to_string(), "changeBp": c.change_bp }))
+}
+
+fn invest_share(v: &Value) -> R {
+    let amounts: Vec<i64> = arr(v, "amounts")?
         .iter()
-        .map(|f| json!({ "code": f.code, "level": f.level.as_str() }))
-        .collect();
-    Ok(json!({ "verdict": r.verdict.as_str(), "flags": flags, "signs": r.signs }))
+        .map(int_str)
+        .collect::<Result<_, _>>()?;
+    let s = self_invest_share(int_str(&v["income"])?, &amounts)?;
+    Ok(json!({ "total": s.total.to_string(), "shareBp": s.share_bp }))
 }
 
 fn protocol(v: &Value) -> R {

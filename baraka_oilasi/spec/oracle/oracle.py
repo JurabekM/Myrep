@@ -838,6 +838,112 @@ def offer_check(answers):
     return {"verdict": verdict, "flags": flags, "signs": signs}
 
 
+# --- U16 (8-tamoyil): kurs yoki ustoz taklifi — umumiy detektorning COURSE turi (uy/SPEC 2G.4) ---
+# (savol, yomon javob) → (bayroq, daraja); UNKNOWN — sariq «_UNKNOWN» bayrog'i, belgi hisoblanmaydi.
+# `jobAbroad` ixtiyoriy (Musofir, musofir/SPEC 6A): berilmasa so'ralmagan hisoblanadi.
+COURSE_QUESTIONS = ("fastRich", "secretFormula", "incomeGuarantee", "syllabus", "teacherVerifiable",
+                    "urgency", "recruitment", "trialOrRefund")
+COURSE_TABLE = {
+    "fastRich": ("YES", "FAST_RICH", "YELLOW", "FAST_RICH_UNKNOWN"),
+    "secretFormula": ("YES", "SECRET_FORMULA", "YELLOW", "SECRET_FORMULA_UNKNOWN"),
+    "incomeGuarantee": ("YES", "INCOME_GUARANTEE", "RED", "INCOME_GUARANTEE_UNKNOWN"),
+    "syllabus": ("NO", "NO_SYLLABUS", "YELLOW", "SYLLABUS_UNKNOWN"),
+    "teacherVerifiable": ("NO", "UNVERIFIABLE_TEACHER", "YELLOW", "TEACHER_UNKNOWN"),
+    "urgency": ("YES", "URGENCY", "YELLOW", "URGENCY_UNKNOWN"),
+    "recruitment": ("YES", "RECRUITMENT_REQUIRED", "RED", "RECRUITMENT_UNKNOWN"),
+    "trialOrRefund": ("NO", "NO_TRIAL_OR_REFUND", "YELLOW", "TRIAL_UNKNOWN"),
+    "jobAbroad": ("YES", "JOB_ABROAD_PROMISE", "RED", "JOB_ABROAD_UNKNOWN"),
+}
+# Kursda har bir aniq bayroq — alohida belgi; ikki va undan ortiq — TWO_SIGNS (qizil).
+COURSE_SIGNS = ("FAST_RICH", "SECRET_FORMULA", "INCOME_GUARANTEE", "NO_SYLLABUS", "UNVERIFIABLE_TEACHER",
+                "URGENCY", "RECRUITMENT_REQUIRED", "NO_TRIAL_OR_REFUND", "JOB_ABROAD_PROMISE")
+
+
+def course_check(answers):
+    """Kurs taklifi: belgi yo'q — YASHIL; bitta belgi — SARIQ; ikki belgi (TWO_SIGNS) yoki
+    INCOME_GUARANTEE / RECRUITMENT_REQUIRED / JOB_ABROAD_PROMISE ning o'zi — QIZIL."""
+    flags = []
+    asked = COURSE_QUESTIONS + (("jobAbroad",) if "jobAbroad" in answers else ())
+    for q in asked:
+        a = answers.get(q)
+        if a is None:
+            raise OracleError("MISSING_ANSWER")
+        if a not in ("YES", "NO", "UNKNOWN"):
+            raise OracleError("INVALID_ANSWER")
+        bad, code, level, unknown = COURSE_TABLE[q]
+        if a == bad:
+            flags.append({"code": code, "level": level})
+        elif a == "UNKNOWN":
+            flags.append({"code": unknown, "level": "YELLOW"})
+    signs = len({f["code"] for f in flags if f["code"] in COURSE_SIGNS})
+    if signs >= 2:
+        flags.append({"code": "TWO_SIGNS", "level": "RED"})
+    levels = {f["level"] for f in flags}
+    verdict = "RED" if "RED" in levels else "YELLOW" if levels else "GREEN"
+    return {"verdict": verdict, "flags": flags, "signs": signs}
+
+
+def offer_check_kind(kind, answers):
+    """Umumiy detektor: `INVESTMENT` (standart, 2E.5 va «besh xavf belgisi») yoki `COURSE` (2G.4)."""
+    if kind == "INVESTMENT":
+        return offer_check(answers)
+    if kind == "COURSE":
+        return course_check(answers)
+    raise OracleError("INVALID_KIND")
+
+
+# --- U16 (8-tamoyil): «Bir soatim qancha?», natija, «Sarmoya» ulushi (uy/SPEC 2G.1, 2G.3, 2G.5) ---
+HOUR_CEIL_DAY_MIN = 600       # kuniga 10 soatdan ko'p — soat chegarasi eslatmasi
+HOUR_CEIL_MONTH_MIN = 15600   # oyiga 260 soatdan ko'p
+
+
+def hour_value(income, month_totals, minutes_per_day, days):
+    """1 soat qiymati = round_half_up(oylik daromad × 60 / oylik daqiqalar); «ikki barobar maqsad» = 2 ×.
+    `income` berilmasa (None) — oxirgi to'liq oylardan yozuvi borlari (ko'pi bilan 3 ta) o'rtachasi
+    (`AUTO`, round_half_up). Daromad 0 yoki yo'q — NO_INCOME."""
+    if month_totals is None:
+        month_totals = []
+    if len(month_totals) > 3:
+        raise OracleError("TOO_MANY_MONTHS")
+    if any(t < 0 for t in month_totals) or (income is not None and income < 0):
+        raise OracleError("AMOUNT_NEGATIVE")
+    if not 1 <= minutes_per_day <= 1440:
+        raise OracleError("INVALID_TIME")
+    if not 1 <= days <= 31:
+        raise OracleError("INVALID_DAYS")
+    if income is None:
+        if not month_totals:
+            raise OracleError("NO_INCOME")
+        income, source = round_half_up(Fraction(sum(month_totals), len(month_totals))), "AUTO"
+    else:
+        source = "MANUAL"
+    if income == 0:
+        raise OracleError("NO_INCOME")
+    minutes = minutes_per_day * days
+    hv = round_half_up(Fraction(income * 60, minutes))
+    return {"income": _s(income), "incomeSource": source, "monthlyMinutes": minutes, "hourValue": _s(hv),
+            "doubleTarget": _s(hv * 2),
+            "overCeiling": minutes_per_day > HOUR_CEIL_DAY_MIN or minutes > HOUR_CEIL_MONTH_MIN}
+
+
+def hour_value_change(base, new):
+    """Natija (2G.5): farq tiyinda va bazis punktda; boshlang'ich 0 — foiz yo'q (None)."""
+    if base < 0 or new < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    return {"diff": _s(new - base), "changeBp": None if base == 0 else bp_of(new - base, base)}
+
+
+def self_invest_share(income, amounts):
+    """«O'zimga sarmoya» qatori (2G.3): belgili xarajatlar yig'indisi va oy daromadidagi ulushi (bp);
+    daromad 0 — ulush yo'q (None)."""
+    if income < 0:
+        raise OracleError("AMOUNT_NEGATIVE")
+    if any(a <= 0 for a in amounts):
+        raise OracleError("AMOUNT_NOT_POSITIVE")
+    total = sum(amounts)
+    return {"total": _s(total), "shareBp": None if income == 0 else bp_of(total, income)}
+
+
 # --- K1: Kasb-kor — ikki cho'ntak, egasi maoshi, hamyonlar (kasbkor/SPEC 2) ---------------
 KK_WALLETS = ("CASH", "CARD")
 KK_EFFECT = {"SALE": 1, "EXPENSE": -1, "OWNER_DRAW": -1, "OWNER_CONTRIBUTION": 1, "OWNER_SALARY": -1,
@@ -2293,8 +2399,62 @@ def build_suites():
           ("offer-011-two-yellow-signs", A("NO", "YES", "YES", "NO", "YES", "YES", "NO")),
           ("offer-neg-001-missing", {"guaranteed": "NO"}),
           ("offer-neg-002-invalid", A("MAYBE", "YES", "YES", "NO", "NO", "YES"))]
-    suites["offer_check"] = _suite("offer_check", "«Kafolatlangan foyda» detektori: 9 savol → bayroqlar; «besh xavf belgisi»dan ikkitasi — TWO_SIGNS; qizil bo'lsa QIZIL, sariq bo'lsa SARIQ, aks holda YASHIL", [
-        _case(cid, {"answers": a}, lambda a=a: offer_check(a)) for cid, a in oc])
+    # U16 (8-tamoyil): kurs yoki ustoz taklifi — shu detektorning COURSE turi.
+    C = lambda fr="NO", sf="NO", ig="NO", sy="YES", tv="YES", u="NO", rc="NO", tr="YES", **kw: dict(  # noqa: E731
+        {"fastRich": fr, "secretFormula": sf, "incomeGuarantee": ig, "syllabus": sy, "teacherVerifiable": tv,
+         "urgency": u, "recruitment": rc, "trialOrRefund": tr}, **kw)
+    cc = [("course-001-green", C()),
+          ("course-002-one-sign", C(u="YES")),
+          ("course-003-fast-rich-and-secret", C(fr="YES", sf="YES")),
+          ("course-004-income-guarantee-alone", C(ig="YES")),
+          ("course-005-recruit-alone", C(rc="YES")),
+          ("course-006-unknowns-only", C(sy="UNKNOWN", tv="UNKNOWN", tr="UNKNOWN")),
+          ("course-007-typical-scam", C(fr="YES", sf="YES", ig="YES", sy="NO", tv="NO", u="YES", tr="NO")),
+          ("course-008-no-syllabus-no-refund", C(sy="NO", tr="NO")),
+          ("course-009-job-abroad", C(jobAbroad="YES")),
+          ("course-010-job-abroad-asked-no", C(jobAbroad="NO")),
+          ("course-011-job-abroad-unknown-plus-sign", C(u="YES", jobAbroad="UNKNOWN")),
+          ("course-neg-001-missing", {"fastRich": "NO"}),
+          ("course-neg-002-invalid", C(fr="MAYBE"))]
+    suites["offer_check"] = _suite("offer_check", "Taklif detektori. INVESTMENT (standart): 9 savol → bayroqlar; «besh xavf belgisi»dan ikkitasi — TWO_SIGNS. COURSE (8-tamoyil): 8 savol (+ ixtiyoriy jobAbroad), har aniq bayroq — belgi, ikkitasi — TWO_SIGNS. Qizil bo'lsa QIZIL, sariq bo'lsa SARIQ, aks holda YASHIL", [
+        _case(cid, {"answers": a}, lambda a=a: offer_check(a)) for cid, a in oc] + [
+        _case(cid, {"kind": "COURSE", "answers": a}, lambda a=a: offer_check_kind("COURSE", a)) for cid, a in cc] + [
+        _case("offer-neg-003-kind", {"kind": "LOTTERY", "answers": A("NO", "YES", "YES", "NO", "NO", "YES")},
+              lambda: offer_check_kind("LOTTERY", {}))])
+    # U16 — «Bir soatim qancha?» (2G.1)
+    hv = [("hv-001-manual", 720000000, None, 600, 26),            # 7,2 mln, 10 soat × 26 kun = 260 soat
+          ("hv-002-auto-three", None, [600000000, 750000000, 900000000], 480, 22),
+          ("hv-003-auto-one", None, [500000000], 480, 22),
+          ("hv-004-rounding", 100000001, None, 420, 23),
+          ("hv-005-over-ceiling-day", 900000000, None, 660, 24),
+          ("hv-006-over-ceiling-month", 900000000, None, 600, 27),
+          ("hv-007-at-ceiling", 900000000, None, 600, 26),
+          ("hv-008-manual-wins", 400000000, [900000000], 300, 20),
+          ("hv-009-auto-rounding", None, [100000000, 100000001, 100000001], 540, 25),
+          ("hv-neg-001-no-income", None, [], 480, 22),
+          ("hv-neg-002-zero-income", 0, None, 480, 22),
+          ("hv-neg-003-time", 500000000, None, 0, 22),
+          ("hv-neg-004-days", 500000000, None, 480, 32),
+          ("hv-neg-005-negative", -1, None, 480, 22),
+          ("hv-neg-006-four-months", None, [1, 2, 3, 4], 480, 22),
+          ("hv-neg-007-day-over-24h", 500000000, None, 1441, 22)]
+    suites["hour_value"] = _suite("hour_value", "«Bir soatim qancha?»: round_half_up(daromad × 60 / (kunlik daqiqa × kun)), ikki barobar maqsad, soat chegarasi (kuniga > 600 daqiqa yoki oyiga > 15 600 daqiqa); daromad berilmasa — oxirgi ≤3 oy o'rtachasi (AUTO)", [
+        _case(cid, {"income": None if inc is None else _s(inc), "monthTotals": None if mt is None else [_s(x) for x in mt],
+                    "minutesPerDay": mpd, "days": d},
+              lambda inc=inc, mt=mt, mpd=mpd, d=d: hour_value(inc, mt, mpd, d))
+        for cid, inc, mt, mpd, d in hv])
+    hc = [("hvc-001-doubled", 3076923, 6153846), ("hvc-002-up", 3076923, 3500000), ("hvc-003-same", 3076923, 3076923),
+          ("hvc-004-down", 3076923, 2800000), ("hvc-005-base-zero", 0, 2500000), ("hvc-006-rounding", 3, 4),
+          ("hvc-neg-001-negative", -1, 100)]
+    suites["hour_value_change"] = _suite("hour_value_change", "Natijani o'lchash: yangi − boshlang'ich (tiyin) va bp_of(farq, boshlang'ich); boshlang'ich 0 — foiz yo'q", [
+        _case(cid, {"base": _s(b), "new": _s(n)}, lambda b=b, n=n: hour_value_change(b, n)) for cid, b, n in hc])
+    si = [("si-001-book-and-course", 720000000, [12000000, 45000000]), ("si-002-none", 720000000, []),
+          ("si-003-rounding", 300000000, [100000]), ("si-004-no-income", 0, [5000000]),
+          ("si-005-over-income", 100000000, [150000000]),
+          ("si-neg-001-zero-amount", 720000000, [0]), ("si-neg-002-negative-income", -1, [100])]
+    suites["self_invest_share"] = _suite("self_invest_share", "«O'zimga sarmoya» oylik qatori: belgili xarajatlar yig'indisi va bp_of(yig'indi, oy daromadi); daromad 0 — ulush yo'q", [
+        _case(cid, {"income": _s(i), "amounts": [_s(a) for a in am]}, lambda i=i, am=am: self_invest_share(i, am))
+        for cid, i, am in si])
     # U13 — ko'rik bayonnomasi yaxlitligi
     def tamper(i, minor):
         t = json.loads(json.dumps(CHAIN_ENTRIES))
@@ -2994,7 +3154,8 @@ ORACLE_SUITES = ("allocate", "percent_of", "round", "fx_convert", "money_format"
                  "kk_owner_pay", "kk_depreciation", "kk_true_profit", "kk_order_quote", "kk_month_close", "kk_cash_close", "kk_credit_sale", "kk_cogs", "kk_replacement",
                  "kk_payroll", "kk_supplier_balance", "kk_expansion_gate", "kk_zakat", "kk_funds", "kk_shift_close",
                  "mf_month", "mf_return_fund", "mf_remittance",
-                 "mf_travel_debt", "mf_cooling", "mf_reserve", "mf_startup", "mf_wall")
+                 "mf_travel_debt", "mf_cooling", "mf_reserve", "mf_startup", "mf_wall",
+                 "hour_value", "hour_value_change", "self_invest_share")
 
 
 def generate(directory: str) -> None:
@@ -3058,6 +3219,15 @@ def _expect_error(code, fn, *args):
 
 
 def selftest() -> None:
+    # U16 (8-tamoyil): 7,2 mln / 260 soat = 27 692,31 so'm; ikki barobar — 55 384,62.
+    h = hour_value(720000000, None, 600, 26)
+    assert (h["hourValue"], h["doubleTarget"], h["overCeiling"]) == ("2769231", "5538462", False)
+    assert hour_value(None, [600000000, 750000000, 900000000], 480, 22)["income"] == "750000000"
+    assert hour_value(900000000, None, 600, 27)["overCeiling"] is True
+    assert hour_value_change(0, 5)["changeBp"] is None and hour_value_change(3076923, 6153846)["changeBp"] == 10000
+    assert self_invest_share(720000000, [12000000, 45000000]) == {"total": "57000000", "shareBp": 792}
+    assert course_check({"fastRich": "NO", "secretFormula": "NO", "incomeGuarantee": "YES", "syllabus": "YES",
+                         "teacherVerifiable": "YES", "urgency": "NO", "recruitment": "NO", "trialOrRefund": "YES"})["verdict"] == "RED"
     # M3 (musofir/SPEC 6): 15 mln yo'l qarzi, maqsadda 3,27 mln, oyiga ~3 mln → 4 oy; qarindosh 15 mln muddatsiz qarz.
     rsv = mf_reserve(300000, [810000, 790000, 815000], 1, 520000)
     assert (rsv["target"], rsv["toReserve"], rsv["toFund"], rsv["status"]) == ("805000", "505000", "15000", "PARTIAL"), rsv

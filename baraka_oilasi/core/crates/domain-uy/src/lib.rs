@@ -10,6 +10,7 @@ pub mod debt;
 pub mod emergency;
 pub mod gate;
 pub mod inflation;
+pub mod learning;
 pub mod nudge;
 pub mod partnership;
 pub mod payoff;

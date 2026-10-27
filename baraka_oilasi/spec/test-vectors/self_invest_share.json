@@ -1,0 +1,96 @@
+{
+  "suite": "self_invest_share",
+  "version": 1,
+  "description": "«O'zimga sarmoya» oylik qatori: belgili xarajatlar yig'indisi va bp_of(yig'indi, oy daromadi); daromad 0 — ulush yo'q",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "si-001-book-and-course",
+      "input": {
+        "income": "720000000",
+        "amounts": [
+          "12000000",
+          "45000000"
+        ]
+      },
+      "expected": {
+        "total": "57000000",
+        "shareBp": 792
+      }
+    },
+    {
+      "id": "si-002-none",
+      "input": {
+        "income": "720000000",
+        "amounts": []
+      },
+      "expected": {
+        "total": "0",
+        "shareBp": 0
+      }
+    },
+    {
+      "id": "si-003-rounding",
+      "input": {
+        "income": "300000000",
+        "amounts": [
+          "100000"
+        ]
+      },
+      "expected": {
+        "total": "100000",
+        "shareBp": 3
+      }
+    },
+    {
+      "id": "si-004-no-income",
+      "input": {
+        "income": "0",
+        "amounts": [
+          "5000000"
+        ]
+      },
+      "expected": {
+        "total": "5000000",
+        "shareBp": null
+      }
+    },
+    {
+      "id": "si-005-over-income",
+      "input": {
+        "income": "100000000",
+        "amounts": [
+          "150000000"
+        ]
+      },
+      "expected": {
+        "total": "150000000",
+        "shareBp": 15000
+      }
+    },
+    {
+      "id": "si-neg-001-zero-amount",
+      "input": {
+        "income": "720000000",
+        "amounts": [
+          "0"
+        ]
+      },
+      "expected": {
+        "error": "AMOUNT_NOT_POSITIVE"
+      }
+    },
+    {
+      "id": "si-neg-002-negative-income",
+      "input": {
+        "income": "-1",
+        "amounts": [
+          "100"
+        ]
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    }
+  ]
+}

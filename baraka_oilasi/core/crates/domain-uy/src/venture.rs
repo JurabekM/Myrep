@@ -638,6 +638,121 @@ pub fn offer_check(a: &OfferAnswers) -> OfferVerdict {
     }
 }
 
+// --- Kurs yoki ustoz taklifi: umumiy detektorning `COURSE` turi (8-tamoyil, SPEC 2G.4) -----------
+
+/// Kurs taklifi javoblari. `job_abroad` — Musofir uchun ixtiyoriy savol (`None` — so'ralmagan).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CourseAnswers {
+    /// Qisqa muddatda boylik yoki katta daromad va'da qilinadimi.
+    pub fast_rich: Reply,
+    /// «Sir», «hech kim aytmaydigan usul» kabi da'vo bormi.
+    pub secret_formula: Reply,
+    /// Kursdan keyin daromad yoki ish kafolatlanadimi.
+    pub income_guarantee: Reply,
+    /// Dastur va amaliy natija yozilganmi.
+    pub syllabus: Reply,
+    /// O'qituvchining amaliy ishini ko'rib, tekshirib bo'ladimi.
+    pub teacher_verifiable: Reply,
+    pub urgency: Reply,
+    /// Boshqalarni olib kelsangiz pul qaytadimi.
+    pub recruitment: Reply,
+    /// Sinov darsi yoki pulni qaytarish sharti bormi.
+    pub trial_or_refund: Reply,
+    /// Kursdan keyin chet elda ish kafolati.
+    pub job_abroad: Option<Reply>,
+}
+
+/// Kursda har bir aniq bayroq — alohida belgi; ikki va undan ortiq — `TWO_SIGNS` (qizil).
+pub const COURSE_SIGNS: [&str; 9] = [
+    "FAST_RICH",
+    "SECRET_FORMULA",
+    "INCOME_GUARANTEE",
+    "NO_SYLLABUS",
+    "UNVERIFIABLE_TEACHER",
+    "URGENCY",
+    "RECRUITMENT_REQUIRED",
+    "NO_TRIAL_OR_REFUND",
+    "JOB_ABROAD_PROMISE",
+];
+
+/// Belgi yo'q — yashil; bitta belgi — sariq; ikki belgi yoki `INCOME_GUARANTEE`,
+/// `RECRUITMENT_REQUIRED`, `JOB_ABROAD_PROMISE` ning o'zi — qizil. `UNKNOWN` — sariq, belgi emas.
+pub fn course_check(a: &CourseAnswers) -> OfferVerdict {
+    use Level::{Red, Yellow};
+    use Reply::{No, Unknown, Yes};
+    let mut table: Vec<(Reply, Reply, &'static str, Level, &'static str)> = vec![
+        (a.fast_rich, Yes, "FAST_RICH", Yellow, "FAST_RICH_UNKNOWN"),
+        (
+            a.secret_formula,
+            Yes,
+            "SECRET_FORMULA",
+            Yellow,
+            "SECRET_FORMULA_UNKNOWN",
+        ),
+        (
+            a.income_guarantee,
+            Yes,
+            "INCOME_GUARANTEE",
+            Red,
+            "INCOME_GUARANTEE_UNKNOWN",
+        ),
+        (a.syllabus, No, "NO_SYLLABUS", Yellow, "SYLLABUS_UNKNOWN"),
+        (
+            a.teacher_verifiable,
+            No,
+            "UNVERIFIABLE_TEACHER",
+            Yellow,
+            "TEACHER_UNKNOWN",
+        ),
+        (a.urgency, Yes, "URGENCY", Yellow, "URGENCY_UNKNOWN"),
+        (
+            a.recruitment,
+            Yes,
+            "RECRUITMENT_REQUIRED",
+            Red,
+            "RECRUITMENT_UNKNOWN",
+        ),
+        (
+            a.trial_or_refund,
+            No,
+            "NO_TRIAL_OR_REFUND",
+            Yellow,
+            "TRIAL_UNKNOWN",
+        ),
+    ];
+    if let Some(r) = a.job_abroad {
+        table.push((r, Yes, "JOB_ABROAD_PROMISE", Red, "JOB_ABROAD_UNKNOWN"));
+    }
+    let mut flags = Vec::new();
+    for (reply, bad, code, level, unknown) in table {
+        if reply == bad {
+            flags.push(OfferFlag { code, level });
+        } else if reply == Unknown {
+            flags.push(OfferFlag {
+                code: unknown,
+                level: Yellow,
+            });
+        }
+    }
+    let n = flags
+        .iter()
+        .filter(|f| COURSE_SIGNS.contains(&f.code))
+        .count();
+    let signs = u8::try_from(n).unwrap_or(u8::MAX);
+    if signs >= 2 {
+        flags.push(OfferFlag {
+            code: "TWO_SIGNS",
+            level: Red,
+        });
+    }
+    let verdict = flags.iter().map(|f| f.level).max().unwrap_or(Level::Green);
+    OfferVerdict {
+        verdict,
+        flags,
+        signs,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
