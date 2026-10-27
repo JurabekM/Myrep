@@ -1,5 +1,5 @@
 import 'package:zanjir_core/zanjir_core.dart';
-import 'package:zanjir_data/zanjir_data.dart' show DataRuleException, ProtocolBlocker;
+import 'package:zanjir_data/zanjir_data.dart' show DataRuleException, ProtocolBlocker, ServerException;
 
 import 'gen/app_localizations.dart';
 
@@ -139,6 +139,20 @@ extension Labels on AppLocalizations {
     'needs_review_requires_lead' => blockerNeedsReviewLead(b.ids.length),
     'lead_comment_required' => blockerLeadComment(b.ids.length),
     _ => blockerOther(b.code),
+  };
+
+  /// Server va sinxronlash xatolari (ADR-0012).
+  String serverErrorText(Object e) => switch (e) {
+    ServerException(unavailable: true) => serverUnavailable,
+    ServerException(code: 'invalid_credentials') => invalidCredentials,
+    ServerException(code: 'invalid_invite') => invalidInvite,
+    ServerException(code: 'conflict') => phoneTaken,
+    ServerException(code: 'invalid_phone') => invalidPhone,
+    ServerException(code: 'session_expired' || 'not_authenticated' || 'invalid_token') => sessionExpired,
+    ServerException(code: 'push_rejected', :final reason) => syncRejected(reason ?? '—'),
+    ServerException(:final code) => serverError(code),
+    StateError(message: 'profile_mismatch' || 'profile_exists') => profileMismatch,
+    _ => errorText(e),
   };
 
   /// Repozitoriy xatolari foydalanuvchiga.

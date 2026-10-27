@@ -27,6 +27,7 @@ class RegisterIn(Strict):
     user_id: Uuid | None = None
     org_name: Name
     license_no: Annotated[str, StringConstraints(max_length=64)] | None = None
+    license_valid_until: datetime | None = None
     full_name: Name
     phone: PhoneIn
     password: Password

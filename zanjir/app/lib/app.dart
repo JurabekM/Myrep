@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/providers.dart';
+import 'core/sync_controller.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
@@ -17,6 +18,8 @@ class ZanjirApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider).value ?? 'uz';
     final large = ref.watch(largeTextProvider).value ?? false;
+    // Fon sinxronlashi (ADR-0012): kontroller ilova davomida tirik turadi; holat o'zgarishi ilovani qayta chizmaydi.
+    ref.listen(syncControllerProvider, (_, _) {});
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       theme: buildDarkTheme(),

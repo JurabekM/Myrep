@@ -2042,9 +2042,628 @@ i1.GeneratedColumn<i2.Uint8List> _column_89(String aliasedName) =>
       type: i1.DriftSqlType.blob,
       $customConstraints: 'NOT NULL',
     );
+
+final class Schema4 extends i0.VersionedSchema {
+  Schema4({required super.database}) : super(version: 4);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    organization,
+    site,
+    appUser,
+    measurementSession,
+    node,
+    instrument,
+    measurement,
+    measurementAppendOnlyUpdate,
+    measurementAppendOnlyDelete,
+    device,
+    protocol,
+    protocolAppendOnlyUpdate,
+    protocolAppendOnlyDelete,
+    protocolDocument,
+    protocolDocumentAppendOnlyUpdate,
+    protocolDocumentAppendOnlyDelete,
+    auditEvent,
+    auditEventAppendOnlyUpdate,
+    auditEventAppendOnlyDelete,
+    nodeSiteIdx,
+    edge,
+    edgeSiteIdx,
+    measurementSessionIdx,
+    auditEventEntityIdx,
+    localPref,
+    syncOutbox,
+    organizationOutboxIns,
+    organizationOutboxUpd,
+    instrumentOutboxIns,
+    instrumentOutboxUpd,
+    siteOutboxIns,
+    siteOutboxUpd,
+    nodeOutboxIns,
+    nodeOutboxUpd,
+    edgeOutboxIns,
+    edgeOutboxUpd,
+    measurementSessionOutboxIns,
+    measurementSessionOutboxUpd,
+    measurementOutboxIns,
+    protocolOutboxIns,
+    protocolDocumentOutboxIns,
+    auditEventOutboxIns,
+    isolationPlan,
+    isolationPlanOutboxIns,
+    isolationPlanOutboxUpd,
+    normSet,
+    normSetOutboxIns,
+    normSetOutboxUpd,
+    orgSetting,
+    orgSettingOutboxIns,
+    orgSettingOutboxUpd,
+  ];
+  late final Shape0 organization = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'organization',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 site = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'site',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_4,
+        _column_5,
+        _column_9,
+        _column_10,
+        _column_11,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape2 appUser = Shape2(
+    source: i0.VersionedTable(
+      entityName: 'app_user',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_4,
+        _column_13,
+        _column_14,
+        _column_15,
+        _column_16,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 measurementSession = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'measurement_session',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_4,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_23,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape4 node = Shape4(
+    source: i0.VersionedTable(
+      entityName: 'node',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_4,
+        _column_17,
+        _column_18,
+        _column_24,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_28,
+        _column_29,
+        _column_30,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape5 instrument = Shape5(
+    source: i0.VersionedTable(
+      entityName: 'instrument',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_4,
+        _column_18,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape6 measurement = Shape6(
+    source: i0.VersionedTable(
+      entityName: 'measurement',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_35,
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_41,
+        _column_42,
+        _column_43,
+        _column_44,
+        _column_45,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Trigger measurementAppendOnlyUpdate = i1.Trigger(
+    'CREATE TRIGGER measurement_append_only_update BEFORE UPDATE ON measurement BEGIN SELECT RAISE (ABORT, \'append_only: measurement\');END',
+    'measurement_append_only_update',
+  );
+  final i1.Trigger measurementAppendOnlyDelete = i1.Trigger(
+    'CREATE TRIGGER measurement_append_only_delete BEFORE DELETE ON measurement BEGIN SELECT RAISE (ABORT, \'append_only: measurement\');END',
+    'measurement_append_only_delete',
+  );
+  late final Shape7 device = Shape7(
+    source: i0.VersionedTable(
+      entityName: 'device',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_4,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_50,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape8 protocol = Shape8(
+    source: i0.VersionedTable(
+      entityName: 'protocol',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)', 'UNIQUE(org_id, number)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_35,
+        _column_51,
+        _column_52,
+        _column_53,
+        _column_54,
+        _column_55,
+        _column_56,
+        _column_48,
+        _column_57,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Trigger protocolAppendOnlyUpdate = i1.Trigger(
+    'CREATE TRIGGER protocol_append_only_update BEFORE UPDATE ON protocol BEGIN SELECT RAISE (ABORT, \'append_only: protocol\');END',
+    'protocol_append_only_update',
+  );
+  final i1.Trigger protocolAppendOnlyDelete = i1.Trigger(
+    'CREATE TRIGGER protocol_append_only_delete BEFORE DELETE ON protocol BEGIN SELECT RAISE (ABORT, \'append_only: protocol\');END',
+    'protocol_append_only_delete',
+  );
+  late final Shape15 protocolDocument = Shape15(
+    source: i0.VersionedTable(
+      entityName: 'protocol_document',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_87,
+        _column_88,
+        _column_89,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Trigger protocolDocumentAppendOnlyUpdate = i1.Trigger(
+    'CREATE TRIGGER protocol_document_append_only_update BEFORE UPDATE ON protocol_document BEGIN SELECT RAISE (ABORT, \'append_only: protocol_document\');END',
+    'protocol_document_append_only_update',
+  );
+  final i1.Trigger protocolDocumentAppendOnlyDelete = i1.Trigger(
+    'CREATE TRIGGER protocol_document_append_only_delete BEFORE DELETE ON protocol_document BEGIN SELECT RAISE (ABORT, \'append_only: protocol_document\');END',
+    'protocol_document_append_only_delete',
+  );
+  late final Shape9 auditEvent = Shape9(
+    source: i0.VersionedTable(
+      entityName: 'audit_event',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)', 'UNIQUE(device_id, seq)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_55,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_61,
+        _column_62,
+        _column_63,
+        _column_64,
+        _column_65,
+        _column_48,
+        _column_66,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Trigger auditEventAppendOnlyUpdate = i1.Trigger(
+    'CREATE TRIGGER audit_event_append_only_update BEFORE UPDATE ON audit_event BEGIN SELECT RAISE (ABORT, \'append_only: audit_event\');END',
+    'audit_event_append_only_update',
+  );
+  final i1.Trigger auditEventAppendOnlyDelete = i1.Trigger(
+    'CREATE TRIGGER audit_event_append_only_delete BEFORE DELETE ON audit_event BEGIN SELECT RAISE (ABORT, \'append_only: audit_event\');END',
+    'audit_event_append_only_delete',
+  );
+  final i1.Index nodeSiteIdx = i1.Index(
+    'node_site_idx',
+    'CREATE INDEX node_site_idx ON node (site_id)',
+  );
+  late final Shape10 edge = Shape10(
+    source: i0.VersionedTable(
+      entityName: 'edge',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_4,
+        _column_17,
+        _column_67,
+        _column_68,
+        _column_69,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index edgeSiteIdx = i1.Index(
+    'edge_site_idx',
+    'CREATE INDEX edge_site_idx ON edge (site_id)',
+  );
+  final i1.Index measurementSessionIdx = i1.Index(
+    'measurement_session_idx',
+    'CREATE INDEX measurement_session_idx ON measurement (session_id)',
+  );
+  final i1.Index auditEventEntityIdx = i1.Index(
+    'audit_event_entity_idx',
+    'CREATE INDEX audit_event_entity_idx ON audit_event (entity_id)',
+  );
+  late final Shape14 localPref = Shape14(
+    source: i0.VersionedTable(
+      entityName: 'local_pref',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY("key")'],
+      columns: [_column_85, _column_86],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape16 syncOutbox = Shape16(
+    source: i0.VersionedTable(
+      entityName: 'sync_outbox',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['UNIQUE(table_name, row_id)'],
+      columns: [_column_90, _column_91, _column_92, _column_93],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Trigger organizationOutboxIns = i1.Trigger(
+    'CREATE TRIGGER organization_outbox_ins AFTER INSERT ON organization WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'organization\', NEW.id, lower(hex(randomblob(16))));END',
+    'organization_outbox_ins',
+  );
+  final i1.Trigger organizationOutboxUpd = i1.Trigger(
+    'CREATE TRIGGER organization_outbox_upd AFTER UPDATE ON organization WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'organization\', NEW.id, lower(hex(randomblob(16))));END',
+    'organization_outbox_upd',
+  );
+  final i1.Trigger instrumentOutboxIns = i1.Trigger(
+    'CREATE TRIGGER instrument_outbox_ins AFTER INSERT ON instrument WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'instrument\', NEW.id, lower(hex(randomblob(16))));END',
+    'instrument_outbox_ins',
+  );
+  final i1.Trigger instrumentOutboxUpd = i1.Trigger(
+    'CREATE TRIGGER instrument_outbox_upd AFTER UPDATE ON instrument WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'instrument\', NEW.id, lower(hex(randomblob(16))));END',
+    'instrument_outbox_upd',
+  );
+  final i1.Trigger siteOutboxIns = i1.Trigger(
+    'CREATE TRIGGER site_outbox_ins AFTER INSERT ON site WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'site\', NEW.id, lower(hex(randomblob(16))));END',
+    'site_outbox_ins',
+  );
+  final i1.Trigger siteOutboxUpd = i1.Trigger(
+    'CREATE TRIGGER site_outbox_upd AFTER UPDATE ON site WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'site\', NEW.id, lower(hex(randomblob(16))));END',
+    'site_outbox_upd',
+  );
+  final i1.Trigger nodeOutboxIns = i1.Trigger(
+    'CREATE TRIGGER node_outbox_ins AFTER INSERT ON node WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'node\', NEW.id, lower(hex(randomblob(16))));END',
+    'node_outbox_ins',
+  );
+  final i1.Trigger nodeOutboxUpd = i1.Trigger(
+    'CREATE TRIGGER node_outbox_upd AFTER UPDATE ON node WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'node\', NEW.id, lower(hex(randomblob(16))));END',
+    'node_outbox_upd',
+  );
+  final i1.Trigger edgeOutboxIns = i1.Trigger(
+    'CREATE TRIGGER edge_outbox_ins AFTER INSERT ON edge WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'edge\', NEW.id, lower(hex(randomblob(16))));END',
+    'edge_outbox_ins',
+  );
+  final i1.Trigger edgeOutboxUpd = i1.Trigger(
+    'CREATE TRIGGER edge_outbox_upd AFTER UPDATE ON edge WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'edge\', NEW.id, lower(hex(randomblob(16))));END',
+    'edge_outbox_upd',
+  );
+  final i1.Trigger measurementSessionOutboxIns = i1.Trigger(
+    'CREATE TRIGGER measurement_session_outbox_ins AFTER INSERT ON measurement_session WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'measurement_session\', NEW.id, lower(hex(randomblob(16))));END',
+    'measurement_session_outbox_ins',
+  );
+  final i1.Trigger measurementSessionOutboxUpd = i1.Trigger(
+    'CREATE TRIGGER measurement_session_outbox_upd AFTER UPDATE ON measurement_session WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'measurement_session\', NEW.id, lower(hex(randomblob(16))));END',
+    'measurement_session_outbox_upd',
+  );
+  final i1.Trigger measurementOutboxIns = i1.Trigger(
+    'CREATE TRIGGER measurement_outbox_ins AFTER INSERT ON measurement WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'measurement\', NEW.id, lower(hex(randomblob(16))));END',
+    'measurement_outbox_ins',
+  );
+  final i1.Trigger protocolOutboxIns = i1.Trigger(
+    'CREATE TRIGGER protocol_outbox_ins AFTER INSERT ON protocol WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'protocol\', NEW.id, lower(hex(randomblob(16))));END',
+    'protocol_outbox_ins',
+  );
+  final i1.Trigger protocolDocumentOutboxIns = i1.Trigger(
+    'CREATE TRIGGER protocol_document_outbox_ins AFTER INSERT ON protocol_document WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'protocol_document\', NEW.id, lower(hex(randomblob(16))));END',
+    'protocol_document_outbox_ins',
+  );
+  final i1.Trigger auditEventOutboxIns = i1.Trigger(
+    'CREATE TRIGGER audit_event_outbox_ins AFTER INSERT ON audit_event WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'audit_event\', NEW.id, lower(hex(randomblob(16))));END',
+    'audit_event_outbox_ins',
+  );
+  late final Shape11 isolationPlan = Shape11(
+    source: i0.VersionedTable(
+      entityName: 'isolation_plan',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_4,
+        _column_17,
+        _column_70,
+        _column_71,
+        _column_72,
+        _column_73,
+        _column_74,
+        _column_75,
+        _column_76,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Trigger isolationPlanOutboxIns = i1.Trigger(
+    'CREATE TRIGGER isolation_plan_outbox_ins AFTER INSERT ON isolation_plan WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'isolation_plan\', NEW.id, lower(hex(randomblob(16))));END',
+    'isolation_plan_outbox_ins',
+  );
+  final i1.Trigger isolationPlanOutboxUpd = i1.Trigger(
+    'CREATE TRIGGER isolation_plan_outbox_upd AFTER UPDATE ON isolation_plan WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'isolation_plan\', NEW.id, lower(hex(randomblob(16))));END',
+    'isolation_plan_outbox_upd',
+  );
+  late final Shape12 normSet = Shape12(
+    source: i0.VersionedTable(
+      entityName: 'norm_set',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)', 'UNIQUE(org_id, version)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_4,
+        _column_77,
+        _column_78,
+        _column_79,
+        _column_80,
+        _column_81,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Trigger normSetOutboxIns = i1.Trigger(
+    'CREATE TRIGGER norm_set_outbox_ins AFTER INSERT ON norm_set WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'norm_set\', NEW.id, lower(hex(randomblob(16))));END',
+    'norm_set_outbox_ins',
+  );
+  final i1.Trigger normSetOutboxUpd = i1.Trigger(
+    'CREATE TRIGGER norm_set_outbox_upd AFTER UPDATE ON norm_set WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'norm_set\', NEW.id, lower(hex(randomblob(16))));END',
+    'norm_set_outbox_upd',
+  );
+  late final Shape13 orgSetting = Shape13(
+    source: i0.VersionedTable(
+      entityName: 'org_setting',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)', 'UNIQUE(org_id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_8,
+        _column_82,
+        _column_83,
+        _column_84,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Trigger orgSettingOutboxIns = i1.Trigger(
+    'CREATE TRIGGER org_setting_outbox_ins AFTER INSERT ON org_setting WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'org_setting\', NEW.id, lower(hex(randomblob(16))));END',
+    'org_setting_outbox_ins',
+  );
+  final i1.Trigger orgSettingOutboxUpd = i1.Trigger(
+    'CREATE TRIGGER org_setting_outbox_upd AFTER UPDATE ON org_setting WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'org_setting\', NEW.id, lower(hex(randomblob(16))));END',
+    'org_setting_outbox_upd',
+  );
+}
+
+class Shape16 extends i0.VersionedTable {
+  Shape16({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get tableName$ =>
+      columnsByName['table_name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get rowId =>
+      columnsByName['row_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get opId =>
+      columnsByName['op_id']! as i1.GeneratedColumn<String>;
+}
+
+i1.GeneratedColumn<int> _column_90(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'id',
+      aliasedName,
+      false,
+      hasAutoIncrement: true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+    );
+i1.GeneratedColumn<String> _column_91(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'table_name',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_92(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'row_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_93(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'op_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
+  required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -2058,6 +2677,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from2To3(migrator, schema);
         return 3;
+      case 3:
+        final schema = Schema4(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from3To4(migrator, schema);
+        return 4;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -2067,6 +2691,11 @@ i0.MigrationStepWithVersion migrationSteps({
 i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
+  required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
 }) => i0.VersionedSchema.stepByStepHelper(
-  step: migrationSteps(from1To2: from1To2, from2To3: from2To3),
+  step: migrationSteps(
+    from1To2: from1To2,
+    from2To3: from2To3,
+    from3To4: from3To4,
+  ),
 );

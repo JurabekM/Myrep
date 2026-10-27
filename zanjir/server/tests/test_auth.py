@@ -29,8 +29,12 @@ async def test_register_login_me(api: Api) -> None:
 async def test_register_with_offline_ids_and_conflicts(api: Api) -> None:
     """Ilovada oflayn yaratilgan laboratoriya o'z ID lari bilan ro'yxatdan o'tadi (ADR-0011)."""
     org_id, user_id = str(uuid.uuid4()), str(uuid.uuid4())
-    u = await api.register("ADMIN", org_id=org_id, user_id=user_id)
+    u = await api.register(
+        "ADMIN", org_id=org_id, user_id=user_id, license_no="EL-1", license_valid_until="2027-12-31T00:00:00.000Z"
+    )
     assert (u.org_id, u.id) == (org_id, user_id)
+    org = (await api.c.get("/sync/pull", headers=u.headers)).json()["changes"][0]["row"]
+    assert (org["license_no"], org["license_valid_until"]) == ("EL-1", "2027-12-31T00:00:00.000Z")
     body = {"org_name": "X", "full_name": "Y", "password": PASSWORD, "org_id": org_id}
     r = await api.c.post("/auth/register", json={**body, "phone": phone()})
     assert r.status_code == 409

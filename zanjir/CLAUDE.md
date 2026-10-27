@@ -53,6 +53,8 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
   (Docker kerak — testcontainers PostgreSQL 16; Docker o'rniga `ZANJIR_TEST_DATABASE_URL`; konteynerda `dockerd &` va
   `TESTCONTAINERS_RYUK_DISABLED=true`). Migratsiya: `uv run alembic upgrade head` (`ZANJIR_DATABASE_URL`).
 - Normalar: `cd tools/norms && uv sync && uv run pytest && uv run python -I check_norms.py ../../norms` (`--release` — release darvozasi)
+- E2E (ilova sync ↔ server): `tools/e2e/run.sh` (Docker'da PostgreSQL yoki `ZANJIR_E2E_OWNER_URL`; `dart test -P e2e-run test/e2e`).
+  Sinxronlash sxemasi shartnomasi: `ZANJIR_UPDATE_SYNC_SCHEMA=1 uv run pytest tests/test_sync_schema.py` → `tools/vectors/sync_schema.json`.
 - Kripto vektorlari: `cd server && uv run python -I ../tools/vectors/generate.py --check` (qo'lda tahrirlanmaydi, ADR-0007)
 - CI: `.github/workflows/zanjir.yml` (repo ildizida) — yuqoridagilarning hammasi.
 
@@ -101,6 +103,13 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - `sync/` — `wire.py` (sim formati), `service.py` (push qoidalari, pull), `protocol_rules.py` (6-qoida serverda).
 - Yangi endpoint → `tests/test_rbac_matrix.py` `MATRIX` va `docs/SECURITY.md` jadvali (aks holda test yiqiladi).
 - Testlar: `tests/support/api.py` (tashkilot/rollar), `tests/support/field.py` (dala qurilmasi taqlidi: audit zanjiri, imzo).
+
+## Sinxronlash (ADR-0012)
+- `zanjir_data/lib/src/sync/`: `sync_engine.dart` (navbat → push, pull bitta tranzaksiyada, LWW), `wire.dart` (Drift ↔ sim
+  formati), `server_api.dart` (HTTP, refresh), `account.dart` (ro'yxatdan o'tish, taklif, kirish). Navbat — SQLite triggerlari
+  (`triggers.drift`); yangi sinxron jadval qo'shilsa: trigger, `syncTables`, server modeli, `sync_schema.json`.
+- Ilova: `core/sync_controller.dart` (fon va qo'lda), sozlamalar "Server" bo'limi, `/login`, `/join`; testlarda
+  `test/support/fake_http_server.dart`.
 
 ## Ilova (`app/`) xaritasi
 - `lib/core/` — provayderlar (Riverpod), profil (oflayn), qurilma kaliti, son formatlash, `platform.dart` (FLAG_SECURE,

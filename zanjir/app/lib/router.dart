@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/providers.dart';
+import 'features/auth/join_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/onboarding_screen.dart';
 import 'features/graph/node_card_screen.dart';
@@ -18,7 +19,7 @@ import 'features/settings/settings_screen.dart';
 import 'features/sites/site_form_screen.dart';
 import 'features/sites/sites_screen.dart';
 
-const _public = {'/login', '/onboarding'};
+const _public = {'/login', '/onboarding', '/join'};
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier(0);
@@ -39,6 +40,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', builder: (_, _) => const SitesScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
+      GoRoute(path: '/join', builder: (_, _) => const JoinScreen()),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       GoRoute(path: '/settings/instruments/new', builder: (_, _) => const InstrumentFormScreen()),
       GoRoute(path: '/sites/new', builder: (_, _) => const SiteFormScreen()),

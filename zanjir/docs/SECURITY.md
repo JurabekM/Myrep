@@ -20,6 +20,8 @@
   payload'dagi natijalar serverdagilar bilan bir xil). Bitta xato — butun paket rad etiladi.
 - Himoya: rate limiting (`/auth/*` — daqiqasiga 10 ta IP bo'yicha), so'rov hajmi 5 MB, CORS faqat sozlangan domenlar,
   tekshirish sahifasida qat'iy CSP, logda faqat marshrut shabloni (token, telefon, parol yo'q).
+- Ilova: server tokenlari va qurilma kaliti `flutter_secure_storage` (Android Keystore) da; serverga faqat ochiq kalit.
+  Sinxronlash xatolari foydalanuvchiga barqaror kod bilan ko'rsatiladi, navbatdagi ma'lumot o'chirilmaydi (ADR-0012).
 - Imzolash bloklanadi: muddati o'tgan asbob, tekshirilmagan normalar, litsenziya yo'q/muddati o'tgan, NEEDS_REVIEW (faqat LEAD
   izoh bilan), bekor qilingan qurilma, VIEWER/ADMIN roli (ADR-0010, 5-band).
 

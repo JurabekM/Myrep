@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
 ## [Unreleased]
 
 ### Qo'shildi
+- 8-faza — ilova ↔ server sinxronlash (ADR-0012): `zanjir_data` sxemasi v4 (`sync_outbox`, SQLite triggerlari), `SyncEngine`
+  (push paketlari, bitta tranzaksiyali pull, LWW, javob yo'qolsa takrorlanmaslik), `ServerApi` (HTTP, token refresh),
+  `ServerAccount` (laboratoriyani ro'yxatdan o'tkazish, taklif bilan qo'shilish, yangi qurilmada kirish); sim formati
+  shartnomasi `tools/vectors/sync_schema.json`; ilovada kirish va qo'shilish ekranlari, sozlamalarda "Server" bo'limi,
+  fonda sinxronlash, tokenlar Keystore'da; E2E `tools/e2e/run.sh` va CI `e2e` jobi; server `/auth/register` litsenziya muddati.
 - 7-faza — server (ADR-0011): PostgreSQL 16 sxemasi (Alembic), RLS + imtiyozsiz ilova roli, append-only va `server_rev`
   triggerlari, kompozit FK; auth (argon2id, JWT 15 daqiqa, refresh rotatsiya va qayta ishlatishni aniqlash, taklif kodlari,
   laboratoriyani ro'yxatdan o'tkazish, SMS OTP interfeysi — o'chiq); foydalanuvchilar, rollar, qurilmalar; `/sync/pull`,
@@ -48,6 +53,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
   normalar schema tekshiruvi, release darvozasi.
 
 ### O'zgardi
+- Ilovadagi vaqtinchalik `AuthGateway` (oflayn shlyuz) olib tashlandi — kirish `ServerAccount` orqali.
 - `ProtocolRepository.insert` olib tashlandi — protokol faqat `prepare` → `sign` orqali; bekor qilish faqat LEAD/ADMIN, sabab bilan.
 - `summarizeValues`, `formatDecimal` — `zanjir_protocol` ga ko'chirildi (ilova va PDF bir xil ko'rinish).
 - `norms/v0.yaml`: izolyatsiya normasini tanlash uchun yagona `circuit_class` atributi; INS-SECONDARY faqat CABLE uchun.

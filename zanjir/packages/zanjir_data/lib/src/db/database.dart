@@ -21,7 +21,60 @@ final OnUpgrade _steps = stepByStep(
     await m.createTrigger(schema.protocolDocumentAppendOnlyUpdate);
     await m.createTrigger(schema.protocolDocumentAppendOnlyDelete);
   },
+  from3To4: (m, schema) async {
+    // 8-faza: sinxronlash navbati (ADR-0012). Mavjud ma'lumot ham navbatga qo'yiladi (hali serverga yuborilmagan).
+    await m.createTable(schema.syncOutbox);
+    for (final t in [
+      schema.organizationOutboxIns,
+      schema.organizationOutboxUpd,
+      schema.instrumentOutboxIns,
+      schema.instrumentOutboxUpd,
+      schema.siteOutboxIns,
+      schema.siteOutboxUpd,
+      schema.nodeOutboxIns,
+      schema.nodeOutboxUpd,
+      schema.edgeOutboxIns,
+      schema.edgeOutboxUpd,
+      schema.measurementSessionOutboxIns,
+      schema.measurementSessionOutboxUpd,
+      schema.measurementOutboxIns,
+      schema.protocolOutboxIns,
+      schema.protocolDocumentOutboxIns,
+      schema.auditEventOutboxIns,
+      schema.isolationPlanOutboxIns,
+      schema.isolationPlanOutboxUpd,
+      schema.normSetOutboxIns,
+      schema.normSetOutboxUpd,
+      schema.orgSettingOutboxIns,
+      schema.orgSettingOutboxUpd,
+    ]) {
+      await m.createTrigger(t);
+    }
+    for (final (table, order) in outboxBackfillOrder) {
+      await m.database.customStatement(
+        'INSERT OR IGNORE INTO sync_outbox (table_name, row_id, op_id) '
+        "SELECT '$table', id, lower(hex(randomblob(16))) FROM $table ORDER BY $order",
+      );
+    }
+  },
 );
+
+/// Navbatga qo'yiladigan jadvallar (ota jadvallar birinchi) va ichki tartib.
+const outboxBackfillOrder = [
+  ('organization', 'created_at'),
+  ('norm_set', 'created_at'),
+  ('org_setting', 'created_at'),
+  ('instrument', 'created_at'),
+  ('site', 'created_at'),
+  ('node', 'created_at'),
+  ('edge', 'created_at'),
+  ('measurement_session', 'created_at'),
+  ('audit_event', 'seq'),
+  ('measurement', 'created_at'),
+  ('protocol', 'created_at'),
+  ('protocol_document', 'created_at'),
+  ('isolation_plan', 'created_at'),
+];
 
 /// ZANJIR lokal bazasi — qurilmadagi asosiy manba (offline-first).
 /// Sxema versiyasi o'zgarsa: `dart run drift_dev make-migrations` va migratsiya testi (ADR-0008).
@@ -43,6 +96,7 @@ final OnUpgrade _steps = stepByStep(
     NormSets,
     OrgSettings,
     LocalPrefs,
+    SyncOutbox,
   ],
   include: {'triggers.drift'},
 )
@@ -50,7 +104,7 @@ class ZanjirDatabase extends _$ZanjirDatabase {
   ZanjirDatabase(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(

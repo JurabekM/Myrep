@@ -140,6 +140,38 @@ jobs:
       - name: tools/vectors eskirmaganmi (Dart testlari ham shu fayllarni o'qiydi)
         run: uv run python -I ../tools/vectors/generate.py --check
 
+  e2e:
+    name: E2E (ilova sinxronlash ↔ server, ADR-0012)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: zanjir_owner
+          # Vaqtinchalik CI konteyneri paroli (maxfiy emas, tashqariga ochilmaydi).
+          POSTGRES_PASSWORD: e2e-ci-only
+          POSTGRES_DB: zanjir
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U zanjir_owner -d zanjir" --health-interval 2s --health-timeout 2s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pipx install uv
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: dart pub get
+        working-directory: zanjir/packages/zanjir_data
+      - name: Ikki qurilma, yo'qolgan javob, LWW, buzilgan zanjir, protokol (Dart → FastAPI + PostgreSQL)
+        env:
+          ZANJIR_E2E_OWNER_URL: postgresql+asyncpg://zanjir_owner:e2e-ci-only@localhost:5432/zanjir
+        run: zanjir/tools/e2e/run.sh
+
   norms:
     name: norms (schema + release darvozasi)
     runs-on: ubuntu-latest

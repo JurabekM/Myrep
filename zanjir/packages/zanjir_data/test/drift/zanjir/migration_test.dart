@@ -92,4 +92,32 @@ void main() {
     await expectLater(db.customUpdate('delete from protocol_document'), throwsA(isA<SqliteException>()));
     await expectLater(db.customUpdate("delete from protocol where id = 'p'"), throwsA(isA<SqliteException>()));
   });
+
+  test('v3 → v4: mavjud ma\'lumot sinxronlash navbatiga qo\'yiladi (app_user/device dan tashqari)', () async {
+    final schema = await verifier.schemaAt(3);
+    const t = "'2026-10-26T07:00:00.000Z'";
+    for (final sql in [
+      "insert into organization (id, name, created_at, updated_at) values ('org', 'Lab', $t, $t)",
+      "insert into app_user (id, org_id, full_name, phone, role, created_at, updated_at) values ('u', 'org', 'M', '+998', 'LEAD', $t, $t)",
+      "insert into device (id, org_id, user_id, public_key_ed25519, sig_alg, registered_at, created_at, updated_at) values ('d', 'org', 'u', 'aa', 'Ed25519', $t, $t, $t)",
+      "insert into site (id, org_id, name, created_at, updated_at) values ('s', 'org', 'Obyekt', $t, $t)",
+      "insert into audit_event (id, org_id, device_id, seq, prev_hash, event_hash, actor_id, event_type, payload_hash, device_sig, sig_alg, event_at, created_at, updated_at) values ('a2', 'org', 'd', 2, 'p', 'e2', 'u', 'X', 'h', 's', 'Ed25519', $t, $t, $t)",
+      "insert into audit_event (id, org_id, device_id, seq, prev_hash, event_hash, actor_id, event_type, payload_hash, device_sig, sig_alg, event_at, created_at, updated_at) values ('a1', 'org', 'd', 1, 'p', 'e1', 'u', 'X', 'h', 's', 'Ed25519', $t, $t, $t)",
+    ]) {
+      schema.rawDatabase.execute(sql);
+    }
+    final db = ZanjirDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 4);
+    final rows = await (db.select(db.syncOutbox)..orderBy([(o) => OrderingTerm(expression: o.id)])).get();
+    expect(
+      [for (final r in rows) (r.tableName_, r.rowId)],
+      [('organization', 'org'), ('site', 's'), ('audit_event', 'a1'), ('audit_event', 'a2')],
+    );
+    expect(rows.map((r) => r.opId).toSet(), hasLength(4));
+    // Yangi yozuvlar triggerlar orqali navbatga tushadi.
+    await db.customStatement("update site set name = 'Y', rev = 2 where id = 's'");
+    final site = await (db.select(db.syncOutbox)..where((o) => o.rowId.equals('s'))).getSingle();
+    expect(site.opId, isNot(rows[1].opId));
+  });
 }

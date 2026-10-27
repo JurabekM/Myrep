@@ -48,7 +48,9 @@ void main() {
     final fk = await db.customSelect('PRAGMA foreign_keys').getSingle();
     expect(fk.data.values.single, 1);
     final triggers = await db
-        .customSelect("select name from sqlite_master where type = 'trigger' order by name")
+        .customSelect(
+          "select name from sqlite_master where type = 'trigger' and name like '%append_only%' order by name",
+        )
         .map((r) => r.read<String>('name'))
         .get();
     expect(triggers, [

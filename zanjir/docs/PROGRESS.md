@@ -1,7 +1,7 @@
 # ZANJIR — PROGRESS
 
-**Joriy holat:** 7-faza tayyor. 🛑 1-inson darvozasi (`docs/NORMS_REVIEW.md`) va S11–S14 hali ochiq — 1-darvoza yopilmaguncha
-protokol imzolash bloklangan (ilovada ham, serverda ham). Keyingi — 8-faza (sinxronlash integratsiyasi, E2E).
+**Joriy holat:** 8-faza tayyor. 🛑 1-inson darvozasi (`docs/NORMS_REVIEW.md`) va S11–S14 hali ochiq — 1-darvoza yopilmaguncha
+protokol imzolash bloklangan (ilovada ham, serverda ham). Keyingi — 9-faza (ajratish rejasi UI, tasdiqlash, STALE).
 **Oxirgi yangilanish:** 2026-10-27
 
 ## Fazalar
@@ -17,7 +17,7 @@ protokol imzolash bloklangan (ilovada ham, serverda ham). Keyingi — 8-faza (si
 | 5 | Ilova UI, l10n uz/ru | ✅ Tayyor (19 widget/oqim testi; emulyator jobi qo'shildi, lokal tekshirilmagan) | 2026-10-26 | 35727eb |
 | 6 | Deterministik PDF, QR, imzolash | ✅ Tayyor (baytma-bayt bir xil PDF, 12 ta bloklash sharti testlangan, sxema v3) | 2026-10-27 | 9c7738b |
 | 7 | Server: auth, RBAC, RLS, sync, `/v/{qr_token}` | ✅ Tayyor (194 pytest, testcontainers PG16, RBAC 22 endpoint × 5 rol, qamrov 97%) | 2026-10-27 | be7544a |
-| 8 | Sinxronlash integratsiyasi (E2E) | ⏳ | | |
+| 8 | Sinxronlash integratsiyasi (E2E) | ✅ Tayyor (E2E 6 stsenariy: Dart ↔ FastAPI + PostgreSQL; ilova 30, data 74 test) | 2026-10-27 | _commit_ |
 | 9 | Ajratish rejasi UI, tasdiqlash, STALE | ⏳ | | |
 | 10 | Mustahkamlash: xavfsizlik, audit, accessibility | ⏳ | | |
 | 11 | Deploy (staging + prod) | ⏳ | | |
@@ -54,6 +54,7 @@ Muhandis uchun: M1–M10 (`docs/NORMS_REVIEW.md`). Ular hal bo'lguncha baholash 
 - Protokol QR havolasi hozircha `zanjir://app/v/<token>` (faqat ilova o'rnatilgan telefonda ochiladi); ochiq tekshirish sahifasi
   `https://<domen>/v/<token>` — 7-faza (server) va 2-darvoza (domen), build'da `--dart-define=ZANJIR_VERIFY_BASE_URL`.
 - `printing` (ulashish/chop etish) va FLAG_SECURE Android'da tekshirilmagan (SDK yo'q).
+- Ilova serverga `--dart-define=ZANJIR_SERVER_URL=...` bilan ulanadi (domen — 2-darvoza); usiz faqat oflayn.
 - Server testlari Docker talab qiladi: bu konteynerda `dockerd` qo'lda ishga tushirildi, image ECR ko'zgusidan
   (Docker Hub 429). Ilova ↔ server haqiqiy sinxronlash — 8-faza.
 - Release darvozasi `needs_verification` holatidagi normalarni ham yiqitadi (ADR-0004) — muhandis tekshiruvidan keyin holat `source_seen` ga o'zgartiriladi.

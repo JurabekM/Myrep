@@ -51,8 +51,9 @@ class SmallSite {
   final NodeRow sock1;
   final InstrumentRow instrument;
 
-  static Future<SmallSite> create(Org org) async {
-    final r = org.repos;
+  static Future<SmallSite> create(Org org) => createWith(org.repos);
+
+  static Future<SmallSite> createWith(Repositories r) async {
     final site = await r.sites.create(name: 'Obyekt', earthingSystem: EarthingSystem.tnCS, u0Volts: 220);
     final grid = await r.graph.addNode(siteId: site.id, kind: NodeKind.srcGrid, label: 'TP-1', verified: true);
     final qf1 = await r.graph.addNode(

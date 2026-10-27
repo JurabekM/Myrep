@@ -287,3 +287,37 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
   `org_setting` bir tashkilotda bitta: ikki qurilma turli ID bilan yaratsa — `constraint_violation` (8-fazada ilova
   serverdagini oladi). Asbob guvohnomasi muddatini muhandis o'z qurilmasida soxtalashtirsa, server buni payload'dan
   aniqlay olmaydi — protsessual nazorat (audit izi saqlanadi).
+
+## ADR-0012: Ilova ↔ server sinxronlash (8-faza)
+
+- **Sana:** 2026-10-27 · **Holat:** qabul qilingan (8-faza).
+- **Kontekst:** Prompt 7–8-bo'limlar (offline-first, fonda va qo'lda sinxronlash) va 8-faza mezoni: "ikki qurilma offline
+  ishlaydi → sync → o'lchovlar yo'qolmaydi va takrorlanmaydi; zanjir buzilishi rad etiladi".
+- **Qaror:**
+  1. **Navbat (outbox):** `sync_outbox(table_name, row_id, op_id)` — SQLite triggerlari (INSERT/UPDATE) to'ldiradi, repozitoriy
+     unutolmaydi; qatorning keyingi o'zgarishi yozuvni yangi `op_id` bilan almashtiradi. `app_user`, `device` — faqat API.
+     Serverdan kelgan o'zgarish navbatga tushmaydi (`local_pref` `sync.applying` belgisi triggerning `WHEN` shartida).
+     Sxema v4; v3 → v4 migratsiyasi mavjud ma'lumotni ham navbatga qo'yadi (audit — `seq` tartibida).
+  2. **Push:** paket ≤ 500 op; audit hodisalari (`seq` bo'yicha) birinchi, keyin jadvallar ota-bola tartibida; protokol o'z
+     hujjati bilan bir paketda (server talabi). Muvaffaqiyatdan keyin faqat yuborilgan `(id, op_id)` o'chiriladi — oraliqda
+     o'zgargan qator navbatda qoladi. Javob yo'qolsa qayta yuborish xavfsiz (server `client_op_id` takrorini o'tkazib
+     yuboradi; append-only bir xil qator — takror). Rad etilsa — navbat saqlanadi, sabab foydalanuvchiga ko'rsatiladi.
+  3. **Pull:** `server_rev` kursori (`sync.cursor`), **barcha sahifalar bitta tranzaksiyada** (`defer_foreign_keys`):
+     ota yozuv keyin o'zgarsa uning `server_rev` i bolalaridan katta — sahifalar alohida commit qilinsa lokal FK buzilardi
+     (testda topilgan). Metadata — LWW (`updated_at`, keyin `rev`; server yutsa mahalliy navbat yozuvi olib tashlanadi),
+     append-only — faqat qo'shiladi. Serverda yo'q lokal ustunlar (`app_user.phone`) yangi qatorda standart qiymat oladi.
+  4. **Sim formati shartnomasi:** `tools/vectors/sync_schema.json` — server testi yaratadi/tekshiradi, Dart testi lokal
+     jadvallar (nom, tur, null) bilan solishtiradi.
+  5. **Hisob oqimlari (`ServerAccount`):** oflayn laboratoriya o'z ID lari va litsenziyasi bilan ro'yxatdan o'tadi (aks holda
+     pull LWW lokal litsenziyani server qiymati bilan almashtirardi) + qurilma ochiq kaliti + to'liq push; taklif kodi bilan
+     qo'shilish va yangi qurilmada kirish — yangi kalit, qurilma, to'liq pull, lokal profil. Boshqa foydalanuvchi profili bor
+     qurilmada kirish rad etiladi (yangi sessiya serverda yopiladi, oldingisi tiklanadi). Tokenlar `flutter_secure_storage`.
+  6. **Ilova:** `--dart-define=ZANJIR_SERVER_URL` (bo'sh — faqat oflayn). Sozlamalarda "Server" bo'limi: ro'yxatdan o'tish
+     (LEAD/ADMIN), holat (navbat, oxirgi vaqt, natija, xato), "Sinxronlash", taklif kodi yaratish, chiqish. Fonda: ulangan
+     bo'lsa har 5 daqiqada va ilova qayta ochilganda; bir vaqtda bitta sinxronlash. Kirish va taklif bilan qo'shilish ekranlari.
+  7. **E2E:** `tools/e2e/run.sh` — PostgreSQL 16 + FastAPI (imtiyozsiz `zanjir_api` roli bilan) + `packages/zanjir_data/test/e2e`
+     (Dart). CI `e2e` jobi. Ilova UI testlari — `MockClient` dagi soxta server bilan.
+- **Oqibat:** Dart va Python audit hash'i, o'lchov va protokol payload hash'lari, PDF `/ID` va imzo haqiqiy serverda mos keldi.
+  Bitta yaroqsiz qator butun navbatni to'xtatadi (server "hammasi yoki hech narsa") — ataylab: audit zanjiri uzilmasin;
+  bunday holat foydalanuvchiga sabab bilan ko'rsatiladi. LWW qurilma soatiga tayanadi (soat noto'g'ri bo'lsa, kechroq
+  yozilgan o'zgarish yutqazishi mumkin) — 10-fazada server vaqti bilan tuzatish ko'rib chiqiladi.

@@ -64,7 +64,14 @@ async def register(body: RegisterIn, ctx: Ctx) -> TokensOut:
     try:
         async with ctx.db.org_session(org_id) as s:
             s.add(
-                Organization(id=org_id, name=body.org_name, license_no=body.license_no, created_at=now, updated_at=now)
+                Organization(
+                    id=org_id,
+                    name=body.org_name,
+                    license_no=body.license_no,
+                    license_valid_until=body.license_valid_until,
+                    created_at=now,
+                    updated_at=now,
+                )
             )
             await s.flush()
             user = AppUser(

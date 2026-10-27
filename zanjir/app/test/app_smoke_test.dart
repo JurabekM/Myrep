@@ -17,12 +17,10 @@ void main() {
     expect(theme.brightness, Brightness.dark);
     expect(theme.scaffoldBackgroundColor, ZanjirColors.paper);
 
-    // Server hali ulanmagan — oflayn profil taklif qilinadi.
-    await tester.enterText(find.byType(TextFormField).at(0), '+998901234567');
-    await tester.enterText(find.byType(TextFormField).at(1), 'parol');
-    await tester.tap(find.widgetWithText(FilledButton, 'Kirish'));
-    await settle(tester);
-    expect(find.textContaining('Server bilan aloqa yo\'q'), findsOneWidget);
+    // Server manzili sozlanmagan — faqat oflayn profil.
+    expect(find.byKey(const Key('login.notConfigured')), findsOneWidget);
+    expect(find.byType(TextFormField), findsNothing);
+    expect(find.text('Oflayn profil yaratish'), findsOneWidget);
     await env.dispose(tester);
   });
 }

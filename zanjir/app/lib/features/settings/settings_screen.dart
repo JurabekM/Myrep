@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zanjir_data/zanjir_data.dart';
 
 import '../../core/numbers.dart';
 import '../../core/providers.dart';
+import '../../core/sync_controller.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../l10n/labels.dart';
 import '../../theme/tokens.dart';
@@ -75,6 +77,8 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ),
+          const _ServerSection(),
+          const Divider(),
           AsyncView(
             value: ref.watch(activeNormSetProvider),
             builder: (set) => ListTile(
@@ -303,6 +307,223 @@ class _LabDialogState extends ConsumerState<_LabDialog> {
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
         FilledButton(key: const Key('lab.save'), onPressed: _save, child: Text(l10n.save)),
+      ],
+    );
+  }
+}
+
+/// Server bilan ulanish va sinxronlash (ADR-0012).
+class _ServerSection extends ConsumerWidget {
+  const _ServerSection();
+
+  Future<void> _register(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final password = await showDialog<String>(context: context, builder: (_) => const _PasswordDialog());
+    if (password == null || !context.mounted) return;
+    try {
+      await ref.read(syncControllerProvider.notifier).registerLab(password);
+    } catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.serverErrorText(e))));
+    }
+  }
+
+  Future<void> _invite(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final role = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.createInvite),
+        children: [
+          for (final r in ['ENGINEER', 'VIEWER', 'LEAD'])
+            SimpleDialogOption(
+              key: Key('invite.role.$r'),
+              onPressed: () => Navigator.pop(ctx, r),
+              child: Text(l10n.roleName(r)),
+            ),
+        ],
+      ),
+    );
+    if (role == null || !context.mounted) return;
+    try {
+      final code = await ref.read(syncControllerProvider.notifier).createInvite(role);
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.inviteCodeTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SelectableText(
+                code,
+                key: const Key('invite.code'),
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 22, letterSpacing: 2),
+              ),
+              const SizedBox(height: 8),
+              Text(l10n.inviteCodeHint),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Clipboard.setData(ClipboardData(text: code)),
+              child: Text(l10n.copy),
+            ),
+            FilledButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.close)),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.serverErrorText(e))));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final sync = ref.watch(syncControllerProvider);
+    final profile = ref.watch(profileProvider).value;
+    final editor = profile?.canEditSettings ?? false;
+    final children = <Widget>[
+      ListTile(title: Text(l10n.serverSection, style: Theme.of(context).textTheme.titleMedium)),
+    ];
+    if (!sync.configured) {
+      children.add(ListTile(key: const Key('server.status'), subtitle: Text(l10n.serverNotConfigured)));
+    } else if (!sync.connected) {
+      children.add(ListTile(key: const Key('server.status'), subtitle: Text(l10n.serverNotConnected)));
+      children.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: editor
+              ? FilledButton(
+                  key: const Key('server.register'),
+                  onPressed: sync.running ? null : () => _register(context, ref),
+                  child: Text(l10n.registerLab),
+                )
+              : OutlinedButton(
+                  key: const Key('server.login'),
+                  onPressed: () => context.push('/login'),
+                  child: Text(l10n.loginButton),
+                ),
+        ),
+      );
+    } else {
+      final last = sync.lastAt;
+      children.addAll([
+        ListTile(
+          key: const Key('server.status'),
+          leading: const Icon(Icons.cloud_done, color: ZanjirColors.success),
+          title: Text(l10n.serverConnected),
+          subtitle: Text(
+            [
+              l10n.syncPending(sync.pending),
+              if (last == null) l10n.syncNever else l10n.syncLastAt(last.toLocal().toString().substring(0, 16)),
+              if (sync.lastReport case final r?) l10n.syncDone(r.pushed, r.pulled),
+            ].join('\n'),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                key: const Key('sync.now'),
+                onPressed: sync.running ? null : () => ref.read(syncControllerProvider.notifier).syncNow(),
+                icon: sync.running
+                    ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.sync),
+                label: Text(l10n.syncNow),
+              ),
+              if (editor)
+                OutlinedButton(
+                  key: const Key('server.invite'),
+                  onPressed: () => _invite(context, ref),
+                  child: Text(l10n.createInvite),
+                ),
+              TextButton(
+                key: const Key('server.logout'),
+                onPressed: () => ref.read(syncControllerProvider.notifier).logout(),
+                child: Text(l10n.logout),
+              ),
+            ],
+          ),
+        ),
+      ]);
+    }
+    if (sync.error case final e?) {
+      children.add(
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            l10n.serverErrorText(e),
+            key: const Key('server.error'),
+            style: const TextStyle(color: ZanjirColors.danger),
+          ),
+        ),
+      );
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children);
+  }
+}
+
+class _PasswordDialog extends StatefulWidget {
+  const _PasswordDialog();
+
+  @override
+  State<_PasswordDialog> createState() => _PasswordDialogState();
+}
+
+class _PasswordDialogState extends State<_PasswordDialog> {
+  final _form = GlobalKey<FormState>();
+  final _password = TextEditingController();
+  final _repeat = TextEditingController();
+
+  @override
+  void dispose() {
+    _password.dispose();
+    _repeat.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.registerLab),
+      content: Form(
+        key: _form,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.registerLabHint),
+            TextFormField(
+              key: const Key('register.password'),
+              controller: _password,
+              obscureText: true,
+              decoration: InputDecoration(labelText: l10n.password),
+              validator: (v) => (v ?? '').length >= 10 ? null : l10n.passwordTooShort,
+            ),
+            TextFormField(
+              key: const Key('register.repeat'),
+              controller: _repeat,
+              obscureText: true,
+              decoration: InputDecoration(labelText: l10n.passwordRepeat),
+              validator: (v) => v == _password.text ? null : l10n.passwordMismatch,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+        FilledButton(
+          key: const Key('register.submit'),
+          onPressed: () {
+            if (_form.currentState!.validate()) Navigator.pop(context, _password.text);
+          },
+          child: Text(l10n.registerLab),
+        ),
       ],
     );
   }

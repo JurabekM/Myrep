@@ -554,5 +554,74 @@
   },
   "errorDraftStale": "Ma'lumotlar o'zgardi — protokolni qayta tayyorlang",
   "editLab": "Laboratoriya rekvizitlari",
-  "verifyUrlLabel": "Tekshirish havolasi"
+  "verifyUrlLabel": "Tekshirish havolasi",
+  "serverSection": "Server",
+  "serverNotConfigured": "Server manzili sozlanmagan — ilova oflayn ishlaydi.",
+  "serverNotConnected": "Serverga ulanmagan. Ma'lumotlar faqat shu qurilmada.",
+  "serverConnected": "Serverga ulangan",
+  "registerLab": "Laboratoriyani serverda ro'yxatdan o'tkazish",
+  "registerLabHint": "Kirish uchun parol o'ylab toping (kamida 10 belgi). Telefon raqami — profildagi.",
+  "passwordRepeat": "Parolni takrorlang",
+  "passwordMismatch": "Parollar mos emas",
+  "passwordTooShort": "Kamida 10 belgi",
+  "syncNow": "Sinxronlash",
+  "syncPending": "Yuborilmagan o'zgarishlar: {count}",
+  "@syncPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncLastAt": "Oxirgi sinxronlash: {time}",
+  "@syncLastAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncNever": "Hali sinxronlanmagan",
+  "syncDone": "Yuborildi: {pushed}, olindi: {pulled}",
+  "@syncDone": {
+    "placeholders": {
+      "pushed": {
+        "type": "int"
+      },
+      "pulled": {
+        "type": "int"
+      }
+    }
+  },
+  "syncRejected": "Server paketni rad etdi ({reason}). O'zgarishlar qurilmada saqlangan — administratorga murojaat qiling.",
+  "@syncRejected": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "createInvite": "Taklif kodi yaratish",
+  "inviteCodeTitle": "Taklif kodi",
+  "inviteCodeHint": "Kodni xodimga bering. U bir marta ishlatiladi va 72 soat amal qiladi.",
+  "copy": "Nusxalash",
+  "logout": "Serverdan chiqish",
+  "joinWithInvite": "Taklif kodi bilan qo'shilish",
+  "joinTitle": "Laboratoriyaga qo'shilish",
+  "inviteCode": "Taklif kodi",
+  "joinButton": "Qo'shilish",
+  "invalidCredentials": "Telefon yoki parol noto'g'ri",
+  "invalidInvite": "Taklif kodi noto'g'ri yoki muddati o'tgan",
+  "phoneTaken": "Bu telefon raqami allaqachon ro'yxatdan o'tgan",
+  "profileMismatch": "Bu qurilmada boshqa foydalanuvchi profili bor",
+  "sessionExpired": "Sessiya tugadi — qayta kiring",
+  "serverError": "Server xatosi: {code}",
+  "@serverError": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "invalidPhone": "Telefon raqami +998XXXXXXXXX formatida bo'lsin"
 }

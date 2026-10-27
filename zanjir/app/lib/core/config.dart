@@ -7,3 +7,6 @@ const String verifyBaseUrl = String.fromEnvironment(
   'ZANJIR_VERIFY_BASE_URL',
   defaultValue: ProtocolRepository.defaultVerifyBaseUrl,
 );
+
+/// Server manzili: `--dart-define=ZANJIR_SERVER_URL=https://<domen>/` (2-darvoza). Bo'sh — ilova faqat oflayn.
+const String serverUrl = String.fromEnvironment('ZANJIR_SERVER_URL');

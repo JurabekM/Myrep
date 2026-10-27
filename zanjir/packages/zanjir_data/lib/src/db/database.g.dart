@@ -7214,6 +7214,421 @@ class EdgesCompanion extends UpdateCompanion<EdgeRow> {
   }
 }
 
+class $LocalPrefsTable extends LocalPrefs with TableInfo<$LocalPrefsTable, LocalPrefRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LocalPrefsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<String> value = GeneratedColumn<String>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [key, value];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'local_pref';
+  @override
+  VerificationContext validateIntegrity(Insertable<LocalPrefRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('key')) {
+      context.handle(_keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(_valueMeta, value.isAcceptableOrUnknown(data['value']!, _valueMeta));
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {key};
+  @override
+  LocalPrefRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalPrefRow(
+      key: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      value: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}value'])!,
+    );
+  }
+
+  @override
+  $LocalPrefsTable createAlias(String alias) {
+    return $LocalPrefsTable(attachedDatabase, alias);
+  }
+}
+
+class LocalPrefRow extends DataClass implements Insertable<LocalPrefRow> {
+  final String key;
+  final String value;
+  const LocalPrefRow({required this.key, required this.value});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['key'] = Variable<String>(key);
+    map['value'] = Variable<String>(value);
+    return map;
+  }
+
+  LocalPrefsCompanion toCompanion(bool nullToAbsent) {
+    return LocalPrefsCompanion(key: Value(key), value: Value(value));
+  }
+
+  factory LocalPrefRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalPrefRow(
+      key: serializer.fromJson<String>(json['key']),
+      value: serializer.fromJson<String>(json['value']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{'key': serializer.toJson<String>(key), 'value': serializer.toJson<String>(value)};
+  }
+
+  LocalPrefRow copyWith({String? key, String? value}) => LocalPrefRow(key: key ?? this.key, value: value ?? this.value);
+  LocalPrefRow copyWithCompanion(LocalPrefsCompanion data) {
+    return LocalPrefRow(
+      key: data.key.present ? data.key.value : this.key,
+      value: data.value.present ? data.value.value : this.value,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalPrefRow(')
+          ..write('key: $key, ')
+          ..write('value: $value')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(key, value);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LocalPrefRow && other.key == this.key && other.value == this.value);
+}
+
+class LocalPrefsCompanion extends UpdateCompanion<LocalPrefRow> {
+  final Value<String> key;
+  final Value<String> value;
+  final Value<int> rowid;
+  const LocalPrefsCompanion({
+    this.key = const Value.absent(),
+    this.value = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LocalPrefsCompanion.insert({required String key, required String value, this.rowid = const Value.absent()})
+    : key = Value(key),
+      value = Value(value);
+  static Insertable<LocalPrefRow> custom({Expression<String>? key, Expression<String>? value, Expression<int>? rowid}) {
+    return RawValuesInsertable({
+      if (key != null) 'key': key,
+      if (value != null) 'value': value,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LocalPrefsCompanion copyWith({Value<String>? key, Value<String>? value, Value<int>? rowid}) {
+    return LocalPrefsCompanion(key: key ?? this.key, value: value ?? this.value, rowid: rowid ?? this.rowid);
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<String>(value.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalPrefsCompanion(')
+          ..write('key: $key, ')
+          ..write('value: $value, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncOutboxTable extends SyncOutbox with TableInfo<$SyncOutboxTable, SyncOutboxRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncOutboxTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'),
+  );
+  static const VerificationMeta _tableName_Meta = const VerificationMeta('tableName_');
+  @override
+  late final GeneratedColumn<String> tableName_ = GeneratedColumn<String>(
+    'table_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rowIdMeta = const VerificationMeta('rowId');
+  @override
+  late final GeneratedColumn<String> rowId = GeneratedColumn<String>(
+    'row_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _opIdMeta = const VerificationMeta('opId');
+  @override
+  late final GeneratedColumn<String> opId = GeneratedColumn<String>(
+    'op_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, tableName_, rowId, opId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_outbox';
+  @override
+  VerificationContext validateIntegrity(Insertable<SyncOutboxRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('table_name')) {
+      context.handle(_tableName_Meta, tableName_.isAcceptableOrUnknown(data['table_name']!, _tableName_Meta));
+    } else if (isInserting) {
+      context.missing(_tableName_Meta);
+    }
+    if (data.containsKey('row_id')) {
+      context.handle(_rowIdMeta, rowId.isAcceptableOrUnknown(data['row_id']!, _rowIdMeta));
+    } else if (isInserting) {
+      context.missing(_rowIdMeta);
+    }
+    if (data.containsKey('op_id')) {
+      context.handle(_opIdMeta, opId.isAcceptableOrUnknown(data['op_id']!, _opIdMeta));
+    } else if (isInserting) {
+      context.missing(_opIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {tableName_, rowId},
+  ];
+  @override
+  SyncOutboxRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncOutboxRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      tableName_: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}table_name'])!,
+      rowId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}row_id'])!,
+      opId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}op_id'])!,
+    );
+  }
+
+  @override
+  $SyncOutboxTable createAlias(String alias) {
+    return $SyncOutboxTable(attachedDatabase, alias);
+  }
+}
+
+class SyncOutboxRow extends DataClass implements Insertable<SyncOutboxRow> {
+  final int id;
+  final String tableName_;
+  final String rowId;
+  final String opId;
+  const SyncOutboxRow({required this.id, required this.tableName_, required this.rowId, required this.opId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['table_name'] = Variable<String>(tableName_);
+    map['row_id'] = Variable<String>(rowId);
+    map['op_id'] = Variable<String>(opId);
+    return map;
+  }
+
+  SyncOutboxCompanion toCompanion(bool nullToAbsent) {
+    return SyncOutboxCompanion(id: Value(id), tableName_: Value(tableName_), rowId: Value(rowId), opId: Value(opId));
+  }
+
+  factory SyncOutboxRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncOutboxRow(
+      id: serializer.fromJson<int>(json['id']),
+      tableName_: serializer.fromJson<String>(json['tableName_']),
+      rowId: serializer.fromJson<String>(json['rowId']),
+      opId: serializer.fromJson<String>(json['opId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'tableName_': serializer.toJson<String>(tableName_),
+      'rowId': serializer.toJson<String>(rowId),
+      'opId': serializer.toJson<String>(opId),
+    };
+  }
+
+  SyncOutboxRow copyWith({int? id, String? tableName_, String? rowId, String? opId}) => SyncOutboxRow(
+    id: id ?? this.id,
+    tableName_: tableName_ ?? this.tableName_,
+    rowId: rowId ?? this.rowId,
+    opId: opId ?? this.opId,
+  );
+  SyncOutboxRow copyWithCompanion(SyncOutboxCompanion data) {
+    return SyncOutboxRow(
+      id: data.id.present ? data.id.value : this.id,
+      tableName_: data.tableName_.present ? data.tableName_.value : this.tableName_,
+      rowId: data.rowId.present ? data.rowId.value : this.rowId,
+      opId: data.opId.present ? data.opId.value : this.opId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncOutboxRow(')
+          ..write('id: $id, ')
+          ..write('tableName_: $tableName_, ')
+          ..write('rowId: $rowId, ')
+          ..write('opId: $opId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, tableName_, rowId, opId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncOutboxRow &&
+          other.id == this.id &&
+          other.tableName_ == this.tableName_ &&
+          other.rowId == this.rowId &&
+          other.opId == this.opId);
+}
+
+class SyncOutboxCompanion extends UpdateCompanion<SyncOutboxRow> {
+  final Value<int> id;
+  final Value<String> tableName_;
+  final Value<String> rowId;
+  final Value<String> opId;
+  const SyncOutboxCompanion({
+    this.id = const Value.absent(),
+    this.tableName_ = const Value.absent(),
+    this.rowId = const Value.absent(),
+    this.opId = const Value.absent(),
+  });
+  SyncOutboxCompanion.insert({
+    this.id = const Value.absent(),
+    required String tableName_,
+    required String rowId,
+    required String opId,
+  }) : tableName_ = Value(tableName_),
+       rowId = Value(rowId),
+       opId = Value(opId);
+  static Insertable<SyncOutboxRow> custom({
+    Expression<int>? id,
+    Expression<String>? tableName_,
+    Expression<String>? rowId,
+    Expression<String>? opId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tableName_ != null) 'table_name': tableName_,
+      if (rowId != null) 'row_id': rowId,
+      if (opId != null) 'op_id': opId,
+    });
+  }
+
+  SyncOutboxCompanion copyWith({Value<int>? id, Value<String>? tableName_, Value<String>? rowId, Value<String>? opId}) {
+    return SyncOutboxCompanion(
+      id: id ?? this.id,
+      tableName_: tableName_ ?? this.tableName_,
+      rowId: rowId ?? this.rowId,
+      opId: opId ?? this.opId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (tableName_.present) {
+      map['table_name'] = Variable<String>(tableName_.value);
+    }
+    if (rowId.present) {
+      map['row_id'] = Variable<String>(rowId.value);
+    }
+    if (opId.present) {
+      map['op_id'] = Variable<String>(opId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncOutboxCompanion(')
+          ..write('id: $id, ')
+          ..write('tableName_: $tableName_, ')
+          ..write('rowId: $rowId, ')
+          ..write('opId: $opId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $IsolationPlansTable extends IsolationPlans with TableInfo<$IsolationPlansTable, IsolationPlanRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -8912,173 +9327,6 @@ class OrgSettingsCompanion extends UpdateCompanion<OrgSettingRow> {
   }
 }
 
-class $LocalPrefsTable extends LocalPrefs with TableInfo<$LocalPrefsTable, LocalPrefRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $LocalPrefsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _keyMeta = const VerificationMeta('key');
-  @override
-  late final GeneratedColumn<String> key = GeneratedColumn<String>(
-    'key',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _valueMeta = const VerificationMeta('value');
-  @override
-  late final GeneratedColumn<String> value = GeneratedColumn<String>(
-    'value',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [key, value];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'local_pref';
-  @override
-  VerificationContext validateIntegrity(Insertable<LocalPrefRow> instance, {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('key')) {
-      context.handle(_keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
-    } else if (isInserting) {
-      context.missing(_keyMeta);
-    }
-    if (data.containsKey('value')) {
-      context.handle(_valueMeta, value.isAcceptableOrUnknown(data['value']!, _valueMeta));
-    } else if (isInserting) {
-      context.missing(_valueMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {key};
-  @override
-  LocalPrefRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return LocalPrefRow(
-      key: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}key'])!,
-      value: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}value'])!,
-    );
-  }
-
-  @override
-  $LocalPrefsTable createAlias(String alias) {
-    return $LocalPrefsTable(attachedDatabase, alias);
-  }
-}
-
-class LocalPrefRow extends DataClass implements Insertable<LocalPrefRow> {
-  final String key;
-  final String value;
-  const LocalPrefRow({required this.key, required this.value});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['key'] = Variable<String>(key);
-    map['value'] = Variable<String>(value);
-    return map;
-  }
-
-  LocalPrefsCompanion toCompanion(bool nullToAbsent) {
-    return LocalPrefsCompanion(key: Value(key), value: Value(value));
-  }
-
-  factory LocalPrefRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return LocalPrefRow(
-      key: serializer.fromJson<String>(json['key']),
-      value: serializer.fromJson<String>(json['value']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{'key': serializer.toJson<String>(key), 'value': serializer.toJson<String>(value)};
-  }
-
-  LocalPrefRow copyWith({String? key, String? value}) => LocalPrefRow(key: key ?? this.key, value: value ?? this.value);
-  LocalPrefRow copyWithCompanion(LocalPrefsCompanion data) {
-    return LocalPrefRow(
-      key: data.key.present ? data.key.value : this.key,
-      value: data.value.present ? data.value.value : this.value,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('LocalPrefRow(')
-          ..write('key: $key, ')
-          ..write('value: $value')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(key, value);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) || (other is LocalPrefRow && other.key == this.key && other.value == this.value);
-}
-
-class LocalPrefsCompanion extends UpdateCompanion<LocalPrefRow> {
-  final Value<String> key;
-  final Value<String> value;
-  final Value<int> rowid;
-  const LocalPrefsCompanion({
-    this.key = const Value.absent(),
-    this.value = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  LocalPrefsCompanion.insert({required String key, required String value, this.rowid = const Value.absent()})
-    : key = Value(key),
-      value = Value(value);
-  static Insertable<LocalPrefRow> custom({Expression<String>? key, Expression<String>? value, Expression<int>? rowid}) {
-    return RawValuesInsertable({
-      if (key != null) 'key': key,
-      if (value != null) 'value': value,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  LocalPrefsCompanion copyWith({Value<String>? key, Value<String>? value, Value<int>? rowid}) {
-    return LocalPrefsCompanion(key: key ?? this.key, value: value ?? this.value, rowid: rowid ?? this.rowid);
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (key.present) {
-      map['key'] = Variable<String>(key.value);
-    }
-    if (value.present) {
-      map['value'] = Variable<String>(value.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('LocalPrefsCompanion(')
-          ..write('key: $key, ')
-          ..write('value: $value, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 abstract class _$ZanjirDatabase extends GeneratedDatabase {
   _$ZanjirDatabase(QueryExecutor e) : super(e);
   late final $OrganizationsTable organizations = $OrganizationsTable(this);
@@ -9135,10 +9383,99 @@ abstract class _$ZanjirDatabase extends GeneratedDatabase {
     'audit_event_entity_idx',
     'CREATE INDEX audit_event_entity_idx ON audit_event (entity_id)',
   );
-  late final $IsolationPlansTable isolationPlans = $IsolationPlansTable(this);
-  late final $NormSetsTable normSets = $NormSetsTable(this);
-  late final $OrgSettingsTable orgSettings = $OrgSettingsTable(this);
   late final $LocalPrefsTable localPrefs = $LocalPrefsTable(this);
+  late final $SyncOutboxTable syncOutbox = $SyncOutboxTable(this);
+  late final Trigger organizationOutboxIns = Trigger(
+    'CREATE TRIGGER organization_outbox_ins AFTER INSERT ON organization WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'organization\', NEW.id, lower(hex(randomblob(16))));END',
+    'organization_outbox_ins',
+  );
+  late final Trigger organizationOutboxUpd = Trigger(
+    'CREATE TRIGGER organization_outbox_upd AFTER UPDATE ON organization WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'organization\', NEW.id, lower(hex(randomblob(16))));END',
+    'organization_outbox_upd',
+  );
+  late final Trigger instrumentOutboxIns = Trigger(
+    'CREATE TRIGGER instrument_outbox_ins AFTER INSERT ON instrument WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'instrument\', NEW.id, lower(hex(randomblob(16))));END',
+    'instrument_outbox_ins',
+  );
+  late final Trigger instrumentOutboxUpd = Trigger(
+    'CREATE TRIGGER instrument_outbox_upd AFTER UPDATE ON instrument WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'instrument\', NEW.id, lower(hex(randomblob(16))));END',
+    'instrument_outbox_upd',
+  );
+  late final Trigger siteOutboxIns = Trigger(
+    'CREATE TRIGGER site_outbox_ins AFTER INSERT ON site WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'site\', NEW.id, lower(hex(randomblob(16))));END',
+    'site_outbox_ins',
+  );
+  late final Trigger siteOutboxUpd = Trigger(
+    'CREATE TRIGGER site_outbox_upd AFTER UPDATE ON site WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'site\', NEW.id, lower(hex(randomblob(16))));END',
+    'site_outbox_upd',
+  );
+  late final Trigger nodeOutboxIns = Trigger(
+    'CREATE TRIGGER node_outbox_ins AFTER INSERT ON node WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'node\', NEW.id, lower(hex(randomblob(16))));END',
+    'node_outbox_ins',
+  );
+  late final Trigger nodeOutboxUpd = Trigger(
+    'CREATE TRIGGER node_outbox_upd AFTER UPDATE ON node WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'node\', NEW.id, lower(hex(randomblob(16))));END',
+    'node_outbox_upd',
+  );
+  late final Trigger edgeOutboxIns = Trigger(
+    'CREATE TRIGGER edge_outbox_ins AFTER INSERT ON edge WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'edge\', NEW.id, lower(hex(randomblob(16))));END',
+    'edge_outbox_ins',
+  );
+  late final Trigger edgeOutboxUpd = Trigger(
+    'CREATE TRIGGER edge_outbox_upd AFTER UPDATE ON edge WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'edge\', NEW.id, lower(hex(randomblob(16))));END',
+    'edge_outbox_upd',
+  );
+  late final Trigger measurementSessionOutboxIns = Trigger(
+    'CREATE TRIGGER measurement_session_outbox_ins AFTER INSERT ON measurement_session WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'measurement_session\', NEW.id, lower(hex(randomblob(16))));END',
+    'measurement_session_outbox_ins',
+  );
+  late final Trigger measurementSessionOutboxUpd = Trigger(
+    'CREATE TRIGGER measurement_session_outbox_upd AFTER UPDATE ON measurement_session WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'measurement_session\', NEW.id, lower(hex(randomblob(16))));END',
+    'measurement_session_outbox_upd',
+  );
+  late final Trigger measurementOutboxIns = Trigger(
+    'CREATE TRIGGER measurement_outbox_ins AFTER INSERT ON measurement WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'measurement\', NEW.id, lower(hex(randomblob(16))));END',
+    'measurement_outbox_ins',
+  );
+  late final Trigger protocolOutboxIns = Trigger(
+    'CREATE TRIGGER protocol_outbox_ins AFTER INSERT ON protocol WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'protocol\', NEW.id, lower(hex(randomblob(16))));END',
+    'protocol_outbox_ins',
+  );
+  late final Trigger protocolDocumentOutboxIns = Trigger(
+    'CREATE TRIGGER protocol_document_outbox_ins AFTER INSERT ON protocol_document WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'protocol_document\', NEW.id, lower(hex(randomblob(16))));END',
+    'protocol_document_outbox_ins',
+  );
+  late final Trigger auditEventOutboxIns = Trigger(
+    'CREATE TRIGGER audit_event_outbox_ins AFTER INSERT ON audit_event WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'audit_event\', NEW.id, lower(hex(randomblob(16))));END',
+    'audit_event_outbox_ins',
+  );
+  late final $IsolationPlansTable isolationPlans = $IsolationPlansTable(this);
+  late final Trigger isolationPlanOutboxIns = Trigger(
+    'CREATE TRIGGER isolation_plan_outbox_ins AFTER INSERT ON isolation_plan WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'isolation_plan\', NEW.id, lower(hex(randomblob(16))));END',
+    'isolation_plan_outbox_ins',
+  );
+  late final Trigger isolationPlanOutboxUpd = Trigger(
+    'CREATE TRIGGER isolation_plan_outbox_upd AFTER UPDATE ON isolation_plan WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'isolation_plan\', NEW.id, lower(hex(randomblob(16))));END',
+    'isolation_plan_outbox_upd',
+  );
+  late final $NormSetsTable normSets = $NormSetsTable(this);
+  late final Trigger normSetOutboxIns = Trigger(
+    'CREATE TRIGGER norm_set_outbox_ins AFTER INSERT ON norm_set WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'norm_set\', NEW.id, lower(hex(randomblob(16))));END',
+    'norm_set_outbox_ins',
+  );
+  late final Trigger normSetOutboxUpd = Trigger(
+    'CREATE TRIGGER norm_set_outbox_upd AFTER UPDATE ON norm_set WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'norm_set\', NEW.id, lower(hex(randomblob(16))));END',
+    'norm_set_outbox_upd',
+  );
+  late final $OrgSettingsTable orgSettings = $OrgSettingsTable(this);
+  late final Trigger orgSettingOutboxIns = Trigger(
+    'CREATE TRIGGER org_setting_outbox_ins AFTER INSERT ON org_setting WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'org_setting\', NEW.id, lower(hex(randomblob(16))));END',
+    'org_setting_outbox_ins',
+  );
+  late final Trigger orgSettingOutboxUpd = Trigger(
+    'CREATE TRIGGER org_setting_outbox_upd AFTER UPDATE ON org_setting WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE "key" = \'sync.applying\') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES (\'org_setting\', NEW.id, lower(hex(randomblob(16))));END',
+    'org_setting_outbox_upd',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
@@ -9167,10 +9504,33 @@ abstract class _$ZanjirDatabase extends GeneratedDatabase {
     edgeSiteIdx,
     measurementSessionIdx,
     auditEventEntityIdx,
-    isolationPlans,
-    normSets,
-    orgSettings,
     localPrefs,
+    syncOutbox,
+    organizationOutboxIns,
+    organizationOutboxUpd,
+    instrumentOutboxIns,
+    instrumentOutboxUpd,
+    siteOutboxIns,
+    siteOutboxUpd,
+    nodeOutboxIns,
+    nodeOutboxUpd,
+    edgeOutboxIns,
+    edgeOutboxUpd,
+    measurementSessionOutboxIns,
+    measurementSessionOutboxUpd,
+    measurementOutboxIns,
+    protocolOutboxIns,
+    protocolDocumentOutboxIns,
+    auditEventOutboxIns,
+    isolationPlans,
+    isolationPlanOutboxIns,
+    isolationPlanOutboxUpd,
+    normSets,
+    normSetOutboxIns,
+    normSetOutboxUpd,
+    orgSettings,
+    orgSettingOutboxIns,
+    orgSettingOutboxUpd,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -9205,6 +9565,94 @@ abstract class _$ZanjirDatabase extends GeneratedDatabase {
     WritePropagation(
       on: TableUpdateQuery.onTableName('audit_event', limitUpdateKind: UpdateKind.delete),
       result: [],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('organization', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('organization', limitUpdateKind: UpdateKind.update),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('instrument', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('instrument', limitUpdateKind: UpdateKind.update),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('site', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('site', limitUpdateKind: UpdateKind.update),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('node', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('node', limitUpdateKind: UpdateKind.update),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('edge', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('edge', limitUpdateKind: UpdateKind.update),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('measurement_session', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('measurement_session', limitUpdateKind: UpdateKind.update),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('measurement', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('protocol', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('protocol_document', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('audit_event', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('isolation_plan', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('isolation_plan', limitUpdateKind: UpdateKind.update),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('norm_set', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('norm_set', limitUpdateKind: UpdateKind.update),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('org_setting', limitUpdateKind: UpdateKind.insert),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('org_setting', limitUpdateKind: UpdateKind.update),
+      result: [TableUpdate('sync_outbox', kind: UpdateKind.insert)],
     ),
   ]);
   @override
