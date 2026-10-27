@@ -1,0 +1,332 @@
+{
+  "suite": "hour_value",
+  "version": 1,
+  "description": "«Bir soatim qancha?»: round_half_up(daromad × 60 / (kunlik daqiqa × kun)), ikki barobar maqsad, soat chegarasi (kuniga > 600 daqiqa yoki oyiga > 15 600 daqiqa); daromad berilmasa — oxirgi ≤3 oy o'rtachasi (AUTO)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "hv-001-manual",
+      "input": {
+        "income": "720000000",
+        "monthTotals": null,
+        "minutesPerDay": 600,
+        "days": 26
+      },
+      "expected": {
+        "income": "720000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 15600,
+        "hourValue": "2769231",
+        "doubleTarget": "5538462",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "hv-002-auto-three",
+      "input": {
+        "income": null,
+        "monthTotals": [
+          "600000000",
+          "750000000",
+          "900000000"
+        ],
+        "minutesPerDay": 480,
+        "days": 22
+      },
+      "expected": {
+        "income": "750000000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 10560,
+        "hourValue": "4261364",
+        "doubleTarget": "8522728",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "hv-003-auto-one",
+      "input": {
+        "income": null,
+        "monthTotals": [
+          "500000000"
+        ],
+        "minutesPerDay": 480,
+        "days": 22
+      },
+      "expected": {
+        "income": "500000000",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 10560,
+        "hourValue": "2840909",
+        "doubleTarget": "5681818",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "hv-004-rounding",
+      "input": {
+        "income": "100000001",
+        "monthTotals": null,
+        "minutesPerDay": 420,
+        "days": 23
+      },
+      "expected": {
+        "income": "100000001",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 9660,
+        "hourValue": "621118",
+        "doubleTarget": "1242236",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "hv-005-over-ceiling-day",
+      "input": {
+        "income": "900000000",
+        "monthTotals": null,
+        "minutesPerDay": 660,
+        "days": 24
+      },
+      "expected": {
+        "income": "900000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 15840,
+        "hourValue": "3409091",
+        "doubleTarget": "6818182",
+        "overCeiling": true
+      }
+    },
+    {
+      "id": "hv-006-over-ceiling-month",
+      "input": {
+        "income": "900000000",
+        "monthTotals": null,
+        "minutesPerDay": 600,
+        "days": 27
+      },
+      "expected": {
+        "income": "900000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 16200,
+        "hourValue": "3333333",
+        "doubleTarget": "6666666",
+        "overCeiling": true
+      }
+    },
+    {
+      "id": "hv-007-at-ceiling",
+      "input": {
+        "income": "900000000",
+        "monthTotals": null,
+        "minutesPerDay": 600,
+        "days": 26
+      },
+      "expected": {
+        "income": "900000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 15600,
+        "hourValue": "3461538",
+        "doubleTarget": "6923076",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "hv-008-manual-wins",
+      "input": {
+        "income": "400000000",
+        "monthTotals": [
+          "900000000"
+        ],
+        "minutesPerDay": 300,
+        "days": 20
+      },
+      "expected": {
+        "income": "400000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 6000,
+        "hourValue": "4000000",
+        "doubleTarget": "8000000",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "hv-009-auto-rounding",
+      "input": {
+        "income": null,
+        "monthTotals": [
+          "100000000",
+          "100000001",
+          "100000001"
+        ],
+        "minutesPerDay": 540,
+        "days": 25
+      },
+      "expected": {
+        "income": "100000001",
+        "incomeSource": "AUTO",
+        "monthlyMinutes": 13500,
+        "hourValue": "444444",
+        "doubleTarget": "888888",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "hv-010-manual-ignores-auto",
+      "input": {
+        "income": "400000000",
+        "monthTotals": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "minutesPerDay": 480,
+        "days": 20
+      },
+      "expected": {
+        "income": "400000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 9600,
+        "hourValue": "2500000",
+        "doubleTarget": "5000000",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "hv-011-manual-ignores-negative-auto",
+      "input": {
+        "income": "400000000",
+        "monthTotals": [
+          "-5"
+        ],
+        "minutesPerDay": 480,
+        "days": 20
+      },
+      "expected": {
+        "income": "400000000",
+        "incomeSource": "MANUAL",
+        "monthlyMinutes": 9600,
+        "hourValue": "2500000",
+        "doubleTarget": "5000000",
+        "overCeiling": false
+      }
+    },
+    {
+      "id": "hv-neg-001-no-income",
+      "input": {
+        "income": null,
+        "monthTotals": [],
+        "minutesPerDay": 480,
+        "days": 22
+      },
+      "expected": {
+        "error": "NO_INCOME"
+      }
+    },
+    {
+      "id": "hv-neg-002-zero-income",
+      "input": {
+        "income": "0",
+        "monthTotals": null,
+        "minutesPerDay": 480,
+        "days": 22
+      },
+      "expected": {
+        "error": "NO_INCOME"
+      }
+    },
+    {
+      "id": "hv-neg-003-time",
+      "input": {
+        "income": "500000000",
+        "monthTotals": null,
+        "minutesPerDay": 0,
+        "days": 22
+      },
+      "expected": {
+        "error": "INVALID_TIME"
+      }
+    },
+    {
+      "id": "hv-neg-004-days",
+      "input": {
+        "income": "500000000",
+        "monthTotals": null,
+        "minutesPerDay": 480,
+        "days": 32
+      },
+      "expected": {
+        "error": "INVALID_DAYS"
+      }
+    },
+    {
+      "id": "hv-neg-005-negative",
+      "input": {
+        "income": "-1",
+        "monthTotals": null,
+        "minutesPerDay": 480,
+        "days": 22
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "hv-neg-006-four-months",
+      "input": {
+        "income": null,
+        "monthTotals": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "minutesPerDay": 480,
+        "days": 22
+      },
+      "expected": {
+        "error": "TOO_MANY_MONTHS"
+      }
+    },
+    {
+      "id": "hv-neg-007-day-over-24h",
+      "input": {
+        "income": "500000000",
+        "monthTotals": null,
+        "minutesPerDay": 1441,
+        "days": 22
+      },
+      "expected": {
+        "error": "INVALID_TIME"
+      }
+    },
+    {
+      "id": "hv-neg-008-negative-and-bad-time",
+      "input": {
+        "income": "-1",
+        "monthTotals": null,
+        "minutesPerDay": -5,
+        "days": 22
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "hv-neg-009-many-months-and-bad-days",
+      "input": {
+        "income": null,
+        "monthTotals": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "minutesPerDay": 480,
+        "days": -1
+      },
+      "expected": {
+        "error": "TOO_MANY_MONTHS"
+      }
+    }
+  ]
+}

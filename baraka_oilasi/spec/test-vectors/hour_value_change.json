@@ -1,0 +1,84 @@
+{
+  "suite": "hour_value_change",
+  "version": 1,
+  "description": "Natijani o'lchash: yangi − boshlang'ich (tiyin) va bp_of(farq, boshlang'ich); boshlang'ich 0 — foiz yo'q",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "hvc-001-doubled",
+      "input": {
+        "base": "3076923",
+        "new": "6153846"
+      },
+      "expected": {
+        "diff": "3076923",
+        "changeBp": 10000
+      }
+    },
+    {
+      "id": "hvc-002-up",
+      "input": {
+        "base": "3076923",
+        "new": "3500000"
+      },
+      "expected": {
+        "diff": "423077",
+        "changeBp": 1375
+      }
+    },
+    {
+      "id": "hvc-003-same",
+      "input": {
+        "base": "3076923",
+        "new": "3076923"
+      },
+      "expected": {
+        "diff": "0",
+        "changeBp": 0
+      }
+    },
+    {
+      "id": "hvc-004-down",
+      "input": {
+        "base": "3076923",
+        "new": "2800000"
+      },
+      "expected": {
+        "diff": "-276923",
+        "changeBp": -900
+      }
+    },
+    {
+      "id": "hvc-005-base-zero",
+      "input": {
+        "base": "0",
+        "new": "2500000"
+      },
+      "expected": {
+        "diff": "2500000",
+        "changeBp": null
+      }
+    },
+    {
+      "id": "hvc-006-rounding",
+      "input": {
+        "base": "3",
+        "new": "4"
+      },
+      "expected": {
+        "diff": "1",
+        "changeBp": 3333
+      }
+    },
+    {
+      "id": "hvc-neg-001-negative",
+      "input": {
+        "base": "-1",
+        "new": "100"
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    }
+  ]
+}

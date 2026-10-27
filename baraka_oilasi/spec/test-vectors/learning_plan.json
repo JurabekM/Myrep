@@ -1,0 +1,332 @@
+{
+  "suite": "learning_plan",
+  "version": 1,
+  "description": "Bilim rejasi: tekshiruv (ko'nikma, yo'llar takrorsiz va tartibli, byudjet ≥ 0, haftalik daqiqa 1–10 080, ko'rik standart +3 oy — oy oxiriga qisiladi) va holat o'tishlari (DONE/DROPPED yopiq, faol rejalar chegarasi 2 — qayta faollashtirishda ham)",
+  "generatedBy": "spec/oracle/oracle.py",
+  "cases": [
+    {
+      "id": "plan-001-default-review-month-end",
+      "input": {
+        "op": "validate",
+        "skill": "Buxgalteriya dasturi",
+        "paths": [
+          "COURSE",
+          "BOOK",
+          "COURSE"
+        ],
+        "budget": "150000000",
+        "weeklyMinutes": 240,
+        "start": "2026-11-30",
+        "review": null
+      },
+      "expected": {
+        "skill": "Buxgalteriya dasturi",
+        "paths": [
+          "BOOK",
+          "COURSE"
+        ],
+        "budget": "150000000",
+        "weeklyMinutes": 240,
+        "review": "2027-02-28"
+      }
+    },
+    {
+      "id": "plan-002-explicit-review",
+      "input": {
+        "op": "validate",
+        "skill": "Buxgalteriya dasturi",
+        "paths": [
+          "COURSE",
+          "BOOK",
+          "COURSE"
+        ],
+        "budget": "150000000",
+        "weeklyMinutes": 240,
+        "start": "2026-11-30",
+        "review": "2027-01-15"
+      },
+      "expected": {
+        "skill": "Buxgalteriya dasturi",
+        "paths": [
+          "BOOK",
+          "COURSE"
+        ],
+        "budget": "150000000",
+        "weeklyMinutes": 240,
+        "review": "2027-01-15"
+      }
+    },
+    {
+      "id": "plan-003-trim-and-no-budget",
+      "input": {
+        "op": "validate",
+        "skill": "  Ingliz tili  ",
+        "paths": [
+          "MENTOR"
+        ],
+        "budget": null,
+        "weeklyMinutes": 240,
+        "start": "2026-11-30",
+        "review": null
+      },
+      "expected": {
+        "skill": "Ingliz tili",
+        "paths": [
+          "MENTOR"
+        ],
+        "budget": null,
+        "weeklyMinutes": 240,
+        "review": "2027-02-28"
+      }
+    },
+    {
+      "id": "plan-004-leap-year",
+      "input": {
+        "op": "validate",
+        "skill": "Buxgalteriya dasturi",
+        "paths": [
+          "COURSE",
+          "BOOK",
+          "COURSE"
+        ],
+        "budget": "150000000",
+        "weeklyMinutes": 240,
+        "start": "2027-11-29",
+        "review": null
+      },
+      "expected": {
+        "skill": "Buxgalteriya dasturi",
+        "paths": [
+          "BOOK",
+          "COURSE"
+        ],
+        "budget": "150000000",
+        "weeklyMinutes": 240,
+        "review": "2028-02-29"
+      }
+    },
+    {
+      "id": "plan-neg-001-skill",
+      "input": {
+        "op": "validate",
+        "skill": "   ",
+        "paths": [
+          "COURSE",
+          "BOOK",
+          "COURSE"
+        ],
+        "budget": "150000000",
+        "weeklyMinutes": 240,
+        "start": "2026-11-30",
+        "review": null
+      },
+      "expected": {
+        "error": "SKILL_REQUIRED"
+      }
+    },
+    {
+      "id": "plan-neg-002-skill-long",
+      "input": {
+        "op": "validate",
+        "skill": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "paths": [
+          "COURSE",
+          "BOOK",
+          "COURSE"
+        ],
+        "budget": "150000000",
+        "weeklyMinutes": 240,
+        "start": "2026-11-30",
+        "review": null
+      },
+      "expected": {
+        "error": "SKILL_TOO_LONG"
+      }
+    },
+    {
+      "id": "plan-neg-003-paths",
+      "input": {
+        "op": "validate",
+        "skill": "Buxgalteriya dasturi",
+        "paths": [],
+        "budget": "150000000",
+        "weeklyMinutes": 240,
+        "start": "2026-11-30",
+        "review": null
+      },
+      "expected": {
+        "error": "PATH_REQUIRED"
+      }
+    },
+    {
+      "id": "plan-neg-004-path-invalid",
+      "input": {
+        "op": "validate",
+        "skill": "Buxgalteriya dasturi",
+        "paths": [
+          "TIKTOK"
+        ],
+        "budget": "150000000",
+        "weeklyMinutes": 240,
+        "start": "2026-11-30",
+        "review": null
+      },
+      "expected": {
+        "error": "INVALID_PATH"
+      }
+    },
+    {
+      "id": "plan-neg-005-budget",
+      "input": {
+        "op": "validate",
+        "skill": "Buxgalteriya dasturi",
+        "paths": [
+          "COURSE",
+          "BOOK",
+          "COURSE"
+        ],
+        "budget": "-1",
+        "weeklyMinutes": 240,
+        "start": "2026-11-30",
+        "review": null
+      },
+      "expected": {
+        "error": "AMOUNT_NEGATIVE"
+      }
+    },
+    {
+      "id": "plan-neg-006-time",
+      "input": {
+        "op": "validate",
+        "skill": "Buxgalteriya dasturi",
+        "paths": [
+          "COURSE",
+          "BOOK",
+          "COURSE"
+        ],
+        "budget": "150000000",
+        "weeklyMinutes": 0,
+        "start": "2026-11-30",
+        "review": null
+      },
+      "expected": {
+        "error": "INVALID_TIME"
+      }
+    },
+    {
+      "id": "plan-neg-007-review",
+      "input": {
+        "op": "validate",
+        "skill": "Buxgalteriya dasturi",
+        "paths": [
+          "COURSE",
+          "BOOK",
+          "COURSE"
+        ],
+        "budget": "150000000",
+        "weeklyMinutes": 240,
+        "start": "2026-11-30",
+        "review": "2026-11-30"
+      },
+      "expected": {
+        "error": "INVALID_REVIEW_DATE"
+      }
+    },
+    {
+      "id": "move-001-pause",
+      "input": {
+        "op": "transition",
+        "from": "ACTIVE",
+        "to": "PAUSED",
+        "otherActive": 5
+      },
+      "expected": {
+        "status": "PAUSED"
+      }
+    },
+    {
+      "id": "move-002-resume",
+      "input": {
+        "op": "transition",
+        "from": "PAUSED",
+        "to": "ACTIVE",
+        "otherActive": 1
+      },
+      "expected": {
+        "status": "ACTIVE"
+      }
+    },
+    {
+      "id": "move-003-resume-limit",
+      "input": {
+        "op": "transition",
+        "from": "PAUSED",
+        "to": "ACTIVE",
+        "otherActive": 2
+      },
+      "expected": {
+        "error": "ACTIVE_PLAN_LIMIT"
+      }
+    },
+    {
+      "id": "move-004-done",
+      "input": {
+        "op": "transition",
+        "from": "PAUSED",
+        "to": "DONE",
+        "otherActive": 0
+      },
+      "expected": {
+        "status": "DONE"
+      }
+    },
+    {
+      "id": "move-005-reopen-done",
+      "input": {
+        "op": "transition",
+        "from": "DONE",
+        "to": "ACTIVE",
+        "otherActive": 0
+      },
+      "expected": {
+        "error": "INVALID_TRANSITION"
+      }
+    },
+    {
+      "id": "move-006-reopen-dropped",
+      "input": {
+        "op": "transition",
+        "from": "DROPPED",
+        "to": "PAUSED",
+        "otherActive": 0
+      },
+      "expected": {
+        "error": "INVALID_TRANSITION"
+      }
+    },
+    {
+      "id": "move-007-same",
+      "input": {
+        "op": "transition",
+        "from": "ACTIVE",
+        "to": "ACTIVE",
+        "otherActive": 0
+      },
+      "expected": {
+        "error": "INVALID_TRANSITION"
+      }
+    },
+    {
+      "id": "move-008-invalid",
+      "input": {
+        "op": "transition",
+        "from": "ACTIVE",
+        "to": "ARCHIVED",
+        "otherActive": 0
+      },
+      "expected": {
+        "error": "INVALID_STATUS"
+      }
+    }
+  ]
+}
