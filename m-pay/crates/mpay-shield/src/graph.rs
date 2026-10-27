@@ -1,9 +1,9 @@
 //! Qurilma–karta bipartit grafi: union-find bilan bog'langan komponentlar, darajalar,
 //! qirralarning birinchi ko'rilgan vaqti.
 //!
-//! Tugunlar — `DeviceId` va `PanFingerprint` (kalitsiz qaytarib bo'lmaydigan HMAC). Graf faqat
-//! xotirada; API instansiyalari uni Shield roli orqali bo'lishadi (ADR-0019). `TODO(spec):` holatni
-//! davriy saqlash va zaxira instansiya (`docs/production-checklist.md` JM-4).
+//! Tugunlar — `DeviceId` va `PanFingerprint` (kalitsiz qaytarib bo'lmaydigan HMAC). Graf xotirada;
+//! API instansiyalari uni Shield roli orqali bo'lishadi (ADR-0019), yetakchi Shield uni belgilar
+//! ombori bilan birga snapshot'ga yozadi va zaxira tiklaydi (ADR-0026).
 //!
 //! Qurilma kaliti almashtirilsa (ADR-0015) yangi ID eski qurilma tuguniga **taxallus** bo'ladi:
 //! alohida tugun yaratilmaydi, kartalar soni ikki barobar bo'lmaydi va `card_device_count` oshmaydi.
@@ -143,6 +143,104 @@ impl DeviceCardGraph {
 
     pub fn nodes(&self) -> usize {
         self.index.len()
+    }
+
+    /// Snapshot (ADR-0026): tugunlar indeks tartibida, qirralar va taxalluslar saralangan.
+    pub(crate) fn encode(&self, w: &mut crate::snapshot::W) {
+        let mut nodes: Vec<(usize, Node)> = self.index.iter().map(|(n, i)| (*i, *n)).collect();
+        nodes.sort_unstable_by_key(|(i, _)| *i);
+        w.len(nodes.len());
+        for (i, n) in &nodes {
+            match n {
+                Node::Device(id) => {
+                    w.u8(0);
+                    w.a32(id);
+                }
+                Node::Card(id) => {
+                    w.u8(1);
+                    w.a32(id);
+                }
+            }
+            w.u64(self.uf.parent[*i] as u64);
+            w.u32(self.uf.size[*i]);
+            w.u32(self.degree[*i]);
+        }
+        let mut edges: Vec<_> = self.edges.iter().collect();
+        edges.sort_unstable();
+        w.len(edges.len());
+        for ((d, c), t) in edges {
+            w.u64(*d as u64);
+            w.u64(*c as u64);
+            w.i64(*t);
+        }
+        let mut aliases: Vec<_> = self.aliases.iter().collect();
+        aliases.sort_unstable();
+        w.len(aliases.len());
+        for (new, root) in aliases {
+            w.a32(new);
+            w.a32(root);
+        }
+    }
+
+    pub(crate) fn decode(r: &mut crate::snapshot::R<'_>) -> crate::snapshot::Result<Self> {
+        use crate::snapshot::SnapshotError::Format;
+        let n = r.len(1 + 32 + 8 + 4 + 4)?;
+        let mut g = Self::default();
+        for i in 0..n {
+            let id = |r: &mut crate::snapshot::R<'_>, tag| match tag {
+                0 => Ok(Node::Device(r.a32()?)),
+                1 => Ok(Node::Card(r.a32()?)),
+                _ => Err(Format("tugun turi")),
+            };
+            let tag = r.u8()?;
+            let node = id(r, tag)?;
+            if g.index.insert(node, i).is_some() {
+                return Err(Format("takroriy tugun"));
+            }
+            let parent = r.u64()?;
+            if parent >= n as u64 {
+                return Err(Format("union-find ota tuguni"));
+            }
+            g.uf.parent.push(parent as usize);
+            g.uf.size.push(r.u32()?);
+            g.degree.push(r.u32()?);
+        }
+        // Ota zanjirlari ildizga yetishi shart (aylana bo'lsa `find` tugamas edi).
+        let mut seen = vec![0u8; n]; // 0 — noma'lum, 1 — tekshirilmoqda, 2 — ildizga yetadi
+        for start in 0..n {
+            let mut path = Vec::new();
+            let mut x = start;
+            while seen[x] == 0 && g.uf.parent[x] != x {
+                seen[x] = 1;
+                path.push(x);
+                x = g.uf.parent[x];
+            }
+            if seen[x] == 1 {
+                return Err(Format("union-find aylanasi"));
+            }
+            seen[x] = 2;
+            for p in path {
+                seen[p] = 2;
+            }
+        }
+        let m = r.len(8 + 8 + 8)?;
+        for _ in 0..m {
+            let (d, c, t) = (r.u64()?, r.u64()?, r.i64()?);
+            if d >= n as u64 || c >= n as u64 {
+                return Err(Format("qirra tuguni"));
+            }
+            if g.edges.insert((d as usize, c as usize), t).is_some() {
+                return Err(Format("takroriy qirra"));
+            }
+        }
+        let a = r.len(64)?;
+        for _ in 0..a {
+            let (new, root) = (r.a32()?, r.a32()?);
+            if g.aliases.insert(new, root).is_some() {
+                return Err(Format("takroriy taxallus"));
+            }
+        }
+        Ok(g)
     }
 }
 

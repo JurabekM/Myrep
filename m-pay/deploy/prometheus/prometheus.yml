@@ -20,7 +20,7 @@ scrape_configs:
       - targets: ["api-1:9464", "api-2:9464"]
   - job_name: mpay-shield
     static_configs:
-      - targets: ["shield:9464"]
+      - targets: ["shield:9464", "shield-2:9464"]
   - job_name: prometheus
     static_configs:
       - targets: ["localhost:9090"]

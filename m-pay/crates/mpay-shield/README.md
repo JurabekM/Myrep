@@ -16,6 +16,7 @@ skor = min(1000, p_ml × 1000 × ml_weight + Σ qoida ballari)
 | `engine` | `Shield` — port'lar implementatsiyasi; qaror: max(qoida harakati, chegara) |
 | `replay` + `bin/shield_replay` | sintetik hodisalar: featurize / evaluate / bench / parity |
 | `stub` | deterministik test stub (M3–M4 testlari) |
+| `snapshot` | Belgilar omborining snapshot'i (ADR-0026): versiyalangan, deterministik, SHA-256; qat'iy tiklash (`FeatureStore::snapshot/restore`, `Shield::snapshot/restore`) |
 
 Qarorlar: tranzaksiya `APPROVE` / `REVIEW` (≥ 500) / `DECLINE` (≥ 800, emitent `59`);
 provisioning `GREEN` / `YELLOW` (≥ 400, OTP) / `RED` (≥ 750).

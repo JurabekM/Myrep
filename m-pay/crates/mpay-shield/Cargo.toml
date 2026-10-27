@@ -27,4 +27,5 @@ tract-onnx.workspace = true
 
 [dev-dependencies]
 tokio.workspace = true
+proptest.workspace = true
 mpay-common.workspace = true

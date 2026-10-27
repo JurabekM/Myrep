@@ -150,6 +150,24 @@ impl Shield {
         }
     }
 
+    /// Belgilar omborining snapshot'i (ADR-0026). Yozish paytida ombor qulflanadi.
+    pub fn snapshot(&self) -> Vec<u8> {
+        self.store().snapshot()
+    }
+
+    /// Ombor holatini snapshot'dan almashtiradi (zaxira instansiya yetakchilikni olganda). Xato
+    /// bo'lsa joriy holat o'zgarmaydi.
+    pub fn restore(&self, data: &[u8]) -> Result<(), crate::SnapshotError> {
+        let s = FeatureStore::restore(data)?;
+        *self.store() = s;
+        Ok(())
+    }
+
+    /// Ombor bo'sh holatga (zaxira instansiya snapshot topmasa).
+    pub fn reset(&self) {
+        *self.store() = FeatureStore::new();
+    }
+
     /// Qurilma kaliti almashtirildi (ADR-0015): yangi ID eski qurilma tuguniga bog'lanadi.
     pub fn link_rekeyed_device(&self, old: [u8; 32], new: [u8; 32]) -> bool {
         self.store().device_rekeyed(old, new)

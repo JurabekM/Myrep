@@ -27,5 +27,6 @@
 | [0023](0023-zaxira-pitr-ogohlantirish.md) | Shifrlangan zaxira (age), PITR (WAL arxivi), Alertmanager | qabul qilingan |
 | [0024](0024-reversal-va-solishtirish.md) | Avtomatik reversal (`0400`/`0401`) va solishtirish: acquirer jurnali ↔ emitent | qabul qilingan |
 | [0025](0025-kliring-va-hisob-kitob.md) | Kunlik kliring (fayl, emitent tasdig'i) va hisob-kitob (MDR, interchange, pozitsiyalar) | qabul qilingan |
+| [0026](0026-shield-yuqori-mavjudlik.md) | Shield: DB ijarasi bilan yetakchi + zaxira, belgilar ombori snapshot'i | qabul qilingan |
 
 Shablon: Kontekst → Qaror → Oqibatlar → Ko'rib chiqilgan muqobillar.

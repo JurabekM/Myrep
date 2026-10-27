@@ -274,7 +274,7 @@ pub fn build_shield(cfg: &Config) -> Result<ShieldPorts, BootError> {
                 crate::shield_client::RemoteShield::new(rc, |p| cfg.resolve(p), local)
                     .map_err(BootError::Config)?,
             );
-            tracing::info!(url = %rc.url, "Shield: masofaviy rol (mahalliy zaxira bilan)");
+            tracing::info!(url = %rc.url, standby = ?rc.standby_urls, "Shield: masofaviy rol (mahalliy zaxira bilan)");
             Ok((r.clone(), r))
         }
     }

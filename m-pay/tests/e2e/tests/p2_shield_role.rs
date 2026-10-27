@@ -41,6 +41,7 @@ async fn start_shield() -> (tempfile::TempDir, mpay_server::shield_role::Running
 fn remote(url: String) -> ShieldRemoteConfig {
     ShieldRemoteConfig {
         url,
+        standby_urls: Vec::new(),
         key_env: None,
         key: Some(SHIELD_KEY.into()),
         ca_file: None,

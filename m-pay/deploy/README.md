@@ -84,13 +84,16 @@ faqat marshrut shabloni, metod, status, javob kodi — PAN, token, qurilma ID, I
 | `mpay_db_up`, `mpay_db_pool_connections{state}`, `mpay_db_pool_max_connections` | gauge | baza |
 | `mpay_pqlink_sessions` | gauge | PQ Link sessiyalari (klaster bo'yicha) |
 | `mpay_shield_{cards,devices,merchants,graph_nodes}` | gauge | Shield belgilar ombori |
+| `mpay_shield_leader`, `mpay_shield_epoch`, `mpay_shield_snapshot_age_seconds`, `mpay_shield_snapshot_bytes` | gauge | Shield yetakchiligi va snapshot (ADR-0026) |
+| `mpay_shield_takeovers_total`, `mpay_shield_snapshot_errors_total` | counter | yetakchilik olindi; snapshot yozilmadi |
 | `mpay_build_info{version,role}`, `mpay_process_start_time_seconds` | gauge | versiya, ishga tushish |
 
 Qoidalar — [`prometheus/alerts.yml`](prometheus/alerts.yml): instansiya yo'q, sig'im kamaydi, DB
 yo'q, avtorizatsiya p99 > 300 ms, 5xx > 1 %, `96` javoblari, Shield zaxirada, Play Integrity javob
 bermayapti yoki yaroqsiz tokenlar ko'paydi, OTP yetkazilmayapti,
 DB hovuzi to'la, chegara portlashi, umumiy chegara ombori xatosi, PROXY sarlavhasi rad etildi,
-reversal rad etildi yoki 15 daqiqadan beri yuborilmayapti. Ogohlantirishlar Alertmanager
+reversal rad etildi yoki 15 daqiqadan beri yuborilmayapti, Shield yetakchisi yo'q yoki ikkita, Shield
+snapshot'i eskirgan. Ogohlantirishlar Alertmanager
 ([`alertmanager/alertmanager.yml`](alertmanager/alertmanager.yml)) orqali navbatchiga yuboriladi —
 sandbox'da virtual kanal `mpay-smsgw` `POST /alerts`. `TODO(spec):` bankning haqiqiy navbatchilik
 kanali (SMS, Telegram, e-pochta) va eskalatsiya.
@@ -168,6 +171,19 @@ bash deploy/pitr-restore.sh deploy/backups/<asosiy> deploy/backups/<keyingi> "20
 * DB'dagi karta ma'lumoti baribir KEK/DEK bilan shifrlangan: HSM kalitlarisiz zaxira foydasiz.
   `TODO(spec):` zaxirani boshqa joyga (offsite) yuborish, saqlash muddati, bank HSM'ining o'z zaxira
   tartibi, WAL arxivini ham uzluksiz offsite'ga (hozir faqat `backup.sh` paytida).
+
+## Shield: yetakchi va zaxira ([ADR-0026](../docs/adr/0026-shield-yuqori-mavjudlik.md))
+
+`shield` va `shield-2` — bir xil konfiguratsiya (`[shield_ha] enabled = true`). Bazadagi ijarani olgani
+yetakchi, ikkinchisi zaxira (`/healthz` → `"leader": false`, ichki API → `503`). API'lar
+`[shield.remote] url` + `standby_urls` bo'yicha yetakchini topadi.
+
+* Yetakchi yiqilsa (`kill`, host) — zaxira `lease_ttl_ms` (6 s) ichida oxirgi snapshot bilan oladi
+  (snapshot har 10 s); oradagi so'rovlar API'ning mahalliy zaxirasida (`SHIELD_DEGRADED`).
+* Yangilash: avval zaxirani yangilang, keyin yetakchini `docker compose stop` (SIGTERM — yakuniy
+  snapshot, ijara bo'shatiladi, zaxira darhol oladi, hodisa yo'qolmaydi).
+* Kim yetakchi: `docker compose exec shield curl -sk https://localhost:8600/healthz`.
+* Instansiyalar soati sinxron bo'lsin (NTP); `instance_id` noyob (standart — konteyner nomi).
 
 ## To'xtatish va yangilash
 

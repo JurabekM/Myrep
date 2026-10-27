@@ -4,8 +4,13 @@
 //! Shield javob bermasa (tarmoq, timeout, 5xx) — shu instansiyaning mahalliy dvigateli (zaxira):
 //! qaror chiqadi, lekin belgilar faqat shu instansiya hodisalaridan, sababga `SHIELD_DEGRADED`
 //! qo'shiladi va ogohlantirish logga yoziladi. Ochiq PAN yuborilmaydi (`mpay_shield::remote`).
+//!
+//! Bir nechta Shield instansiyasi (`standby_urls`, ADR-0026): so'rov avval oxirgi javob bergan
+//! instansiyaga, xato yoki `503 SHIELD_STANDBY` bo'lsa — navbatdagisiga; hammasi javob bermasa —
+//! mahalliy zaxira.
 
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -25,14 +30,17 @@ pub const DEGRADED: &str = "SHIELD_DEGRADED";
 /// Masofaviy Shield + mahalliy zaxira.
 pub struct RemoteShield {
     http: reqwest::Client,
-    base: String,
+    /// Asosiy va zaxira instansiyalar.
+    bases: Vec<String>,
+    /// Oxirgi javob bergan instansiya.
+    preferred: AtomicUsize,
     key: Option<Zeroizing<String>>,
     local: Arc<Shield>,
 }
 
 impl std::fmt::Debug for RemoteShield {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "RemoteShield({})", self.base)
+        write!(f, "RemoteShield({:?})", self.bases)
     }
 }
 
@@ -42,10 +50,19 @@ impl RemoteShield {
         resolve: impl Fn(&Path) -> PathBuf,
         local: Arc<Shield>,
     ) -> Result<Self, String> {
-        let base = rc.url.trim_end_matches('/').to_owned();
-        if !(base.starts_with("https://") || crate::otp::is_loopback_http(&base)) {
-            return Err("shield.remote.url: https:// (http:// faqat loopback)".into());
+        let bases: Vec<String> = std::iter::once(&rc.url)
+            .chain(&rc.standby_urls)
+            .map(|u| u.trim_end_matches('/').to_owned())
+            .collect();
+        if let Some(bad) = bases
+            .iter()
+            .find(|b| !(b.starts_with("https://") || crate::otp::is_loopback_http(b)))
+        {
+            return Err(format!(
+                "shield.remote: {bad} — https:// (http:// faqat loopback)"
+            ));
         }
+        let any_https = bases.iter().any(|b| b.starts_with("https://"));
         let key = match (&rc.key, &rc.key_env) {
             (Some(k), _) => Some(Zeroizing::new(k.clone())),
             (None, Some(var)) => {
@@ -61,7 +78,7 @@ impl RemoteShield {
             .pool_max_idle_per_host(64);
         // reqwest `rustls-no-provider`: TLS konfiguratsiyasi har doim aniq beriladi; loopback `http://`
         // da ildizlarsiz (hech qanday TLS ulanishga ishonmaydi).
-        b = b.use_preconfigured_tls(if base.starts_with("https://") {
+        b = b.use_preconfigured_tls(if any_https {
             tls_config(rc, &resolve)?
         } else {
             rustls::ClientConfig::builder_with_provider(Arc::new(
@@ -74,18 +91,20 @@ impl RemoteShield {
         });
         Ok(Self {
             http: b.build().map_err(|e| e.to_string())?,
-            base,
+            bases,
+            preferred: AtomicUsize::new(0),
             key,
             local,
         })
     }
 
-    async fn post<B: serde::Serialize, T: serde::de::DeserializeOwned>(
+    async fn post_one<B: serde::Serialize, T: serde::de::DeserializeOwned>(
         &self,
+        base: &str,
         path: &str,
         body: &B,
     ) -> Result<T, String> {
-        let mut rb = self.http.post(format!("{}{path}", self.base)).json(body);
+        let mut rb = self.http.post(format!("{base}{path}")).json(body);
         if let Some(k) = &self.key {
             rb = rb.bearer_auth(k.as_str());
         }
@@ -94,6 +113,31 @@ impl RemoteShield {
             return Err(format!("Shield: {}", r.status()));
         }
         r.json::<T>().await.map_err(|e| e.without_url().to_string())
+    }
+
+    /// Instansiyalarni oxirgi muvaffaqiyatlisidan boshlab navbat bilan sinaydi.
+    async fn post<B: serde::Serialize, T: serde::de::DeserializeOwned>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> Result<T, String> {
+        let n = self.bases.len();
+        let start = self.preferred.load(Ordering::Relaxed) % n;
+        let mut errors = Vec::new();
+        for i in 0..n {
+            let idx = (start + i) % n;
+            match self.post_one(&self.bases[idx], path, body).await {
+                Ok(v) => {
+                    if idx != start {
+                        self.preferred.store(idx, Ordering::Relaxed);
+                        tracing::warn!(shield = %self.bases[idx], "Shield: boshqa instansiyaga o'tildi");
+                    }
+                    return Ok(v);
+                }
+                Err(e) => errors.push(format!("{}: {e}", self.bases[idx])),
+            }
+        }
+        Err(errors.join("; "))
     }
 }
 

@@ -56,6 +56,10 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
 * **Ko'p instansiya** (ADR-0019): `sessions.rs` — PQ Link sessiyalari DB'da (KEK bilan shifrlangan,
   `[pqlink] session_store`), ro'yxatdan o'tish nonce'lari umumiy; `shield_role.rs` — `mpay-server shield`
   (yagona belgilar ombori, ichki API), `shield_client.rs` — `[shield] mode = "remote"` (zaxira bilan).
+* **Shield yuqori mavjudligi** (`shield_ha.rs`, `[shield_ha]`, migratsiya `3007`, ADR-0026): bir nechta
+  Shield roli bitta bazada — DB ijarasi bilan bittasi yetakchi, zaxiralar `503 SHIELD_STANDBY`;
+  yetakchi belgilar omborini davriy snapshot'ga yozadi (`epoch` bilan to'silgan), yangi yetakchi
+  tiklab oladi; `SIGTERM` — yakuniy snapshot va ijarani bo'shatish. Mijoz: `[shield.remote] standby_urls`.
 * **Deployment** (ADR-0020, `deploy/README.md`): `proxyproto.rs` — PROXY protocol v1
   (`[http] proxy_protocol`, sarlavha faqat `trusted_proxies` dan; L4 load balancer ortida TLS/mTLS
   end-to-end); `metrics.rs` — Prometheus `/metrics` alohida portda (`[metrics] listen`, yorliqlarda

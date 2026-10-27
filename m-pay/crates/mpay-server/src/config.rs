@@ -49,6 +49,9 @@ pub struct Config {
     /// Kliring va hisob-kitob (ADR-0025).
     #[serde(default)]
     pub clearing: ClearingConfig,
+    /// Shield roli: yetakchilik va snapshot'lar (ADR-0026; faqat `mpay-server shield`).
+    #[serde(default)]
+    pub shield_ha: ShieldHaConfig,
 
     /// Konfiguratsiya fayli papkasi (yuklashda to'ldiriladi).
     #[serde(skip)]
@@ -96,6 +99,38 @@ impl Default for AcquirerConfig {
             reversal_interval_ms: 5_000,
             reversal_delay_secs: 10,
             reversal_max_backoff_secs: 600,
+        }
+    }
+}
+
+/// `[shield_ha]`: Shield rolining yuqori mavjudligi (ADR-0026). Bir nechta Shield instansiyasi bitta
+/// bazani ko'radi: bittasi yetakchi (DB ijarasi), qolganlari zaxira; yetakchi belgilar omborini
+/// davriy saqlaydi, zaxira yetakchilikni olganda oxirgi snapshot'ni tiklaydi.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct ShieldHaConfig {
+    pub enabled: bool,
+    /// Instansiya nomi (log va ijara egasi); berilmasa — `HOSTNAME` yoki tasodifiy.
+    pub instance_id: Option<String>,
+    /// Ijara muddati (ms): yetakchi shuncha vaqt yangilamasa zaxira oladi.
+    pub lease_ttl_ms: u64,
+    /// Ijarani yangilash oralig'i (ms).
+    pub renew_interval_ms: u64,
+    /// Snapshot oralig'i (s) — yetakchi yiqilsa yo'qoladigan belgilar oynasi (RPO).
+    pub snapshot_interval_secs: u64,
+    /// Saqlanadigan snapshot'lar soni.
+    pub snapshots_keep: u32,
+}
+
+impl Default for ShieldHaConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            instance_id: None,
+            lease_ttl_ms: 6_000,
+            renew_interval_ms: 1_000,
+            snapshot_interval_secs: 30,
+            snapshots_keep: 3,
         }
     }
 }
@@ -413,6 +448,10 @@ pub enum ShieldMode {
 pub struct ShieldRemoteConfig {
     /// `https://shield.internal:8445` (`http://` — faqat loopback sinov).
     pub url: String,
+    /// Zaxira Shield instansiyalari (ADR-0026): asosiysi javob bermasa yoki `503 SHIELD_STANDBY`
+    /// qaytarsa navbatdagisi; oxirgi muvaffaqiyatlisi keyingi so'rovlarda birinchi.
+    #[serde(default)]
+    pub standby_urls: Vec<String>,
     /// `shield` rolidagi API kaliti turgan muhit o'zgaruvchisi.
     #[serde(default)]
     pub key_env: Option<String>,
@@ -440,6 +479,7 @@ impl std::fmt::Debug for ShieldRemoteConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ShieldRemoteConfig")
             .field("url", &self.url)
+            .field("standby_urls", &self.standby_urls)
             .field("key_env", &self.key_env)
             .field("key", &self.key.as_ref().map(|_| "<maxfiy>"))
             .field("timeout_ms", &self.timeout_ms)
@@ -564,6 +604,31 @@ impl Config {
                 "acquirer: reversal_interval_ms ≥ 50, reversal_delay_secs ≥ 0, reversal_max_backoff_secs ≥ 1"
                     .into(),
             ));
+        }
+        let h = &self.shield_ha;
+        if h.renew_interval_ms < 50
+            || h.lease_ttl_ms < h.renew_interval_ms * 3
+            || h.snapshot_interval_secs == 0
+            || h.snapshots_keep == 0
+            || h.instance_id.as_deref().is_some_and(|i| {
+                i.is_empty() || i.len() > 64 || !i.bytes().all(|b| b.is_ascii_graphic())
+            })
+        {
+            return Err(ConfigError::Invalid(
+                "shield_ha: renew_interval_ms ≥ 50, lease_ttl_ms ≥ 3 × renew_interval_ms, \
+                 snapshot_interval_secs ≥ 1, snapshots_keep ≥ 1, instance_id 1–64 belgi"
+                    .into(),
+            ));
+        }
+        if let Some(r) = &self.shield.remote {
+            if r.standby_urls
+                .iter()
+                .any(|u| u.trim_end_matches('/') == r.url.trim_end_matches('/'))
+            {
+                return Err(ConfigError::Invalid(
+                    "shield.remote.standby_urls asosiy url'ni takrorlamasin".into(),
+                ));
+            }
         }
         let c = &self.clearing;
         if c.merchant_fee_bps > 10_000 || c.interchange_bps > 10_000 || c.cutoff_grace_secs < 0 {

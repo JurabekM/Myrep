@@ -8,6 +8,8 @@
 # 3. Yuk nginx orqali (TLS + mTLS, PROXY protocol); o'rtada api-1 to'xtatiladi (SIGTERM, graceful),
 #    Prometheus'da MpayInstanceDown ogohlantirishi kutiladi, so'ng api-1 qayta ishga tushadi.
 #    Ogohlantirish Alertmanager orqali navbatchi kanaliga (virtual — smsgw `/alerts`) yetib boradi.
+# 3a. Shield almashinuvi (ADR-0026): yetakchi Shield SIGKILL bilan o'ldiriladi — zaxira snapshot'dan
+#     tiklab oladi, keyingi yukda API'lar mahalliy zaxiraga tushmaydi.
 # 4. Shifrlangan zaxira (age): yukdan oldin asosiy nusxa (B1), keyin T lahza, yana faollik, ikkinchi
 #    zaxira (B2) → alohida bazaga tiklash + audit; PITR: B1 + B2 WAL → T lahza — audit yozuvlari soni
 #    T dagidek (keyingi faollik yo'q), audit xesh-zanjiri to'g'ri.
@@ -130,11 +132,47 @@ if [ -z "$NB" ]; then
   exit 1
 fi
 
+echo "== Shield almashinuvi: yetakchi o'ldiriladi (SIGKILL)"
+shield_health() {   # $1 xizmat → healthz JSON (ichki port)
+  "${DC[@]}" exec -T "$1" curl -sfk https://localhost:8600/healthz 2>/dev/null || echo '{}'
+}
+jget() { "$PY" -c "import json,sys; d=json.load(sys.stdin); print(d$1)"; }
+LEADER=""
+for s in shield shield-2; do
+  [ "$(shield_health "$s" | jget '.get("leader")')" = True ] && LEADER="$s"
+done
+[ -n "$LEADER" ] || { echo "XATO: Shield yetakchisi yo'q"; exit 1; }
+STANDBY=$([ "$LEADER" = shield ] && echo shield-2 || echo shield)
+CARDS="$(shield_health "$LEADER" | jget '["cards"]')"
+echo "   yetakchi: $LEADER ($CARDS karta), zaxira: $STANDBY"
+# Oxirgi hodisalar snapshot'ga tushsin (snapshot_interval_secs = 10).
+sleep 12
+t0=$(date +%s)
+"${DC[@]}" kill -s SIGKILL "$LEADER" >/dev/null
+TOOK=""
+for _ in $(seq 1 30); do
+  sleep 1
+  if [ "$(shield_health "$STANDBY" | jget '.get("leader")')" = True ]; then TOOK=1; break; fi
+done
+[ -n "$TOOK" ] || { echo "XATO: zaxira Shield yetakchilikni olmadi"; exit 1; }
+H2="$(shield_health "$STANDBY")"
+echo "   $STANDBY yetakchi: $(( $(date +%s) - t0 )) s ichida; $(echo "$H2" | jget '["cards"]') karta, epoch $(echo "$H2" | jget '["ha"]["epoch"]')"
+[ "$(echo "$H2" | jget '["cards"]')" = "$CARDS" ] || { echo "XATO: snapshot'dan tiklangan kartalar soni $CARDS emas"; exit 1; }
+# O'tishdan keyingi trafik — "T lahza" bosqichining yuki (alohida yuk bu yerda kartalarni yana bir
+# qurilmaga qo'shib, keyingi bosqichda karta–qurilma qoidasiga tushirardi). Tekshiruv — o'sha yukdan keyin.
+sleep 12
+DEG1="$(prom_q 'sum(mpay_shield_degraded_total)')"
+echo "   SHIELD_DEGRADED o'tishdan keyin: ${DEG1:-0}"
+"${DC[@]}" start "$LEADER" >/dev/null
+sleep 5
+[ "$(shield_health "$LEADER" | jget '.get("leader")')" = False ] || { echo "XATO: qaytgan instansiya zaxira emas"; exit 1; }
+echo "   $LEADER qaytdi — zaxira"
+
 echo "== Prometheus"
 sleep 12
 for q in 'sum(mpay_authorizations_total)' 'sum by (instance) (mpay_authorizations_total)' \
          'sum(mpay_shield_degraded_total)' 'sum(mpay_proxy_protocol_rejected_total)' \
-         'min(mpay_db_up)' 'max(mpay_shield_cards)' \
+         'min(mpay_db_up)' 'max(mpay_shield_cards)' 'sum(mpay_shield_leader)' \
          'histogram_quantile(0.99, sum by (le) (rate(mpay_http_request_duration_seconds_bucket{route="/v1/authorizations"}[2m])))'; do
   echo "   $q = $(prom_q "$q")"
 done
@@ -164,6 +202,11 @@ sleep 2
 C2="$(sql "SELECT count(*) FROM vault_audit")"
 echo "   keyin audit=$C2"
 [ "$C2" -gt "$C1" ] || { echo "XATO: qo'shimcha faollik audit'ga tushmadi"; exit 1; }
+# Shield almashinuvidan keyingi yuk (provisioning + avtorizatsiya) yangi yetakchida — mahalliy zaxirasiz.
+sleep 12
+DEG2="$(prom_q 'sum(mpay_shield_degraded_total)')"
+echo "   SHIELD_DEGRADED keyingi yukdan keyin: ${DEG2:-0} (o'tishdan keyin ${DEG1:-0})"
+[ "${DEG2:-0}" = "${DEG1:-0}" ] || { echo "XATO: yangi Shield yetakchisi bilan ham mahalliy zaxiraga tushildi"; exit 1; }
 
 echo "== shifrlangan zaxira (B2) va tiklash"
 bash "$D/backup.sh" "$BK2" | tail -1

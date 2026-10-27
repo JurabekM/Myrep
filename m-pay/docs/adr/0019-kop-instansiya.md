@@ -72,7 +72,7 @@ jarayon xotirasida edi:
   yoqilgan bo'lsa yana bitta UPSERT; handshake'ga ham bitta UPSERT. Avtorizatsiya —
   asosiy yuklama — muhrlanmagan (terminal), shuning uchun unga ta'sir qilmaydi.
 * Shield yagona nuqta. Uning yiqilishi to'lovni to'xtatmaydi, faqat aniqlashni zaiflashtiradi.
-  `TODO(spec):` Shield holatini davriy saqlash va zaxira instansiya (pilot SLA bo'yicha).
+  Holatni davriy saqlash va zaxira instansiya — ADR-0026 (2026-10-27).
 * `max_sessions` va `max_pending` endi butun klaster bo'yicha hisoblanadi (umumiy jadval).
 * Tekshirilgan (SQLite va PostgreSQL):
   * e2e `p2_multi_instance`: handshake A'dan B'ga o'tadi, sessiya A/B almashadi, A to'xtasa B'da

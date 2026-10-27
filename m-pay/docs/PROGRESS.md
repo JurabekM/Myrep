@@ -993,3 +993,23 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   haqiqiy binar bilan `init` → `clearing --out-dir`; smoke OK.
 * Ochiq: haqiqiy kliring formati (SX-2), tariflar, fayl kanali, savdo nuqtasi reyestri (BK-15),
   refund/chargeback (JM-10).
+
+### Shield yuqori mavjudligi (2026-10-27, ADR-0026; checklist JM-4 ✅)
+
+* Muammo: Shield roli yagona, belgilar ombori faqat xotirada — yiqilsa yoki yangilansa butun tarix
+  (qurilma fermalari, karta profillari) yo'qolardi, API'lar mahalliy zaxirada qolardi.
+* Snapshot (`mpay-shield/src/snapshot.rs`): to'liq ombor (oynalar, profillar, graf, taxalluslar),
+  versiyalangan, deterministik, SHA-256; qat'iy tiklash (uzunliklar, indekslar, union-find aylanasi).
+* `[shield_ha]`: DB ijarasi (`shield_leader`, `epoch`) — bittasi yetakchi, zaxira `503 SHIELD_STANDBY`;
+  yetakchi muddatdan oldin o'zini to'xtatadi; snapshot `epoch` bilan to'silgan, oxirgi 3 tasi;
+  yangi yetakchi tiklab oladi; `SIGTERM` — yakuniy snapshot va ijara bo'shatiladi.
+* Mijoz: `[shield.remote] standby_urls` — oxirgi muvaffaqiyatlisidan boshlab navbat bilan.
+* Deploy: `shield` + `shield-2`, Prometheus ikkalasini ko'radi; 3 ta yangi ogohlantirish (jami 19).
+* Tekshirildi: `cargo test --workspace` — 267 (SQLite), e2e/vault/server PostgreSQL'da — 111; snapshot
+  (aynan tiklash, buzilgan bayt, union-find aylanasi, proptest); HA unit (yiqilgan yetakchi, eski epoch
+  to'silgan, `step_down`, buzilgan snapshot → oldingisi); e2e `p3_shield_ha` (ikki haqiqiy Shield + API:
+  zaxira 503, yiqilish → 3 karta tiklandi, 4-karta YELLOW `SHIELD_DEGRADED` siz, qaytgan instansiya
+  zaxira, `step_down` bilan qaytarish); tiklash o'chirilganda e2e yiqildi.
+* `scripts/compose-test.sh` (Docker Desktop): yetakchi `shield-2` SIGKILL → `shield` 8 s da oldi, 200
+  karta snapshot'dan, keyingi yukda `SHIELD_DEGRADED` = 0, qaytgan instansiya zaxira, `sum(mpay_shield_leader)`
+  = 1; p99 72 ms; PITR va loglar — OK. `promtool` — 19 qoida.

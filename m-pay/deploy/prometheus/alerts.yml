@@ -64,6 +64,27 @@ groups:
         annotations:
           summary: "Shield roli javob bermadi — qarorlar mahalliy zaxirada ({{ $value }} ta / 5 daqiqa)"
 
+      - alert: MpayShieldNoLeader
+        expr: (sum(mpay_shield_leader) or vector(0)) < 1
+        for: 1m
+        labels: { severity: warning }
+        annotations:
+          summary: "Shield'da yetakchi yo'q — API'lar mahalliy zaxirada (belgilar instansiyalar bo'yicha bo'lingan)"
+
+      - alert: MpayShieldSplitBrain
+        expr: sum(mpay_shield_leader) > 1
+        for: 30s
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $value }} ta Shield instansiyasi o'zini yetakchi deb hisoblaydi — soatlar (NTP) va instance_id ni tekshiring"
+
+      - alert: MpayShieldSnapshotStale
+        expr: max(mpay_shield_snapshot_age_seconds) > 300
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Shield snapshot'i {{ $value }} s dan beri yozilmagan — yetakchi yiqilsa belgilar yo'qoladi"
+
       - alert: MpayIntegrityUnavailable
         expr: sum(increase(mpay_integrity_checks_total{result="unavailable"}[5m])) > 0
         labels: { severity: warning }

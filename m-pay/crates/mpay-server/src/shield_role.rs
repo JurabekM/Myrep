@@ -7,6 +7,9 @@
 //! * `POST /internal/shield/rekey` — `RekeyEventDto` → `RekeyResult` (ADR-0015)
 //! * `GET /healthz`
 //!
+//! Yuqori mavjudlik (`[shield_ha] enabled`, ADR-0026): bir nechta instansiya, bittasi yetakchi;
+//! zaxira ichki API'ga `503 SHIELD_STANDBY` qaytaradi (`crate::shield_ha`).
+//!
 //! Kirish: `shield` rolidagi API kaliti (`[[auth.keys]] role = "shield"`); `require_mtls` bo'lsa
 //! mijoz sertifikati CN = kalit ID. Ochiq PAN qabul qilinmaydi (DTO'larda yo'q).
 
@@ -24,14 +27,19 @@ use mpay_shield::remote::{IdvEventDto, RekeyEventDto, RekeyResult, TxnEventDto};
 use mpay_shield::Shield;
 use tokio::net::TcpListener;
 
+use mpay_common::clock::{Clock, SystemClock};
+
 use crate::auth::{Authenticator, Mtls};
 use crate::config::{Config, Role};
 use crate::error::ApiError;
+use crate::shield_ha::ShieldHa;
 
 struct RoleState {
     shield: Arc<Shield>,
     auth: Authenticator,
     require_mtls: bool,
+    ha: Option<Arc<ShieldHa>>,
+    clock: Arc<dyn Clock>,
 }
 
 impl RoleState {
@@ -43,6 +51,18 @@ impl RoleState {
                 "MTLS_REQUIRED",
                 "mijoz sertifikati kerak (CN = API kaliti ID)",
             ));
+        }
+        // Zaxira instansiya xizmat qilmaydi — mijoz keyingi URL'ga o'tadi (ADR-0026).
+        if let Some(ha) = &self.ha {
+            if !ha.is_active(crate::shield_ha::now_ms(self.clock.as_ref())) {
+                let mut e = ApiError::new(
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    "SHIELD_STANDBY",
+                    "zaxira Shield instansiyasi",
+                );
+                e.retry_after = Some(1);
+                return Err(e);
+            }
         }
         Ok(())
     }
@@ -104,9 +124,16 @@ async fn rekey(
 
 async fn health(State(s): St) -> Json<serde_json::Value> {
     let (cards, devices, merchants, graph_nodes) = s.shield.stats();
+    let ha = match &s.ha {
+        Some(ha) => Some(ha.status(crate::shield_ha::now_ms(s.clock.as_ref())).await),
+        None => None,
+    };
     Json(serde_json::json!({
         "status": "ok",
         "role": "shield",
+        // HA o'chiq — yagona instansiya doim yetakchi.
+        "leader": ha.as_ref().is_none_or(|h| h.leader),
+        "ha": ha,
         "cards": cards,
         "devices": devices,
         "merchants": merchants,
@@ -120,11 +147,30 @@ pub struct RunningShield {
     pub metrics_addr: Option<SocketAddr>,
     shutdown: Option<tokio::sync::oneshot::Sender<()>>,
     metrics: Option<tokio::task::JoinHandle<()>>,
+    /// Yetakchilik (`[shield_ha] enabled`).
+    pub ha: Option<Arc<ShieldHa>>,
+    ha_task: Option<tokio::task::AbortHandle>,
+    clock: Arc<dyn Clock>,
     pub handle: tokio::task::JoinHandle<std::io::Result<()>>,
 }
 
 impl RunningShield {
+    /// To'g'ri to'xtatishdan oldin: yakuniy snapshot va ijarani bo'shatish (zaxira darhol oladi).
+    pub async fn step_down(&mut self) {
+        if let Some(t) = self.ha_task.take() {
+            t.abort();
+        }
+        if let Some(ha) = &self.ha {
+            ha.step_down(crate::shield_ha::now_ms(self.clock.as_ref()))
+                .await;
+        }
+    }
+
+    /// Yangi ulanishlarni to'xtatadi. `step_down` siz — yiqilish kabi: ijara muddatida tugaydi.
     pub fn shutdown(&mut self) {
+        if let Some(t) = self.ha_task.take() {
+            t.abort();
+        }
         if let Some(tx) = self.shutdown.take() {
             let _ = tx.send(());
         }
@@ -143,10 +189,39 @@ impl Drop for RunningShield {
 /// Shield rolini ishga tushiradi (`[http]` — listen/TLS/client_ca, `[auth]`, `[shield]`).
 pub async fn start(cfg: &Config) -> Result<RunningShield, String> {
     let shield = crate::state::build_engine(cfg).map_err(|e| e.to_string())?;
+    let clock: Arc<dyn Clock> = Arc::new(SystemClock);
+    let ha = if cfg.shield_ha.enabled {
+        let url = cfg
+            .database
+            .connect_url(|p| cfg.resolve(p))
+            .map_err(|e| e.to_string())?;
+        let db =
+            mpay_vault::db::Db::open(&url, cfg.database.synchronous, cfg.database.max_connections)
+                .await
+                .map_err(|e| format!("ma'lumotlar bazasi: {e}"))?;
+        crate::dedup::migrate(&db)
+            .await
+            .map_err(|e| e.to_string())?;
+        let ha = Arc::new(ShieldHa::new(db, shield.clone(), cfg.shield_ha.clone()));
+        // Birinchi qadam xizmatdan oldin: yetakchi bo'lsa — snapshot tiklangan holda boshlaydi.
+        if let Err(e) = ha.tick(crate::shield_ha::now_ms(clock.as_ref())).await {
+            tracing::warn!(error = %e, "shield-ha: birinchi qadam");
+        }
+        tracing::info!(
+            instance = ha.instance(),
+            "Shield roli: yuqori mavjudlik yoqilgan"
+        );
+        Some(ha)
+    } else {
+        None
+    };
+    let ha_task = ha.clone().map(|h| h.spawn(clock.clone()));
     let st = Arc::new(RoleState {
         shield,
         auth: Authenticator::new(&cfg.auth.keys),
         require_mtls: cfg.auth.require_mtls,
+        ha: ha.clone(),
+        clock: clock.clone(),
     });
     let app = Router::new()
         .route("/internal/shield/idv", post(idv))
@@ -182,6 +257,36 @@ pub async fn start(cfg: &Config) -> Result<RunningShield, String> {
                 Box::pin(async move {
                     let mut t = crate::metrics::Text::default();
                     crate::metrics::render_common(&mut t, "shield");
+                    let ha = match &st.ha {
+                        Some(ha) => {
+                            Some(ha.status(crate::shield_ha::now_ms(st.clock.as_ref())).await)
+                        }
+                        None => None,
+                    };
+                    // HA o'chiq — yagona instansiya doim yetakchi (ogohlantirish qoidalari bir xil).
+                    t.gauge(
+                        "mpay_shield_leader",
+                        "Shu instansiya yetakchimi (1) yoki zaxira (0)",
+                        "",
+                        f64::from(u8::from(ha.as_ref().is_none_or(|h| h.leader))),
+                    );
+                    if let Some(h) = ha {
+                        t.gauge("mpay_shield_epoch", "Yetakchilik davri", "", h.epoch as f64);
+                        if let Some(age) = h.snapshot_age_secs {
+                            t.gauge(
+                                "mpay_shield_snapshot_age_seconds",
+                                "Oxirgi snapshot'dan beri (faqat yetakchi)",
+                                "",
+                                age as f64,
+                            );
+                        }
+                        t.gauge(
+                            "mpay_shield_snapshot_bytes",
+                            "Oxirgi snapshot hajmi",
+                            "",
+                            h.snapshot_bytes as f64,
+                        );
+                    }
                     let (cards, devices, merchants, nodes) = st.shield.stats();
                     for (kind, v) in [
                         ("cards", cards),
@@ -214,6 +319,9 @@ pub async fn start(cfg: &Config) -> Result<RunningShield, String> {
         metrics_addr,
         shutdown: Some(tx),
         metrics,
+        ha,
+        ha_task,
+        clock,
         handle,
     })
 }

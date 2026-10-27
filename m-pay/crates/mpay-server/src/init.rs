@@ -324,6 +324,14 @@ merchant_fee_bps = 150           # savdo nuqtasi komissiyasi (MDR), 1,5 %
 interchange_bps = 100            # emitentga, 1,0 %
 # cutoff_grace_secs = 900        # kun tugagach kutish (javobi kutilayotganlar yopilsin)
 
+# Faqat `mpay-server shield` (ADR-0026): bir nechta Shield roli bitta bazada — yetakchi + zaxira,
+# belgilar ombori snapshot'i. API instansiyalari: [shield.remote] standby_urls.
+# [shield_ha]
+# enabled = true
+# lease_ttl_ms = 6000
+# renew_interval_ms = 1000
+# snapshot_interval_secs = 30
+
 # Prometheus metrikalari (2-faza P2.5): alohida ichki port, kalitsiz — tashqariga ochilmaydi.
 [metrics]
 # listen = "127.0.0.1:9464"

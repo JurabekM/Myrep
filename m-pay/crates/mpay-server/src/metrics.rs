@@ -72,6 +72,8 @@ struct Registry {
     otp_failed: AtomicU64,
     proxy_rejected: AtomicU64,
     rate_limit_store_errors: AtomicU64,
+    shield_takeovers: AtomicU64,
+    shield_snapshot_errors: AtomicU64,
 }
 
 static REG: LazyLock<Registry> = LazyLock::new(Registry::default);
@@ -153,6 +155,16 @@ pub fn reversal_result(result: &'static str) {
 /// Shield roli javob bermadi — mahalliy zaxira ishladi.
 pub fn shield_degraded() {
     REG.shield_degraded.fetch_add(1, Ordering::Relaxed);
+}
+
+/// Shield instansiyasi yetakchilikni oldi (ADR-0026).
+pub fn shield_takeover() {
+    REG.shield_takeovers.fetch_add(1, Ordering::Relaxed);
+}
+
+/// Shield snapshot'i yozilmadi.
+pub fn shield_snapshot_error() {
+    REG.shield_snapshot_errors.fetch_add(1, Ordering::Relaxed);
 }
 
 /// Umumiy chegara ombori xatosi (so'rov o'tkazildi — fail-open).
@@ -346,6 +358,16 @@ pub fn render_common(out: &mut Text, role: &str) {
             "mpay_rate_limit_store_errors_total",
             "Umumiy chegara ombori xatosi (so'rov o'tkazildi)",
             &REG.rate_limit_store_errors,
+        ),
+        (
+            "mpay_shield_takeovers_total",
+            "Shield instansiyasi yetakchilikni oldi (snapshot tiklandi)",
+            &REG.shield_takeovers,
+        ),
+        (
+            "mpay_shield_snapshot_errors_total",
+            "Shield snapshot'i yozilmadi",
+            &REG.shield_snapshot_errors,
         ),
     ] {
         out.head(name, "counter", help);

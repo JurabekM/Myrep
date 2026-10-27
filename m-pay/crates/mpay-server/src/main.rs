@@ -202,6 +202,8 @@ async fn run(cli: Cli) -> Result<(), String> {
             let mut srv = mpay_server::shield_role::start(&cfg).await?;
             shutdown_signal().await?;
             tracing::info!("to'xtatilmoqda");
+            // Yakuniy snapshot va ijarani bo'shatish — zaxira instansiya hodisa yo'qotmasdan oladi.
+            srv.step_down().await;
             srv.shutdown();
             let _ = (&mut srv.handle).await;
             Ok(())

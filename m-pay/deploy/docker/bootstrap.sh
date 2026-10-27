@@ -28,7 +28,7 @@ fi
 
 if [ ! -f "$CFG" ]; then
   mpay-server init --dir "$STATE" --listen 0.0.0.0:8443 --tls --keystore pkcs11 \
-    --tls-san lb --tls-san api-1 --tls-san api-2 --tls-san shield >/dev/null
+    --tls-san lb --tls-san api-1 --tls-san api-2 --tls-san shield --tls-san shield-2 >/dev/null
   # Konsolga chiqqan API kalitlari yuqorida yutildi; ular faqat state/dev-credentials.env da (sandbox).
 
   # PostgreSQL: parolli URL faqat muhitda (secret).
@@ -55,6 +55,9 @@ if [ ! -f "$CFG" ]; then
   printf '\n[[auth.keys]]\nid = "api-shield"\nrole = "shield"\nsha256 = "%s"\n' "$key_hash" >> "$STATE/shield.toml"
   # Shield rolida PROXY protocol yo'q (to'g'ridan-to'g'ri ichki ulanishlar).
   sed -i 's|^proxy_protocol = true$|proxy_protocol = false|' "$STATE/shield.toml"
+  # Ikki Shield instansiyasi (ADR-0026): DB ijarasi bilan bittasi yetakchi, belgilar ombori snapshot'i
+  # bazada; instansiya nomi — konteyner HOSTNAME'i.
+  printf '\n[shield_ha]\nenabled = true\nsnapshot_interval_secs = 10\n' >> "$STATE/shield.toml"
 
   # API instansiyalari Shield roliga murojaat qiladi.
   sed -i 's|^engine = "engine"$|engine = "engine"\nmode = "remote"|' "$CFG"
@@ -62,6 +65,7 @@ if [ ! -f "$CFG" ]; then
 
 [shield.remote]
 url = "https://shield:8600"
+standby_urls = ["https://shield-2:8600"]
 key_env = "MPAY_SHIELD_KEY"
 ca_file = "tls-cert.pem"
 client_cert = "api-shield.crt.pem"

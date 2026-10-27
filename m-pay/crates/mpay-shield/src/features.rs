@@ -359,6 +359,133 @@ impl FeatureStore {
             .retain(|_, m| m.ev.back().is_some_and(|(t, _)| *t > now - 600));
     }
 
+    /// Snapshot (ADR-0026): to'liq holat — keyingi hodisalarda belgilar tiklangan va asl omborda bir xil.
+    pub fn snapshot(&self) -> Vec<u8> {
+        use crate::snapshot::W;
+        fn pairs(w: &mut W, q: &VecDeque<(i64, u64)>) {
+            w.len(q.len());
+            for (t, v) in q {
+                w.i64(*t);
+                w.u64(*v);
+            }
+        }
+        fn times(w: &mut W, q: &VecDeque<i64>) {
+            w.len(q.len());
+            for t in q {
+                w.i64(*t);
+            }
+        }
+        crate::snapshot::seal(|w| {
+            w.u64(self.events);
+            let mut cards: Vec<_> = self.cards.iter().collect();
+            cards.sort_unstable_by_key(|(k, _)| **k);
+            w.len(cards.len());
+            for (k, c) in cards {
+                w.a32(k);
+                pairs(w, &c.win.ev);
+                pairs(w, &c.merchants);
+                for h in c.hours {
+                    w.u32(h);
+                }
+                w.u64(c.n);
+                w.f64(c.mean);
+                w.f64(c.m2);
+                w.opt_i64(c.last_ts);
+                times(w, &c.prov);
+            }
+            let mut devices: Vec<_> = self.devices.iter().collect();
+            devices.sort_unstable_by_key(|(k, _)| **k);
+            w.len(devices.len());
+            for (k, d) in devices {
+                w.a32(k);
+                pairs(w, &d.win.ev);
+                w.opt_i64(d.first_seen);
+                times(w, &d.prov);
+            }
+            let mut merchants: Vec<_> = self.merchants.iter().collect();
+            merchants.sort_unstable_by_key(|(k, _)| **k);
+            w.len(merchants.len());
+            for (k, m) in merchants {
+                w.u64(*k);
+                w.len(m.ev.len());
+                for (t, card) in &m.ev {
+                    w.i64(*t);
+                    w.a32(card);
+                }
+            }
+            times(w, &self.p2p);
+            self.graph.encode(w);
+        })
+    }
+
+    /// Snapshot'dan tiklaydi (xesh, tuzilma va graf tekshiriladi).
+    pub fn restore(data: &[u8]) -> Result<Self, crate::snapshot::SnapshotError> {
+        use crate::snapshot::{SnapshotError::Format, R};
+        fn pairs(r: &mut R<'_>) -> crate::snapshot::Result<VecDeque<(i64, u64)>> {
+            let n = r.len(16)?;
+            (0..n).map(|_| Ok((r.i64()?, r.u64()?))).collect()
+        }
+        fn times(r: &mut R<'_>) -> crate::snapshot::Result<VecDeque<i64>> {
+            let n = r.len(8)?;
+            (0..n).map(|_| r.i64()).collect()
+        }
+        crate::snapshot::open(data, |r| {
+            let mut s = Self {
+                events: r.u64()?,
+                ..Self::default()
+            };
+            let n = r.len(32 + 8 + 8 + 24 * 4 + 8 + 8 + 8 + 1 + 8)?;
+            for _ in 0..n {
+                let k = r.a32()?;
+                let win = Window { ev: pairs(r)? };
+                let merchants = pairs(r)?;
+                let mut hours = [0u32; 24];
+                for h in &mut hours {
+                    *h = r.u32()?;
+                }
+                let c = CardState {
+                    win,
+                    merchants,
+                    hours,
+                    n: r.u64()?,
+                    mean: r.f64()?,
+                    m2: r.f64()?,
+                    last_ts: r.opt_i64()?,
+                    prov: times(r)?,
+                };
+                if s.cards.insert(k, c).is_some() {
+                    return Err(Format("takroriy karta"));
+                }
+            }
+            let n = r.len(32 + 8 + 1 + 8)?;
+            for _ in 0..n {
+                let k = r.a32()?;
+                let d = DeviceState {
+                    win: Window { ev: pairs(r)? },
+                    first_seen: r.opt_i64()?,
+                    prov: times(r)?,
+                };
+                if s.devices.insert(k, d).is_some() {
+                    return Err(Format("takroriy qurilma"));
+                }
+            }
+            let n = r.len(8 + 8)?;
+            for _ in 0..n {
+                let k = r.u64()?;
+                let m = r.len(40)?;
+                let ev = (0..m)
+                    .map(|_| Ok((r.i64()?, r.a32()?)))
+                    .collect::<crate::snapshot::Result<VecDeque<_>>>()?;
+                if s.merchants.insert(k, MerchantState { ev }).is_some() {
+                    return Err(Format("takroriy savdo nuqtasi"));
+                }
+            }
+            s.p2p = times(r)?;
+            s.graph = DeviceCardGraph::decode(r)?;
+            Ok(s)
+        })
+    }
+
     /// Diagnostika.
     pub fn stats(&self) -> (usize, usize, usize, usize) {
         (
@@ -447,6 +574,122 @@ mod tests {
         let v = s.txn(&tx(t0 + 21 * 3600, 1, 1, "SHOP", 500_000_000));
         assert!(f(&v, "amount_zscore") > 5.0);
         assert!(f(&v, "amount_to_card_mean_ratio") > 100.0);
+    }
+
+    /// Har xil hodisalar bilan to'ldirilgan ombor (kartalar, qurilmalar, P2P, graf, taxallus).
+    fn busy_store() -> FeatureStore {
+        let mut s = FeatureStore::new();
+        let t0 = 1_800_000_000;
+        for i in 0..40i64 {
+            let card = (i % 7) as u8;
+            let dev = (i % 3) as u8;
+            let merchant = if i % 5 == 0 { "P2P-1" } else { "SHOP" };
+            s.txn(&tx(
+                t0 + i * 97,
+                card,
+                dev,
+                merchant,
+                10_000 + i as u64 * 1_000,
+            ));
+        }
+        s.provision(&ProvisionEvent {
+            at: t0 + 5_000,
+            device: [9; 32],
+            card: [1; 32],
+            attestation_level: 2,
+            existing_tokens_for_pan: 1,
+            existing_tokens_for_device: 0,
+            integrity: None,
+        });
+        assert!(s.device_rekeyed([1; 32], [42; 32]));
+        s
+    }
+
+    #[test]
+    fn snapshot_restores_identical_future_features() {
+        let mut a = busy_store();
+        let bytes = a.snapshot();
+        let mut b = FeatureStore::restore(&bytes).unwrap();
+        // Deterministik: tiklangan omborning snapshot'i — o'sha baytlar.
+        assert_eq!(b.snapshot(), bytes);
+        assert_eq!(a.stats(), b.stats());
+        // Keyingi hodisalarda ikkalasi bir xil belgilar beradi (taxallus orqali ham).
+        let t = 1_800_010_000;
+        for (i, e) in [
+            tx(t, 1, 42, "SHOP", 55_000),
+            tx(t + 5, 3, 2, "P2P-1", 70_000),
+            tx(t + 9, 200, 0, "SHOPX", 100),
+        ]
+        .iter()
+        .enumerate()
+        {
+            assert_eq!(a.txn(e), b.txn(e), "hodisa {i}");
+        }
+        let p = ProvisionEvent {
+            at: t + 20,
+            device: [42; 32],
+            card: [5; 32],
+            attestation_level: 2,
+            existing_tokens_for_pan: 0,
+            existing_tokens_for_device: 2,
+            integrity: None,
+        };
+        assert_eq!(a.provision(&p), b.provision(&p));
+        assert_eq!(a.snapshot(), b.snapshot());
+    }
+
+    #[test]
+    fn corrupted_snapshot_is_rejected() {
+        use crate::snapshot::SnapshotError;
+        let bytes = busy_store().snapshot();
+        let mut t = bytes.clone();
+        t[bytes.len() / 2] ^= 1;
+        assert_eq!(
+            FeatureStore::restore(&t).unwrap_err(),
+            SnapshotError::Checksum
+        );
+        assert!(FeatureStore::restore(&bytes[..bytes.len() - 1]).is_err());
+        assert!(FeatureStore::restore(b"MPSHSNP1").is_err());
+        assert!(FeatureStore::restore(&[]).is_err());
+        // Bo'sh ombor ham tiklanadi.
+        let empty = FeatureStore::new().snapshot();
+        assert_eq!(FeatureStore::restore(&empty).unwrap().stats(), (0, 0, 0, 0));
+    }
+
+    #[test]
+    fn union_find_cycle_in_snapshot_is_rejected() {
+        // Xesh to'g'ri, lekin graf ichida aylana (qo'lda yig'ilgan) — tiklash `find` da osilib qolmasin.
+        let bytes = crate::snapshot::seal(|w| {
+            w.u64(0);
+            for _ in 0..3 {
+                w.len(0); // kartalar, qurilmalar, savdo nuqtalari
+            }
+            w.len(0); // p2p
+            w.len(2);
+            for (i, parent) in [(1u8, 1u64), (2, 0)] {
+                w.u8(0);
+                w.a32(&[i; 32]);
+                w.u64(parent);
+                w.u32(1);
+                w.u32(0);
+            }
+            w.len(0);
+            w.len(0);
+        });
+        assert!(matches!(
+            FeatureStore::restore(&bytes),
+            Err(crate::snapshot::SnapshotError::Format(_))
+        ));
+    }
+
+    proptest::proptest! {
+        #[test]
+        fn restore_never_panics(data in proptest::collection::vec(proptest::prelude::any::<u8>(), 0..600)) {
+            let _ = FeatureStore::restore(&data);
+            // Xeshi to'g'ri, mazmuni tasodifiy tana.
+            let sealed = crate::snapshot::seal(|w| for b in &data { w.u8(*b) });
+            let _ = FeatureStore::restore(&sealed);
+        }
     }
 
     #[test]

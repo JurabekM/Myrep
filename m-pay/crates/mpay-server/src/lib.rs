@@ -26,6 +26,7 @@ pub mod serve;
 pub mod sessions;
 pub mod shared_limits;
 pub mod shield_client;
+pub mod shield_ha;
 pub mod shield_role;
 pub mod state;
 
