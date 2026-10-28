@@ -347,3 +347,73 @@ Demo qurilmada (alohida `Baraka_Demo` AVD, API 36 x86_64, 2026-10-25; umumiy emu
 | Haqiqiy ilova bilan yonma-yon | PASS | `uz.barakadastur.app` va `.demo` ikkalasi o'rnatildi; haqiqiy ilovada demo yozuvi yo'q |
 | Launcher nomi | PASS (tuzatildi) | avval «Baraka Dastur DEMO» → «Baraka Dast…» bo'lib kesilib, haqiqiy ilovadan farqlanmasdi; endi «DEMO Baraka Dastur» → «DEMO Bara…» |
 | FATAL / crash | PASS | 0 |
+
+## 14. 1.0.0+4: 8-qonun bilan reliz nomzodi (2026-10-27)
+
+Versiya: `1.0.0+4` (`versionName 1.0.0`, `versionCode 4`). Manba: `5f181648` + versiya oshirilishi.
+Artefaktlar: `release/1.0.0+4/` (`tools/build_release.ps1`), 27.10.2026 18:31–18:32.
+Imzo: `CN=Android Debug` — **reliz nomzodi, Play'ga yuklab bo'lmaydi** (upload kaliti — 2-bo'lim).
+
+| Fayl | Hajm | SHA-256 |
+|---|---|---|
+| `app-release.aab` (Play; arm, arm64, x64) | 57,7 MB | `e73d69e554007ea0255b04f11e57f593a80f4f779de83ce07967e0f461e8a5a5` |
+| `app-arm64-v8a-release.apk` (telefon) | 29,5 MB | `549960aae2119b1d292ed559f11344b2f8d36cc7b428ee7f5d05c13d31869283` |
+| `app-armeabi-v7a-release.apk` | 25,9 MB | `cee5a5257e5a531451e60489ba3674dfb0d93bb4ad7b4477921e8626c7c1e4d4` |
+| `app-x86_64-release.apk` | 31,2 MB | `49ad13bc03885d3618ea19d552474f1bda67444b056c94e84fafe5e1d235e37c` |
+| `mapping-aab.txt` / `mapping-apk.txt` (bir xil) | 15,7 MB | `5fec90980c58370445f45b7e23efc48d5bdfb7e2dd15ce284e673899d0185945` |
+| `symbols-aab.zip` | 4,8 MB | `e79226c6ef966d104bf2934c7bbd781665182b0e19a47ade4ad694d896a313f8` |
+| `symbols-apk.zip` | 4,8 MB | `a84782a9efba652b65aeb9b5abeb3e600e8c6aa8c1246086623ef627ce23d241` |
+
+- `aapt2` (arm64 APK): `uz.barakadastur.app`, `versionCode 4`, `versionName 1.0.0`, «Baraka Dastur», `targetSdk 35`; `INTERNET` ruxsati yo'q. `apksigner` / `jarsigner`: `CN=Android Debug`.
+- `flutter analyze --fatal-infos`: toza. `flutter test`: 825 o'tdi, 4 o'tkazib yuborildi (vektorlar va migratsiya ichida).
+
+8-qonun qurilmada (alohida `Baraka_14C` AVD, API 36 x86_64, x86_64 APK, yangi o'rnatish, 5556-port):
+
+| Band | Natija | Izoh |
+|---|---|---|
+| O'rnatish, PIN, onboarding | PASS | «Ilova haqida»: «Versiya 1.0.0 (4)» |
+| Bosh ekran → «Bilimga sarmoya» | PASS | soat hisoblanmaguncha «Yangi maqsad» o'chiq |
+| «Bir soatim qancha turadi?» | PASS | 6 000 000 so'm, 8 soat × 26 kun, chegara 12 soat → 28 846,15 so'm; ×2 = 57 692,30; chegaraning 66,7 % i; eng katta daromad 9 000 000; «soat qo'shib ikki barobar qilib bo'lmaydi» |
+| O'qish maqsadi | PASS | sarlavha, sabab, 28 846,15 → 57 692,30; yorliq kesilishi — OPEN_QUESTIONS 157 |
+| Kurs yo'li va qoplanish | PASS | 1 500 000 + vaqt 1 153 846 = 2 653 846 so'm; oyiga 5 999 999,20 (OPEN_QUESTIONS 160); ≈ 1 oy; «o'qishni qarzga olmang» |
+| Kurs tekshiruvi | PASS | 4 belgi → qizil, «bu kursga pul to'lamang»; «Qizil» belgisi; «Boshlash» — alohida tasdiq oynasi |
+| Kitob yo'li → «Tugatdim» | PASS | bo'sh natija rad etildi (OPEN_QUESTIONS 158); natija bilan — «Erishildi: …» |
+| «O'rgatganlarim» | PASS | kimga, nima, sana, 45 daqiqa → «0,8 soat» (OPEN_QUESTIONS 159) |
+| Ruscha | PASS | «Вложение в знания», maqsad ekrani, qoplanish |
+| Boblar ro'yxati | PASS | «8-bob. Bilimingizga sarmoya kiriting», odat qoidasi bilan yopiq; bob ichi qurilmada ochilmadi (kontent testlari bilan tekshiriladi) |
+| FATAL / ANR / Flutter xatosi | PASS | 0 / 0 / 0 |
+| Haqiqiy telefon, bildirishnoma, TalkBack | NOT TESTED | |
+
+## 15. 1.0.0+5: 8-qonun tuzatishlari bilan reliz nomzodi (2026-10-28)
+
+Versiya: `1.0.0+5` (`versionName 1.0.0`, `versionCode 5`). Manba: `0b2ed486` + versiya oshirilishi.
+Artefaktlar: `release/1.0.0+5/` (`tools/build_release.ps1`), 28.10.2026 08:55–08:56. `release/1.0.0+4/` tegilmadi.
+Imzo: `CN=Android Debug` — **reliz nomzodi, Play'ga yuklab bo'lmaydi** (upload kaliti — 2-bo'lim).
+
+| Fayl | Hajm | SHA-256 |
+|---|---|---|
+| `app-release.aab` (Play; arm, arm64, x64) | 57,7 MB | `da60a8f9adde7cb1a189624325f38bf2cd796bc5fece6c8c388865819d76383f` |
+| `app-arm64-v8a-release.apk` (telefon) | 29,5 MB | `1f6b59f119ad3ccf47a1026a23b73e9df627e5556c9e8699f1aa6fb8af6136e3` |
+| `app-armeabi-v7a-release.apk` | 25,9 MB | `fac3d9876493042ec0225e97aa973e6160f5d19ef5e6f6eda597c8afcb8f1a8e` |
+| `app-x86_64-release.apk` | 31,2 MB | `26e739cd3edebb8140d9856fd4089c901086426182e8e67ae7003ba89abb8c8e` |
+| `mapping-aab.txt` / `mapping-apk.txt` (bir xil) | 15,7 MB | `5fec90980c58370445f45b7e23efc48d5bdfb7e2dd15ce284e673899d0185945` |
+| `symbols-aab.zip` | 4,8 MB | `94b085a78d6cb36a1ce83b99fb351bafca1ecc606374fc51ae7ac0d0b331ed69` |
+| `symbols-apk.zip` | 4,8 MB | `b3ff4e3bdd813485e6b5dd167fcc37ae7dec2e4e4c7182d81857f35ed1c674d9` |
+
+- `SHA256SUMS.txt` bo'yicha qayta tekshiruv: 0 nomuvofiqlik.
+- `aapt2` (arm64 APK): `uz.barakadastur.app`, `versionCode 5`, `versionName 1.0.0`, «Baraka Dastur», `targetSdk 35`; `INTERNET` ruxsati yo'q. `apksigner`: `CN=Android Debug`.
+- `flutter analyze`: toza. `flutter test`: 830 o'tdi, 4 o'tkazib yuborildi.
+
+Tuzatishlar qurilmada (`Baraka_14C`, x86_64 APK, `1.0.0+4` ustiga `adb install -r` — ma'lumotlar saqlandi). Suratlar: `release/1.0.0+5/tuzatishlar-emulyator-2026-10-28.png`.
+
+| Band | Natija | Izoh |
+|---|---|---|
+| Yangilash, PIN | PASS | `versionCode 5`; avvalgi maqsad, yo'llar va yozuvlar joyida |
+| 157: maqsad oynasi yorlig'i | PASS | «Nega aynan shu?» to'liq; savolning qolgani maydon ostida ikki qatorda |
+| 158: «Tugatdim» bo'sh natija | PASS | oyna ochiq qoladi, «Erishilgan natijani yozing.» maydon ostida; yozish boshlanganda yo'qoladi; bekor qilinganda kurs «Rejada» qoldi |
+| 159: qisqa vaqt | PASS | «O'rgatganlarim»: «Shogird · 27.10.2026 · 45 daqiqa» |
+| 160: qoplanish taxmini | PASS | «oyiga qo'shimcha: taxminan 6 000 000 so'm»; jami 2 653 846 so'm, ≈ 1 oy — o'zgarmadi |
+| 161: 8-bob sarlavhasi | PASS | «8-bob. Bilimingga sarmoya kirit», odat qoidasi bilan yopiq |
+| FATAL / ANR / Flutter xatosi | PASS | 0 / 0 / 0 |
+| Ruscha matnlar | NOT TESTED | qurilmada ochilmadi; `durationLabel` ruscha birlik testi bor |
+| Haqiqiy telefon, bildirishnoma, TalkBack | NOT TESTED | |

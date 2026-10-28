@@ -32,6 +32,21 @@ String hoursLabel(int minutes) {
   return rest == 0 ? '${tenths ~/ 10}' : '${tenths ~/ 10},$rest';
 }
 
+/// Davomiylik: bir soatdan kami daqiqada («45 daqiqa»), qolgani soatda
+/// («1,5 soat»).
+String durationLabel(AppLocalizations l10n, int minutes) => minutes < 60
+    ? l10n.lnMinutes(minutes)
+    : l10n.lnItemHours(hoursLabel(minutes));
+
+/// Qoplanish taxminidagi summa ekranda (SPEC 2H.4): 1 000 so'mdan katta
+/// bo'lsa 1 000 so'mgacha, kichik bo'lsa butun so'mgacha yaxlitlanadi.
+/// Hisobning o'zi (umumiy vektorlar) o'zgarmaydi.
+Money estimateDisplay(Money m) {
+  final c = m.currency;
+  final thousand = 1000 * c.minorPerMajor;
+  return m.roundTo(m.minorUnits >= thousand ? thousand : c.minorPerMajor);
+}
+
 String learningError(AppLocalizations l10n, Object e) => switch (e) {
   DomainRuleException(code: LearningMath.errInvalidHours) => l10n.lnErrHours,
   DomainRuleException(code: LearningMath.errInvalidAmount) => l10n.lnErrAmount,
@@ -186,7 +201,11 @@ class _GoalDialogState extends ConsumerState<_GoalDialog> {
               key: const Key('ln-goal-why'),
               controller: _why,
               maxLines: 2,
-              decoration: InputDecoration(labelText: l10n.lnGoalWhy),
+              decoration: InputDecoration(
+                labelText: l10n.lnGoalWhy,
+                helperText: l10n.lnGoalWhyHint,
+                helperMaxLines: 3,
+              ),
             ),
             ListTile(
               key: const Key('ln-goal-target'),

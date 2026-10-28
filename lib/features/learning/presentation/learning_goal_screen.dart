@@ -222,34 +222,67 @@ class LearningGoalScreen extends ConsumerWidget {
     );
   }
 
-  Future<String?> _askOutcome(BuildContext context) async {
+  Future<String?> _askOutcome(BuildContext context) => showDialog<String>(
+    context: context,
+    builder: (_) => const _OutcomeDialog(),
+  );
+}
+
+/// «Tugatdim»: erishilgan natija (SPEC 2H.3). Bo'sh natijada oyna
+/// yopilmaydi — xato maydon ostida chiqadi.
+class _OutcomeDialog extends StatefulWidget {
+  const _OutcomeDialog();
+
+  @override
+  State<_OutcomeDialog> createState() => _OutcomeDialogState();
+}
+
+class _OutcomeDialogState extends State<_OutcomeDialog> {
+  // Oyna yopilish animatsiyasi tugaguncha kontroller tirik qoladi.
+  final _controller = TextEditingController();
+  var _empty = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.lnItemOutcome),
-        content: TextField(
-          key: const Key('ln-item-outcome'),
-          controller: controller,
-          maxLines: 3,
-          autofocus: true,
+    return AlertDialog(
+      title: Text(l10n.lnItemOutcome),
+      content: TextField(
+        key: const Key('ln-item-outcome'),
+        controller: _controller,
+        maxLines: 3,
+        autofocus: true,
+        onChanged: (_) {
+          if (_empty) setState(() => _empty = false);
+        },
+        decoration: InputDecoration(
+          errorText: _empty ? l10n.lnErrOutcome : null,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            key: const Key('ln-item-outcome-save'),
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: Text(l10n.save),
-          ),
-        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('ln-item-outcome-save'),
+          onPressed: () {
+            if (_controller.text.trim().isEmpty) {
+              setState(() => _empty = true);
+              return;
+            }
+            Navigator.pop(context, _controller.text);
+          },
+          child: Text(l10n.save),
+        ),
+      ],
     );
-    controller.dispose();
-    return result;
   }
 }
 
@@ -289,7 +322,10 @@ class _PaybackCard extends StatelessWidget {
               if (months == null)
                 Text(l10n.lnPaybackNever, key: const Key('ln-payback-never'))
               else ...[
-                Text(l10n.lnPaybackGain(money(p.monthlyGain))),
+                Text(
+                  l10n.lnPaybackGain(money(estimateDisplay(p.monthlyGain))),
+                  key: const Key('ln-payback-gain'),
+                ),
                 Text(
                   l10n.lnPaybackMonths(months),
                   key: const Key('ln-payback-months'),
@@ -351,7 +387,7 @@ class _ItemCard extends StatelessWidget {
                       learningItemStatusLabel(l10n, item.status),
                       if (item.cost case final c?) money(c),
                       if (item.studyMinutes case final m?)
-                        l10n.lnItemHours(hoursLabel(m)),
+                        durationLabel(l10n, m),
                     ].join(' · '),
                   ),
                   if (isCourse && item.courseVerdict != null)

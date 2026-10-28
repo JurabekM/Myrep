@@ -226,6 +226,14 @@
 155. **Desktop: 3 yangi umumiy suite.** `hourly_value`, `skill_payback`, `course_check` (`DESKTOP_PROMPT.md` 5.3). Desktop runner noma'lum suite'da yiqiladi — desktop jamoasi runner qo'shishi kerak.
 156. **Mavjud «Hunarlar» (`Skill`, 5-qonun) bilan bog'lash.** O'qish maqsadi hozircha erkin matn. Uni «Hunardan ishga» dagi hunar ro'yxatiga bog'lash kerakmi (masalan, o'rganilgan mahoratdan keyin g'oya yozish)?
 
+## Reliz 1.0.0+4: 8-qonun emulyatorda (2026-10-27)
+
+157. **[Hal qilindi, 2026-10-28] Maqsad oynasidagi yorliq kesiladi.** Yorliq qisqardi: «Nega aynan shu?». Savolning qolgani maydon ostidagi izohga o'tdi: «Qaysi ishni tezroq, sifatliroq yoki ko'proq odamga qila olasiz?» (SPEC 2H.2 so'zlari bilan).
+158. **[Hal qilindi, 2026-10-28] «Tugatdim» oynasida bo'sh natija.** Endi oyna yopilmaydi, «Erishilgan natijani yozing.» xatosi maydon ostida chiqadi va yozish boshlanganda yo'qoladi. Xizmatdagi tekshiruv ham qoldi. Yo'l-yo'lakay yashirin xato tuzatildi: matn kontrolleri oyna yopilish animatsiyasi tugamasdan yo'q qilinardi (debug'da assert).
+159. **[Hal qilindi, 2026-10-28] Qisqa vaqt soatda.** Bir soatdan kam vaqt daqiqada ko'rinadi («45 daqiqa» / «45 мин»), bir soat va undan ko'pi avvalgidek soatda («1,5 soat»). «O'rgatganlarim» va o'qish yo'llarida bir xil.
+160. **[Hal qilindi, 2026-10-28] Qoplanishdagi g'alati tiyinlar.** Hisob o'zgarmadi (umumiy vektorlar, desktop bilan bitma-bit). Faqat ekranda oylik qo'shimcha «taxminan» so'zi bilan yaxlitlanadi: 1 000 so'mdan katta bo'lsa 1 000 so'mgacha, kichik bo'lsa butun so'mgacha (Qorovul pul rejasidagi qoida). 5 999 999,20 → «taxminan 6 000 000 so'm». Desktop ham shunday ko'rsatishi kerakmi — desktop sessiyasi qarori.
+161. **[Hal qilindi, 2026-10-28] 8-bob sarlavhasi uslubi.** «8-bob. Bilimingga sarmoya kirit» / «Глава 8. Вкладывай в свои знания» — 1–7-boblar kabi «sen» shaklida. Bob matni avvalgidek «siz» shaklida (1–7-boblarda ham shunday). Sarlavha uslubi kontent testi bilan qotirildi; kontent siyosati testidan o'tdi. Desktop kontentidagi sarlavha alohida (desktop sessiyasi).
+
 ## Nom va mustaqil kontent (2026-10-23)
 
 - **Android `applicationId` yangilandi: `uz.barakadastur.app`** (Play identifikatori; birinchi yuklashdan keyin o'zgartirib bo'lmaydi). Oqibat: telefonga oldin o'rnatilgan «Baraka daftari» yangilanmaydi — yangi ilova alohida o'rnatiladi va eski ma'lumotlar o'z-o'zidan ko'chmaydi (kerak bo'lsa, eski ilovadan zaxira nusxa olib, yangisiga tiklash). Ichki nomlar o'zgarmadi: Kotlin `namespace` `uz.barakadaftari.app`, Dart paketi `baraka_daftari`, Tauri `identifier` `uz.barakadaftari.desktop` (desktop ma'lumotlar papkasi), keyring `BarakaDaftari`, `.baraka` kengaytmasi, crate nomlari — ular foydalanuvchiga ko'rinmaydi.

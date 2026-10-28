@@ -5,5 +5,5 @@ abstract final class AppInfo {
   static const author = 'JurabekM';
   static const copyrightYear = '2026';
   static const version = '1.0.0';
-  static const build = 3;
+  static const build = 5;
 }

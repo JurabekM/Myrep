@@ -1,7 +1,7 @@
 name: baraka_daftari
 description: "Baraka Dastur — ribosiz shaxsiy moliya ilovasi (MVP-1)."
 publish_to: 'none'
-version: 1.0.0+3
+version: 1.0.0+5
 
 environment:
   sdk: ^3.8.1

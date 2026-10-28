@@ -8215,11 +8215,17 @@ abstract class AppLocalizations {
   /// **'Qaysi bilim yoki mahorat?'**
   String get lnGoalTitleField;
 
-  /// Maydon
+  /// Maydon (qisqa — tor ekranda kesilmasin)
   ///
   /// In uz, this message translates to:
-  /// **'Nega aynan shu? Qaysi ishni yaxshiroq qila olasiz?'**
+  /// **'Nega aynan shu?'**
   String get lnGoalWhy;
+
+  /// Maydon ostidagi izoh
+  ///
+  /// In uz, this message translates to:
+  /// **'Qaysi ishni tezroq, sifatliroq yoki koʻproq odamga qila olasiz?'**
+  String get lnGoalWhyHint;
 
   /// Maydon
   ///
@@ -8377,6 +8383,12 @@ abstract class AppLocalizations {
   /// **'{hours} soat'**
   String lnItemHours(String hours);
 
+  /// Bir soatdan kam vaqt
+  ///
+  /// In uz, this message translates to:
+  /// **'{minutes} daqiqa'**
+  String lnMinutes(int minutes);
+
   /// Holat
   ///
   /// In uz, this message translates to:
@@ -8467,10 +8479,10 @@ abstract class AppLocalizations {
   /// **'Narx {cost} + vaqt qiymati {time} = {total}'**
   String lnPaybackInvest(String cost, String time, String total);
 
-  /// Oylik qo'shimcha daromad
+  /// Oylik qo'shimcha daromad (ekranda yaxlitlangan)
   ///
   /// In uz, this message translates to:
-  /// **'Soatingiz maqsadga yetsa, oyiga qoʻshimcha: {amount}'**
+  /// **'Soatingiz maqsadga yetsa, oyiga qoʻshimcha: taxminan {amount}'**
   String lnPaybackGain(String amount);
 
   /// Qoplanish oylari

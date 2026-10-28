@@ -2,6 +2,7 @@ import 'package:baraka_daftari/app/router/app_router.dart';
 import 'package:baraka_daftari/app/router/app_routes.dart';
 import 'package:baraka_daftari/core/domain/enums.dart';
 import 'package:baraka_daftari/core/money/money.dart';
+import 'package:baraka_daftari/core/money/money_format.dart';
 import 'package:baraka_daftari/features/learning/data/learning_providers.dart';
 import 'package:baraka_daftari/features/learning/domain/course_check.dart';
 import 'package:baraka_daftari/features/partnerships/domain/offer_check.dart';
@@ -165,5 +166,100 @@ void main() {
     expect(taught.learner, 'Ukam');
     await reveal(tester, find.byKey(Key('ln-teach-${taught.meta.id}')));
     expect(find.text('Jadvalda formula'), findsOneWidget);
+  });
+
+  testWidgets('maqsad oynasi: qisqa yorliq va izoh maydon ostida', (
+    tester,
+  ) async {
+    final env = await pumpBarakaApp(tester);
+    final s = await env.container.read(learningServiceProvider.future);
+    await s.calculate(
+      income: som(6000000),
+      minutesPerDay: 480,
+      daysPerMonth: 26,
+    );
+    await go(tester, env, AppRoutes.learning);
+    await tapIn(tester, find.byKey(const Key('ln-goal-new')));
+    final why = find.byKey(const Key('ln-goal-why'));
+    expect(
+      find.descendant(of: why, matching: find.text('Nega aynan shu?')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: why,
+        matching: find.text(
+          'Qaysi ishni tezroq, sifatliroq yoki koʻproq odamga qila olasiz?',
+        ),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('«Tugatdim»: boʻsh natijada oyna ochiq qoladi; qoʻshimcha '
+      'taxminan; 45 daqiqa daqiqada', (tester) async {
+    final env = await pumpBarakaApp(tester);
+    final s = await env.container.read(learningServiceProvider.future);
+    await s.calculate(
+      income: som(6000000),
+      minutesPerDay: 480,
+      daysPerMonth: 26,
+    );
+    final goal = await s.createGoal(title: 'Excel');
+    final item = await s.addItem(
+      goalId: goal.meta.id,
+      kind: LearningItemKind.book,
+      title: 'Kitob',
+      purpose: 'Hisobotni oʻzim tuzaman',
+      cost: som(1500000),
+      studyMinutes: 45,
+    );
+    await s.logTeaching(learner: 'Ukam', topic: 'Formula', minutes: 45);
+    await go(tester, env, AppRoutes.learningGoal(goal.meta.id));
+
+    // Hisob umumiy vektorlar bilan bir xil, ekranda esa yaxlitlangan.
+    expect((await s.payback(goal))!.monthlyGain.minorUnits, 599999920);
+    final gain = tester.widget<Text>(find.byKey(const Key('ln-payback-gain')));
+    expect(
+      gain.data,
+      endsWith('taxminan ${MoneyFormatter.format(som(6000000))}'),
+    );
+    expect(find.textContaining('45 daqiqa'), findsOneWidget);
+
+    await tapIn(tester, find.byKey(Key('ln-item-menu-${item.meta.id}')));
+    await tapIn(tester, find.byKey(const Key('ln-item-action-done')));
+    await tester.tap(find.byKey(const Key('ln-item-outcome-save')));
+    await tester.pumpAndSettle();
+    // Boʻsh natija: oyna yopilmaydi, xato maydon ostida.
+    expect(find.byKey(const Key('ln-item-outcome')), findsOneWidget);
+    expect(find.text('Erishilgan natijani yozing.'), findsOneWidget);
+    expect(
+      (await s.items(goal.meta.id)).single.status,
+      LearningItemStatus.planned,
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('ln-item-outcome')),
+      'Hisobotni oʻzim tuzdim',
+    );
+    await tester.pump();
+    expect(find.text('Erishilgan natijani yozing.'), findsNothing);
+    await tester.tap(find.byKey(const Key('ln-item-outcome-save')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('ln-item-outcome')), findsNothing);
+    final done = (await s.items(goal.meta.id)).single;
+    expect(done.status, LearningItemStatus.done);
+    expect(done.outcome, 'Hisobotni oʻzim tuzdim');
+
+    final taught = (await s.teachings()).single;
+    await go(tester, env, AppRoutes.learning);
+    await reveal(tester, find.byKey(Key('ln-teach-${taught.meta.id}')));
+    expect(
+      find.descendant(
+        of: find.byKey(Key('ln-teach-${taught.meta.id}')),
+        matching: find.textContaining('45 daqiqa'),
+      ),
+      findsOneWidget,
+    );
   });
 }

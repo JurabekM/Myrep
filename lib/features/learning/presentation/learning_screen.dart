@@ -220,7 +220,7 @@ class _TeachingSection extends StatelessWidget {
               [
                 t.learner,
                 formatDate(t.taughtOn),
-                if (t.minutes case final m?) l10n.lnItemHours(hoursLabel(m)),
+                if (t.minutes case final m?) durationLabel(l10n, m),
                 if (t.note case final n?) n,
               ].join(' · '),
             ),

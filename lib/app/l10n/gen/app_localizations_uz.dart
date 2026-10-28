@@ -4738,7 +4738,11 @@ class AppLocalizationsUz extends AppLocalizations {
   String get lnGoalTitleField => 'Qaysi bilim yoki mahorat?';
 
   @override
-  String get lnGoalWhy => 'Nega aynan shu? Qaysi ishni yaxshiroq qila olasiz?';
+  String get lnGoalWhy => 'Nega aynan shu?';
+
+  @override
+  String get lnGoalWhyHint =>
+      'Qaysi ishni tezroq, sifatliroq yoki koʻproq odamga qila olasiz?';
 
   @override
   String get lnGoalTarget => 'Maqsad soat qiymati';
@@ -4839,6 +4843,11 @@ class AppLocalizationsUz extends AppLocalizations {
   }
 
   @override
+  String lnMinutes(int minutes) {
+    return '$minutes daqiqa';
+  }
+
+  @override
   String get lnItemStatusPlanned => 'Rejada';
 
   @override
@@ -4888,7 +4897,7 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String lnPaybackGain(String amount) {
-    return 'Soatingiz maqsadga yetsa, oyiga qoʻshimcha: $amount';
+    return 'Soatingiz maqsadga yetsa, oyiga qoʻshimcha: taxminan $amount';
   }
 
   @override

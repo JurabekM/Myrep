@@ -1,3 +1,4 @@
+import 'package:baraka_daftari/app/l10n/gen/app_localizations.dart';
 import 'package:baraka_daftari/core/domain/enums.dart';
 import 'package:baraka_daftari/core/errors/data_exceptions.dart';
 import 'package:baraka_daftari/core/money/money.dart';
@@ -11,6 +12,7 @@ import 'package:baraka_daftari/features/learning/domain/learning_math.dart';
 import 'package:baraka_daftari/features/learning/domain/learning_service.dart';
 import 'package:baraka_daftari/features/learning/presentation/learning_widgets.dart';
 import 'package:baraka_daftari/features/partnerships/domain/offer_check.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/db.dart';
@@ -324,6 +326,30 @@ void main() {
       expect(parseHoursToMinutes('abc'), isNull);
       expect(hoursLabel(450), '7,5');
       expect(hoursLabel(540), '9');
+    });
+
+    test('davomiylik: bir soatdan kami daqiqada', () {
+      final l10n = lookupAppLocalizations(const Locale('uz'));
+      expect(durationLabel(l10n, 45), '45 daqiqa');
+      expect(durationLabel(l10n, 59), '59 daqiqa');
+      expect(durationLabel(l10n, 60), '1 soat');
+      expect(durationLabel(l10n, 90), '1,5 soat');
+      expect(
+        durationLabel(lookupAppLocalizations(const Locale('ru')), 45),
+        '45 мин',
+      );
+    });
+
+    test('taxminiy summa ekranda yaxlitlanadi', () {
+      Money tiyin(int minor) => Money(minor, CurrencyCode.uzs);
+      // 6 000 000 soʻm, 8 soat × 26 kun, ikki barobar maqsad: oylik
+      // qoʻshimcha 5 999 999,20 soʻm (vektorlar) → ekranda 6 000 000.
+      expect(estimateDisplay(tiyin(599999920)), som(6000000));
+      expect(estimateDisplay(tiyin(149950)), som(1000));
+      expect(estimateDisplay(tiyin(150000)), som(2000));
+      expect(estimateDisplay(tiyin(49950)), som(500));
+      expect(estimateDisplay(tiyin(49949)), som(499));
+      expect(estimateDisplay(tiyin(0)), som(0));
     });
   });
 }

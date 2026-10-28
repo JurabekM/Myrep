@@ -106,6 +106,27 @@ void main() {
       );
     });
 
+    test('bob sarlavhalari bir uslubda — «sen» buyruq shakli', () {
+      final r = ContentParser.parse(
+        File('assets/content/chapters.json').readAsStringSync(),
+      );
+      for (final ch in r.chapters) {
+        // «siz» shakli (-ing/-ting: «kiriting») va «вы» shakli
+        // («вкладывайте») sarlavhada yoʻq.
+        expect(
+          ch.title.of('uz').split(' ').last,
+          isNot(endsWith('ing')),
+          reason: ch.id,
+        );
+        expect(
+          ch.title.of('ru'),
+          isNot(contains(RegExp('(йте|ите)(?![а-яё])'))),
+          reason: ch.id,
+        );
+      }
+      expect(r.chapters.last.title.of('uz'), '8-bob. Bilimingga sarmoya kirit');
+    });
+
     test('docs/content_schema.json — haqiqiy JSON Schema', () {
       final schema =
           jsonDecode(File('docs/content_schema.json').readAsStringSync())

@@ -6732,9 +6732,13 @@
   "@lnGoalTitleField": {
     "description": "Maydon"
   },
-  "lnGoalWhy": "Nega aynan shu? Qaysi ishni yaxshiroq qila olasiz?",
+  "lnGoalWhy": "Nega aynan shu?",
   "@lnGoalWhy": {
-    "description": "Maydon"
+    "description": "Maydon (qisqa — tor ekranda kesilmasin)"
+  },
+  "lnGoalWhyHint": "Qaysi ishni tezroq, sifatliroq yoki koʻproq odamga qila olasiz?",
+  "@lnGoalWhyHint": {
+    "description": "Maydon ostidagi izoh"
   },
   "lnGoalTarget": "Maqsad soat qiymati",
   "@lnGoalTarget": {
@@ -6868,6 +6872,15 @@
       }
     }
   },
+  "lnMinutes": "{minutes} daqiqa",
+  "@lnMinutes": {
+    "description": "Bir soatdan kam vaqt",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "lnItemStatusPlanned": "Rejada",
   "@lnItemStatusPlanned": {
     "description": "Holat"
@@ -6939,9 +6952,9 @@
       }
     }
   },
-  "lnPaybackGain": "Soatingiz maqsadga yetsa, oyiga qoʻshimcha: {amount}",
+  "lnPaybackGain": "Soatingiz maqsadga yetsa, oyiga qoʻshimcha: taxminan {amount}",
   "@lnPaybackGain": {
-    "description": "Oylik qo'shimcha daromad",
+    "description": "Oylik qo'shimcha daromad (ekranda yaxlitlangan)",
     "placeholders": {
       "amount": {
         "type": "String"

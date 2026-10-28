@@ -4772,8 +4772,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lnGoalTitleField => 'Какое знание или умение?';
 
   @override
-  String get lnGoalWhy =>
-      'Почему именно оно? Какую работу вы сможете делать лучше?';
+  String get lnGoalWhy => 'Почему именно оно?';
+
+  @override
+  String get lnGoalWhyHint =>
+      'Какую работу вы сможете делать быстрее, качественнее или для большего числа людей?';
 
   @override
   String get lnGoalTarget => 'Целевая стоимость часа';
@@ -4875,6 +4878,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String lnMinutes(int minutes) {
+    return '$minutes мин';
+  }
+
+  @override
   String get lnItemStatusPlanned => 'В планах';
 
   @override
@@ -4924,7 +4932,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String lnPaybackGain(String amount) {
-    return 'Если ваш час достигнет цели, в месяц дополнительно: $amount';
+    return 'Если ваш час достигнет цели, в месяц дополнительно: примерно $amount';
   }
 
   @override

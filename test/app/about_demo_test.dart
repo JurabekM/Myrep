@@ -36,7 +36,10 @@ void main() {
     await tester.tap(find.byKey(const Key('settings-about')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Versiya 1.0.0 (3)'), findsOneWidget);
+    expect(
+      find.text('Versiya ${AppInfo.version} (${AppInfo.build})'),
+      findsOneWidget,
+    );
     expect(find.text('Muallif: JurabekM'), findsOneWidget);
     expect(
       find.text('© 2026 JurabekM. Barcha huquqlar himoyalangan.'),

@@ -1,5 +1,28 @@
 # O'zgarishlar jurnali
 
+## [1.0.0+5] 8-qonun tuzatishlari bilan reliz nomzodi — 2026-10-28
+
+- Versiya `1.0.0+5` (`pubspec.yaml`, `AppInfo.build`); manba `0b2ed486`.
+- `release/1.0.0+5/`: ABI bo'yicha APK'lar, AAB, mapping, Dart belgilari, SHA-256 (RELEASE_CHECKLIST 15). Imzo hali debug kaliti. `release/1.0.0+4/` o'zgarmadi.
+- 157–161 tuzatishlari `Baraka_14C` emulyatorida `1.0.0+4` ustiga yangilash bilan ko'z bilan tekshirildi — hammasi PASS, FATAL/ANR 0.
+- **Sinov:** `flutter test` — 830 o'tdi, 4 o'tkazib yuborildi; `flutter analyze` — toza.
+
+## [8-qonun] Emulyatorda topilgan kamchiliklar tuzatildi (OPEN_QUESTIONS 157–161) — 2026-10-28
+
+- **Maqsad oynasi:** yorliq qisqardi («Nega aynan shu?»), savolning qolgani maydon ostidagi izohda (`lnGoalWhyHint`) — tor ekranda kesilmaydi.
+- **«Tugatdim»:** bo'sh natijada oyna yopilmaydi, xato maydon ostida chiqadi. Oyna alohida `_OutcomeDialog` widget'iga ajratildi: matn kontrolleri endi yopilish animatsiyasidan keyin yo'q qilinadi (avval debug'da «used after being disposed» assert'i bor edi).
+- **Vaqt:** bir soatdan kam vaqt daqiqada (`durationLabel`, `lnMinutes`: «45 daqiqa» / «45 мин»), qolgani soatda.
+- **Qoplanish taxmini:** oylik qo'shimcha ekranda «taxminan» bilan yaxlitlanadi (`estimateDisplay`: ≥ 1 000 so'm — 1 000 so'mgacha, kichigi — butun so'mgacha). Hisob va umumiy vektorlar o'zgarmadi.
+- **8-bob sarlavhasi:** «8-bob. Bilimingga sarmoya kirit» / «Глава 8. Вкладывай в свои знания» — 1–7-boblar kabi «sen» shaklida. Kontent testi sarlavha uslubini tekshiradi.
+- **Testlar:** +5 (davomiylik, taxminiy yaxlitlash, maqsad oynasi izohi, «Tugatdim» oqimi, sarlavha uslubi). `flutter test` — 830 o'tdi, 4 o'tkazib yuborildi; `flutter analyze` — toza.
+
+## [1.0.0+4] 8-qonun bilan reliz nomzodi — 2026-10-27
+
+- Versiya `1.0.0+4` (`pubspec.yaml`, `AppInfo.build`). `about_demo_test` endi versiyani qattiq yozilgan matn bilan emas, `AppInfo` orqali tekshiradi.
+- `release/1.0.0+4/`: ABI bo'yicha APK'lar, AAB, mapping, Dart belgilari, SHA-256 (RELEASE_CHECKLIST 14). Imzo hali debug kaliti.
+- 8-qonun ekranlari alohida `Baraka_14C` emulyatorida ko'z bilan tekshirildi: soat qiymati, maqsad, kurs yo'li va qoplanish, kurs tekshiruvi (qizil → tasdiq), «Tugatdim», «O'rgatganlarim», ruscha, boblar ro'yxati. FATAL / ANR 0. Kichik UX topilmalari — OPEN_QUESTIONS 157–161.
+- **Sinov:** `flutter test` — 825 o'tdi, 4 o'tkazib yuborildi; `flutter analyze --fatal-infos` — toza.
+
 ## [Kontent siyosati] Taqiqlangan iboralar faqat xesh ko'rinishida — 2026-10-27
 
 - `test/design/source_policy_test.dart`: 54 ta taqiqlangan ibora (eski nom, tashqi manba personajlari, bob nomlari va o'xshatishlar, manba va homiy nomlari) endi ochiq matnda emas, `(so'zlar soni, belgilar soni, sha256)` ko'rinishida saqlanadi. Moslik so'z boshidan: matn so'zlarga bo'linadi, ketma-ket so'zlar ibora bilan boshlansa — topildi. Eski ro'yxatning har bir iborasi yangi moslagichda ushlanishi vaqtinchalik test bilan tasdiqlandi.
