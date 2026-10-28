@@ -370,6 +370,10 @@ mixin ActionState<W extends StatefulWidget> on State<W> {
 
 /// Ekran tanasi: aylanadigan ustun, 16 dp chekka. `ListView` emas — ekrandan chiqqan kartalar
 /// (va ulardagi to'ldirilayotgan formalar) yo'q qilinmasin.
+///
+/// Har bolaga kalit beriladi: o'z kaliti yoki «turi + shu turdagi tartib raqami». Shunda
+/// ro'yxat o'sib-kamayganda undan keyingi forma (masalan, «Yangi marosim») o'z holatini
+/// yo'qotmaydi — aks holda saqlash tugaguncha forma yo'q qilinib, qayta yaratilardi.
 class ScreenBody extends StatelessWidget {
   const ScreenBody({required this.children, this.mentorKey, super.key});
 
@@ -377,16 +381,26 @@ class ScreenBody extends StatelessWidget {
   final String? mentorKey;
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final c in children) Padding(padding: const EdgeInsets.only(bottom: 12), child: c),
-        if (mentorKey != null) MentorCard(mentorKey!),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final seen = <Type, int>{};
+    Key slot(Widget c) {
+      final own = c.key;
+      if (own != null && own is! GlobalKey) return ValueKey(('own', own));
+      final n = seen[c.runtimeType] = (seen[c.runtimeType] ?? -1) + 1;
+      return ValueKey((c.runtimeType, n));
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final c in children) Padding(key: slot(c), padding: const EdgeInsets.only(bottom: 12), child: c),
+          if (mentorKey != null) MentorCard(mentorKey!),
+        ],
+      ),
+    );
+  }
 }
 
 /// Dialog overlay — qora 60 % (CLAUDE.md).

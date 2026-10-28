@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Tuzatildi — ekran formalari va eski skrinshotlar
+- **Android: ro'yxat o'zgarganda forma holati yo'qolmaydi.** `ScreenBody` endi har bolaga kalit beradi (o'z kaliti yoki «turi + tartib raqami»). Avval ro'yxat (masalan, marosimlar) saqlash tugashidan oldin yangilansa, undan keyingi forma yo'q qilinib qayta yaratilardi: «Yangi marosim» yo'q qilingan maydonni tozalashga urinib xato berardi va yangi marosim sahifasi ochilmasdi. Xuddi shu tuzilishdagi boshqa ekranlar (qarzdan chiqish ro'yxati, nasiya, mehnat, kassa va hisob kuni tarixi, boshqaruv, davr ochish) ham shu bilan tuzaldi. `CeremoniesScreen` — saqlashdan keyin `mounted` tekshiruvi.
+- **Skrinshotlar:** Android skrinshotlari qayta yaratildi (eski maslahatchi nomi o'rniga «Moliyaviy maslahatchi»). Ilova nomi va maslahatchi o'zgarishidan oldingi 97 ta desktop skrinshoti (eski «Baraka» nomi va eski persona) olib tashlandi; 1.2.0 skrinshotlari qoldi.
+
 ## [1.2.0] — 2026-10-27
 
 8-tamoyil — «Oʻzingizga sarmoya qiling» — uchala makonda (Uy, Kasb-kor, Musofir): «Bir soatim qancha?», bilim rejalari, «Sarmoya» belgisi, kurs taklifini tekshirish, «Ilm zakoti», juma eslatmalari. Sxema v25 (migratsiyalar 023–025); 1.1.0 ustidan yangilanadi — eski maʼlumotlar va jurnal zanjiri oʻzgarmaydi (`app/tests/upgrade_1_1.rs`). Shuningdek: «Ilova haqida» va mualliflik (LICENSE), demo yigʻma, vaqt mintaqasi tuzatishi, ilhom manbasi nomlari repodan olib tashlandi.
