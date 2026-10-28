@@ -1,5 +1,19 @@
 # O'zgarishlar jurnali
 
+## [1.0.0+5 demo] 30 kunlik demo va eski artefaktlarni tozalash — 2026-10-28
+
+- `release/demo/baraka-dastur-demo-1.0.0-2026-11-27.apk` (`tools/build_demo.ps1`, barcha ABI, debug imzo, `uz.barakadastur.demo`). Emulyatorda: DEMO lentasi va pastki yozuv, «Ilova haqida», 8-qonun, Toshkent vaqti bo'yicha muddat chegarasi (27.11 23:30 ochiq, 28.11 00:30 yopiq), haqiqiy ilova bilan yonma-yon — hammasi PASS (RELEASE_CHECKLIST 17).
+- Eski debug imzoli relizlar (`1.0.0+2`…`1.0.0+5`) va eski demo o'chirildi (823 MB). Xeshlari RELEASE_CHECKLIST 12–15 da qoladi.
+
+## [Imzo] Upload kalitini yaratish skripti — 2026-10-28
+
+- `tools/create_upload_key.ps1`: PKCS12, RSA 4096, 10000 kun; parol faqat egasining terminalida so'raladi (`-storepass:env`, muhit o'zgaruvchisi darhol o'chiriladi). `upload.jks`, `key.properties` (teskari chiziq ekranlanadi) va sertifikat SHA-256 yoziladi. Mavjud kalit ustidan yozmaydi; repo ichidagi va sinxronlanadigan papkani rad etadi.
+- `tools/build_release.ps1 -ExpectedSignatureSha256`: imzo xeshi `--android-project-arg` orqali `BuildConfig.EXPECTED_SIGNATURE_SHA256` ga tushadi (avval skript uni umuman uzatmasdi; `ORG_GRADLE_PROJECT_*` muhit o'zgaruvchisi `flutter build` orqali Gradle'ga yetmasligi sinovda ko'rindi).
+- Sinov: bir martalik kalit bilan arm64 APK yig'ildi — `apksigner`: `CN=JurabekM, C=UZ`, sertifikat SHA-256 = kalit xeshi = BuildConfig qiymati. Sinov kaliti va APK o'chirildi.
+- RELEASE_CHECKLIST 2-bo'lim: Play App Signing (upload va app signing kalitlari), zaxira, Play uchun xesh.
+- `tools/build_release.ps1 -NoApk` — faqat AAB (Play AAB va to'g'ridan-to'g'ri APK alohida yig'iladi). Skript yig'ishdan oldin `.dart_tool/flutter_build` va `build/symbols/<versiya>` ni tozalaydi: aks holda Dart kodi o'zgarmaganda Flutter belgilarni qayta yozmaydi va `symbols-*.zip` yiqiladi yoki eskisi qoladi.
+- **Imzolangan reliz `1.0.0+5`** egasining upload kaliti bilan (`CN=JurabekM, C=UZ`): `release/1.0.0+5-signed/` — APK'lar upload xeshi bilan, AAB xeshsiz (RELEASE_CHECKLIST 16). Emulyatorda ilova ichidagi imzo tekshiruvi o'tdi.
+
 ## [1.0.0+5] 8-qonun tuzatishlari bilan reliz nomzodi — 2026-10-28
 
 - Versiya `1.0.0+5` (`pubspec.yaml`, `AppInfo.build`); manba `0b2ed486`.

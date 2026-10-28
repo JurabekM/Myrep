@@ -21,15 +21,35 @@ Belgilanmagan band — reliz yo'q.
 Kalit va parollar repoda saqlanmaydi (`android/.gitignore`: `key.properties`, `*.jks`,
 `*.keystore`).
 
-1. Kalit bir marta yaratiladi va **ikki joyda** zaxiralanadi (kalit yo'qolsa ilovani
-   yangilab bo'lmaydi):
+**Ikki kalit (Play App Signing).** Play'ga AAB **upload kaliti** bilan yuklanadi. Play
+imzoni tekshiradi va foydalanuvchiga boradigan APK'larni o'zining **app signing** kaliti
+bilan qayta imzolaydi. Upload kaliti yo'qolsa, Play Console orqali yangisiga almashtirish
+mumkin (Play qo'llab-quvvatlash xizmati, bir necha kun). Play'siz, to'g'ridan-to'g'ri
+tarqatilgan APK'lar esa upload kalitining o'zi bilan imzolanadi: bu kalit yo'qolsa, ularni
+hech qachon yangilab bo'lmaydi.
+
+1. **Kalitni yaratish** — faqat egasi, o'z terminalida (parol chatga, repoga, logga
+   tushmaydi):
 
    ```
-   keytool -genkeypair -v -keystore C:\keys\baraka\upload.jks -alias baraka ^
-     -keyalg RSA -keysize 4096 -validity 10000
+   powershell -ExecutionPolicy Bypass -File tools/create_upload_key.ps1
    ```
 
-2. `C:\keys\baraka\key.properties` (repodan tashqarida):
+   Skript: PKCS12, RSA 4096, 10000 kun (~27 yil; Play 2033-10-22 dan keyin tugashini
+   talab qiladi), `-dname "CN=JurabekM, C=UZ"`. `C:\keys\baraka\` ga `upload.jks`,
+   `key.properties` va `upload-cert-sha256.txt` yozadi. Mavjud kalit ustidan yozmaydi;
+   repo ichidagi va sinxronlanadigan (OneDrive va h.k.) papkani rad etadi. Parol —
+   kamida 12 ta ko'rinadigan ASCII belgi (Java `key.properties` ni ISO-8859-1 da o'qiydi).
+   Skriptsiz ekvivalenti (`key.properties` qo'lda yoziladi):
+
+   ```
+   keytool -genkeypair -v -keystore C:\keys\baraka\upload.jks -storetype PKCS12 ^
+     -alias baraka -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=JurabekM, C=UZ"
+   ```
+
+2. **Zaxira:** `C:\keys\baraka\` **ikki joyga** (masalan, shifrlangan USB va boshqa disk).
+   Parol alohida saqlanadi (parol menejeri yoki qog'oz). Kalit hech kimga yuborilmaydi.
+3. `C:\keys\baraka\key.properties` (skript yozadi; repodan tashqarida):
 
    ```
    storeFile=C:/keys/baraka/upload.jks
@@ -38,11 +58,21 @@ Kalit va parollar repoda saqlanmaydi (`android/.gitignore`: `key.properties`, `*
    keyPassword=...
    ```
 
-3. Yo'l `BARAKA_SIGNING_PROPERTIES` muhit o'zgaruvchisi, `-PsigningProperties=` yoki
-   `tools/build_release.ps1 -SigningProperties ...` orqali beriladi. Fayl bo'lmasa
+   Yo'l `tools/build_release.ps1 -SigningProperties ...`, `BARAKA_SIGNING_PROPERTIES`
+   muhit o'zgaruvchisi yoki `-PsigningProperties=` orqali beriladi. Fayl bo'lmasa
    release **debug kaliti** bilan imzolanadi — bunday APK faqat sinov uchun.
-4. Imzo xeshi (`apksigner verify --print-certs`) yaxlitlik tekshiruviga beriladi:
-   `-PexpectedSignatureSha256=<SHA-256>` (aks holda «imzo sozlanmagan» signali).
+4. **Imzo xeshi** ilova ichidagi yaxlitlik tekshiruviga beriladi:
+   `tools/build_release.ps1 -ExpectedSignatureSha256 <SHA-256>` (ichida
+   `flutter build … --android-project-arg=expectedSignatureSha256=…`). Xesh maxfiy emas.
+   Mos kelmasa, ilova «Qurilmada xavf belgilari bor … ilova imzosi mos emas» deb
+   ogohlantiradi, lekin ishlayveradi. Berilmasa, tekshiruv o'chiq.
+   - To'g'ridan-to'g'ri APK: upload kaliti xeshi (`upload-cert-sha256.txt`).
+   - Play AAB: Play Console → App integrity → «App signing key certificate» SHA-256.
+     U birinchi yuklashdan keyin ko'rinadi: birinchi AAB xeshsiz yig'iladi, keyingilari
+     shu xesh bilan. Bir yig'ishda bitta xesh bo'lgani uchun Play AAB va to'g'ridan-to'g'ri
+     APK alohida yig'iladi (`-NoBundle` — faqat APK, `-NoApk` — faqat AAB).
+5. **Tekshirish:** `apksigner verify --print-certs <apk>` → `CN=JurabekM`, SHA-256
+   kalitnikiga teng.
 
 > **Diqqat:** debug kaliti bilan o'rnatilgan ilovani release kaliti bilan imzolangan
 > versiya ustidan yangilab bo'lmaydi — avval ilova o'chiriladi. Ma'lumotni saqlash
@@ -417,3 +447,62 @@ Tuzatishlar qurilmada (`Baraka_14C`, x86_64 APK, `1.0.0+4` ustiga `adb install -
 | FATAL / ANR / Flutter xatosi | PASS | 0 / 0 / 0 |
 | Ruscha matnlar | NOT TESTED | qurilmada ochilmadi; `durationLabel` ruscha birlik testi bor |
 | Haqiqiy telefon, bildirishnoma, TalkBack | NOT TESTED | |
+
+## 16. 1.0.0+5: upload kaliti bilan imzolangan reliz (2026-10-28)
+
+Versiya: `1.0.0+5` (`versionCode 5`). Ilova kodi: `ed9120c5` (15-bo'limdagi bilan bir xil); yig'ish skripti — `-ExpectedSignatureSha256`, `-NoApk` va Flutter keshini tozalash bilan.
+Artefaktlar: `release/1.0.0+5-signed/`, 28.10.2026 10:58–11:02. 15-bo'limdagi debug imzoli `release/1.0.0+5/` endi faqat sinov uchun.
+Imzo: upload kaliti `CN=JurabekM, C=UZ` (egasi o'zi yaratdi, `tools/create_upload_key.ps1`; kalit va parol repodan tashqarida, Claude ularni ko'rmagan). Sertifikat SHA-256:
+`7DF6E883250FCCD63BBEA5C0C3FC3394084A9EC7DF9BA239E4ACE76D0B605DBF`.
+
+Ikki yig'ish (2-bo'lim, 4-band):
+- APK'lar — `-ExpectedSignatureSha256 <upload xeshi> -NoBundle`: to'g'ridan-to'g'ri o'rnatish uchun, ilova o'z imzosini tekshiradi.
+- AAB — `-NoApk`, xeshsiz: Play'ga birinchi yuklash uchun. Play App Signing xeshi olingach, keyingi AAB'lar shu xesh bilan yig'iladi.
+
+| Fayl | Hajm | SHA-256 |
+|---|---|---|
+| `app-release.aab` (Play; xeshsiz) | 57,7 MB | `c4de92b26f6897ae89ba1a8fac25cb67216744bedfc9f338189c27f2f2c7c919` |
+| `app-arm64-v8a-release.apk` (telefon) | 29,5 MB | `f746742afdcc0f57aa971d8d5b070e8460ddf8088868c7d923f8cdaa45945639` |
+| `app-armeabi-v7a-release.apk` | 25,9 MB | `c259f26275ec0a0848b68f0d99d72c370cae8314057efda273de96f8016a153e` |
+| `app-x86_64-release.apk` | 31,2 MB | `9518064558e2c331bf9ea345c4ed0de137bd802ce06a67906c1bc847e20633c7` |
+| `mapping-apk.txt` | 15,7 MB | `9f13bf111a21ac080ae7be1b1e1b028e23c4e0cca14d301fa7d639e37a6d3d47` |
+| `mapping-aab.txt` | 15,7 MB | `5fec90980c58370445f45b7e23efc48d5bdfb7e2dd15ce284e673899d0185945` |
+| `symbols-apk.zip` | 4,8 MB | `ef20105f9abb4e4c9e4c0aeabab4511df6e180840681fab0db85f57164c68839` |
+| `symbols-aab.zip` | 4,8 MB | `2b529709d4c27d74ada8031475756f54cd381bcb11a5aaa15cd428d6719a135c` |
+
+- `apksigner verify --print-certs` (3 APK): imzo to'g'ri, `CN=JurabekM, C=UZ`, SHA-256 = upload xeshi. `keytool -printcert -jarfile` (AAB): shu sertifikat.
+- `aapt2`: `uz.barakadastur.app`, `versionCode 5`. BuildConfig: APK'larda `EXPECTED_SIGNATURE_SHA256` = upload xeshi, AAB'da bo'sh.
+- APK va AAB mapping'lari endi farq qiladi (BuildConfig qiymati boshqa) — har biri o'z build'iniki.
+
+Qurilmada (`Baraka_14C`, x86_64 APK; debug imzoli ilova avval o'chirildi — imzo boshqa bo'lgani uchun ustidan o'rnatilmaydi):
+
+| Band | Natija | Izoh |
+|---|---|---|
+| Toza o'rnatish, ishga tushish | PASS | PIN o'rnatish ekrani |
+| Ilova ichidagi imzo tekshiruvi | PASS | «Aniqlangan: emulyator» — «ilova imzosi mos emas» yo'q (`imzo-tekshiruvi-emulyator-2026-10-28.png`) |
+| Nomuvofiq xesh | PASS (unit) | `IntegrityHeuristicsTest`: noto'g'ri xesh → `false`, bo'sh → tekshiruv yo'q |
+| FATAL / Flutter xatosi | PASS | 0 / 0 |
+| Haqiqiy telefon, bildirishnoma, TalkBack | NOT TESTED | |
+
+## 17. 1.0.0+5 demo (2026-10-28)
+
+Yig'ish: `tools/build_demo.ps1` (30 kun, barcha ABI), ilova kodi `ed9120c5`, skriptlar `7c2107c9`.
+Fayl: `release/demo/baraka-dastur-demo-1.0.0-2026-11-27.apk` — 84,7 MB, SHA-256
+`ec1ebebcaec90ebc90827e03dbbd40c572e6fa57753baf0ad4171375be3f5a2d` (`.sha256` yonida).
+
+- `aapt2`: `uz.barakadastur.demo`, `versionCode 5`, `versionName 1.0.0`, «DEMO Baraka Dastur»; native: arm64-v8a, armeabi-v7a, x86, x86_64. `apksigner`: `CN=Android Debug` (demo har doim debug kaliti bilan — Play qabul qilmaydi).
+- Muddat: Toshkent vaqti bilan 27.11.2026 kun oxirigacha (ilova sanani UTC+5 da hisoblaydi).
+
+Qurilmada (`Baraka_14C`, imzolangan `uz.barakadastur.app` bilan yonma-yon; suratlar `release/demo/demo-emulyator-2026-10-28.png`):
+
+| Band | Natija | Izoh |
+|---|---|---|
+| O'rnatish, PIN, onboarding (5 qadam) | PASS | har ekranda pastda «Demo versiya · © 2026 JurabekM · nashr qilish va tarqatish taqiqlanadi» |
+| «DEMO» lentasi | PASS | yuqori o'ng burchakda |
+| «Ilova haqida» | PASS | «Versiya 1.0.0 (5)», «Demo versiya: 27.11.2026 gacha ishlaydi», muallif, ©, taqiq |
+| 8-qonun bo'limi | PASS | «Bilimga sarmoya» ochiladi |
+| Muddat chegarasi | PASS | Toshkent 27.11 23:30 (18:30 GMT) — PIN ekrani; 28.11 00:30 (19:30 GMT) — «Demo muddati tugadi», ilovaga kirib bo'lmaydi. Sinovdan keyin vaqt avtomatik rejimga qaytarildi |
+| Haqiqiy ilova bilan yonma-yon | PASS | ikkala paket o'rnatilgan; haqiqiy ilovada demo yozuvi yo'q |
+| FATAL / Flutter xatosi | PASS | 0 / 0 (emulyatorning o'z «System UI isn't responding» oynasi bir marta chiqdi — swiftshader, ilovaga aloqasi yo'q) |
+
+**Eski artefaktlar o'chirildi (foydalanuvchi so'rovi, 2026-10-28):** `release/1.0.0+2`, `1.0.0+3`, `1.0.0+4`, `1.0.0+5` (debug imzoli) va eski demo `baraka-dastur-demo-1.0.0-2026-11-24.apk` — jami 823 MB. Ularning xeshlari 12–15-bo'limlarda qoladi. Qoldi: `release/1.0.0+5-signed/`, yangi demo, `release/mualliflik-2026-10-25/`.
