@@ -1,5 +1,11 @@
 # O'zgarishlar jurnali
 
+## [1.0.0+6 demo] 30 kunlik demo API 36 bilan — 2026-10-28
+
+- `release/demo/baraka-dastur-demo-1.0.0+6-2026-11-27.apk` (`tools/build_demo.ps1`, barcha ABI, debug imzo, `uz.barakadastur.demo`, `targetSdk 36`). Tekshiruv — `aapt2`, `apksigner`, 16 KB tekislash, muddat (RELEASE_CHECKLIST 19); qurilmada sinalmadi (AVD o'chirilgan).
+- `tools/build_demo.ps1`: fayl nomida to'liq versiya (`1.0.0+6`) — bir kunda yig'ilgan demolar bir-birining ustidan yozilmaydi.
+- `release/1.0.0+5-signed/`, `Baraka_API36` AVD va eski 1.0.0+5 demo foydalanuvchi so'rovi bilan o'chirildi.
+
 ## [1.0.0+6] Android 16 (API 36) va Google Play tayyorgarligi — 2026-10-28
 
 - **API 36:** `compileSdk`/`targetSdk` 36 (Play 2026-08-31 dan talab qiladi; `1.0.0+5` yuklanmas edi), AGP 8.7.3 → 8.11.1, Gradle 8.12 → 8.14.3. Native kutubxonalar 16 KB sahifaga mos (tekshirildi).

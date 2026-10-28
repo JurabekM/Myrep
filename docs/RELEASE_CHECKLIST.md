@@ -555,3 +555,15 @@ Qurilmada — yangi `Baraka_API36` AVD (Android 16, `google_apis` x86_64, 1080×
 | Haqiqiy telefon, TalkBack | NOT TESTED | |
 
 Play'ga yuklash tartibi va formalar javoblari — `docs/PLAY_CONSOLE.md`; do'kon matnlari — `docs/PLAY_LISTING.md`.
+
+## 19. 1.0.0+6 demo (2026-10-28)
+
+Yig'ish: `tools/build_demo.ps1` (30 kun, barcha ABI), ilova kodi `5d37f015` (18-bo'lim bilan bir xil). Fayl nomiga endi build raqami ham yoziladi: bir kunda yig'ilgan ikki demoning muddati bir xil chiqib, biri ikkinchisining ustidan yozilardi.
+Fayl: `release/demo/baraka-dastur-demo-1.0.0+6-2026-11-27.apk` — 84,6 MB, SHA-256
+`d7fe894e5f02280efb6fb37454529038457a30358418978652c23876af2fa50d` (`.sha256` yonida).
+
+- `aapt2`: `uz.barakadastur.demo`, `versionCode 6`, `versionName 1.0.0`, `targetSdkVersion 36`, «DEMO Baraka Dastur»; native: arm64-v8a, armeabi-v7a, x86, x86_64. `apksigner`: `CN=Android Debug` (Play qabul qilmaydi). `zipalign -P 16` — o'tdi.
+- Muddat `2026-11-27` (Toshkent vaqti bilan kun oxirigacha) — arm64 va x86_64 `libapp.so` ichida bor.
+- Qurilmada sinalmadi: `Baraka_API36` AVD foydalanuvchi so'rovi bilan o'chirildi. Demo mantig'i (`DemoGate`, lenta, muddat) 1.0.0+5 dan beri o'zgarmagan va `about_demo_test` bilan tekshiriladi (17-bo'lim — qurilma sinovi), Android 16 xulqi — 18-bo'lim.
+
+`release/1.0.0+5-signed/`, `Baraka_API36` AVD va eski demo (`baraka-dastur-demo-1.0.0-2026-11-27.apk`, `demo-emulyator-2026-10-28.png`) foydalanuvchi so'rovi bilan o'chirildi (2026-10-28); ularning xeshlari 16–17-bo'limlarda qoladi.

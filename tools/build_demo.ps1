@@ -12,7 +12,7 @@
 # - har ekranda "DEMO" lentasi va muallif / "nashr qilish taqiqlanadi" yozuvi;
 # - muddat tugagach (-Days) ilova ochilmaydi, faqat xabar ko'rsatadi;
 # - Dart kodi obfuskatsiya qilingan, R8 yoqilgan.
-# Natija: release/demo/baraka-dastur-demo-<versiya>-<muddat>.apk va .sha256.
+# Natija: release/demo/baraka-dastur-demo-<versiya+build>-<muddat>.apk va .sha256.
 param(
     [int]$Days = 30,
     # Barcha ABI: plaginlarning native kutubxonalari hamma ABI uchun keladi;
@@ -27,7 +27,9 @@ if (-not $env:JAVA_HOME) {
     if (Test-Path $jbr) { $env:JAVA_HOME = $jbr }
 }
 
-$version = (Select-String -Path pubspec.yaml -Pattern '^version:\s*([^+\s]+)').Matches[0].Groups[1].Value
+# To'liq versiya (build raqami bilan): bir kunda yig'ilgan ikki demo bir-birining
+# ustidan yozilmasin (muddat sanasi bir xil chiqadi).
+$version = (Select-String -Path pubspec.yaml -Pattern '^version:\s*(\S+)').Matches[0].Groups[1].Value
 $until = (Get-Date).AddDays($Days).ToString("yyyy-MM-dd")
 $symbols = "build/symbols/demo-$version"
 
