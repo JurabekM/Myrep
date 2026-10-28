@@ -1,5 +1,6 @@
 import 'package:baraka_daftari/app/router/app_routes.dart';
 import 'package:baraka_daftari/features/about/presentation/about_screen.dart';
+import 'package:baraka_daftari/features/about/presentation/privacy_screen.dart';
 import 'package:baraka_daftari/features/agreements/presentation/agreement_screen.dart';
 import 'package:baraka_daftari/features/agreements/presentation/dispute_screen.dart';
 import 'package:baraka_daftari/features/agreements/presentation/review_screen.dart';
@@ -314,6 +315,10 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: AppRoutes.about,
         builder: (context, state) => const AboutScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.privacy,
+        builder: (context, state) => const PrivacyScreen(),
       ),
       GoRoute(
         path: AppRoutes.content,

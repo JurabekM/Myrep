@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:baraka_daftari/app/app_info.dart';
@@ -56,6 +57,48 @@ void main() {
     await tester.tap(find.byKey(const Key('about-licenses')));
     await tester.pumpAndSettle();
     expect(find.byType(LicensePage), findsOneWidget);
+  });
+
+  testWidgets('«Ilova haqida» → maxfiylik siyosati toʻliq matni va orqaga', (
+    tester,
+  ) async {
+    final env = await pumpBarakaApp(tester);
+    final router = env.container.read(appRouterProvider)
+      ..go(AppRoutes.settings);
+    await tester.pumpAndSettle();
+    unawaited(router.push(AppRoutes.about));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('about-privacy')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const Key('about-privacy')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.widgetWithText(AppBar, 'Maxfiylik siyosati'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Kuchga kirgan sana: 28.10.2026'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Ilovada internet ruxsati yoʻq.'),
+      findsOneWidget,
+    );
+    await tester.scrollUntilVisible(
+      find.text('Oʻzgarishlar va aloqa'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Oʻzgarishlar va aloqa'), findsOneWidget);
+
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppBar, 'Ilova haqida'), findsOneWidget);
   });
 
   testWidgets('demo: har ekranda «DEMO» va muallif, muddat «Ilova haqida»da', (

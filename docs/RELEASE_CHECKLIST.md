@@ -506,3 +506,52 @@ Qurilmada (`Baraka_14C`, imzolangan `uz.barakadastur.app` bilan yonma-yon; surat
 | FATAL / Flutter xatosi | PASS | 0 / 0 (emulyatorning o'z «System UI isn't responding» oynasi bir marta chiqdi — swiftshader, ilovaga aloqasi yo'q) |
 
 **Eski artefaktlar o'chirildi (foydalanuvchi so'rovi, 2026-10-28):** `release/1.0.0+2`, `1.0.0+3`, `1.0.0+4`, `1.0.0+5` (debug imzoli) va eski demo `baraka-dastur-demo-1.0.0-2026-11-24.apk` — jami 823 MB. Ularning xeshlari 12–15-bo'limlarda qoladi. Qoldi: `release/1.0.0+5-signed/`, yangi demo, `release/mualliflik-2026-10-25/`.
+
+## 18. 1.0.0+6: Android 16 (API 36) va Play tayyorgarligi (2026-10-28)
+
+Sabab: Google Play 2026-08-31 dan yangi ilova va yangilanishlardan `targetSdk 36` talab qiladi; `1.0.0+5` (`targetSdk 35`) yuklanmas edi.
+
+O'zgarishlar:
+- `android/app/build.gradle.kts`: `compileSdk = 36`, `targetSdk = 36` (Flutter 3.32.5 standarti 35 edi). `android/settings.gradle.kts`: AGP 8.7.3 → 8.11.1; `gradle-wrapper.properties`: Gradle 8.12 → 8.14.3. Kotlin 2.1.0 o'zgarmadi.
+- Ilovada «Maxfiylik siyosati» ekrani (Sozlamalar → Ilova haqida → Maxfiylik siyosati, `/settings/about/privacy`, ARB `privacy*` uz/ru) — Play siyosati ilova ichida ham bo'lishi shart. Ochiq nusxasi `docs/PRIVACY_POLICY.md` (uz/ru/en).
+- Versiya `1.0.0+6` (`pubspec.yaml`, `AppInfo.build`).
+
+Avtomatik tekshiruvlar: `flutter analyze --fatal-infos --fatal-warnings` — toza; `flutter test` — 832 o'tdi, 4 o'tkazib yuborildi; `gradlew :app:testDebugUnitTest` (AGP 8.11.1) — 46/46; `flutter build apk --debug` — muvaffaqiyatli.
+
+Artefaktlar: `release/1.0.0+6-signed/`, 28.10.2026 14:21–14:27, ikki yig'ish (16-bo'lim tartibi): APK'lar `-ExpectedSignatureSha256 <upload xeshi> -NoBundle`, AAB `-NoApk` (xeshsiz, Play'ga birinchi yuklash uchun).
+
+| Fayl | Hajm | SHA-256 |
+|---|---|---|
+| `app-release.aab` (Play; xeshsiz) | 57,8 MB | `5c207a56ea53eb65589b98a37e6fabb4caf5fe77d5ca3b79bf640846266c864e` |
+| `app-arm64-v8a-release.apk` (telefon) | 29,5 MB | `2b69c738a7dbed8593a4631fb781289f675754b76bf2a0f5dc7b42fe54f51e95` |
+| `app-armeabi-v7a-release.apk` | 25,9 MB | `eae3eb1b3b2bd5421ac611e2a03ea7604e32eae25ca666b28b906a3742b61a01` |
+| `app-x86_64-release.apk` | 31,2 MB | `56e71ba1008c8abbbba0a19ecf9d48b318f34a6356d22ae22102238a97305957` |
+| `mapping-apk.txt` | 16,1 MB | `039c52fadfdf3e7ab513205d81eb1835e8bce012c40db77fc0bf2cdc4b51e95b` |
+| `mapping-aab.txt` | 16,1 MB | `8e50f9abcf51c5a108f2dd939c8ae3ce6266c27477534d8b9c2730e5742e4b20` |
+| `symbols-apk.zip` | 4,8 MB | `c369d4e0207dc53f3e11a1d4baa1e4e9e4aefce66f45d95243cb97d35e92c0d2` |
+| `symbols-aab.zip` | 4,8 MB | `524ec34f47c52507cbc2da918b5106d5ce25e9dd4ca51bd1f44c44b12eb6323e` |
+
+- `apksigner verify --print-certs` (3 APK): `CN=JurabekM, C=UZ`, SHA-256 = upload xeshi `7DF6E883…5DBF`. `keytool -printcert -jarfile` (AAB): shu sertifikat.
+- `aapt2 dump badging`: `uz.barakadastur.app`, `versionCode 6`, `versionName 1.0.0`, `compileSdkVersion 36`, `targetSdkVersion 36`, `minSdkVersion 26`. Ruxsatlar: `USE_BIOMETRIC`, `POST_NOTIFICATIONS`, `WAKE_LOCK`, `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED`, `FOREGROUND_SERVICE`, `USE_FINGERPRINT` (+ AndroidX ichki `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`); `INTERNET`, `AD_ID`, kamera va media ruxsatlari yo'q. BuildConfig: AAB'da `EXPECTED_SIGNATURE_SHA256` bo'sh.
+- 16 KB sahifa: `libapp.so`, `libflutter.so` — 2^16, `libsqlcipher.so` — 2^14 tekislangan (arm64-v8a va x86_64); `zipalign -c -P 16` — o'tdi.
+
+Qurilmada — yangi `Baraka_API36` AVD (Android 16, `google_apis` x86_64, 1080×1920, 420 dpi, port 5556). Android 16 xulqi avval debug APK'da, keyin imzolangan x86_64 APK'da sinaldi. Suratlar: `android16-sinov-emulyator-2026-10-28.png`, `maxfiylik-ekrani-emulyator-2026-10-28.png`.
+
+| Band | Natija | Izoh |
+|---|---|---|
+| O'rnatish, PIN, onboarding (5 qadam) | PASS | `targetSdk=36` (`dumpsys package`) |
+| Ilova ichidagi imzo tekshiruvi | PASS | faqat «Aniqlangan: emulyator» — «imzo mos emas» yo'q |
+| Predictive back: tizim «orqaga» tugmasi | PASS | onboarding 3/5 → 2/5 (`PopScope`), ichki ekran → bosh sahifa, ochiq menyu → faqat menyu yopiladi |
+| Predictive back: chetdan surish ishorasi | PASS | onboarding 3/5 → 2/5, Sozlamalar → bosh sahifa |
+| Bosh ekrandan «orqaga» | PASS | ilova yopiladi (launcher), qayta ochilganda PIN so'raladi |
+| Edge-to-edge | PASS | holat va navigatsiya panellari ostida kontent kesilmaydi |
+| Katta ekran (`wm size 1600x2560`, 320 dpi → 800 dp) va landshaft | PASS | Android 16 yo'nalish cheklovlarini e'tiborsiz qoldiradi — ilovada qulf yo'q; kontent markazda, yiqilish yo'q |
+| WorkManager + bildirishnomalar | PASS | `widget_hide` ishi SUCCEEDED; majburan ishga tushirilgan `IncomeReminderWorker` va `WeeklyChapterWorker` bildirishnoma chiqardi (`POST_NOTIFICATIONS` berilgach) |
+| «Ilova haqida» → «Maxfiylik siyosati» | PASS | «Versiya 1.0.0 (6)», 7 bo'lim, orqaga qaytish |
+| Do'kon skrinshotlari | PASS | `tools/store/screenshots/uz` (7), `ru` (5), 1080×1920 — `adb emu screenrecord screenshot` FLAG_SECURE'ga qaramay to'liq oladi |
+| FATAL / ANR / Flutter xatosi | PASS | 0 / 0 / 0 |
+| Kichik ekran PIN klaviaturasi | Kuzatuv | 731 dp balandlikda qulf ekranidagi «0» pastda kesiladi — aylantirsa ko'rinadi (OPEN_QUESTIONS 162) |
+| Bildirishnoma ikonkasi | Kuzatuv | tizimning `ic_popup_reminder` ikonkasi Android 16 da noaniq (OPEN_QUESTIONS 169) |
+| Haqiqiy telefon, TalkBack | NOT TESTED | |
+
+Play'ga yuklash tartibi va formalar javoblari — `docs/PLAY_CONSOLE.md`; do'kon matnlari — `docs/PLAY_LISTING.md`.

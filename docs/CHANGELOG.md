@@ -1,5 +1,15 @@
 # O'zgarishlar jurnali
 
+## [1.0.0+6] Android 16 (API 36) va Google Play tayyorgarligi — 2026-10-28
+
+- **API 36:** `compileSdk`/`targetSdk` 36 (Play 2026-08-31 dan talab qiladi; `1.0.0+5` yuklanmas edi), AGP 8.7.3 → 8.11.1, Gradle 8.12 → 8.14.3. Native kutubxonalar 16 KB sahifaga mos (tekshirildi).
+- **Android 16 sinovi** yangi `Baraka_API36` AVD'da: predictive back (tugma va ishora), edge-to-edge, katta ekran va landshaft, WorkManager eslatmalari — hammasi PASS, FATAL/ANR 0 (RELEASE_CHECKLIST 18).
+- **Maxfiylik siyosati ilova ichida:** Sozlamalar → Ilova haqida → «Maxfiylik siyosati» (`PrivacyScreen`, `/settings/about/privacy`, ARB `privacy*` uz/ru). Ochiq matn `docs/PRIVACY_POLICY.md` (uz/ru/en; aloqa emaili joyi bo'sh — OPEN 163).
+- **Play materiallari:** `docs/PLAY_CONSOLE.md` (akkauntdan production'gacha, App content javoblari, Play App Signing va imzo xeshi tartibi), `docs/PLAY_LISTING.md` (nom, qisqa/to'liq tavsif, «What's new» — uz/ru/en; `tools/store/check_listing.py` chegaralarni tekshiradi), telefon skrinshotlari `tools/store/screenshots/uz` (7) va `ru` (5), 1080×1920.
+- **Imzolangan reliz `1.0.0+6`:** `release/1.0.0+6-signed/` — APK'lar upload xeshi bilan, AAB xeshsiz (Play'ga birinchi yuklash uchun).
+- **Testlar:** +2 (maxfiylik ekrani, marshrut). `flutter test` — 832 o'tdi, 4 o'tkazib yuborildi; `flutter analyze` — toza; Kotlin JUnit 46/46.
+- Yangi ochiq savollar: OPEN_QUESTIONS 162–169 (kichik ekranda PIN klaviaturasi, aloqa emaili, siyosat URL'i, financial features, Play tili, birinchi AAB xeshi, yig'ish vositalari, bildirishnoma ikonkasi).
+
 ## [1.0.0+5 demo] 30 kunlik demo va eski artefaktlarni tozalash — 2026-10-28
 
 - `release/demo/baraka-dastur-demo-1.0.0-2026-11-27.apk` (`tools/build_demo.ps1`, barcha ABI, debug imzo, `uz.barakadastur.demo`). Emulyatorda: DEMO lentasi va pastki yozuv, «Ilova haqida», 8-qonun, Toshkent vaqti bo'yicha muddat chegarasi (27.11 23:30 ochiq, 28.11 00:30 yopiq), haqiqiy ilova bilan yonma-yon — hammasi PASS (RELEASE_CHECKLIST 17).

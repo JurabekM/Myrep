@@ -1,10 +1,12 @@
 import 'package:baraka_daftari/app/app_info.dart';
 import 'package:baraka_daftari/app/demo/demo_config.dart';
 import 'package:baraka_daftari/app/l10n/l10n.dart';
+import 'package:baraka_daftari/app/router/app_routes.dart';
 import 'package:baraka_daftari/app/widgets/brand_logo.dart';
 import 'package:baraka_daftari/app/widgets/labels.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// «Ilova haqida»: nom, versiya, muallif, mualliflik huquqi, maxfiylik va
 /// ochiq kodli kutubxonalar litsenziyalari.
@@ -71,8 +73,12 @@ class AboutScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           Card(
             child: ListTile(
+              key: const Key('about-privacy'),
               leading: const Icon(Icons.lock_outline),
-              title: Text(l10n.aboutPrivacy),
+              title: Text(l10n.privacyTitle),
+              subtitle: Text(l10n.aboutPrivacy),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(AppRoutes.privacy),
             ),
           ),
           const SizedBox(height: 8),

@@ -6555,6 +6555,79 @@
   "@aboutLicenses": {
     "description": "Litsenziyalar tugmasi"
   },
+  "privacyTitle": "Maxfiylik siyosati",
+  "@privacyTitle": {
+    "description": "Maxfiylik siyosati ekrani sarlavhasi"
+  },
+  "privacyUpdated": "Kuchga kirgan sana: 28.10.2026",
+  "@privacyUpdated": {
+    "description": "Siyosat sanasi"
+  },
+  "privacyIntro": "Baraka Dastur — internetsiz ishlaydigan shaxsiy va oilaviy moliya daftari (muallif: {author}). Bu siyosat ilova qanday maʼlumotlar bilan ishlashini tushuntiradi.",
+  "@privacyIntro": {
+    "description": "Siyosat kirish qismi",
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "privacyStoredTitle": "Nima saqlanadi va qayerda",
+  "@privacyStoredTitle": {
+    "description": "Siyosat: saqlash"
+  },
+  "privacyStoredBody": "Siz kiritgan hamma narsa — daromad va xarajatlar, qarzlar, kelishuvlar, oila aʼzolarining ismlari, biriktirgan chek rasmlari — faqat shu telefonda saqlanadi. Maʼlumotlar bazasi shifrlangan, uning kaliti Android Keystore tizimida turadi. Qurilma xavfsizligi tekshiruvi (root, emulyator) natijalari ham faqat telefonda qoladi.",
+  "@privacyStoredBody": {
+    "description": "Siyosat: saqlash matni"
+  },
+  "privacyNoNetworkTitle": "Hech narsa yuborilmaydi",
+  "@privacyNoNetworkTitle": {
+    "description": "Siyosat: tarmoq"
+  },
+  "privacyNoNetworkBody": "Ilovada internet ruxsati yoʻq. Reklama, analitika va kuzatuv vositalari ishlatilmaydi. Muallif ham, boshqa hech kim ham maʼlumotlaringizni olmaydi va koʻrmaydi.",
+  "@privacyNoNetworkBody": {
+    "description": "Siyosat: tarmoq matni"
+  },
+  "privacyPermissionsTitle": "Ruxsatlar",
+  "@privacyPermissionsTitle": {
+    "description": "Siyosat: ruxsatlar"
+  },
+  "privacyPermissionsBody": "Biometriya — barmoq izi yoki yuzni Android oʻzi tekshiradi, ilova faqat «mos keldi» yoki «mos kelmadi» javobini oladi. Bildirishnomalar — eslatmalar telefonning oʻzida tuziladi. Kamera va galereya — faqat chek rasmini biriktirganingizda, tizim oynasi orqali. Qurilma yoqilganda ishga tushish — eslatmalarni qayta rejalashtirish uchun.",
+  "@privacyPermissionsBody": {
+    "description": "Siyosat: ruxsatlar matni"
+  },
+  "privacyShareTitle": "Zaxira nusxa va ulashish",
+  "@privacyShareTitle": {
+    "description": "Siyosat: ulashish"
+  },
+  "privacyShareBody": "Zaxira fayli faqat siz bosganingizda yaratiladi va siz tanlagan parol bilan shifrlanadi. PDF hujjat yoki faylni ulashsangiz, uni qayerga yuborishni oʻzingiz tanlaysiz — keyin u oʻsha ilova yoki xizmat qoidalariga boʻysunadi. Ilovaning oʻzi hech narsani avtomatik yubormaydi.",
+  "@privacyShareBody": {
+    "description": "Siyosat: ulashish matni"
+  },
+  "privacyDeleteTitle": "Maʼlumotlarni oʻchirish",
+  "@privacyDeleteTitle": {
+    "description": "Siyosat: oʻchirish"
+  },
+  "privacyDeleteBody": "Ilovani oʻchirsangiz, undagi barcha maʼlumotlar telefondan oʻchadi. Android bulutli zaxirasi oʻchirilgan — maʼlumotlar Google hisobingizga ham koʻchmaydi. Muallifda maʼlumotlaringiz yoʻq, ularni faqat oʻz zaxira faylingiz va parolingiz bilan tiklash mumkin.",
+  "@privacyDeleteBody": {
+    "description": "Siyosat: oʻchirish matni"
+  },
+  "privacyChildrenTitle": "Bolalar",
+  "@privacyChildrenTitle": {
+    "description": "Siyosat: bolalar"
+  },
+  "privacyChildrenBody": "Ilova kattalar uchun moʻljallangan. Oila aʼzolari roʻyxatiga bolalar ismini kattalar kiritadi va bu maʼlumot ham faqat telefonda qoladi.",
+  "@privacyChildrenBody": {
+    "description": "Siyosat: bolalar matni"
+  },
+  "privacyChangesTitle": "Oʻzgarishlar va aloqa",
+  "@privacyChangesTitle": {
+    "description": "Siyosat: oʻzgarishlar"
+  },
+  "privacyChangesBody": "Siyosat oʻzgarsa, yangi matn ilovaning yangi versiyasi bilan keladi va yuqoridagi sana yangilanadi. Savollaringizni Google Play sahifasida koʻrsatilgan dasturchi emailiga yozing.",
+  "@privacyChangesBody": {
+    "description": "Siyosat: oʻzgarishlar matni"
+  },
   "demoBanner": "DEMO",
   "@demoBanner": {
     "description": "Demo lentasi"

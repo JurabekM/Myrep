@@ -17,6 +17,7 @@ void main() {
     AppRoutes.members: 'Oila aʼzolari',
     AppRoutes.settings: 'Sozlamalar',
     AppRoutes.about: 'Ilova haqida',
+    AppRoutes.privacy: 'Maxfiylik siyosati',
     AppRoutes.vault: 'Kelajagim',
     AppRoutes.vaultRule: 'Ulush sozlamalari',
     AppRoutes.vaultWithdraw: 'Kelajagimdan pul olish',

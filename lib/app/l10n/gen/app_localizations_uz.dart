@@ -4617,6 +4617,66 @@ class AppLocalizationsUz extends AppLocalizations {
   String get aboutLicenses => 'Ochiq kodli kutubxonalar litsenziyalari';
 
   @override
+  String get privacyTitle => 'Maxfiylik siyosati';
+
+  @override
+  String get privacyUpdated => 'Kuchga kirgan sana: 28.10.2026';
+
+  @override
+  String privacyIntro(String author) {
+    return 'Baraka Dastur — internetsiz ishlaydigan shaxsiy va oilaviy moliya daftari (muallif: $author). Bu siyosat ilova qanday maʼlumotlar bilan ishlashini tushuntiradi.';
+  }
+
+  @override
+  String get privacyStoredTitle => 'Nima saqlanadi va qayerda';
+
+  @override
+  String get privacyStoredBody =>
+      'Siz kiritgan hamma narsa — daromad va xarajatlar, qarzlar, kelishuvlar, oila aʼzolarining ismlari, biriktirgan chek rasmlari — faqat shu telefonda saqlanadi. Maʼlumotlar bazasi shifrlangan, uning kaliti Android Keystore tizimida turadi. Qurilma xavfsizligi tekshiruvi (root, emulyator) natijalari ham faqat telefonda qoladi.';
+
+  @override
+  String get privacyNoNetworkTitle => 'Hech narsa yuborilmaydi';
+
+  @override
+  String get privacyNoNetworkBody =>
+      'Ilovada internet ruxsati yoʻq. Reklama, analitika va kuzatuv vositalari ishlatilmaydi. Muallif ham, boshqa hech kim ham maʼlumotlaringizni olmaydi va koʻrmaydi.';
+
+  @override
+  String get privacyPermissionsTitle => 'Ruxsatlar';
+
+  @override
+  String get privacyPermissionsBody =>
+      'Biometriya — barmoq izi yoki yuzni Android oʻzi tekshiradi, ilova faqat «mos keldi» yoki «mos kelmadi» javobini oladi. Bildirishnomalar — eslatmalar telefonning oʻzida tuziladi. Kamera va galereya — faqat chek rasmini biriktirganingizda, tizim oynasi orqali. Qurilma yoqilganda ishga tushish — eslatmalarni qayta rejalashtirish uchun.';
+
+  @override
+  String get privacyShareTitle => 'Zaxira nusxa va ulashish';
+
+  @override
+  String get privacyShareBody =>
+      'Zaxira fayli faqat siz bosganingizda yaratiladi va siz tanlagan parol bilan shifrlanadi. PDF hujjat yoki faylni ulashsangiz, uni qayerga yuborishni oʻzingiz tanlaysiz — keyin u oʻsha ilova yoki xizmat qoidalariga boʻysunadi. Ilovaning oʻzi hech narsani avtomatik yubormaydi.';
+
+  @override
+  String get privacyDeleteTitle => 'Maʼlumotlarni oʻchirish';
+
+  @override
+  String get privacyDeleteBody =>
+      'Ilovani oʻchirsangiz, undagi barcha maʼlumotlar telefondan oʻchadi. Android bulutli zaxirasi oʻchirilgan — maʼlumotlar Google hisobingizga ham koʻchmaydi. Muallifda maʼlumotlaringiz yoʻq, ularni faqat oʻz zaxira faylingiz va parolingiz bilan tiklash mumkin.';
+
+  @override
+  String get privacyChildrenTitle => 'Bolalar';
+
+  @override
+  String get privacyChildrenBody =>
+      'Ilova kattalar uchun moʻljallangan. Oila aʼzolari roʻyxatiga bolalar ismini kattalar kiritadi va bu maʼlumot ham faqat telefonda qoladi.';
+
+  @override
+  String get privacyChangesTitle => 'Oʻzgarishlar va aloqa';
+
+  @override
+  String get privacyChangesBody =>
+      'Siyosat oʻzgarsa, yangi matn ilovaning yangi versiyasi bilan keladi va yuqoridagi sana yangilanadi. Savollaringizni Google Play sahifasida koʻrsatilgan dasturchi emailiga yozing.';
+
+  @override
   String get demoBanner => 'DEMO';
 
   @override

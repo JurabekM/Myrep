@@ -29,7 +29,8 @@ val hasReleaseSigning = listOf("storeFile", "storePassword", "keyAlias", "keyPas
 
 android {
     namespace = "uz.barakadaftari.app"
-    compileSdk = flutter.compileSdkVersion
+    // Flutter 3.32 standarti 35; Google Play 2026-08-31 dan targetSdk 36 talab qiladi.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -48,7 +49,9 @@ android {
         manifestPlaceholders["appLabel"] = if (isDemo) "DEMO Baraka Dastur" else "Baraka Dastur"
         // SPEC 4.1: minSdk 26.
         minSdk = 26
-        targetSdk = flutter.targetSdkVersion
+        // Android 16: predictive back va katta ekranda yo'nalish cheklovlari
+        // e'tiborsiz (ilovada yo'nalish qulfi yo'q) — RELEASE_CHECKLIST 18.
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         // Release imzosining SHA-256 xeshi (`-PexpectedSignatureSha256=...`).

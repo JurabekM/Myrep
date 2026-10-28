@@ -8023,6 +8023,108 @@ abstract class AppLocalizations {
   /// **'Ochiq kodli kutubxonalar litsenziyalari'**
   String get aboutLicenses;
 
+  /// Maxfiylik siyosati ekrani sarlavhasi
+  ///
+  /// In uz, this message translates to:
+  /// **'Maxfiylik siyosati'**
+  String get privacyTitle;
+
+  /// Siyosat sanasi
+  ///
+  /// In uz, this message translates to:
+  /// **'Kuchga kirgan sana: 28.10.2026'**
+  String get privacyUpdated;
+
+  /// Siyosat kirish qismi
+  ///
+  /// In uz, this message translates to:
+  /// **'Baraka Dastur — internetsiz ishlaydigan shaxsiy va oilaviy moliya daftari (muallif: {author}). Bu siyosat ilova qanday maʼlumotlar bilan ishlashini tushuntiradi.'**
+  String privacyIntro(String author);
+
+  /// Siyosat: saqlash
+  ///
+  /// In uz, this message translates to:
+  /// **'Nima saqlanadi va qayerda'**
+  String get privacyStoredTitle;
+
+  /// Siyosat: saqlash matni
+  ///
+  /// In uz, this message translates to:
+  /// **'Siz kiritgan hamma narsa — daromad va xarajatlar, qarzlar, kelishuvlar, oila aʼzolarining ismlari, biriktirgan chek rasmlari — faqat shu telefonda saqlanadi. Maʼlumotlar bazasi shifrlangan, uning kaliti Android Keystore tizimida turadi. Qurilma xavfsizligi tekshiruvi (root, emulyator) natijalari ham faqat telefonda qoladi.'**
+  String get privacyStoredBody;
+
+  /// Siyosat: tarmoq
+  ///
+  /// In uz, this message translates to:
+  /// **'Hech narsa yuborilmaydi'**
+  String get privacyNoNetworkTitle;
+
+  /// Siyosat: tarmoq matni
+  ///
+  /// In uz, this message translates to:
+  /// **'Ilovada internet ruxsati yoʻq. Reklama, analitika va kuzatuv vositalari ishlatilmaydi. Muallif ham, boshqa hech kim ham maʼlumotlaringizni olmaydi va koʻrmaydi.'**
+  String get privacyNoNetworkBody;
+
+  /// Siyosat: ruxsatlar
+  ///
+  /// In uz, this message translates to:
+  /// **'Ruxsatlar'**
+  String get privacyPermissionsTitle;
+
+  /// Siyosat: ruxsatlar matni
+  ///
+  /// In uz, this message translates to:
+  /// **'Biometriya — barmoq izi yoki yuzni Android oʻzi tekshiradi, ilova faqat «mos keldi» yoki «mos kelmadi» javobini oladi. Bildirishnomalar — eslatmalar telefonning oʻzida tuziladi. Kamera va galereya — faqat chek rasmini biriktirganingizda, tizim oynasi orqali. Qurilma yoqilganda ishga tushish — eslatmalarni qayta rejalashtirish uchun.'**
+  String get privacyPermissionsBody;
+
+  /// Siyosat: ulashish
+  ///
+  /// In uz, this message translates to:
+  /// **'Zaxira nusxa va ulashish'**
+  String get privacyShareTitle;
+
+  /// Siyosat: ulashish matni
+  ///
+  /// In uz, this message translates to:
+  /// **'Zaxira fayli faqat siz bosganingizda yaratiladi va siz tanlagan parol bilan shifrlanadi. PDF hujjat yoki faylni ulashsangiz, uni qayerga yuborishni oʻzingiz tanlaysiz — keyin u oʻsha ilova yoki xizmat qoidalariga boʻysunadi. Ilovaning oʻzi hech narsani avtomatik yubormaydi.'**
+  String get privacyShareBody;
+
+  /// Siyosat: oʻchirish
+  ///
+  /// In uz, this message translates to:
+  /// **'Maʼlumotlarni oʻchirish'**
+  String get privacyDeleteTitle;
+
+  /// Siyosat: oʻchirish matni
+  ///
+  /// In uz, this message translates to:
+  /// **'Ilovani oʻchirsangiz, undagi barcha maʼlumotlar telefondan oʻchadi. Android bulutli zaxirasi oʻchirilgan — maʼlumotlar Google hisobingizga ham koʻchmaydi. Muallifda maʼlumotlaringiz yoʻq, ularni faqat oʻz zaxira faylingiz va parolingiz bilan tiklash mumkin.'**
+  String get privacyDeleteBody;
+
+  /// Siyosat: bolalar
+  ///
+  /// In uz, this message translates to:
+  /// **'Bolalar'**
+  String get privacyChildrenTitle;
+
+  /// Siyosat: bolalar matni
+  ///
+  /// In uz, this message translates to:
+  /// **'Ilova kattalar uchun moʻljallangan. Oila aʼzolari roʻyxatiga bolalar ismini kattalar kiritadi va bu maʼlumot ham faqat telefonda qoladi.'**
+  String get privacyChildrenBody;
+
+  /// Siyosat: oʻzgarishlar
+  ///
+  /// In uz, this message translates to:
+  /// **'Oʻzgarishlar va aloqa'**
+  String get privacyChangesTitle;
+
+  /// Siyosat: oʻzgarishlar matni
+  ///
+  /// In uz, this message translates to:
+  /// **'Siyosat oʻzgarsa, yangi matn ilovaning yangi versiyasi bilan keladi va yuqoridagi sana yangilanadi. Savollaringizni Google Play sahifasida koʻrsatilgan dasturchi emailiga yozing.'**
+  String get privacyChangesBody;
+
   /// Demo lentasi
   ///
   /// In uz, this message translates to:

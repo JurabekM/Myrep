@@ -21,6 +21,9 @@ abstract final class AppRoutes {
   static const members = '/members';
   static const settings = '/settings';
   static const about = '/settings/about';
+
+  /// Maxfiylik siyosati (Google Play: ilova ichida ham bo'lishi shart).
+  static const privacy = '/settings/about/privacy';
   static const content = '/content';
   static const categories = '/expenses/categories';
   static const templates = '/expenses/templates';
@@ -99,6 +102,7 @@ abstract final class AppRoutes {
     members,
     settings,
     about,
+    privacy,
     content,
     categories,
     templates,

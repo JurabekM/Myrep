@@ -23,7 +23,7 @@
 | 14A | **Vazifalar va «bajarilmadi», oylik ko'rik va bayonnoma, «katta foyda», nizo va hakam papkasi, oilaviy kelishuvlar** — 6-qonun | ✅ (2026-10-15; yillik eslatma defekti 2026-10-20 da tuzatilib, qurilmada tasdiqlandi — RELEASE_CHECKLIST 10-bo'lim) |
 | 14B | **Besh xavf belgisi, «o'z ko'zim bilan ko'raman», piramida, oilaviy zaxira, «to'xta, maslahatlash», hunar shablonlari** — 7-qonun | ✅ (2026-10-20; qabul mezonlari pastda) |
 | 14C | **Soat qiymati va jismoniy chegara, o'qish maqsadi va yo'llari, qoplanish, kurs tekshiruvi, «o'rgatganlarim»** — 8-qonun | ✅ (2026-10-27; qabul mezonlari pastda) |
-| 15 | Onboarding, eksport, sifat va reliz | ✅ v0.7 bo'yicha; E2E ssenariysi 14A (vazifa hodisasi, oylik ko'rik) va 14B (Bekzod) qadamlari bilan qurilmada o'tdi (2026-10-20). Reliz bloker: imzo kaliti (OPEN 122), haqiqiy telefonda sinov |
+| 15 | Onboarding, eksport, sifat va reliz | ✅ v0.7 bo'yicha; E2E ssenariysi 14A (vazifa hodisasi, oylik ko'rik) va 14B (Bekzod) qadamlari bilan qurilmada o'tdi (2026-10-20). Imzo kaliti bor (2026-10-28); `1.0.0+6` — `targetSdk 36`, ilova ichida maxfiylik siyosati, Play materiallari (`docs/PLAY_CONSOLE.md`, RELEASE_CHECKLIST 18). Qoldi: haqiqiy telefonda sinov, aloqa emaili va siyosat URL'i (OPEN 163–164), Play akkaunti |
 
 ## v0.8 (6-qonun) ta'siri — 2026-10-13
 

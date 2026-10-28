@@ -18,7 +18,8 @@ pluginManagement {
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "8.7.3" apply false
+    // Android 16 (API 36) uchun kamida AGP 8.9.1 kerak (Play talabi: targetSdk 36).
+    id("com.android.application") version "8.11.1" apply false
     id("org.jetbrains.kotlin.android") version "2.1.0" apply false
     // Jetpack Glance vidjeti (Compose kompilyatori, Kotlin bilan bir versiya).
     id("org.jetbrains.kotlin.plugin.compose") version "2.1.0" apply false
