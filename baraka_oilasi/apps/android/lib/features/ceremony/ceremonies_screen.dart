@@ -149,12 +149,13 @@ class _CreateFormState extends ConsumerState<_CreateForm> with ActionState {
             ),
           ),
     );
-    if (c != null) {
+    if (c == null) return;
+    if (mounted) {
       _title.clear();
       _scenario.clear();
       _guestsC.clear();
-      widget.onCreated(c.id, c.title);
     }
+    widget.onCreated(c.id, c.title);
   }
 
   @override
