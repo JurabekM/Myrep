@@ -30,10 +30,13 @@ docker volume rm "$vol" >/dev/null
 echo "== $SVC qayta ishga tushmoqda ($PRIMARY dan nusxa)"
 "${DC[@]}" up -d --no-deps "$SVC" >/dev/null
 ok=""
+# Tekshiruv qo'shilgan tugunning o'zida: yetakchidagi pg_stat_replication da o'chirilgan eski konteynerning
+# walsender yozuvi (wal_sender_timeout gacha) "streaming" bo'lib qoladi — u yangi tugun ulanganini isbotlamaydi.
 for _ in $(seq 1 120); do
-  n="$("${DC[@]}" exec -T "$PRIMARY" psql -U mpay -d mpay -qAtc \
-    "SELECT count(*) FROM pg_stat_replication WHERE state = 'streaming'" 2>/dev/null | tr -d '\r' || true)"
-  [ "${n:-0}" -ge 1 ] && { ok=1; break; }
+  s="$("${DC[@]}" exec -T "$SVC" psql -U mpay -d mpay -qAtc \
+    "SELECT pg_is_in_recovery()::text || ':' || coalesce((SELECT status FROM pg_stat_wal_receiver), '')" \
+    2>/dev/null | tr -d '\r' || true)"
+  [ "$s" = "true:streaming" ] && { ok=1; break; }
   sleep 1
 done
 [ -n "$ok" ] || { "${DC[@]}" logs --tail 30 "$SVC" >&2; echo "XATO: $SVC replikatsiyaga ulanmadi" >&2; exit 1; }
