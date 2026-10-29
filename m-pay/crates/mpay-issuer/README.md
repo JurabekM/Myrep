@@ -61,6 +61,12 @@ avtorizatsiyada yechadi, kliring balansni o'zgartirmaydi.
 `validate_request(&IsoMessage)` — `0100` ni DB va kalitlarsiz tahlil qiladi (majburiy maydonlar,
 Track 2 ↔ maydon 2/14, ICC teglari, PDOL ↔ maydon 4/49); `fuzz/fuzz_targets/issuer_parse.rs` ishlatadi.
 
+## Tranzaksiyalar tarixi (ADR-0030)
+
+`Issuer::token_history(token_id, cursor, limit)` — hamyon uchun: qaydnomadan token bo'yicha, yangilari
+birinchi (`ts`, ATC, `auth_id`), kursor `<ts>.<atc>.<auth_id>`. Holat `APPROVED` / `REVERSED` /
+`DECLINED`, `cleared` — kliringdan o'tgan. PAN yo'q. Real bankda — emitent API'si (`TODO(spec)`, BK-1).
+
 ## Testlar
 
 ```bash

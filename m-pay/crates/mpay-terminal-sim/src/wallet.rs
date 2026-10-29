@@ -3,7 +3,8 @@
 
 use mpay_common::api::{
     Empty, Envelope, ErrorResponse, LuksResponse, OtpVerifyRequest, ProvisionRequest,
-    ProvisionResponse, TokenProfileDto,
+    ProvisionResponse, TokenProfileDto, TxnHistoryRequest, TxnHistoryResponse, WalletTokenDto,
+    WalletTokensResponse,
 };
 use mpay_common::{DeviceId, TokenId};
 use mpay_pqlink::sandbox::SoftDeviceKey;
@@ -276,6 +277,37 @@ impl SoftWallet {
         token_id: &TokenId,
     ) -> Result<mpay_common::api::RenewResponse, WalletError> {
         self.call(&format!("/v1/tokens/{token_id}/renew"), &Empty {})
+            .await
+    }
+
+    // ------------------------------------------------------------ hamyon API (ADR-0030)
+
+    /// Shu qurilmaning kartalari.
+    pub async fn wallet_tokens(&mut self) -> Result<WalletTokensResponse, WalletError> {
+        self.call("/v1/wallet/tokens", &Empty {}).await
+    }
+
+    /// `action`: `suspend`, `resume` yoki `delete`.
+    pub async fn wallet_set_state(
+        &mut self,
+        token_id: &TokenId,
+        action: &str,
+    ) -> Result<WalletTokenDto, WalletError> {
+        self.call(&format!("/v1/wallet/tokens/{token_id}/{action}"), &Empty {})
+            .await
+    }
+
+    pub async fn wallet_transactions(
+        &mut self,
+        token_id: &TokenId,
+        cursor: Option<&str>,
+        limit: Option<u32>,
+    ) -> Result<TxnHistoryResponse, WalletError> {
+        let req = TxnHistoryRequest {
+            cursor: cursor.map(str::to_owned),
+            limit,
+        };
+        self.call(&format!("/v1/wallet/tokens/{token_id}/transactions"), &req)
             .await
     }
 }

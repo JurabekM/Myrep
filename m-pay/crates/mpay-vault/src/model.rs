@@ -133,4 +133,6 @@ pub struct TokenSummary {
     pub last_atc: Option<i64>,
     pub created_at: i64,
     pub updated_at: i64,
+    /// `SUSPENDED` bo'lsa kim to'xtatgan: `DEVICE` (foydalanuvchi) yoki `BANK`.
+    pub suspended_by: Option<String>,
 }

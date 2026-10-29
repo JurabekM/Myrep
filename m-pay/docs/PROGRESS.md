@@ -1070,3 +1070,26 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   izini bekor qilgan → "server identifikatori bekor qilingan", handshake boshlanmadi; nazorat —
   handshake boshlandi.
 * Ochiq: push-xabar kanali va eskirish siyosati (bank).
+
+## Mijoz hamyoni (product) — 1-bosqich: server API (2026-10-29, ADR-0030)
+
+* Maqsad: product darajadagi Android mijoz hamyoni (ko'p karta, tarix, kartani o'zim boshqarish,
+  bildirishnomalar; uz/ru/en). 1-bosqich — server tomonidagi muhrlangan API.
+* `POST /v1/wallet/tokens` — qurilmaning o'chirilmagan kartalari (faqat maskalangan DPAN/FPAN, holat,
+  `suspended_by`).
+* `POST /v1/wallet/tokens/{id}/suspend|resume|delete` — foydalanuvchi o'zi; faqat o'z kartasi
+  (`DEVICE_MISMATCH`). Vault: `suspended_by` (`DEVICE`/`BANK`, migratsiya `1004`) — bank to'xtatganini
+  ilova yoqa olmaydi (`SUSPENDED_BY_BANK` 403), tekshiruv o'tish tranzaksiyasi ichida; audit aktori
+  `device:<16 hex>`.
+* `POST /v1/wallet/tokens/{id}/transactions` — `Issuer::token_history`: emitent qaydnomasidan,
+  yangilari birinchi (`ts`, ATC, `auth_id`), kursor `<ts>.<atc>.<auth_id>` (qat'iy tahlil), holat
+  `APPROVED`/`REVERSED`/`DECLINED`, `cleared`.
+* `SoftWallet::wallet_tokens`, `wallet_set_state`, `wallet_transactions`.
+* Tekshirildi: e2e `p4_wallet_api` — ikki karta ro'yxatda, ochiq PAN yo'q; bir soniyadagi 5 yozuv
+  2 tadan 3 sahifada, tartib to'g'ri, takror/tushib qolish yo'q; noto'g'ri kursor `BAD_REQUEST`;
+  o'zi to'xtatgan karta tap'da `05`, o'zi yoqqach `00`; bank to'xtatgani `SUSPENDED_BY_BANK`; begona
+  qurilma ro'yxatda hech narsa ko'rmaydi, boshqara/o'qiy olmaydi; o'chirilgan karta ro'yxatdan chiqadi,
+  tap rad; 5 ta `device:` audit yozuvi, zanjir butun. Birinchi yugurish tartib xatosini topdi
+  (bir soniya ichida tasodifiy `auth_id` bo'yicha) — ATC qo'shildi. Workspace 269/269 (SQLite);
+  PostgreSQL — CI'da.
+* Keyingi: 2-bosqich — wallet-sdk (ko'p karta, yangi API'lar), 3-bosqich — `wallet-app` (Compose).

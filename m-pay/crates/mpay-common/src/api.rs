@@ -315,6 +315,67 @@ pub struct AuthorizationResponse {
     pub risk_score: Option<u16>,
 }
 
+// ---------------------------------------------------------------- hamyon (ADR-0030)
+
+/// Hamyon ilovasidagi karta ko'rinishi: faqat maskalangan PAN'lar, sirlar yo'q.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WalletTokenDto {
+    pub token_id: TokenId,
+    pub state: crate::ports::TokenState,
+    pub dpan_masked: String,
+    /// Bank kartasi (`990012******3456`) — foydalanuvchi qaysi kartasi ekanini taniydi.
+    pub fpan_masked: String,
+    pub dpan_expiry: String,
+    pub created_at: i64,
+    pub updated_at: i64,
+    /// `SUSPENDED` bo'lsa: `DEVICE` (foydalanuvchi o'zi — qayta yoqa oladi) yoki `BANK`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub suspended_by: Option<String>,
+}
+
+/// `POST /v1/wallet/tokens` (muhrlangan) javobi: shu qurilmaning o'chirilmagan kartalari.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WalletTokensResponse {
+    pub tokens: Vec<WalletTokenDto>,
+}
+
+/// `POST /v1/wallet/tokens/{id}/transactions` (muhrlangan) so'rovi.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct TxnHistoryRequest {
+    /// Oldingi javobning `next_cursor` i; yo'q — eng yangilaridan.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cursor: Option<String>,
+    /// 1–100, standart 20.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<u32>,
+}
+
+/// Tarixdagi bitta tranzaksiya (PAN yo'q).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TxnDto {
+    pub id: String,
+    pub at: i64,
+    pub amount_minor: i64,
+    pub currency: u16,
+    pub merchant_id: String,
+    pub terminal_id: String,
+    pub rrn: String,
+    /// `APPROVED`, `REVERSED`, `DECLINED`.
+    pub status: String,
+    pub response_code: String,
+    pub reason: String,
+    /// Kliringdan o'tgan — yakuniy.
+    pub cleared: bool,
+}
+
+/// Tarix sahifasi; yangilari birinchi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TxnHistoryResponse {
+    pub transactions: Vec<TxnDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub next_cursor: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

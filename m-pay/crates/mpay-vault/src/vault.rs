@@ -885,6 +885,7 @@ impl Vault {
             ACTOR_DEVICE,
             "IDV_OTP_VERIFIED",
             ts,
+            false,
         )
         .await?;
         let luks = self
@@ -1052,6 +1053,9 @@ impl Vault {
         Ok(luks)
     }
 
+    /// `device` — o'zgarish qurilmadan (hamyon): bank to'xtatgan tokenni qayta yoqib bo'lmaydi.
+    /// Tekshiruv shu tranzaksiyada, qator qulfi ostida — bank bilan poyga yo'q.
+    #[allow(clippy::too_many_arguments)]
     async fn set_state_tx(
         &self,
         tx: &mut AnyConnection,
@@ -1060,9 +1064,10 @@ impl Vault {
         actor: &str,
         action: &str,
         ts: i64,
+        device: bool,
     ) -> Result<TokenState, VaultError> {
         let r = sqlx::query(sqlx::AssertSqlSafe(format!(
-            "SELECT state FROM vault_tokens WHERE token_id = $1{}",
+            "SELECT state, suspended_by FROM vault_tokens WHERE token_id = $1{}",
             self.db.for_update()
         )))
         .bind(token_id.as_str())
@@ -1086,12 +1091,24 @@ impl Vault {
                 to: to.as_str(),
             });
         }
-        sqlx::query("UPDATE vault_tokens SET state = $1, updated_at = $2 WHERE token_id = $3")
-            .bind(to.as_str())
-            .bind(ts)
-            .bind(token_id.as_str())
-            .execute(&mut *tx)
-            .await?;
+        if device
+            && from == TokenState::Suspended
+            && to == TokenState::Active
+            && r.try_get::<Option<String>, _>("suspended_by")?.as_deref() != Some("DEVICE")
+        {
+            return Err(VaultError::SuspendedByBank);
+        }
+        let suspended_by =
+            (to == TokenState::Suspended).then_some(if device { "DEVICE" } else { "BANK" });
+        sqlx::query(
+            "UPDATE vault_tokens SET state = $1, updated_at = $2, suspended_by = $3 WHERE token_id = $4",
+        )
+        .bind(to.as_str())
+        .bind(ts)
+        .bind(suspended_by)
+        .bind(token_id.as_str())
+        .execute(&mut *tx)
+        .await?;
         if to == TokenState::Deleted {
             sqlx::query("UPDATE vault_luks SET revoked = 1 WHERE token_id = $1")
                 .bind(token_id.as_str())
@@ -1120,11 +1137,12 @@ impl Vault {
         to: TokenState,
         actor: &str,
         action: &str,
+        device: bool,
     ) -> Result<TokenSummary, VaultError> {
         let ts = self.clock.unix();
         {
             let mut tx = self.db.begin_write().await?;
-            self.set_state_tx(&mut tx, token_id, to, actor, action, ts)
+            self.set_state_tx(&mut tx, token_id, to, actor, action, ts, device)
                 .await?;
             tx.commit().await?;
         }
@@ -1136,8 +1154,14 @@ impl Vault {
         token_id: &TokenId,
         actor: &str,
     ) -> Result<TokenSummary, VaultError> {
-        self.transition(token_id, TokenState::Suspended, actor, "TOKEN_SUSPENDED")
-            .await
+        self.transition(
+            token_id,
+            TokenState::Suspended,
+            actor,
+            "TOKEN_SUSPENDED",
+            false,
+        )
+        .await
     }
 
     pub async fn resume(
@@ -1145,7 +1169,7 @@ impl Vault {
         token_id: &TokenId,
         actor: &str,
     ) -> Result<TokenSummary, VaultError> {
-        self.transition(token_id, TokenState::Active, actor, "TOKEN_RESUMED")
+        self.transition(token_id, TokenState::Active, actor, "TOKEN_RESUMED", false)
             .await
     }
 
@@ -1154,8 +1178,59 @@ impl Vault {
         token_id: &TokenId,
         actor: &str,
     ) -> Result<TokenSummary, VaultError> {
-        self.transition(token_id, TokenState::Deleted, actor, "TOKEN_DELETED")
+        self.transition(token_id, TokenState::Deleted, actor, "TOKEN_DELETED", false)
             .await
+    }
+
+    // ------------------------------------------------------------------ hamyon (qurilma o'zi)
+
+    /// Qurilmaning tokenlari (o'chirilganlarsiz), qo'shilgan tartibda.
+    pub async fn device_tokens(
+        &self,
+        dev: &DeviceContext,
+    ) -> Result<Vec<TokenSummary>, VaultError> {
+        let ids: Vec<String> = sqlx::query_scalar(
+            "SELECT token_id FROM vault_tokens WHERE device_id = $1 AND state <> 'DELETED' \
+             ORDER BY created_at, token_id",
+        )
+        .bind(dev.device_id.to_hex())
+        .fetch_all(self.db.pool())
+        .await?;
+        let mut out = Vec::with_capacity(ids.len());
+        for id in ids {
+            let id = TokenId::parse(&id).ok_or(VaultError::Db("token_id".into()))?;
+            out.push(self.summary(&id).await?);
+        }
+        Ok(out)
+    }
+
+    /// Token shu qurilmaniki ekanini tekshirib, ko'rinishini qaytaradi.
+    pub async fn device_token(
+        &self,
+        token_id: &TokenId,
+        dev: &DeviceContext,
+    ) -> Result<TokenSummary, VaultError> {
+        Self::check_device(&self.token_row(token_id).await?, dev)?;
+        self.summary(token_id).await
+    }
+
+    /// Foydalanuvchi kartani o'zi to'xtatadi, qayta yoqadi yoki o'chiradi (hamyon). Faqat o'z qurilmasi;
+    /// bank to'xtatganini qayta yoqib bo'lmaydi (`SUSPENDED_BY_BANK`). Audit aktori — `device:<id>`.
+    pub async fn device_set_state(
+        &self,
+        token_id: &TokenId,
+        dev: &DeviceContext,
+        to: TokenState,
+    ) -> Result<TokenSummary, VaultError> {
+        Self::check_device(&self.token_row(token_id).await?, dev)?;
+        let action = match to {
+            TokenState::Suspended => "TOKEN_SUSPENDED",
+            TokenState::Active => "TOKEN_RESUMED",
+            TokenState::Deleted => "TOKEN_DELETED",
+            TokenState::PendingIdv => return Err(VaultError::BadRequest("holat")),
+        };
+        let actor = format!("device:{}", &dev.device_id.to_hex()[..16]);
+        self.transition(token_id, to, &actor, action, true).await
     }
 
     /// Operator ko'rinishi (maskalangan).
@@ -1184,6 +1259,7 @@ impl Vault {
             last_atc: r.try_get("last_atc")?,
             created_at: r.try_get("created_at")?,
             updated_at: r.try_get("updated_at")?,
+            suspended_by: r.try_get("suspended_by")?,
         })
     }
 

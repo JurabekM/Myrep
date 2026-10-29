@@ -53,6 +53,9 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
   Shield grafida yangi kalit eski qurilmaning davomi (`/internal/shield/rekey`).
 * **Token muddatini yangilash** (ADR-0022): `POST /v1/tokens/{id}/renew` (muhrlangan, bog'langan
   qurilmadan) — profildagi `renew_after` dan keyin; javob `renewed` + profil (LUK'siz).
+* **Hamyon API'si** (ADR-0030): muhrlangan `POST /v1/wallet/tokens` (qurilma kartalari),
+  `/v1/wallet/tokens/{id}/suspend|resume|delete` (foydalanuvchi o'zi; bank to'xtatganini yoqa olmaydi —
+  `SUSPENDED_BY_BANK`), `/v1/wallet/tokens/{id}/transactions` (emitent qaydnomasidan, kursor bilan).
 * **Ko'p instansiya** (ADR-0019): `sessions.rs` — PQ Link sessiyalari DB'da (KEK bilan shifrlangan,
   `[pqlink] session_store`), ro'yxatdan o'tish nonce'lari umumiy; `shield_role.rs` — `mpay-server shield`
   (yagona belgilar ombori, ichki API), `shield_client.rs` — `[shield] mode = "remote"` (zaxira bilan).

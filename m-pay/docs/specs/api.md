@@ -51,6 +51,9 @@ Client javob `Content-Type` iga qarab uni ochadi yoki ochiq xato sifatida o'qiyd
 | POST | `/v1/authorizations` | terminal | JSON | tap natijasi → ISO 8583 `0100` → `0110` |
 | GET | `/v1/pqlink/revocations` | — | — | oflayn ildiz imzolagan bekor qilingan identifikatorlar (ADR-0014; sozlanmagan — 404) |
 | POST | `/v1/devices/rekey` | qurilma (sealed) | `{cert_chain[], signature}` | qurilma kalitini almashtirish, tokenlar ko'chadi (ADR-0015) |
+| POST | `/v1/wallet/tokens` | qurilma (sealed) | `{}` | shu qurilmaning kartalari (§3.13, ADR-0030) |
+| POST | `/v1/wallet/tokens/{token_id}/suspend\|resume\|delete` | qurilma (sealed) | `{}` | kartani o'zi to'xtatish, qayta yoqish, o'chirish (§3.13) |
+| POST | `/v1/wallet/tokens/{token_id}/transactions` | qurilma (sealed) | `{cursor?, limit?}` | karta bo'yicha tranzaksiyalar tarixi (§3.13) |
 | POST | `/v1/pqlink/enroll` | — (IP chegarasi) | `{}` | yangi qurilma uchun bir martalik nonce: `{nonce, expires_at}` (P1.7) |
 | GET | `/v1/terminal/ping` | terminal | — | diagnostika: `{key_id, mtls, server_time}` (kalit, mTLS, chegaralar) |
 | GET | `/v1/sandbox/accounts` | operator, faqat sandbox | — | emitent test hisoblari va qoldiqlar |
@@ -258,6 +261,40 @@ CLEARING_NOT_READY`; jurnal muddatidan (3 kun) eski — `400`; emitent ishlamadi
 `…/clearing.txt` va `…/ack.txt` — `text/plain` (format: `crates/mpay-common/src/clearing.rs`),
 `…/payouts.csv` — `text/csv` (faqat `SETTLED`).
 
+### 3.13 Hamyon (qurilma, sealed; ADR-0030)
+
+`POST /v1/wallet/tokens` → shu qurilmaning o'chirilmagan kartalari (`created_at` bo'yicha):
+
+```json
+{ "tokens": [ { "token_id": "tok_…", "state": "SUSPENDED", "dpan_masked": "990077******1234",
+  "fpan_masked": "990012******0014", "dpan_expiry": "2910", "created_at": 1792,
+  "updated_at": 1800, "suspended_by": "DEVICE" } ] }
+```
+
+`suspended_by` — faqat `SUSPENDED` da: `DEVICE` (foydalanuvchi) yoki `BANK` (operator).
+
+`POST /v1/wallet/tokens/{token_id}/suspend|resume|delete` (`{}`) → yuqoridagi bitta karta:
+
+* faqat o'z kartasi, aks holda `DEVICE_MISMATCH` (403);
+* bank to'xtatganini qayta yoqish — `SUSPENDED_BY_BANK` (403);
+* ruxsat etilmagan o'tish — `INVALID_STATE` (409);
+* `delete` qaytarib bo'lmaydi; audit aktori `device:<16 hex>`.
+
+`POST /v1/wallet/tokens/{token_id}/transactions`:
+
+* so'rov `{"cursor": "…", "limit": 20}` — ikkalasi ixtiyoriy, `limit` 1–100;
+* javob — yangilari birinchi:
+
+```json
+{ "transactions": [ { "id": "ath_…", "at": 1792, "amount_minor": 1250000, "currency": 860,
+  "merchant_id": "SHOP0000000001", "terminal_id": "TERM0001", "rrn": "…",
+  "status": "APPROVED", "response_code": "00", "reason": "APPROVED", "cleared": false } ],
+  "next_cursor": "1792.7.ath_…" }
+```
+
+* `status`: `APPROVED`, `REVERSED` (reversal bilan qaytarilgan) yoki `DECLINED`;
+* `next_cursor` yo'q — oxirgi sahifa; noto'g'ri kursor — `BAD_REQUEST`.
+
 ### 3.9 `GET /v1/sandbox/accounts` (operator, faqat sandbox)
 
 Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "balance_minor"}]`.
@@ -273,6 +310,7 @@ Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "bal
 | `TOO_MANY_DEVICES` (karta `max_devices_per_card` qurilmada), `CARD_ALREADY_ON_DEVICE` (ADR-0022) | 409 |
 | `TOKEN_EXPIRED` (LUK to'ldirish; token muddati o'tgan) | 410 |
 | `DEVICE_MISMATCH` | 403 |
+| `SUSPENDED_BY_BANK` (hamyon: bank to'xtatgan kartani qayta yoqish, ADR-0030) | 403 |
 | `OTP_INVALID` / `OTP_EXPIRED` / `OTP_LOCKED` | 422 / 410 / 423 |
 | `UNSUPPORTED_MEDIA_TYPE` | 415 |
 | `IDV_UNAVAILABLE`, `PQLINK_BUSY`, `INTEGRITY_UNAVAILABLE` | 503 |

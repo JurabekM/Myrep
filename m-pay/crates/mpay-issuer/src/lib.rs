@@ -8,12 +8,14 @@
 
 pub mod clearing;
 pub mod codes;
+pub mod history;
 pub mod issuer;
 pub mod reversal;
 
 use thiserror::Error;
 
 pub use codes::{Reason, ResponseCode, ReversalReason};
+pub use history::{TokenTxn, TokenTxnPage};
 pub use issuer::{
     validate_request, AccountView, AuthOutcome, Issuer, IssuerConfig, ReviewAction, TestAccount,
     DEFAULT_CVM_LIMIT_MINOR,

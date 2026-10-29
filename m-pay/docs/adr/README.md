@@ -31,5 +31,6 @@
 | [0027](0027-postgres-replika-va-lb-zaxira.md) | PostgreSQL streaming replika, `pg` proksisi, almashinuv skriptlari; nginx zaxirasi (VRRP VIP) | qabul qilingan |
 | [0028](0028-falokatdan-tiklash.md) | Falokatdan tiklash (`dr-restore.sh`, CI'dagi mashq) va navbatchi runbook'i | qabul qilingan |
 | [0029](0029-bekor-qilish-royxati-manbalari.md) | Bekor qilish ro'yxati: ilova build'i + mustaqil kanal (CDN) + server, eng katta versiya | qabul qilingan |
+| [0030](0030-hamyon-api.md) | Mijoz hamyoni API'si: kartalar ro'yxati, o'zim to'xtatish/yoqish/o'chirish (bank bloki ustun), tarix | qabul qilingan |
 
 Shablon: Kontekst → Qaror → Oqibatlar → Ko'rib chiqilgan muqobillar.

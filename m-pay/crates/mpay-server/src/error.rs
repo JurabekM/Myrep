@@ -104,7 +104,9 @@ impl From<VaultError> for ApiError {
             | VaultError::TooManyDevices
             | VaultError::CardAlreadyOnDevice => StatusCode::CONFLICT,
             VaultError::TokenExpired => StatusCode::GONE,
-            VaultError::DeviceMismatch | VaultError::IdvDeclined => StatusCode::FORBIDDEN,
+            VaultError::DeviceMismatch | VaultError::IdvDeclined | VaultError::SuspendedByBank => {
+                StatusCode::FORBIDDEN
+            }
             VaultError::OtpInvalid => StatusCode::UNPROCESSABLE_ENTITY,
             VaultError::OtpExpired => StatusCode::GONE,
             VaultError::OtpLocked => StatusCode::LOCKED,

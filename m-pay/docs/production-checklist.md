@@ -162,7 +162,9 @@ real ma'lumotda o'qitish.
 * `crates/mpay-integrity/src/google.rs` — BK-11
 * `crates/mpay-integrity/src/lib.rs` — BK-11
 * `crates/mpay-integrity/src/service_account.rs` — BK-11
+* `crates/mpay-issuer/README.md` — BK-1
 * `crates/mpay-issuer/src/clearing.rs` — SX-2
+* `crates/mpay-issuer/src/history.rs` — BK-1
 * `crates/mpay-issuer/src/issuer.rs` — BK-9
 * `crates/mpay-issuer/src/reversal.rs` — SX-2
 * `crates/mpay-pqlink/src/attestation.rs` — BK-12
@@ -193,6 +195,7 @@ real ma'lumotda o'qitish.
 * `docs/adr/0027-postgres-replika-va-lb-zaxira.md` — BK-16
 * `docs/adr/0028-falokatdan-tiklash.md` — BK-4, BK-13
 * `docs/adr/0029-bekor-qilish-royxati-manbalari.md` — BK-11
+* `docs/adr/0030-hamyon-api.md` — BK-1
 * `docs/android-testing.md` — BK-11, MB-4
 * `docs/architecture.md` — BK-5
 * `docs/load-report.md` — BK-3, BK-10, JM-8

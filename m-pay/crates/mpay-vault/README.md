@@ -9,6 +9,9 @@ Token Vault: provisioning, ID&V, LUK, lifecycle, detokenizatsiya va audit.
 * **Provisioning**: FPAN → `IdvDecider` (Shield) → GREEN: token + LUK partiyasi; YELLOW: OTP
   challenge (5 daqiqa, 3 urinish); RED: rad (token yaratilmaydi, audit yoziladi).
 * **Lifecycle**: `PENDING_IDV → ACTIVE ⇄ SUSPENDED → DELETED`; o'chirishda LUK'lar bekor qilinadi.
+  Hamyon (ADR-0030): `device_tokens`, `device_token`, `device_set_state` — faqat o'z qurilmasi;
+  `suspended_by` (`DEVICE`/`BANK`, migratsiya `1004`) — bank to'xtatganini qurilma yoqa olmaydi
+  (`SUSPENDED_BY_BANK`), tekshiruv o'tish tranzaksiyasi ichida.
 * **LUK**: partiya (standart 5), har biri 10 foydalanish / 24 soat; to'ldirish faqat bog'langan
   qurilmadan, faol LUK'lar ≤ 2 × partiya.
 * **Token muddati** (ADR-0022): `min(hozir + token_validity_months, karta muddati)`, sxema vaqti bilan

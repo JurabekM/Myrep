@@ -15,8 +15,10 @@ use axum::{Json, Router};
 use mpay_common::api::{
     AuthorizationRequest, Empty, Envelope, LukDto, LuksResponse, OtpVerifyRequest,
     ProvisionRequest as ProvisionDto, ProvisionResponse, SandboxOtp, ServerIdentityDto,
-    TokenProfileDto,
+    TokenProfileDto, TxnDto, TxnHistoryRequest, TxnHistoryResponse, WalletTokenDto,
+    WalletTokensResponse,
 };
+use mpay_common::ports::TokenState;
 use mpay_common::{CardExpiry, Pan, PanKind, TokenId};
 use mpay_pqlink::SessionInfo;
 use mpay_vault::{DeviceContext, LukGrant, ProvisionOutcome, ProvisionRequest, TokenProfile};
@@ -50,6 +52,14 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/tokens/{id}/luks", post(replenish))
         .route("/v1/tokens/{id}/renew", post(renew))
         .route("/v1/devices/rekey", post(rekey))
+        .route("/v1/wallet/tokens", post(wallet_tokens))
+        .route("/v1/wallet/tokens/{id}/suspend", post(wallet_suspend))
+        .route("/v1/wallet/tokens/{id}/resume", post(wallet_resume))
+        .route("/v1/wallet/tokens/{id}/delete", post(wallet_delete))
+        .route(
+            "/v1/wallet/tokens/{id}/transactions",
+            post(wallet_transactions),
+        )
         .route("/v1/tokens/{id}/suspend", post(suspend))
         .route("/v1/tokens/{id}/resume", post(resume))
         .route("/v1/audit/verify", get(audit_verify))
@@ -722,6 +732,139 @@ async fn renew(State(s): St, Path(id): Path<String>, headers: HeaderMap, body: B
             profile: profile_dto(&p, cvm_limit),
         })
     })
+    .await
+}
+
+// ---------------------------------------------------------------- hamyon (ADR-0030)
+
+fn wallet_dto(t: mpay_vault::TokenSummary) -> WalletTokenDto {
+    WalletTokenDto {
+        token_id: t.token_id,
+        state: t.state,
+        dpan_masked: t.dpan_masked,
+        fpan_masked: t.fpan_masked,
+        dpan_expiry: t.dpan_expiry,
+        created_at: t.created_at,
+        updated_at: t.updated_at,
+        suspended_by: t.suspended_by,
+    }
+}
+
+/// Qurilmaning kartalari (muhrlangan): hamyon ro'yxatni server bilan moslaydi.
+async fn wallet_tokens(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
+    let vault = s.vault.clone();
+    sealed(&s, &headers, &body, |info, _req: Empty| async move {
+        let tokens = vault.device_tokens(&device_ctx(&info)).await?;
+        Ok(WalletTokensResponse {
+            tokens: tokens.into_iter().map(wallet_dto).collect(),
+        })
+    })
+    .await
+}
+
+async fn wallet_state(
+    s: Arc<AppState>,
+    id: String,
+    headers: HeaderMap,
+    body: Bytes,
+    to: TokenState,
+) -> Response {
+    let vault = s.vault.clone();
+    sealed(&s, &headers, &body, |info, _req: Empty| async move {
+        let token_id = parse_token_id(&id)?;
+        Ok(wallet_dto(
+            vault
+                .device_set_state(&token_id, &device_ctx(&info), to)
+                .await?,
+        ))
+    })
+    .await
+}
+
+/// Foydalanuvchi kartani o'zi to'xtatadi (yo'qotdim/shubha) — tap'lar rad etiladi.
+async fn wallet_suspend(
+    State(s): St,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
+    wallet_state(s, id, headers, body, TokenState::Suspended).await
+}
+
+/// O'zi to'xtatgan kartani qayta yoqadi; bank to'xtatgan bo'lsa — `403 SUSPENDED_BY_BANK`.
+async fn wallet_resume(
+    State(s): St,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
+    wallet_state(s, id, headers, body, TokenState::Active).await
+}
+
+/// Kartani hamyondan o'chiradi (qaytarib bo'lmaydi; qurilma LUK'larini o'zi o'chiradi).
+async fn wallet_delete(
+    State(s): St,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
+    wallet_state(s, id, headers, body, TokenState::Deleted).await
+}
+
+/// Karta bo'yicha tranzaksiyalar tarixi (muhrlangan): avval token shu qurilmaniki ekani tekshiriladi.
+async fn wallet_transactions(
+    State(s): St,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
+    let vault = s.vault.clone();
+    let issuer = s.issuer.clone();
+    sealed(
+        &s,
+        &headers,
+        &body,
+        |info, req: TxnHistoryRequest| async move {
+            let token_id = parse_token_id(&id)?;
+            vault.device_token(&token_id, &device_ctx(&info)).await?;
+            let page = issuer
+                .token_history(
+                    token_id.as_str(),
+                    req.cursor.as_deref(),
+                    req.limit.unwrap_or(20),
+                )
+                .await
+                .map_err(|e| match e {
+                    mpay_issuer::IssuerError::Format(_) => {
+                        ApiError::bad_request("kursor noto'g'ri")
+                    }
+                    e => {
+                        tracing::error!(error = %e, "tranzaksiyalar tarixi");
+                        ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
+                    }
+                })?;
+            Ok(TxnHistoryResponse {
+                transactions: page
+                    .transactions
+                    .into_iter()
+                    .map(|t| TxnDto {
+                        id: t.id,
+                        at: t.at,
+                        amount_minor: t.amount_minor,
+                        currency: t.currency,
+                        merchant_id: t.merchant_id,
+                        terminal_id: t.terminal_id,
+                        rrn: t.rrn,
+                        status: t.status,
+                        response_code: t.response_code,
+                        reason: t.reason,
+                        cleared: t.cleared,
+                    })
+                    .collect(),
+                next_cursor: page.next_cursor,
+            })
+        },
+    )
     .await
 }
 
