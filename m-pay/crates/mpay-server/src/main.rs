@@ -36,11 +36,51 @@ enum Cmd {
         /// `memory` yoki `pkcs11`.
         #[arg(long, default_value = "memory")]
         keystore: String,
+        /// TLS sertifikatiga qo'shimcha nom (SAN), takrorlanadi: `--tls-san lb --tls-san api-1`.
+        #[arg(long = "tls-san")]
+        tls_san: Vec<String>,
     },
     /// Serverni ishga tushiradi.
     Serve {
         #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
         config: PathBuf,
+    },
+    /// Shield rolini ishga tushiradi (2-faza P2.4, ADR-0019): belgilar ombori yagona instansiyada,
+    /// API instansiyalari `[shield] mode = "remote"` bilan murojaat qiladi. Faqat ichki API.
+    Shield {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/shield.toml")]
+        config: PathBuf,
+    },
+    /// Bir martalik tayyorgarlik (2-faza P2.5): DB migratsiyalari va KeyStore/HSM kalitlari
+    /// (`ensure_key`) — so'ng chiqadi. Ko'p instansiyada API'lar ishga tushishidan oldin bir marta,
+    /// aks holda bir vaqtda yuklangan instansiyalar HSM'da bir xil yorliqli ikki kalit yaratishi mumkin.
+    Bootstrap {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
+        config: PathBuf,
+    },
+    /// Solishtirish (ADR-0024): acquirer jurnali ↔ emitent qaydnomasi. Tafovut bo'lsa — chiqish kodi 1
+    /// (cron/navbatchi uchun).
+    Recon {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
+        config: PathBuf,
+        /// Kun `YYYY-MM-DD` — sxema vaqti (UTC+5); standart — bugun.
+        #[arg(long)]
+        date: Option<String>,
+        /// To'liq hisobot (JSON) fayli.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+    /// Kunlik kliring va hisob-kitob (ADR-0025): paket → emitent → pozitsiyalar. Qayta ishga
+    /// tushirish xavfsiz. Emitent yozuvlarni rad etsa — chiqish kodi 1.
+    Clearing {
+        #[arg(long, env = "MPAY_CONFIG", default_value = ".mpay/mpay.toml")]
+        config: PathBuf,
+        /// Kun `YYYY-MM-DD` — sxema vaqti (UTC+5); standart — kecha.
+        #[arg(long)]
+        date: Option<String>,
+        /// Shu papkaga: kliring fayli, emitent tasdig'i, to'lovlar CSV va hisobot JSON.
+        #[arg(long)]
+        out_dir: Option<PathBuf>,
     },
     /// Audit log xesh-zanjirini tekshiradi.
     AuditVerify {
@@ -88,6 +128,15 @@ enum Cmd {
         #[arg(long, default_value = "revocations.json")]
         out: PathBuf,
     },
+    /// Bekor qilish ro'yxati faylini tekshiradi (ADR-0029): CDN'ga yuklash yoki ilova build'iga
+    /// joylashdan oldin — ildiz barmoq izi va gibrid imzo. Xato bo'lsa chiqish kodi 1.
+    RevocationsCheck {
+        #[arg(long)]
+        file: PathBuf,
+        /// Ilovaga joylangan oflayn ildiz barmoq izi (`root-keygen` chiqishi).
+        #[arg(long)]
+        root_fingerprint: String,
+    },
     /// mTLS mijoz sertifikati barmoq izi (SHA-256, hex) — `[auth] revoked_client_certs` uchun.
     CertFingerprint {
         #[arg(long)]
@@ -122,6 +171,7 @@ async fn run(cli: Cli) -> Result<(), String> {
             tls,
             force,
             keystore,
+            tls_san,
         } => {
             let keystore = match keystore.as_str() {
                 "memory" => mpay_server::config::KeyStoreBackend::Memory,
@@ -134,6 +184,7 @@ async fn run(cli: Cli) -> Result<(), String> {
                 tls,
                 force,
                 keystore,
+                tls_names: tls_san,
             })?;
             println!("Sandbox tayyor: {}", out.config_path.display());
             println!("PQ Link server barmoq izi: {}", out.server_fingerprint);
@@ -147,15 +198,40 @@ async fn run(cli: Cli) -> Result<(), String> {
         Cmd::Serve { config } => {
             let cfg = Config::load(&config).map_err(|e| e.to_string())?;
             let mut srv = mpay_server::start(&cfg).await?;
-            tokio::signal::ctrl_c().await.map_err(|e| e.to_string())?;
-            tracing::info!("to'xtatilmoqda");
+            shutdown_signal().await?;
+            tracing::info!(
+                "to'xtatilmoqda: yangi ulanishlar qabul qilinmaydi, ochiq so'rovlar tugatiladi"
+            );
             srv.shutdown();
             let _ = srv.handle.await;
             Ok(())
         }
-        Cmd::AuditVerify { config } => {
+        Cmd::Shield { config } => {
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let mut srv = mpay_server::shield_role::start(&cfg).await?;
+            shutdown_signal().await?;
+            tracing::info!("to'xtatilmoqda");
+            // Yakuniy snapshot va ijarani bo'shatish — zaxira instansiya hodisa yo'qotmasdan oladi.
+            srv.step_down().await;
+            srv.shutdown();
+            let _ = (&mut srv.handle).await;
+            Ok(())
+        }
+        Cmd::Bootstrap { config } => {
             let cfg = Config::load(&config).map_err(|e| e.to_string())?;
             let st = mpay_server::state::build(&cfg)
+                .await
+                .map_err(|e| e.to_string())?;
+            println!(
+                "tayyor: migratsiyalar va kalitlar (keystore = {}, PQ Link barmoq izi {})",
+                st.keystore.backend_name(),
+                hex::encode(st.pqlink.identity().fingerprint())
+            );
+            Ok(())
+        }
+        Cmd::AuditVerify { config } => {
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let st = mpay_server::state::build_offline(&cfg)
                 .await
                 .map_err(|e| e.to_string())?;
             let r = st.vault.verify_audit().await.map_err(|e| e.to_string())?;
@@ -164,6 +240,136 @@ async fn run(cli: Cli) -> Result<(), String> {
                 r.entries, r.head_hash
             );
             Ok(())
+        }
+        Cmd::Clearing {
+            config,
+            date,
+            out_dir,
+        } => {
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let st = mpay_server::state::build_offline(&cfg)
+                .await
+                .map_err(|e| e.to_string())?;
+            let date = date.unwrap_or_else(|| mpay_server::clearing::yesterday(st.clock.now()));
+            mpay_server::recon::business_day(&date)?;
+            let r = mpay_server::clearing::run(&st, &date)
+                .await
+                .map_err(|e| e.to_string())?;
+            if let Some(dir) = &out_dir {
+                std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+                let write = |name: String, body: &[u8]| {
+                    let p = dir.join(name);
+                    std::fs::write(&p, body).map_err(|e| format!("{}: {e}", p.display()))
+                };
+                if let Some((file, ack)) = mpay_server::clearing::files(st.vault.db(), &date)
+                    .await
+                    .map_err(|e| e.to_string())?
+                {
+                    write(format!("{}.clr", r.batch_id), file.as_bytes())?;
+                    if let Some(ack) = ack {
+                        write(format!("{}.ack", r.batch_id), ack.as_bytes())?;
+                    }
+                }
+                write(
+                    format!("{}-payouts.csv", r.batch_id),
+                    mpay_server::clearing::payouts_csv(&r).as_bytes(),
+                )?;
+                write(
+                    format!("{}-settlement.json", r.batch_id),
+                    &serde_json::to_vec_pretty(&r).map_err(|e| e.to_string())?,
+                )?;
+            }
+            println!(
+                "Paket {} ({}): {} — {} yozuv, qabul {}, rad {}",
+                r.batch_id,
+                r.business_date,
+                r.state,
+                r.records,
+                r.accepted.unwrap_or(0),
+                r.rejected.unwrap_or(0)
+            );
+            for p in &r.positions {
+                println!(
+                    "  {:<8} {:<15} {} — {} ta, yalpi {}, komissiya {}, sof {}",
+                    p.party,
+                    p.party_id,
+                    p.currency,
+                    p.count,
+                    p.gross_minor,
+                    p.fee_minor,
+                    p.net_minor
+                );
+            }
+            for i in &r.rejected_items {
+                println!(
+                    "  RAD: #{} terminal {} STAN {} RRN {} {} {} — {:?} {:?}",
+                    i.seq,
+                    i.terminal_id,
+                    i.stan,
+                    i.rrn,
+                    i.dpan_masked,
+                    i.amount_minor,
+                    i.code,
+                    i.reason
+                );
+            }
+            if r.rejected_items.is_empty() {
+                Ok(())
+            } else {
+                Err(format!(
+                    "emitent {} ta yozuvni rad etdi",
+                    r.rejected_items.len()
+                ))
+            }
+        }
+        Cmd::Recon { config, date, out } => {
+            let cfg = Config::load(&config).map_err(|e| e.to_string())?;
+            let st = mpay_server::state::build_offline(&cfg)
+                .await
+                .map_err(|e| e.to_string())?;
+            let (from, to) =
+                mpay_server::recon::period(date.as_deref(), None, None, st.clock.now())?;
+            let r = mpay_server::recon::run(&st, from, to)
+                .await
+                .map_err(|e| e.to_string())?;
+            if let Some(out) = &out {
+                std::fs::write(
+                    out,
+                    serde_json::to_vec_pretty(&r).map_err(|e| e.to_string())?,
+                )
+                .map_err(|e| format!("{}: {e}", out.display()))?;
+            }
+            println!(
+                "Davr [{from}, {to}): acquirer {} yozuv, emitent {}, mos {}",
+                r.acquirer_records, r.issuer_records, r.matched
+            );
+            for t in &r.approved {
+                println!(
+                    "  tasdiqlangan ({}): {} ta, {} (minor)",
+                    t.currency, t.count, t.amount_minor
+                );
+            }
+            for i in r.discrepancies.iter().chain(&r.notes) {
+                println!(
+                    "  {:?}: terminal {} STAN {} RRN {} {} acquirer {:?}/{:?} emitent {:?}/{:?} reversal {:?}",
+                    i.kind,
+                    i.terminal_id,
+                    i.stan,
+                    i.rrn,
+                    i.dpan_masked.as_deref().unwrap_or("-"),
+                    i.acquirer_code,
+                    i.acquirer_amount_minor,
+                    i.issuer_code,
+                    i.issuer_amount_minor,
+                    i.reversal
+                );
+            }
+            if r.is_clean() {
+                println!("Tafovut yo'q ({} izoh)", r.notes.len());
+                Ok(())
+            } else {
+                Err(format!("{} ta tafovut", r.discrepancies.len()))
+            }
         }
         Cmd::TerminalBundle {
             config,
@@ -285,13 +491,37 @@ async fn run(cli: Cli) -> Result<(), String> {
             );
             Ok(())
         }
+        Cmd::RevocationsCheck {
+            file,
+            root_fingerprint,
+        } => {
+            let raw = std::fs::read(&file).map_err(|e| format!("{}: {e}", file.display()))?;
+            let dto: mpay_common::api::RevocationsDto =
+                serde_json::from_slice(&raw).map_err(|e| format!("JSON: {e}"))?;
+            let signed = mpay_server::revocations::from_dto(&dto)?;
+            let mut fp = [0u8; 32];
+            hex::decode_to_slice(root_fingerprint.trim(), &mut fp)
+                .map_err(|_| "--root-fingerprint: 64 hex".to_owned())?;
+            signed
+                .verify(&fp)
+                .map_err(|e| format!("imzo yoki ildiz mos emas: {e}"))?;
+            println!(
+                "to'g'ri: versiya {}, {} ta bekor qilingan identifikator",
+                signed.version,
+                signed.revoked.len()
+            );
+            for r in &signed.revoked {
+                println!("  {}", hex::encode(r));
+            }
+            Ok(())
+        }
         Cmd::CertFingerprint { cert } => {
             println!("{}", mpay_server::auth::cert_fingerprint_pem(&cert)?);
             Ok(())
         }
         Cmd::Identity { config } => {
             let cfg = Config::load(&config).map_err(|e| e.to_string())?;
-            let st = mpay_server::state::build(&cfg)
+            let st = mpay_server::state::build_offline(&cfg)
                 .await
                 .map_err(|e| e.to_string())?;
             let id = st.pqlink.identity();
@@ -323,5 +553,22 @@ async fn main() -> ExitCode {
             tracing::error!("{e}");
             ExitCode::FAILURE
         }
+    }
+}
+
+/// Ctrl+C yoki (Unix) SIGTERM — `docker stop` SIGTERM yuboradi.
+async fn shutdown_signal() -> Result<(), String> {
+    #[cfg(unix)]
+    {
+        let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .map_err(|e| e.to_string())?;
+        tokio::select! {
+            r = tokio::signal::ctrl_c() => r.map_err(|e| e.to_string()),
+            _ = term.recv() => Ok(()),
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        tokio::signal::ctrl_c().await.map_err(|e| e.to_string())
     }
 }

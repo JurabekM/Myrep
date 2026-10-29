@@ -20,9 +20,18 @@ dependencies {
     testImplementation(libs.json)
     testImplementation(libs.bcpkix)
     testImplementation(libs.junit)
+    // Jazzer fuzz testlari (JUnit 5); mavjud JUnit 4 testlari — vintage engine orqali.
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.jazzer.junit)
+    testRuntimeOnly(libs.junit.vintage)
+    testRuntimeOnly(libs.junit.launcher)
 }
 
 tasks.test {
+    useJUnitPlatform()
+    // Jazzer: JAZZER_FUZZ=1 — haqiqiy fuzzing (scripts/android-fuzz.sh), aks holda regressiya rejimi.
+    System.getenv("JAZZER_FUZZ")?.let { environment("JAZZER_FUZZ", it) }
     // Interop testi: MPAY_INTEROP_URL / MPAY_SANDBOX_DIR muhit o'zgaruvchilari (scripts/android-interop.sh).
     environment("MPAY_TESTVECTORS", rootProject.file("../testvectors").absolutePath)
     testLogging { events("passed", "failed", "skipped"); showStandardStreams = true }

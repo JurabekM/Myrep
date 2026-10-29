@@ -13,6 +13,7 @@ workspace = true
 mpay-server.workspace = true
 mpay-terminal-sim.workspace = true
 mpay-common.workspace = true
+mpay-db.workspace = true
 mpay-pqlink = { workspace = true, features = ["sandbox-attestation"] }
 tokio = { workspace = true, features = ["io-util"] }
 tempfile.workspace = true
@@ -21,10 +22,21 @@ tracing-subscriber.workspace = true
 serde_json.workspace = true
 zeroize.workspace = true
 mpay-issuer.workspace = true
+mpay-smsgw.workspace = true
 mpay-crypto.workspace = true
+mpay-integrity.workspace = true
 hex.workspace = true
+sha2.workspace = true
 clap.workspace = true
 sqlx.workspace = true
+rcgen.workspace = true
+proptest.workspace = true
+rsa = { workspace = true, features = ["std", "pem"] }
+rand_core06 = { package = "rand_core", version = "0.6.4", features = ["getrandom"] }
+ring = "0.17.14"
+base64.workspace = true
+axum.workspace = true
+tower.workspace = true
 
 [[bin]]
 name = "mpay-load"

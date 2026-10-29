@@ -2,22 +2,23 @@
 
 use std::future::Future;
 use std::sync::Arc;
-use std::time::Instant;
 
 use axum::body::Bytes;
 use std::net::SocketAddr;
 
-use axum::extract::{ConnectInfo, DefaultBodyLimit, MatchedPath, Path, Request, State};
+use axum::extract::{ConnectInfo, DefaultBodyLimit, Path, State};
 use axum::http::{header, HeaderMap, HeaderValue, StatusCode};
-use axum::middleware::{self, Next};
+use axum::middleware;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use mpay_common::api::{
     AuthorizationRequest, Empty, Envelope, LukDto, LuksResponse, OtpVerifyRequest,
     ProvisionRequest as ProvisionDto, ProvisionResponse, SandboxOtp, ServerIdentityDto,
-    TokenProfileDto,
+    TokenProfileDto, TxnDto, TxnHistoryRequest, TxnHistoryResponse, WalletTokenDto,
+    WalletTokensResponse,
 };
+use mpay_common::ports::TokenState;
 use mpay_common::{CardExpiry, Pan, PanKind, TokenId};
 use mpay_pqlink::SessionInfo;
 use mpay_vault::{DeviceContext, LukGrant, ProvisionOutcome, ProvisionRequest, TokenProfile};
@@ -47,32 +48,37 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/tokens", post(provision))
         .route("/v1/tokens/{id}", get(get_token).delete(delete_token))
         .route("/v1/tokens/{id}/idv/verify", post(idv_verify))
+        .route("/v1/tokens/{id}/idv/resend", post(idv_resend))
         .route("/v1/tokens/{id}/luks", post(replenish))
+        .route("/v1/tokens/{id}/renew", post(renew))
         .route("/v1/devices/rekey", post(rekey))
+        .route("/v1/wallet/tokens", post(wallet_tokens))
+        .route("/v1/wallet/tokens/{id}/suspend", post(wallet_suspend))
+        .route("/v1/wallet/tokens/{id}/resume", post(wallet_resume))
+        .route("/v1/wallet/tokens/{id}/delete", post(wallet_delete))
+        .route(
+            "/v1/wallet/tokens/{id}/transactions",
+            post(wallet_transactions),
+        )
         .route("/v1/tokens/{id}/suspend", post(suspend))
         .route("/v1/tokens/{id}/resume", post(resume))
         .route("/v1/audit/verify", get(audit_verify))
+        .route("/v1/recon", get(recon))
+        .route("/v1/clearing/run", post(clearing_run))
+        .route("/v1/clearing/{date}", get(clearing_get))
+        .route("/v1/clearing/{date}/{file}", get(clearing_file))
         .route("/v1/sandbox/otp/{challenge_id}", get(sandbox_otp))
         .route("/v1/sandbox/accounts", get(sandbox_accounts))
+        .route("/v1/sandbox/integrity-token", post(sandbox_integrity))
+        .route(
+            "/v1/sandbox/integrity-token/device",
+            post(sandbox_integrity_device),
+        )
         .route("/v1/authorizations", post(authorize))
         .route("/v1/terminal/ping", get(terminal_ping))
-        .route_layer(middleware::from_fn(log_requests))
+        .route_layer(middleware::from_fn(crate::metrics::track))
         .layer(DefaultBodyLimit::max(256 * 1024))
         .with_state(state)
-}
-
-/// Har so'rov: metod, marshrut shabloni, status, davomiylik. Tanalar hech qachon logga yozilmaydi.
-async fn log_requests(req: Request, next: Next) -> Response {
-    let method = req.method().clone();
-    let route = req
-        .extensions()
-        .get::<MatchedPath>()
-        .map(|p| p.as_str().to_owned())
-        .unwrap_or_default();
-    let start = Instant::now();
-    let resp = next.run(req).await;
-    tracing::info!(%method, route, status = resp.status().as_u16(), ms = start.elapsed().as_millis() as u64, "http");
-    resp
 }
 
 async fn health(State(s): St) -> impl IntoResponse {
@@ -81,7 +87,7 @@ async fn health(State(s): St) -> impl IntoResponse {
         "version": crate::VERSION,
         "keystore": s.keystore.backend_name(),
         "sandbox": s.sandbox,
-        "pqlink_sessions": s.pqlink.session_count(),
+        "pqlink_sessions": s.pqlink.session_count().await,
     }))
 }
 
@@ -132,17 +138,22 @@ fn pqlink_body(status: StatusCode, body: Vec<u8>) -> Response {
 }
 
 /// Handshake oldidan: IP chegarasi va global parallellik ruxsati (tahdid modeli D2).
-fn handshake_guard(
+async fn handshake_guard(
     s: &AppState,
     peer: SocketAddr,
     headers: &HeaderMap,
 ) -> Result<Option<tokio::sync::OwnedSemaphorePermit>, ApiError> {
     let ip = s.client_ip(peer, headers);
-    s.limits.ip(&crate::clientip::rate_key(ip)).map_err(|l| {
-        tracing::warn!(%ip, "rate-limit: handshake IP");
-        ApiError::rate_limited(l, false)
-    })?;
+    s.limits
+        .ip(&crate::clientip::rate_key(ip))
+        .await
+        .map_err(|l| {
+            crate::metrics::rate_limited(crate::metrics::Limit::Ip);
+            tracing::warn!(%ip, "rate-limit: handshake IP");
+            ApiError::rate_limited(l, false)
+        })?;
     s.limits.handshake_permit().map_err(|l| {
+        crate::metrics::rate_limited(crate::metrics::Limit::Handshake);
         tracing::warn!("rate-limit: handshake navbati to'la");
         ApiError::rate_limited(l, true)
     })
@@ -185,7 +196,7 @@ async fn rekey(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
             ]
             .concat();
             new.verify_signature(&msg, &sig)?;
-            enroll.consume(&new.attestation_challenge)?;
+            enroll.consume(&new.attestation_challenge).await?;
             let db = |e: sqlx::Error| {
                 tracing::error!(error = %e, "pqlink_devices");
                 ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
@@ -248,10 +259,14 @@ async fn pq_enroll(
         return Err(ApiError::not_found());
     };
     let ip = s.client_ip(peer, &headers);
-    s.limits.ip(&crate::clientip::rate_key(ip)).map_err(|l| {
-        tracing::warn!(%ip, "rate-limit: enroll IP");
-        ApiError::rate_limited(l, false)
-    })?;
+    s.limits
+        .ip(&crate::clientip::rate_key(ip))
+        .await
+        .map_err(|l| {
+            crate::metrics::rate_limited(crate::metrics::Limit::Ip);
+            tracing::warn!(%ip, "rate-limit: enroll IP");
+            ApiError::rate_limited(l, false)
+        })?;
     let (nonce, expires_at) = e.issue()?;
     Ok(Json(serde_json::json!({
         "nonce": hex::encode(nonce),
@@ -267,14 +282,19 @@ async fn pq_hello(
     body: Bytes,
 ) -> Result<Response, ApiError> {
     require_pqlink_ct(&headers)?;
-    let _permit = handshake_guard(&s, peer, &headers)?;
+    let _permit = handshake_guard(&s, peer, &headers).await?;
+    // Joy yo'q bo'lsa qimmat hisoblashdan oldin rad (sessiyalar ombori umumiy bo'lishi mumkin).
+    if !s.pqlink.has_room().await? {
+        return Err(mpay_pqlink::PqLinkError::TooManySessions.into());
+    }
     let pq = s.pqlink.clone();
     // ML-KEM/ML-DSA hisoblashlari bloklovchi CPU ishi — async ishchilardan tashqarida.
-    let sh = tokio::task::spawn_blocking(move || pq.handle_hello(&body))
+    let prepared = tokio::task::spawn_blocking(move || pq.hello_crypto(&body))
         .await
         .map_err(|_| {
             ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
         })??;
+    let sh = s.pqlink.commit_hello(prepared).await?;
     Ok(pqlink_body(StatusCode::OK, sh))
 }
 
@@ -285,13 +305,16 @@ async fn pq_finish(
     body: Bytes,
 ) -> Result<Response, ApiError> {
     require_pqlink_ct(&headers)?;
-    let _permit = handshake_guard(&s, peer, &headers)?;
+    let _permit = handshake_guard(&s, peer, &headers).await?;
+    let start = s.pqlink.begin_finish(&body).await?;
     let pq = s.pqlink.clone();
-    let (_info, sa) = tokio::task::spawn_blocking(move || pq.handle_finish(&body))
+    // Attestatsiya zanjiri va imzolar — bloklovchi CPU ishi.
+    let verified = tokio::task::spawn_blocking(move || pq.finish_crypto(start))
         .await
         .map_err(|_| {
             ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
         })??;
+    let (_info, sa) = s.pqlink.commit_finish(verified).await?;
     Ok(pqlink_body(StatusCode::OK, sa))
 }
 
@@ -323,12 +346,12 @@ where
     if let Err(e) = require_pqlink_ct(headers) {
         return e.into_response();
     }
-    let (info, plaintext) = match s.pqlink.open(body) {
+    let (info, plaintext) = match s.pqlink.open(body).await {
         Ok(x) => x,
         Err(e) => return ApiError::from(e).into_response(),
     };
     // Qurilma chegarasi: javob baribir muhrlanadi — sessiya ketma-ketligi buzilmaydi.
-    let limited = s.limits.device(&info.device_id.to_string()).err();
+    let limited = s.limits.device(&info.device_id.to_string()).await.err();
     let stale = !stale_ok && s.reattest_due(&info);
     let (status, env) = match serde_json::from_slice::<Req>(&plaintext) {
         _ if stale => (
@@ -339,6 +362,7 @@ where
             ),
         ),
         _ if limited.is_some() => {
+            crate::metrics::rate_limited(crate::metrics::Limit::Device);
             tracing::warn!(device = %info.device_id, "rate-limit: qurilma");
             (
                 StatusCode::TOO_MANY_REQUESTS,
@@ -362,7 +386,7 @@ where
                 .into_response()
         }
     };
-    match s.pqlink.seal(&info.session_id, &json) {
+    match s.pqlink.seal(&info.session_id, &json).await {
         Ok(b) => pqlink_body(status, b),
         Err(e) => ApiError::from(e).into_response(),
     }
@@ -389,7 +413,7 @@ fn luk_dto(g: &LukGrant) -> LukDto {
     }
 }
 
-fn profile_dto(p: &TokenProfile) -> TokenProfileDto {
+fn profile_dto(p: &TokenProfile, cvm_limit_minor: u64) -> TokenProfileDto {
     TokenProfileDto {
         token_id: p.token_id.clone(),
         dpan: Zeroizing::new(p.dpan.expose_digits().to_owned()),
@@ -398,22 +422,35 @@ fn profile_dto(p: &TokenProfile) -> TokenProfileDto {
         aid: p.aid.clone(),
         scheme: p.scheme.clone(),
         luks: p.luks.iter().map(luk_dto).collect(),
+        cvm_limit_minor: Some(cvm_limit_minor),
+        renew_after: p.renew_after,
     }
 }
 
 async fn provision(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
-    let vault = s.vault.clone();
+    let st = s.clone();
     sealed(&s, &headers, &body, |info, req: ProvisionDto| async move {
         let fpan = Pan::parse_kind(&req.pan, PanKind::Funding)
             .map_err(|e| ApiError::bad_request(e.to_string()))?;
         let expiry = CardExpiry::parse_yymm(&req.expiry)
             .ok_or_else(|| ApiError::bad_request("expiry YYMM bo'lishi kerak"))?;
-        let out = vault
-            .provision(ProvisionRequest { fpan, expiry }, device_ctx(&info))
+        let integrity = check_integrity(&st, &info, req.integrity_token.as_deref()).await?;
+        // OTP SMS uchun emitentdan telefonni topishga — faqat kanal SMS yuborsa (nusxa `Drop` da tozalanadi).
+        let fpan_for_otp = st.otp.sends().then(|| fpan.clone());
+        let out = st
+            .vault
+            .provision(
+                ProvisionRequest {
+                    fpan,
+                    expiry,
+                    integrity,
+                },
+                device_ctx(&info),
+            )
             .await?;
         Ok(match out {
             ProvisionOutcome::Active { profile, idv } => ProvisionResponse::Active {
-                profile: profile_dto(&profile),
+                profile: profile_dto(&profile, st.cvm_limit_minor),
                 idv,
             },
             ProvisionOutcome::PendingIdv {
@@ -421,13 +458,220 @@ async fn provision(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
                 challenge_id,
                 otp_expires_at,
                 idv,
-            } => ProvisionResponse::PendingIdv {
-                token_id,
-                challenge_id,
-                otp_expires_at,
-                idv,
-            },
+            } => {
+                let ttl = otp_expires_at - st.clock.unix();
+                let otp_sent_to = match &fpan_for_otp {
+                    Some(fpan) => queue_otp(&st, fpan, &challenge_id, ttl).await,
+                    None => None,
+                };
+                ProvisionResponse::PendingIdv {
+                    token_id,
+                    challenge_id,
+                    otp_expires_at,
+                    idv,
+                    otp_sent_to,
+                }
+            }
             ProvisionOutcome::Declined { idv } => ProvisionResponse::Declined { idv },
+        })
+    })
+    .await
+}
+
+/// Play Integrity tokeni (ADR-0021): haqiqiylik va sessiyaga bog'lanish — shu yerda (buzilsa
+/// so'rov rad etiladi), verdict sifati — Shield'da. Token va verdict logga yozilmaydi.
+async fn check_integrity(
+    s: &AppState,
+    info: &SessionInfo,
+    token: Option<&str>,
+) -> Result<Option<mpay_common::ports::IntegritySignals>, ApiError> {
+    let Some(pi) = &s.integrity else {
+        return Ok(None);
+    };
+    let now_ms = s.clock.now().unix_timestamp() * 1000;
+    let r = pi
+        .verify(
+            token,
+            mpay_integrity::Purpose::Provision,
+            &info.session_id,
+            now_ms,
+        )
+        .await;
+    match &r {
+        Ok(Some(sig)) => {
+            crate::metrics::integrity_check("ok");
+            tracing::info!(device = %info.device_id, app = sig.app, level = sig.device, licensed = sig.licensed, env_risk = sig.env_risk, "integrity: verdict");
+        }
+        Ok(None) => crate::metrics::integrity_check("absent"),
+        Err(e) => {
+            crate::metrics::integrity_check(match e {
+                mpay_integrity::IntegrityError::Missing => "missing",
+                mpay_integrity::IntegrityError::Unavailable(_) => "unavailable",
+                _ => "invalid",
+            });
+            tracing::warn!(device = %info.device_id, error = %e, "integrity: token rad etildi");
+        }
+    }
+    r.map_err(|e| crate::integrity::api_error(&e))
+}
+
+/// Sandbox: emulyatordagi demo ilova uchun mock yaxlitlik tokeni (haqiqiy Play Integrity o'rnida).
+/// Faqat `[integrity] mode = "mock"` (u faqat `sandbox = true` bilan ruxsat) va operator kaliti.
+async fn sandbox_integrity(
+    State(s): St,
+    headers: HeaderMap,
+    mtls: Mtls,
+    Json(req): Json<mpay_common::api::SandboxIntegrityRequest>,
+) -> Result<Response, ApiError> {
+    let Some(issuer) = s.integrity_mock.as_ref().filter(|_| s.sandbox) else {
+        return Err(ApiError::not_found());
+    };
+    s.caller(&headers, &mtls, Role::Operator)?;
+    if req.request_hash.len() != 43 {
+        return Err(ApiError::bad_request(
+            "request_hash: base64url SHA-256 (43 belgi)",
+        ));
+    }
+    Ok(Json(issue_mock_integrity(&s, issuer, &req)?).into_response())
+}
+
+/// Sandbox, qurilma yo'li (muhrlangan, PQ Link sessiyasi): demo ilova operator kaliti va mTLS
+/// sertifikatisiz oladi — TLS (`require_mtls`) sandbox'ida ham. Token faqat **shu sessiya**
+/// `requestHash` i uchun: qurilma boshqa sessiya uchun token yasay olmaydi (haqiqiy Play Integrity
+/// tokeni ham qurilmaning o'z so'roviga beriladi).
+async fn sandbox_integrity_device(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
+    let st = s.clone();
+    sealed(
+        &s,
+        &headers,
+        &body,
+        |info, req: mpay_common::api::SandboxIntegrityRequest| async move {
+            let Some(issuer) = st.integrity_mock.as_ref().filter(|_| st.sandbox) else {
+                return Err(ApiError::not_found());
+            };
+            let own =
+                mpay_integrity::request_hash(mpay_integrity::Purpose::Provision, &info.session_id);
+            if req.request_hash != own {
+                return Err(ApiError::bad_request(
+                    "request_hash shu PQ Link sessiyasiniki emas",
+                ));
+            }
+            issue_mock_integrity(&st, issuer, &req)
+        },
+    )
+    .await
+}
+
+fn issue_mock_integrity(
+    s: &AppState,
+    issuer: &crate::integrity::SandboxIssuer,
+    req: &mpay_common::api::SandboxIntegrityRequest,
+) -> Result<mpay_common::api::SandboxIntegrityResponse, ApiError> {
+    let preset = match req.preset.as_deref() {
+        None => mpay_integrity::mock::Preset::Strong,
+        Some(p) => mpay_integrity::mock::Preset::parse(p)
+            .ok_or_else(|| ApiError::bad_request("preset noma'lum"))?,
+    };
+    let now_ms = s.clock.now().unix_timestamp() * 1000;
+    Ok(mpay_common::api::SandboxIntegrityResponse {
+        integrity_token: issuer.issue(preset, &req.request_hash, now_ms),
+    })
+}
+
+/// OTP'ni karta egasining emitentdagi telefoniga yuborishga qo'yadi (2-faza P2.1, ADR-0016).
+/// Telefon va kod shu yerda olinadi, SMS esa fonda yuboriladi — sekin yoki osilgan shlyuz provisioning
+/// javobini ushlab turmasin (aks holda mijoz `challenge_id` ni olmay qolishi mumkin). Yetkazilmasa
+/// qurilma `/idv/resend` qiladi. Qaytaradi: maskalangan telefon (yuborishga qo'yilgan bo'lsa).
+async fn queue_otp(s: &Arc<AppState>, fpan: &Pan, challenge_id: &str, ttl: i64) -> Option<String> {
+    let phone = match s.issuer.contact_phone(fpan).await {
+        Ok(Some(p)) => p,
+        Ok(None) => {
+            tracing::warn!(pan = %fpan.masked(), "otp: emitentda telefon yo'q — SMS yuborilmadi");
+            return None;
+        }
+        Err(e) => {
+            tracing::error!(error = %e, "otp: emitentdan telefon olinmadi");
+            return None;
+        }
+    };
+    let otp = match s.vault.sandbox_otp(challenge_id).await {
+        Ok(o) => Zeroizing::new(o),
+        Err(e) => {
+            tracing::error!(error = %e, "otp: kod hosil qilinmadi");
+            return None;
+        }
+    };
+    let masked = crate::otp::mask_phone(&phone);
+    let (st, reference) = (s.clone(), challenge_id.to_owned());
+    tokio::spawn(async move {
+        if let Err(e) = st.otp.deliver(&phone, &otp, ttl, &reference).await {
+            crate::metrics::otp_failed();
+            tracing::error!(to = %crate::otp::mask_phone(&phone), error = %e, "otp: SMS yuborilmadi");
+        }
+    });
+    Some(masked)
+}
+
+/// OTP'ni qayta yuborish (sealed; qurilma chegarasi amal qiladi).
+async fn idv_resend(
+    State(s): St,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
+    let st = s.clone();
+    sealed(&s, &headers, &body, |info, req: mpay_common::api::OtpResendRequest| async move {
+        let token_id = parse_token_id(&id)?;
+        if !st.otp.sends() {
+            return Err(ApiError::new(
+                StatusCode::CONFLICT,
+                "OTP_CHANNEL_DISABLED",
+                "OTP kanali sozlanmagan (sandbox)",
+            ));
+        }
+        let (fpan, otp, ttl) = st
+            .vault
+            .otp_resend_material(&token_id, &req.challenge_id, &device_ctx(&info))
+            .await?;
+        // SMS aniq ketmagan holatlarda hisoblagich qaytariladi (ADR-0016).
+        let refund = |e: ApiError| async {
+            if let Err(r) = st.vault.otp_resend_refund(&req.challenge_id).await {
+                tracing::error!(error = %r, "otp: qayta yuborish hisoblagichi qaytarilmadi");
+            }
+            e
+        };
+        let phone = match st.issuer.contact_phone(&fpan).await {
+            Ok(Some(p)) => p,
+            Ok(None) => {
+                return Err(refund(ApiError::new(
+                    StatusCode::CONFLICT,
+                    "NO_CONTACT",
+                    "emitentda telefon raqami yo'q",
+                ))
+                .await)
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "otp: emitentdan telefon olinmadi");
+                return Err(refund(ApiError::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "INTERNAL",
+                    "ichki xato",
+                ))
+                .await);
+            }
+        };
+        if let Err(e) = st.otp.deliver(&phone, &otp, ttl, &req.challenge_id).await {
+            crate::metrics::otp_failed();
+            tracing::error!(to = %crate::otp::mask_phone(&phone), error = %e, "otp: qayta yuborilmadi");
+            let err = ApiError::new(
+                StatusCode::BAD_GATEWAY,
+                "OTP_DELIVERY_FAILED",
+                "SMS yuborilmadi, keyinroq urinib ko'ring",
+            );
+            return Err(if e.not_sent { refund(err).await } else { err });
+        }
+        Ok(mpay_common::api::OtpResendResponse {
+            otp_sent_to: crate::otp::mask_phone(&phone),
         })
     })
     .await
@@ -440,6 +684,7 @@ async fn idv_verify(
     body: Bytes,
 ) -> Response {
     let vault = s.vault.clone();
+    let cvm_limit = s.cvm_limit_minor;
     sealed(
         &s,
         &headers,
@@ -449,7 +694,7 @@ async fn idv_verify(
             let p = vault
                 .verify_otp(&token_id, &req.challenge_id, &req.otp, device_ctx(&info))
                 .await?;
-            Ok(profile_dto(&p))
+            Ok(profile_dto(&p, cvm_limit))
         },
     )
     .await
@@ -462,13 +707,164 @@ async fn replenish(
     body: Bytes,
 ) -> Response {
     let vault = s.vault.clone();
+    let cvm_limit = s.cvm_limit_minor;
     sealed(&s, &headers, &body, |info, _req: Empty| async move {
         let token_id = parse_token_id(&id)?;
         let luks = vault.replenish_luks(&token_id, device_ctx(&info)).await?;
         Ok(LuksResponse {
             luks: luks.iter().map(luk_dto).collect(),
+            cvm_limit_minor: Some(cvm_limit),
         })
     })
+    .await
+}
+
+/// Token muddatini yangilash (ADR-0022): qurilma `renew_after` dan keyin chaqiradi; takroriy chaqiruv
+/// xavfsiz (`renewed = false`, joriy profil).
+async fn renew(State(s): St, Path(id): Path<String>, headers: HeaderMap, body: Bytes) -> Response {
+    let vault = s.vault.clone();
+    let cvm_limit = s.cvm_limit_minor;
+    sealed(&s, &headers, &body, |info, _req: Empty| async move {
+        let token_id = parse_token_id(&id)?;
+        let (renewed, p) = vault.renew_token(&token_id, device_ctx(&info)).await?;
+        Ok(mpay_common::api::RenewResponse {
+            renewed,
+            profile: profile_dto(&p, cvm_limit),
+        })
+    })
+    .await
+}
+
+// ---------------------------------------------------------------- hamyon (ADR-0030)
+
+fn wallet_dto(t: mpay_vault::TokenSummary) -> WalletTokenDto {
+    WalletTokenDto {
+        token_id: t.token_id,
+        state: t.state,
+        dpan_masked: t.dpan_masked,
+        fpan_masked: t.fpan_masked,
+        dpan_expiry: t.dpan_expiry,
+        created_at: t.created_at,
+        updated_at: t.updated_at,
+        suspended_by: t.suspended_by,
+    }
+}
+
+/// Qurilmaning kartalari (muhrlangan): hamyon ro'yxatni server bilan moslaydi.
+async fn wallet_tokens(State(s): St, headers: HeaderMap, body: Bytes) -> Response {
+    let vault = s.vault.clone();
+    sealed(&s, &headers, &body, |info, _req: Empty| async move {
+        let tokens = vault.device_tokens(&device_ctx(&info)).await?;
+        Ok(WalletTokensResponse {
+            tokens: tokens.into_iter().map(wallet_dto).collect(),
+        })
+    })
+    .await
+}
+
+async fn wallet_state(
+    s: Arc<AppState>,
+    id: String,
+    headers: HeaderMap,
+    body: Bytes,
+    to: TokenState,
+) -> Response {
+    let vault = s.vault.clone();
+    sealed(&s, &headers, &body, |info, _req: Empty| async move {
+        let token_id = parse_token_id(&id)?;
+        Ok(wallet_dto(
+            vault
+                .device_set_state(&token_id, &device_ctx(&info), to)
+                .await?,
+        ))
+    })
+    .await
+}
+
+/// Foydalanuvchi kartani o'zi to'xtatadi (yo'qotdim/shubha) — tap'lar rad etiladi.
+async fn wallet_suspend(
+    State(s): St,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
+    wallet_state(s, id, headers, body, TokenState::Suspended).await
+}
+
+/// O'zi to'xtatgan kartani qayta yoqadi; bank to'xtatgan bo'lsa — `403 SUSPENDED_BY_BANK`.
+async fn wallet_resume(
+    State(s): St,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
+    wallet_state(s, id, headers, body, TokenState::Active).await
+}
+
+/// Kartani hamyondan o'chiradi (qaytarib bo'lmaydi; qurilma LUK'larini o'zi o'chiradi).
+async fn wallet_delete(
+    State(s): St,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
+    wallet_state(s, id, headers, body, TokenState::Deleted).await
+}
+
+/// Karta bo'yicha tranzaksiyalar tarixi (muhrlangan): avval token shu qurilmaniki ekani tekshiriladi.
+async fn wallet_transactions(
+    State(s): St,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
+    let vault = s.vault.clone();
+    let issuer = s.issuer.clone();
+    sealed(
+        &s,
+        &headers,
+        &body,
+        |info, req: TxnHistoryRequest| async move {
+            let token_id = parse_token_id(&id)?;
+            vault.device_token(&token_id, &device_ctx(&info)).await?;
+            let page = issuer
+                .token_history(
+                    token_id.as_str(),
+                    req.cursor.as_deref(),
+                    req.limit.unwrap_or(20),
+                )
+                .await
+                .map_err(|e| match e {
+                    mpay_issuer::IssuerError::Format(_) => {
+                        ApiError::bad_request("kursor noto'g'ri")
+                    }
+                    e => {
+                        tracing::error!(error = %e, "tranzaksiyalar tarixi");
+                        ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
+                    }
+                })?;
+            Ok(TxnHistoryResponse {
+                transactions: page
+                    .transactions
+                    .into_iter()
+                    .map(|t| TxnDto {
+                        id: t.id,
+                        at: t.at,
+                        amount_minor: t.amount_minor,
+                        currency: t.currency,
+                        merchant_id: t.merchant_id,
+                        terminal_id: t.terminal_id,
+                        rrn: t.rrn,
+                        status: t.status,
+                        response_code: t.response_code,
+                        reason: t.reason,
+                        cleared: t.cleared,
+                    })
+                    .collect(),
+                next_cursor: page.next_cursor,
+            })
+        },
+    )
     .await
 }
 
@@ -517,6 +913,144 @@ async fn delete_token(
 async fn audit_verify(State(s): St, headers: HeaderMap, mtls: Mtls) -> Result<Response, ApiError> {
     s.caller(&headers, &mtls, Role::Operator)?;
     Ok(Json(s.vault.verify_audit().await?).into_response())
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ReconQuery {
+    date: Option<String>,
+    from: Option<i64>,
+    to: Option<i64>,
+}
+
+/// Solishtirish hisoboti (ADR-0024): `?date=YYYY-MM-DD` (sxema vaqti; standart — bugun) yoki
+/// `?from=&to=` (unix). Faqat operator.
+async fn recon(
+    State(s): St,
+    headers: HeaderMap,
+    mtls: Mtls,
+    axum::extract::Query(q): axum::extract::Query<ReconQuery>,
+) -> Result<Response, ApiError> {
+    s.caller(&headers, &mtls, Role::Operator)?;
+    let (from, to) = crate::recon::period(q.date.as_deref(), q.from, q.to, s.clock.now())
+        .map_err(ApiError::bad_request)?;
+    match crate::recon::run(&s, from, to).await {
+        Ok(r) => Ok(Json(r).into_response()),
+        Err(crate::recon::ReconError::Period(m)) => Err(ApiError::bad_request(m)),
+        Err(e) => {
+            tracing::error!(error = %e, "solishtirish");
+            Err(ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "INTERNAL",
+                "ichki xato",
+            ))
+        }
+    }
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ClearingRunDto {
+    /// `YYYY-MM-DD` (sxema vaqti); berilmasa — kecha.
+    date: Option<String>,
+}
+
+fn clearing_err(e: crate::clearing::ClearingError) -> ApiError {
+    use crate::clearing::ClearingError as E;
+    match e {
+        E::Period(m) => ApiError::bad_request(m),
+        E::NotReady(m) => ApiError::new(StatusCode::CONFLICT, "CLEARING_NOT_READY", m),
+        E::Issuer(m) => {
+            tracing::error!(error = %m, "kliring: emitent");
+            ApiError::new(
+                StatusCode::BAD_GATEWAY,
+                "ISSUER_ERROR",
+                "emitent kliring paketini qayta ishlay olmadi",
+            )
+        }
+        e => {
+            tracing::error!(error = %e, "kliring");
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
+        }
+    }
+}
+
+fn clearing_date(date: &str) -> Result<(), ApiError> {
+    crate::recon::business_day(date)
+        .map(|_| ())
+        .map_err(ApiError::bad_request)
+}
+
+/// Kunlik kliring (ADR-0025): paket → emitent → hisob-kitob. Qayta chaqirish xavfsiz (to'xtagan
+/// bosqichdan davom etadi). Faqat operator.
+async fn clearing_run(
+    State(s): St,
+    headers: HeaderMap,
+    mtls: Mtls,
+    Json(req): Json<ClearingRunDto>,
+) -> Result<Response, ApiError> {
+    s.caller(&headers, &mtls, Role::Operator)?;
+    let date = req
+        .date
+        .unwrap_or_else(|| crate::clearing::yesterday(s.clock.now()));
+    clearing_date(&date)?;
+    let r = crate::clearing::run(&s, &date)
+        .await
+        .map_err(clearing_err)?;
+    Ok(Json(r).into_response())
+}
+
+async fn clearing_get(
+    State(s): St,
+    Path(date): Path<String>,
+    headers: HeaderMap,
+    mtls: Mtls,
+) -> Result<Response, ApiError> {
+    s.caller(&headers, &mtls, Role::Operator)?;
+    clearing_date(&date)?;
+    match crate::clearing::report(s.vault.db(), &date).await {
+        Ok(Some(r)) => Ok(Json(r).into_response()),
+        Ok(None) => Err(ApiError::not_found()),
+        Err(e) => Err(clearing_err(e.into())),
+    }
+}
+
+/// `clearing.txt` (kliring fayli), `ack.txt` (emitent tasdig'i), `payouts.csv` (savdo nuqtalariga to'lov).
+async fn clearing_file(
+    State(s): St,
+    Path((date, file)): Path<(String, String)>,
+    headers: HeaderMap,
+    mtls: Mtls,
+) -> Result<Response, ApiError> {
+    s.caller(&headers, &mtls, Role::Operator)?;
+    clearing_date(&date)?;
+    let db = s.vault.db();
+    let (body, ctype) = match file.as_str() {
+        "clearing.txt" | "ack.txt" => {
+            let Some((f, ack)) = crate::clearing::files(db, &date)
+                .await
+                .map_err(|e| clearing_err(e.into()))?
+            else {
+                return Err(ApiError::not_found());
+            };
+            let body = if file == "ack.txt" {
+                ack.ok_or_else(ApiError::not_found)?
+            } else {
+                f
+            };
+            (body, "text/plain; charset=utf-8")
+        }
+        "payouts.csv" => {
+            let r = crate::clearing::report(db, &date)
+                .await
+                .map_err(|e| clearing_err(e.into()))?
+                .filter(|r| r.state == "SETTLED")
+                .ok_or_else(ApiError::not_found)?;
+            (crate::clearing::payouts_csv(&r), "text/csv; charset=utf-8")
+        }
+        _ => return Err(ApiError::not_found()),
+    };
+    Ok(([(header::CONTENT_TYPE, ctype)], body).into_response())
 }
 
 async fn sandbox_otp(
@@ -585,10 +1119,12 @@ async fn authorize(
             tracing::error!(error = %e, "acquirer: avtorizatsiya vazifasi");
             ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
         })??;
+    crate::metrics::observe_authorization(&out.response_code);
     Ok(Json(out).into_response())
 }
 
-/// Takroriy so'rov tekshiruvi → emitent → javobni saqlash (ADR-0010).
+/// Takroriy so'rov tekshiruvi → emitent → javobni saqlash (ADR-0010). Natija noma'lum bo'lsa
+/// (timeout, o'qib bo'lmaydigan javob, qotgan yozuv) — `96` va reversal navbatga (ADR-0024).
 async fn process_authorization(
     s: &AppState,
     key_id: &str,
@@ -601,17 +1137,13 @@ async fn process_authorization(
         tracing::error!(error = %e, "acquirer: takroriy so'rovlar jadvali");
         ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL", "ichki xato")
     };
+    use crate::reversal::{self, RowKey};
     let key = dedup::RequestKey::new(req, key_id, built.txn_date.clone());
-    let sys_err = |reason: &str| {
-        dedup::system_error_response(
-            req,
-            built.dpan_masked.clone(),
-            built.amount_minor,
-            built.currency,
-            reason,
-        )
+    let row = RowKey::from(&key);
+    let unknown = |cause: &'static str| {
+        reversal::settle_unknown(s.vault.db(), &row, cause, &s.acquirer, s.clock.unix())
     };
-    match dedup::begin(pool, &key, s.clock.unix())
+    match dedup::begin(pool, &key, &dedup::Journal::new(req, built), s.clock.unix())
         .await
         .map_err(db_err)?
     {
@@ -641,15 +1173,20 @@ async fn process_authorization(
         Begin::Stale => {
             // Avvalgi ishlov tugamagan: emitent pul yechgan bo'lishi mumkin — qayta yuborilmaydi.
             tracing::error!(terminal = %key_id, stan = req.stan, "acquirer: natija noma'lum (qotib qolgan PENDING) — 96");
-            let r = sys_err("OUTCOME_UNKNOWN");
-            dedup::finish(pool, &key, &r).await.map_err(db_err)?;
-            return Ok(r);
+            return unknown(reversal::CAUSE_UNKNOWN).await.map_err(db_err);
         }
     }
     let bytes = built.msg.pack();
-    let (resp, outcome) = match s.issuer.process_bytes(&bytes).await {
-        Ok(x) => x,
-        Err(e) => {
+    let timeout = std::time::Duration::from_millis(s.acquirer.issuer_timeout_ms);
+    let (resp, outcome) = match tokio::time::timeout(timeout, s.issuer.process_bytes(&bytes)).await
+    {
+        Ok(Ok(x)) => x,
+        Err(_) => {
+            // Javob yo'q: emitent yechgan bo'lishi mumkin — terminalga 96, emitentga reversal.
+            tracing::error!(terminal = %key_id, stan = req.stan, "acquirer: emitent javob bermadi — 96");
+            return unknown(reversal::CAUSE_TIMEOUT).await.map_err(db_err);
+        }
+        Ok(Err(e)) => {
             // Emitent so'rovni qayta ishlamadi — yozuv o'chiriladi, terminal qayta urinishi mumkin.
             tracing::warn!(error = %e, "issuer 0100 ni qayta ishlay olmadi");
             dedup::abort(pool, &key).await.map_err(db_err)?;
@@ -672,7 +1209,7 @@ async fn process_authorization(
         Ok(o) => o,
         Err(e) => {
             tracing::error!(code = e.code, error = %e.message, stan = req.stan, "acquirer: emitent javobini o'qib bo'lmadi — 96");
-            sys_err("ISSUER_RESPONSE_UNREADABLE")
+            return unknown(reversal::CAUSE_UNREADABLE).await.map_err(db_err);
         }
     };
     dedup::finish(pool, &key, &out).await.map_err(db_err)?;

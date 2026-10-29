@@ -147,10 +147,11 @@ GREEN/YELLOW/RED, LUK berish va to'ldirish, lifecycle, xesh-zanjirli audit) va `
 
 **Ochiq savollar**
 
-* `TODO(spec):` token muddati: hozir `min(karta muddati, hozir + 36 oy)`; real sxema qoidasi kerak.
-* `TODO(spec):` bir karta bir nechta qurilmada — hozir cheklanmagan (Shield M5 da `existing_tokens_for_pan`
-  bo'yicha qaror qiladi).
-* `TODO(spec):` OTP kanali (SMS/push/bank ilovasi) — sandbox'da faqat operator endpointi.
+* `TODO(spec):` token muddati: hozir `min(karta muddati, hozir + 36 oy)`; real sxema qoidasi kerak
+  (keyin: UTC+5 va yangilash — ADR-0022 §4).
+* ~~Bir karta bir nechta qurilmada — hozir cheklanmagan~~ — ✅ `max_devices_per_card` (ADR-0022, P2.7).
+* ~~OTP kanali — sandbox'da faqat operator endpointi~~ — ✅ virtual SMS shlyuzi (ADR-0016, P2.1);
+  `TODO(spec):` haqiqiy shlyuz.
 
 **Keyingi bosqich (M4)**: `mpay-issuer` (ISO 8583 `0100`/`0110`, ARQC/ARPC, UZS test hisoblar,
 javob kodlari), `mpay-terminal-sim` (APDU transport trait, loopback soft-karta, terminal yadrosi,
@@ -208,9 +209,9 @@ bir rad kodi).
 
 **Ochiq savollar**
 
-* `TODO(spec):` issuer tomonidagi CVM siyosati (CDCVM bo'lmagan yuqori summalar) — M6.
-* `TODO(spec):` takroriy STAN/RRN ni acquirer darajasida rad etish (hozir faqat ATC replay himoyasi).
-* `TODO(spec):` REVIEW uchun standart siyosat (hozir `approve`, konfiguratsiyada `decline`).
+* ~~Issuer tomonidagi CVM siyosati~~ — ✅ ADR-0022 (P2.7).
+* ~~Takroriy STAN/RRN ni acquirer darajasida rad etish~~ — ✅ ADR-0010 (P1.2).
+* ~~REVIEW uchun standart siyosat~~ — ✅ `step_up` (ADR-0022, P2.7).
 
 ## M0–M4 yakuni
 
@@ -265,7 +266,8 @@ p99 < 50 ms benchmark) va `shield-ml` (sintetik fraud stsenariylari, LightGBM �
 
 * `TODO(spec):` real ma'lumotlar bilan qayta o'qitish va chegaralarni kalibrlash; sintetik natijalar
   optimistik (`shield-report.md` §3).
-* `TODO(spec):` taqsimlangan feature store/graf (ko'p instansiya), MCC va terminal geo-koordinatalari.
+* `TODO(spec):` taqsimlangan feature store/graf (ko'p instansiya; keyin — Shield roli, ADR-0019), MCC va
+  terminal geo-koordinatalari.
 
 **Keyingi bosqich (M6)**: Android `wallet-sdk`, `wallet-demo`, `terminal-app`.
 
@@ -318,8 +320,9 @@ p99 < 50 ms benchmark) va `shield-ml` (sintetik fraud stsenariylari, LightGBM �
   Rust emitentiga qarshi sinalgan; `IsoDep`/`HostApduService` qatlami sinalmagan.
   Qo'lda sinov tartibi: `docs/android-testing.md` §3.
 * `terminal-app` `/v1/authorizations` ni sandbox'da ochiq HTTP orqali yuboradi (terminal kaliti
-  tarmoqda ko'rinadi). `TODO(spec):` TLS + pinlash, terminal kalitini Keystore'da saqlash.
-* `TODO(spec):` Play Integrity, bank ilovasida build vaqtida pinlangan server barmoq izi (TOFU o'rniga).
+  tarmoqda ko'rinadi). ~~TLS + pinlash, terminal kalitini Keystore'da saqlash~~ — ✅ P1.4.
+* `TODO(spec):` Play Integrity (keyin: server tomoni va SDK — ADR-0021, P2.6; haqiqiy Google ochiq).
+  ~~Build vaqtida pinlangan server barmoq izi~~ — ✅ P1.5.
 
 ## M7 — fuzz kampaniyasi, yuk sinovi, bank namoyishi (2026-10-24)
 
@@ -364,8 +367,8 @@ p99 < 50 ms benchmark) va `shield-ml` (sintetik fraud stsenariylari, LightGBM �
 * **M6 qabul mezoni — ikki telefon orasida haqiqiy NFC tap — sinalmagan** (qurilmalar yo'q);
   namoyishning telefon qismi ixtiyoriy va oldindan repetitsiya talab qiladi.
 * CI'dagi yangi `fuzz` job'i va demo qadami hali GitHub'da yugurtirilmagan (branch push qilinmagan).
-* `TODO(spec):` production DB va TPS/SLA talablari; HSM kechikishi bilan yuk sinovi;
-  HTTP API fuzzing; Kotlin tomoni uchun Jazzer.
+* `TODO(spec):` TPS/SLA talablari. Keyin yopilgan: production DB (P2.3), HSM bilan yuk sinovi (P2.2),
+  HTTP API fuzzing va Kotlin Jazzer (`docs/fuzz-report.md` §5).
 
 ## Phase 0 (M0–M7) yakuni
 
@@ -402,7 +405,8 @@ Reja: `docs/roadmap.md`. Branch: `claude/mpay-faza1`.
 
 **Ochiq**
 
-* `TODO(spec):` teskari proksi ortida `X-Forwarded-For` uchun ishonchli proksi ro'yxati.
+* ~~Teskari proksi ortida `X-Forwarded-For` uchun ishonchli proksi ro'yxati~~ — ✅ 1-faza qo'shimcha
+  ishlari.
 * O'tkazuvchanlik −27 % — 2-fazada (bitta tranzaksiya / PostgreSQL).
 
 ### P1.3 — ichki API uchun mTLS (2026-10-24)
@@ -581,6 +585,61 @@ Haqiqiy telefonlar hozircha yo'q, shuning uchun tap emulyatorda virtual NFC ko'p
 **Qanday tekshirildi** (emulyator, TLS + mTLS server, hamyon build pinlari bilan): 25 000 so'm → `00`;
 2 000 000 so'm → "Telefonda tasdiqlang" → barmoq izi → `00`; CDCVM bir martalik; server logida ochiq PAN 0.
 Batafsil: `docs/android-testing.md` §5. Haqiqiy NFC radiosi (§3) — ochiq.
+
+## 2-faza — pilot tayyorgarligi (virtual muhitda)
+
+Qarorlar (2026-10-25): SLA faraz — 200 TPS, p99 < 300 ms (`TODO(spec)`); umumiy ombor — PostgreSQL;
+tartib — avval OTP kanali va HSM. Jadval: `docs/roadmap.md`.
+
+### P2.1 — OTP kanali: emitentdagi telefonga SMS (2026-10-25)
+
+**Nima qilindi**
+
+* Emitent: `issuer_accounts.phone` (migratsiya 2002, E.164), `contact_phone(FPAN)`; `init` demo
+  hisoblariga fiktiv `+99800000000N` raqamlar (`+998 00` operator kodi mavjud emas).
+* Server `[otp]`: `sandbox` (default) yoki `webhook` (Bearer token muhit o'zgaruvchisida, TLS — tizim
+  ildizlari + `ca_file`, bitta qayta urinish). `PENDING_IDV` javobida `otp_sent_to` (maskalangan).
+* `POST /v1/tokens/{id}/idv/resend` — o'sha kod, challenge uchun 3 marta (`OTP_RESEND_LIMIT`, Vault
+  migratsiyasi 1002), qurilma tekshiruvi.
+* `mpay-common::phone` — E.164 tekshiruvi va maskalash.
+* Yangi crate `mpay-smsgw` — virtual SMS shlyuzi (sinov vositasi): `POST /send`, `GET /messages`,
+  nosozlik simulyatsiyasi.
+* Kotlin: `PendingIdv.otpSentTo`, `resendOtp` (mpay-core, wallet-sdk); demo ilovada "Qayta yuborish",
+  SMS kanalida operator kaliti maydoni yashiriladi.
+* ADR-0016, `specs/api.md` §3.3a.
+
+**Qanday tekshirildi**
+
+* e2e `p2_otp.rs` (3): ikkinchi qurilma → YELLOW → SMS emitentdagi raqamga keldi (kod sandbox OTP bilan
+  bir xil), boshqa qurilma resend → 403, 3 marta resend → 4-si 429, SMS'dagi kod bilan tasdiqlash →
+  5 LUK, iste'moldan keyin resend → 404; telefonsiz hisob → `NO_CONTACT`; operator 2 × 503 →
+  `otp_sent_to` yo'q, keyin resend (503 + qayta urinish) o'tadi; shlyuz o'chgan → 502; sandbox kanali →
+  409. Loglarda OTP, to'liq telefon va PAN yo'q.
+* Kotlin ↔ Rust interop: haqiqiy `mpay-server` + `mpay-smsgw`; Kotlin mijoz `otpSentTo` ni oladi, resend
+  qiladi, kodni shlyuz qutisidan o'qib tasdiqlaydi; server va shlyuz loglarida OTP/to'liq telefon yo'q.
+* `cargo test --workspace`: 171 test o'tdi; clippy `-D warnings` toza.
+* Emulyator (Medium Phone API 36, TLS + pin, haqiqiy Keystore): YELLOW → SMS `+998*******03` →
+  "Qayta yuborish" → SMS'dagi kod → "Token faol", 5 LUK; loglarda OTP va to'liq telefon 0
+  (`docs/android-testing.md` §6). Shu sinovda demo ilovadagi tugmalar qatori tor ekranda "Attestatsiya"
+  matnini harflab uzayotgani ko'rindi — `FlowRow` ga o'tkazildi (ko'z bilan tekshirildi).
+
+### P2.1 — kod ko'rib chiqish tuzatishlari (2026-10-25)
+
+Codex limiti tugagani uchun PR #19 ni Claude ko'rib chiqdi (10 topilma) va tuzatildi:
+
+* Bloklangan (3 noto'g'ri kod) yoki `PENDING_IDV` bo'lmagan token uchun resend endi SMS yubormaydi
+  (`423 OTP_LOCKED` / `409 INVALID_STATE`).
+* Provisioning SMS'i fonda yuboriladi — osilgan shlyuz javobni ~10 s ushlab turmaydi.
+* `otp.webhook.url`: `http://` faqat loopback yoki `insecure_http = true` bilan.
+* Konfiguratsiyadan olib tashlangan telefon bazadan ham o'chadi (`set_phone(None)`).
+* Testlar `std::env::set_var` o'rniga dasturiy token (`WebhookConfig.token`, faylga yozilmaydi).
+* `identity`, `audit-verify` CLI buyruqlari SMS tokenisiz ishlaydi (`state::build_offline`).
+* SMS aniq ketmagan resend urinishi chegarani yemaydi (`otp_resend_refund`, `connect_timeout`).
+* Maskalash: ma'lum bo'lmagan mamlakat kodida faqat `+` va oxirgi 2 raqam.
+* `mpay-smsgw`: `VecDeque`; `shutdown` tinglovchini darhol yopadi. FPAN nusxasi faqat SMS kanalida.
+
+Tekshiruv: `p2_otp.rs` 4 test (yangi: `locked_challenge_gets_no_sms`, hisoblagich qaytishi, javob < 5 s
+osilgan shlyuzda), `iso_flow::phone_follows_config_and_can_be_cleared`, `otp` unit (loopback qoidasi).
 ### Xavfsizlik tuzatishlari — kod ko'rib chiqishdan (2026-10-25)
 
 PR #16 ni Claude ko'rib chiqdi (Codex limiti tugagan); topilmalar shu branch'da tuzatildi:
@@ -597,7 +656,8 @@ PR #16 ni Claude ko'rib chiqdi (Codex limiti tugagan); topilmalar shu branch'da 
   qaytadan). Tashlab ketilgan `PENDING_IDV` (challenge muddati o'tgan/bloklangan) limitlarni egallamaydi.
   Testlar `concurrent_provisioning_respects_device_limit`, `abandoned_pending_tokens_do_not_count`.
 * **Emitent:** pul yechish va avtorizatsiya yozuvi bitta tranzaksiyada (`BEGIN IMMEDIATE`).
-  `TODO(spec):` LUK/ATC iste'moli (Vault) bilan umumiy tranzaksiya — 2-faza P2.3 (PostgreSQL).
+  LUK/ATC iste'moli (Vault) bilan umumiy tranzaksiya — ADR-0018 da ataylab rad etildi (emitent alohida
+  tizim).
 * **Detokenizatsiya auditi:** alohida commit o'rniga iste'mol tranzaksiyasida (`DETOKENIZED_LUK_USED`).
 * PKCS#11 sessiya pool'i va qayta login — 2-faza P2.2 (SoftHSM yuk sinovi) bilan birga.
 
@@ -611,7 +671,7 @@ PR #17 topilmalari:
   javobi saqlanadi (avval yozuv `PENDING` da qotib qolardi). Kalit — autentifikatsiya qilingan terminal
   kaliti + `terminal_id` va **kartadagi** sana (ICC `9A`; qayta urinish yarim tundan o'tsa ham o'sha
   kalit). Emitent ishlagandan keyingi xatoda yozuv o'chirilmaydi — `96` saqlanadi (qayta yuborish ATC
-  replay bo'lardi). 120 s dan uzoq `PENDING` — `96 OUTCOME_UNKNOWN`. `TODO(spec):` avtomatik reversal.
+  replay bo'lardi). 120 s dan uzoq `PENDING` — `96 OUTCOME_UNKNOWN`. ~~Avtomatik reversal~~ — ✅ ADR-0024.
 * **Rate-limit:** IPv6 kaliti `/64`; faol kalitlar ko'p bo'lsa eng eskilari yarmigacha chiqariladi
   (xarita chegaralangan, skanerlash amortizatsiyalangan).
 * **Ro'yxatdan o'tish nonce'lari** holatsiz (HMAC, muddat ichida): `/v1/pqlink/enroll` ni ko'p chaqirib
@@ -625,3 +685,451 @@ PR #17 topilmalari:
 
 Tekshiruv: 174 Rust test (yangi: dedup ×2, nonce ×2, IPv6 kaliti, limiter chegarasi), clippy toza,
 Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
+
+### P2.2 — HSM bilan yuk sinovi (2026-10-26)
+
+**Nima qilindi**
+
+* `Pkcs11KeyStore`: sessiyalar pool'i (`MPAY_PKCS11_SESSIONS`, standart 4), sessiya yoki login
+  yo'qolsa qayta ochish va bir marta takrorlash, kalit handle'lari keshi (ADR-0017).
+* `scripts/softhsm-load.sh` — Docker'da memory / SoftHSM 1 sessiya / SoftHSM N sessiya yuk sinovi,
+  natijalar `docs/load/p2.2-*.json`; `docs/load-report.md` §7.
+
+**Natija**
+
+* Kesh: SoftHSM CMAC 1 264 → 17 941 op/s (1 sessiya), 32 591 op/s (4 sessiya).
+* Yuk sinovi (FULL fsync): memory 105 /s, SoftHSM 101 /s (HSM xarajati −3%, avval −21%), p99 ~360 ms.
+  fsync'siz: SoftHSM 4 sessiya **492 /s, p99 89 ms**. SLA (200 /s, p99 < 300 ms) HSM tufayli emas,
+  SQLite commit'lari tufayli bajarilmaydi — P2.3 (PostgreSQL, bitta tranzaksiya).
+* Testlar (SoftHSM, Docker): 6 ta PKCS#11 testi, yangi — sessiyalar pool'i va logout'dan tiklanish.
+
+### P2.3 — PostgreSQL va parallel tranzaksiyalar (2026-10-26)
+
+**Nima qilindi** (ADR-0018)
+
+* Yangi `mpay-db` crate'i: `sqlx::Any` orqali SQLite yoki PostgreSQL, bitta SQL (`$N`, `BIGINT`),
+  `Db::begin_write` (SQLite — jarayon qulfi + `BEGIN IMMEDIATE`; PostgreSQL — parallel).
+* Migratsiyalar `migrations/sqlite` (ko'chirildi, kontrolsummalar o'zgarmagan) va `migrations/postgres`.
+* PostgreSQL qulflari: ATC iste'moli, LUK to'ldirish va holat o'tishlarida token qatori `FOR UPDATE`;
+  OTP challenge'i `FOR UPDATE`; provisioning — karta/qurilma advisory qulflari; DEK va audit zanjiri —
+  advisory qulf (audit — oxirgi).
+* `[database] url_env` (PostgreSQL URL'i faqat muhitda), `MPAY_TEST_PG_URL` bilan testlar PG'da;
+  CI'ga PostgreSQL job'i; `scripts/pg-load.sh`.
+
+**Qanday tekshirildi**
+
+* SQLite: `cargo test --workspace` (yangi: `concurrent_same_atc_consumed_once`, DB unit testlari).
+* PostgreSQL 17 (Docker): Vault testlari 13/13, butun e2e to'plami. `concurrent_same_atc_consumed_once`
+  `FOR UPDATE` olib tashlansa PG'da yiqiladi (bir xil kriptogramma ikki marta o'tardi) — qulf zarurligi
+  isbotlandi.
+* Yuk sinovi (`load-report.md` §8): PostgreSQL + SoftHSM **368 /s, p99 118 ms** (SQLite + SoftHSM:
+  101 /s, p99 368 ms) — SLA (200 /s, p99 < 300 ms) to'liq chidamlilik bilan bajarildi.
+
+### P2.4 — Ko'p instansiya (2026-10-26)
+
+**Nima qilindi** (ADR-0019)
+
+* PQ Link sessiyalari: `SessionStore` (async) — xotira yoki DB (`pqlink_sessions`, kalitlar KEK bilan
+  shifrlangan, `seq` atomar); handshake ikki bosqichli; `[pqlink] session_store`.
+* Ro'yxatdan o'tish nonce'lari: MAC kaliti KeyStore'da (`mpay.enroll-nonce.v1`), ishlatilganlar DB'da.
+* Shield roli: `mpay-server shield` (ichki API, `shield` rolidagi kalit, autentifikatsiya tahlildan
+  oldin), API instansiyalarida `[shield] mode = "remote"` va mahalliy zaxira (`SHIELD_DEGRADED`);
+  ichki protokolda ochiq PAN yo'q.
+* `mpay-load --server a,b` (round-robin), `scripts/multi-load.sh`.
+* CI fuzz job'i (P2.4 dan keyin async API) tuzatildi.
+
+**Qanday tekshirildi**
+
+* e2e `p2_multi_instance` (2) va `p2_shield_role` — SQLite va PostgreSQL'da; `enroll` unit (nonce A→B).
+* Yuk sinovi (`load-report.md` §9): 2 instansiya + Shield roli 384 /s, p99 113 ms, xato 0, zaxira 0.
+
+### P2.5 — Deployment: docker-compose, monitoring, zaxira (2026-10-26)
+
+**Nima qilindi** (ADR-0020)
+
+* `Dockerfile` (ko'p bosqichli, `pkcs11`, `debian:bookworm-slim` + SoftHSM2, uid 10001; `loadgen`
+  bosqichi), `.dockerignore`.
+* `deploy/`: `docker-compose.yml` (PostgreSQL, bootstrap, Shield roli, 2 API, virtual SMS shlyuzi,
+  nginx, Prometheus), sirlar Docker secrets'da (`init-secrets.sh`, `mpay-entrypoint`), nginx `stream`
+  (L4, TLS end-to-end), `prometheus.yml` + `alerts.yml` (11 qoida), `backup.sh`, `restore.sh`
+  (`--verify` / `--replace`), README.
+* Server: PROXY protocol v1 (`proxyproto.rs`, `[http] proxy_protocol`, faqat `trusted_proxies` dan),
+  Prometheus metrikalari (`metrics.rs`, `[metrics] listen`, cheklangan yorliqlar), SIGTERM'da graceful
+  to'xtatish (ochiq so'rovlar ≤ 8 s), TLS handshake timeout, `accept` xatosida to'xtamaslik.
+* CLI: `mpay-server bootstrap` (migratsiyalar va HSM kalitlari bir marta), `init --tls-san`;
+  `init --tls` `api-shield` mijoz sertifikatini ham chiqaradi. `mpay-load` — `https://` (TLS + mTLS).
+* CI: `deploy` job'i — to'liq compose sinovi.
+
+**Qanday tekshirildi**
+
+* e2e `p2_deploy` (4): bitta proksi ortidagi ikki mijozning IP chegarasi alohida, sarlavhasiz ulanish
+  rad etiladi, metrikalar (PAN'siz), `proxy_protocol` uchun `trusted_proxies` majburiy, keep-alive
+  ulanishlar to'xtatishda yopiladi. Unit: PROXY tahlili, metrika formati va yorliq chegarasi.
+* `cargo test --workspace` — 200 o'tdi (SQLite); vault + e2e PostgreSQL'da — 53 o'tdi; clippy
+  (`pkcs11` bilan ham), fmt, deny toza.
+* `scripts/compose-test.sh` (3 marta): nginx orqali 275–355 /s, p99 136–282 ms, `api-1` to'xtatilganda
+  xato 0, `MpayInstanceDown` ishladi, zaxira → tiklash → audit to'g'ri, loglarda PAN va sir yo'q
+  (`load-report.md` §10).
+
+### P2.6 — Play Integrity (mock tekshiruvchi) (2026-10-26)
+
+**Nima qilindi** (ADR-0021)
+
+* Yangi `mpay-integrity` crate'i: `requestHash` (PQ Link sessiyasiga bog'langan, PAN'siz), Play
+  Integrity verdict tuzilmasi, `check` (paket, imzo sertifikati, `requestHash`, yangilik →
+  `IntegritySignals`), almashtiriladigan `IntegrityVerifier`: `mock` (ES256 JWS, 7 stsenariy) va
+  `google` (`decodeIntegrityToken`, access token tashqaridan).
+* Server: `[integrity]` (`mode`, `required`, `package_name`, `certificate_sha256`, `max_age_secs`,
+  `mock_key`, `[integrity.google]`); provisioning'da tekshiruv (`INTEGRITY_REQUIRED` / `INTEGRITY_INVALID`
+  403, `INTEGRITY_UNAVAILABLE` 503); `POST /v1/sandbox/integrity-token`; metrika
+  `mpay_integrity_checks_total{result}`, 2 ta ogohlantirish; production'da `mock` taqiqlangan.
+* Shield: 5 ta yangi ID&V belgisi va 6 ta qoida (`IDV_INTEGRITY_*`), Shield roli DTO'sida belgilar.
+* `init`: mock kaliti va `[integrity] mode = "mock"`, `required = true`.
+* Hamyonlar: Rust soft-hamyon `IntegrityProvider`, `mpay-tsim` (sandbox endpoint), `mpay-load`;
+  Kotlin `Integrity.requestHash`, `MpayClient.provision(…, integrityToken)`, wallet-sdk
+  `IntegrityTokenProvider`, demo ilovada operator kaliti va stsenariy tugmalari.
+
+**Qanday tekshirildi**
+
+* Unit: `mpay-integrity` 5 (umumiy test vektori, bog'lanish, verdict xaritasi, JWS buzish, `alg: none`,
+  Google emulyatori), Shield remote DTO; Kotlin `IntegrityTest` (o'sha vektor).
+* e2e `p2_integrity` (4): tokensiz rad, boshqa sessiya / eskirgan / boshqa paket / qayta imzolangan /
+  begona kalit / buzilgan token rad (karta yaratilmaydi), verdict → Shield (device GREEN, basic va Play
+  Protect YELLOW, root / tanilmagan / masofaviy boshqaruv RED), sandbox endpoint, konfiguratsiya himoyasi.
+  `sb.wallet()` endi har doim mock token yuboradi — boshqa e2e testlar ham tekshiruv yo'lidan o'tadi.
+* `cargo test --workspace` — 210 o'tdi (SQLite); vault + e2e PostgreSQL'da — 57 o'tdi; clippy, fmt, deny.
+* Smoke (haqiqiy binarlar, `required = true`): 10 provisioning — 10 verdict, logda token yo'q.
+* Kotlin ↔ Rust interop: tokensiz → `INTEGRITY_REQUIRED`, boshqa sessiya tokeni → `INTEGRITY_INVALID`,
+  HTTP va TLS + mTLS orqali provisioning.
+* Emulyator (demo ilova, `android-testing.md` §7): tokensiz 403, `strong` → qabul (YELLOW faqat SOFTWARE
+  attestatsiya tufayli) → OTP → token faol, `no_integrity` → RED.
+* compose (`scripts/compose-test.sh`): 200 provisioning mock token + SoftHSM bilan, xato 0; sinov endi
+  yaxlitlik tekshiruvlari sonini Prometheus'dan tasdiqlaydi.
+
+### P2.7 — Mahsulot siyosatlari (2026-10-26)
+
+**Nima qilindi** (ADR-0022; standart qiymatlar — bank tasdiqlashi kerak, `TODO(spec)`)
+
+* **CVM:** `[issuer] cvm_limit_minor` (1 000 000 so'm) — token profilida va LUK to'ldirish javobida
+  qurilmaga beriladi (Rust `mpay-tsim`, Kotlin `CardProfile.cvmLimitMinor` va `WalletStore`); emitent
+  CVR bo'yicha o'zi tekshiradi → `Q2 CVM_REQUIRED` (avval chegara faqat qurilmada edi).
+* **REVIEW:** `review_action = "step_up"` (yangi standart) — CDCVM bo'lsa `00 APPROVED_AFTER_REVIEW`,
+  aks holda `Q2 REVIEW_STEP_UP`; terminal-app `Q2` da "Telefonda tasdiqlang" va qayta tap kutadi.
+* **Token muddati:** avtorizatsiyada DPAN muddati tekshiriladi → `54 TOKEN_EXPIRED` (avval
+  tekshirilmasdi), LUK muddati token muddatidan oshmaydi, muddati o'tgan tokenga LUK yo'q (410);
+  `CardExpiry::end_unix`.
+* **Karta–qurilma:** `[vault] max_devices_per_card` (3) → `409 TOO_MANY_DEVICES`; shu qurilmada
+  takroriy karta → `409 CARD_ALREADY_ON_DEVICE`; qulf ostida qayta sanash (PostgreSQL'da ham).
+* Javob kodlari `54` va `Q2` (ADR-0007), API spetsifikatsiyasi, tahdid modeli (E2, yangi E4).
+
+**Qanday tekshirildi**
+
+* Emitent `iso_flow::product_policies`: chegarada `00`, chegaradan 1 tiyin yuqori `Q2`, CDCVM bilan
+  `00`; REVIEW `step_up`/`approve`/`decline`; muddati o'tgan token `54` (LUK holatidan oldin).
+* Vault: qurilmalar chegarasi, takroriy karta, o'chirilgandan keyin joy bo'shashi, `0` — cheklanmagan;
+  LUK muddati token tugashiga teng, keyin to'ldirish `TokenExpired`.
+* e2e `p2_policy` (2): profil va LUK javobida chegara; "o'zgartirilgan hamyon" (chegarani e'tiborsiz
+  qoldiradi) → emitent `Q2` (ARPC bilan), CDCVM bilan `00`; halol karta o'zi `6986`; HTTP 409 kodlari.
+  `m4_tap_to_pay` REVIEW yangi siyosatga moslandi.
+* `cargo test --workspace` — 216 o'tdi; PostgreSQL (vault + e2e) — 61; clippy, fmt, deny; smoke, demo,
+  Kotlin ↔ Rust interop; Kotlin `AppletTest` (profil chegarasi).
+* Emulyator (TLS + mTLS, virtual NFC, `android-testing.md` §8): `REVIEW…` savdo nuqtasi → terminal
+  "Telefonda tasdiqlang (REVIEW_STEP_UP)" → hamyonda barmoq izi → qayta tap → `00 APPROVED_AFTER_REVIEW`.
+
+### P2.6 tuzatish — TLS sandbox'ida demo ilova uchun mock token (2026-10-26)
+
+* Muammo: TLS + mTLS sandbox'ida (`require_mtls`) `POST /v1/sandbox/integrity-token` operator mijoz
+  sertifikatini talab qiladi, demo ilovada esa u yo'q — `[integrity] required = true` bilan karta qo'shib
+  bo'lmasdi (P2.7 emulyator sinovida `required = false` qilishga to'g'ri kelgan edi).
+* Yechim: `POST /v1/sandbox/integrity-token/device` — muhrlangan (PQ Link) so'rov, kalit va mTLS'siz;
+  `request_hash` shu sessiyaniki bo'lishi shart (boshqa sessiya uchun token yasab bo'lmaydi). Rust
+  `SoftWallet::sandbox_integrity_token`, Kotlin `MpayClient.sandboxDeviceIntegrityToken`; demo ilova shu
+  yo'ldan foydalanadi, operator kaliti faqat OTP uchun qoldi.
+* Tekshirildi: e2e `device_endpoint_over_tls` (operator yo'li `403 MTLS_REQUIRED`, qurilma yo'li bilan
+  karta qo'shiladi, begona hash — 400, `mode = off` — 404) SQLite va PostgreSQL'da; Kotlin ↔ Rust interop
+  TLS qismi shu yo'l bilan; emulyatorda TLS + mTLS, `required = true`, operator kaliti bo'sh: `strong` —
+  qabul, `no_integrity` — RED (`android-testing.md` §7); `cargo test --workspace` — 217.
+
+## 3-faza tayyorgarligi (bank kerak bo'lmagan ishlar)
+
+### HTTP API fuzzing va Kotlin Jazzer (2026-10-26)
+
+* `tests/e2e/src/apifuzz.rs` — router jarayon ichida; ochiq so'rovlar va haqiqiy PQ Link sessiyasi bilan
+  muhrlangan ixtiyoriy JSON. Uni ishlatadi: cargo-fuzz maqsadi `http_api` (lug'at, seed'lar) va
+  `tests/api_robustness.rs` (proptest, 400 holat + qamrovni tasdiqlovchi aniq test — har `cargo test`).
+* Kotlin: Jazzer 0.30 (JUnit 5, JUnit 4 testlari vintage orqali), 7 ta `@FuzzTest`
+  (`FuzzTests.kt`), `scripts/android-fuzz.sh`; CI'ga `kotlin` job'i (avval Kotlin CI'da umuman yo'q edi,
+  `gradlew` bajariladigan qilindi).
+* **Topilma:** Kotlin `Hex.decode` `+`/`-` belgili satrlarni qabul qilardi (`"-1"` → `0xFF`) — qat'iy hex'ga
+  o'tkazildi, kirishlar regressiya korpusida.
+* Natija (`docs/fuzz-report.md` §5): `http_api` 300 s, ~196 ming yugurish, crash yo'q; Kotlin 7 test,
+  ~26 mln yugurish, tuzatishdan keyin toza. `cargo test --workspace` — 219; interop o'tdi.
+
+### Shifrlangan zaxira, PITR va Alertmanager (2026-10-26, ADR-0023)
+
+* **Shifrlash:** `deploy/backup-keygen.sh` — age (X25519) kalit jufti; ochiq kalit serverda, maxfiy
+  kalit oflayn (`MPAY_BACKUP_IDENTITY`). `backup.sh` hamma qismni oqimda shifrlaydi (`*.age`, ochiq
+  ma'lumot diskka tushmaydi), ochiq kalitsiz ishlamaydi; `restore.sh` maxfiy kalit bilan ochadi.
+* **PITR:** PostgreSQL WAL arxivi (`archive_mode`, `walarchive` hajmi, `archive_timeout = 300`);
+  `backup.sh` asosiy nusxa (`pg_basebackup`) va WAL arxivini ham oladi; `deploy/pitr-restore.sh` —
+  vaqtinchalik PostgreSQL'da `recovery_target_time` gacha tiklash + audit zanjiri.
+* **Alertmanager:** Prometheus → Alertmanager → webhook; sandbox'da virtual navbatchi kanali
+  `mpay-smsgw` `POST /alerts` (token bilan, unit test).
+* Yo'l-yo'lakay tuzatilgan: oxirgi WAL almashtirishdan keyin yozuv bo'lmasa `pg_switch_wal()` joriy
+  segmentni ko'rsatardi (zaxira kutib qolardi) — kichik WAL yozuvi + `switch_lsn - 1`; tiklanuvchi
+  server `max_connections` asosiydan kam bo'lsa tiklash to'xtaydi — skript sozlaydi va konteyner
+  yiqilsa kutmaydi.
+* Tekshirildi (`scripts/compose-test.sh`): yukdan oldin B1 → yuk → T (audit 21 568) → qo'shimcha
+  faollik (23 057) → shifrlangan B2 (dump'da `PGDMP` sarlavhasi yo'q) → `restore.sh --verify` (23 057,
+  zanjir to'g'ri) → **PITR B1 + B2 WAL → T: aynan 21 568 yozuv**, zanjir to'g'ri; `MpayInstanceDown`
+  navbatchi kanaliga yetdi; loglarda PAN va sir yo'q. `promtool` (13 qoida) va `amtool` tekshiruvi.
+
+### Play Integrity: Google xizmat akkaunti → OAuth token (2026-10-26)
+
+* `mpay-integrity::service_account`: Google kalit fayli (JSON) → RS256 JWT (`ring`, doimiy vaqtli) →
+  `token_uri` (RFC 7523) → access token; kesh, muddatidan 60 s oldin yangilash, bir vaqtdagi so'rovlar
+  bitta almashuvga; `token_uri` faqat https (loopback — sinov); kalit, JWT va token logga yozilmaydi.
+* `[integrity.google] service_account_file` (yoki `access_token_env` / `access_token_file`, aynan bittasi).
+* Tekshirildi: unit (JWT imzosi ochiq kalit bilan, claim'lar, yomon fayllar rad, kesh — bitta almashuv,
+  begona kalit → Unavailable); e2e `google_mode_with_service_account`: server JWT → token → decode
+  emulyatori → provisioning GREEN, ikki provisioning — bitta token almashuvi, rad etilgan token — 403.
+
+### Ko'p instansiyada umumiy so'rovlar chegarasi (2026-10-26, ADR-0019 §4)
+
+* Muammo: har instansiyada mahalliy token bucket — balanser ortida amalda `N × chegara`.
+* nginx: `limit_conn perip 200` (IP bo'yicha bir vaqtdagi ulanishlar; TLS ochilmaydi, shuning uchun
+  so'rov tezligi nginx'da emas).
+* Server: `shared_limits.rs` — handshake (IP) va muhrlangan so'rovlar (qurilma) chelaklari `rate_buckets`
+  jadvalida (migratsiya `3004`), bitta atomar UPSERT; kalit SHA-256 xesh; mahalliy chelak oldindan filtr;
+  ombor xatosida fail-open + `mpay_rate_limit_store_errors_total` + `MpayRateLimitStoreErrors`.
+  `[rate_limit] shared` (berilmasa — sessiyalar ombori umumiy bo'lsa). Terminal kaliti mahalliy qoldi.
+* Tekshirildi: unit (to'ldirish, burst, qarz chegarasi, xeshlangan kalit, fail-open); e2e
+  `p3_shared_limits` (IP va qurilma chegarasi A/B bo'yicha global, `shared = false` — mahalliy) SQLite va
+  PostgreSQL'da; `p1_rate_limit`, `p2_multi_instance` o'zgarishsiz o'tdi; `promtool` — 14 qoida, `nginx -t`.
+
+### Rekey → Shield hodisasi (2026-10-26, ADR-0015)
+
+* Muammo: kalit almashtirilgach Shield grafida eski qurilma qolardi; kartani o'chirib yangi kalit bilan
+  qayta qo'shish `IDV_NEW_DEVICE_EXISTING_CARD` (karta 2 qurilmada + qurilma 1 soatdan yosh) → YELLOW.
+* `IdvDecider::device_rekeyed` (standart — hech narsa); Vault tokenlarni ko'chirgach chaqiradi (xato —
+  faqat log). Shield: yangi ID asl qurilma tugunining taxallusi (graf va qurilma oynalari umumiy,
+  yomon tarix ham meros); `new` o'z tarixiga ega bo'lsa bog'lanmaydi. Shield roli
+  `POST /internal/shield/rekey`, `RemoteShield` mahalliy zaxirani ham bog'laydi.
+* Tekshirildi: graf unit testi; e2e `rekeyed_device_keeps_shield_history_locally` va
+  `rekey_event_reaches_shield_role` — qayta qo'shish GREEN, nazorat (boshqa qurilma)
+  `IDV_NEW_DEVICE_EXISTING_CARD`; tuzatish vaqtincha o'chirilganda ikkala test aynan shu sabab bilan yiqildi.
+
+### Token muddati: UTC+5 va yangilash (2026-10-26, ADR-0022 §4)
+
+* Muddat O'zbekiston vaqti bilan (UTC+5): `CardExpiry::end_unix` mahalliy yarim tun, `is_expired(now)`,
+  `current(now)`; Vault (provisioning, LUK chegarasi, token muddati) va emitent (`54`) bir xil qoidada.
+* `POST /v1/tokens/{id}/renew`: oxirgi `token_renew_before_days` (30) kunda yoki muddat o'tgach DPAN
+  muddati karta muddati doirasida uzaytiriladi; idempotent; audit `TOKEN_RENEWED`; profilda
+  `renew_after`. Har token o'z karta muddatini saqlaydi (migratsiya `1003`). Muddati o'tgan tokenlar
+  chegaralarda hisoblanmaydi.
+* Rust `SoftWallet::renew`; Kotlin `MpayClient.renew`, `CardProfile.expiryYymm/renewAfter` o'zgaruvchan,
+  `WalletStore` saqlaydi, `MpayWallet.renewIfDue` LUK to'ldirishdan oldin.
+* Tekshirildi: unit/vault/e2e (yuqorida, ADR-0022), SQLite va PostgreSQL; `cargo test --workspace` — 236;
+  Kotlin ↔ Rust interop (renew bosqichi) o'tdi; wallet-sdk va demo kompilyatsiyasi.
+
+### Terminal ilovasi: klaviatura o'zi ochilmaydi (2026-10-26)
+
+* Muammo (emulyatorda qayta ko'rsatildi): ilova ochilishi bilan "Summa" maydoni fokus olib, to'liq QWERTY
+  klaviatura (`mInputShown=true`) holat kartasi va sozlamalarni yopardi.
+* Tuzatish: manifest `adjustResize|stateHidden`; boshlang'ich fokus ildizga (`focusable`), bo'sh joyga
+  teginish va har tugma klaviaturani yopadi; "Summa" — raqamli klaviatura, barcha maydonlarda
+  `ImeAction.Done`.
+* Tekshirildi (emulyator, `android-testing.md` §9): ochilishda `mInputShown=false`; teginishda raqamli
+  klaviatura (`inputType=0x2`); "✓", bo'sh joy va tugma bosilganda yopiladi, "To'lov qabul qilish" bitta
+  bosishda ishlaydi; pastdagi maydon klaviatura ustiga aylanadi. Hamyon demo'da muammo yo'q edi.
+
+### Production nazorat ro'yxati (2026-10-27)
+
+* `docs/production-checklist.md` — production'gacha qolgan ishlarning yagona ro'yxati: sxema (SX), bank
+  (BK), jamoa (JM), mobil (MB), audit (AU), regulyator (RG); har band uchun kim (jamoa, bank, sxema,
+  regulyator, auditor) va qachon (pilotdan oldin yoki production'dan oldin), pilotga chiqish mezoni.
+* `TODO(spec):` belgilari tozalandi: 80 → 66 (38 fayl). Bajarilgan ishlarga qaragan eskilari o'chirildi
+  yoki `PROGRESS.md` da ✅ bilan yopildi (ko'p instansiya sessiyalari, PostgreSQL, global chegara, CVM va
+  REVIEW siyosati, STAN/RRN, ishonchli proksilar, P1.4/P1.5 va boshqalar). Ishlatilmaydigan Kotlin
+  `IntegrityProvider`/`StubIntegrityProvider` stub'i o'chirildi (o'rnini P2.6 da `IntegrityTokenProvider`
+  egallagan).
+* `scripts/check-todo-spec.sh` (CI `check` job'i): belgisi bor fayllar va ro'yxat indeksi ikki tomonlama
+  solishtiriladi. Tekshirildi: yangi belgi va yopilgan belgi ikkalasi ham xato beradi.
+
+### Avtomatik reversal va solishtirish (2026-10-27, ADR-0024; checklist JM-3 ✅, JM-2 ◐)
+
+* Muammo: emitent pul yechgan, terminal esa `96` ko'rgan holatlar (emitent javob bermadi, `0110`
+  o'qilmadi, jarayon to'xtadi) — pul qaytmasdi; ikki tomonni taqqoslash vositasi yo'q edi.
+* ISO 8583: `0400`/`0401`/`0410`, maydon 90 (asl ma'lumot, ikkilamchi bitmap); reversal'da PAN yo'q —
+  asl yozuv terminal, STAN, RRN bo'yicha.
+* Emitent: summa yechilgan hisobga bir marta qaytadi (shartli `UPDATE`), `00`/`25`/`13`/`30`;
+  avtorizatsiyada yechilgan hisob yoziladi; `issuer_reversals`; `report()`; sandbox `response_delay_ms`.
+* Acquirer: `[acquirer] issuer_timeout_ms`; natija noma'lum → bitta tranzaksiyada `96` va navbat;
+  `acquirer_requests` jurnal ustunlari bilan; fon ishchisi qotgan `PENDING` larni yopadi va
+  `0400`/`0401` ni kutish bilan qayta yuboradi; metrikalar va 2 ta ogohlantirish (jami 16 qoida).
+* Solishtirish: `GET /v1/recon`, `mpay-server recon` (tafovut — chiqish kodi 1); `ISSUER_ONLY_APPROVED`,
+  `ACQUIRER_ONLY_APPROVED`, `AMOUNT_MISMATCH`, `REVERSAL_FAILED`; kun — UTC+5.
+* Tekshirildi: `cargo test --workspace` (SQLite) va e2e/vault/server PostgreSQL'da; e2e `p3_reversal` —
+  timeout → emitent vaqtincha ishlamaganda qayta urinishlar → `0401` bilan qaytarish; qotgan yozuv;
+  uch xil tafovut, API ruxsatlari. Ishchi o'chirilganda ikkala reversal testi yiqildi. `promtool` — 16
+  qoida; `mpay-server init` + `recon` haqiqiy binar bilan.
+* Ochiq: kliring/settlement (JM-1), real bankning emitent fayli (BK-1), sxemaning reversal formati (SX-2).
+
+### Kunlik kliring va hisob-kitob (2026-10-27, ADR-0025; checklist JM-1 ✅, JM-2 ✅)
+
+* Kliring fayli (M-Pay Test Scheme v1, `mpay-common/src/clearing.rs`): qat'iy uzunlikli `H`/`D`/`S`/`T`
+  qatorlar, valyuta bo'yicha nazorat yig'indilari, SHA-256; emitent tasdig'i `A`/`R`/`Z`; faqat
+  maskalangan DPAN, qat'iy tahlil.
+* Emitent: har yozuv asl avtorizatsiyaga — `00`/`25`/`13`/`12`/`94`; `cleared_batch`; bir paket ID —
+  bitta natija; kliringdan o'tganga reversal — `12 ALREADY_CLEARED`.
+* Acquirer: kun (UTC+5) — bitta paket, `BUILT` → `ACKED` → `SETTLED` (idempotent): `00` yozuvlar
+  doimiy `clearing_items` ga, emitent tasdig'i, pozitsiyalar MERCHANT/ISSUER/ACQUIRER (MDR 1,5 %,
+  interchange 1,0 % — faraz), muvozanat tekshiruvi. `POST /v1/clearing/run`, `GET /v1/clearing/{date}`
+  va fayllar, `mpay-server clearing` (rad etilgan bo'lsa chiqish kodi 1).
+* Solishtirish kliring bilan: `clearing` maydoni, `cleared`, tafovut `CLEARING_REJECTED`.
+* Tekshirildi: `cargo test --workspace` — 259 (SQLite); e2e/vault/server PostgreSQL'da — 107; e2e
+  `p3_clearing` (kun tugamaguncha 409, 2 qabul/1 rad, aniq pozitsiyalar, takror — o'sha natija,
+  fayllar va CSV, solishtirish); paketga rad etilganlar tushadigan qilib buzilganda test yiqildi;
+  haqiqiy binar bilan `init` → `clearing --out-dir`; smoke OK.
+* Ochiq: haqiqiy kliring formati (SX-2), tariflar, fayl kanali, savdo nuqtasi reyestri (BK-15),
+  refund/chargeback (JM-10).
+
+### Shield yuqori mavjudligi (2026-10-27, ADR-0026; checklist JM-4 ✅)
+
+* Muammo: Shield roli yagona, belgilar ombori faqat xotirada — yiqilsa yoki yangilansa butun tarix
+  (qurilma fermalari, karta profillari) yo'qolardi, API'lar mahalliy zaxirada qolardi.
+* Snapshot (`mpay-shield/src/snapshot.rs`): to'liq ombor (oynalar, profillar, graf, taxalluslar),
+  versiyalangan, deterministik, SHA-256; qat'iy tiklash (uzunliklar, indekslar, union-find aylanasi).
+* `[shield_ha]`: DB ijarasi (`shield_leader`, `epoch`) — bittasi yetakchi, zaxira `503 SHIELD_STANDBY`;
+  yetakchi muddatdan oldin o'zini to'xtatadi; snapshot `epoch` bilan to'silgan, oxirgi 3 tasi;
+  yangi yetakchi tiklab oladi; `SIGTERM` — yakuniy snapshot va ijara bo'shatiladi.
+* Mijoz: `[shield.remote] standby_urls` — oxirgi muvaffaqiyatlisidan boshlab navbat bilan.
+* Deploy: `shield` + `shield-2`, Prometheus ikkalasini ko'radi; 3 ta yangi ogohlantirish (jami 19).
+* Tekshirildi: `cargo test --workspace` — 267 (SQLite), e2e/vault/server PostgreSQL'da — 111; snapshot
+  (aynan tiklash, buzilgan bayt, union-find aylanasi, proptest); HA unit (yiqilgan yetakchi, eski epoch
+  to'silgan, `step_down`, buzilgan snapshot → oldingisi); e2e `p3_shield_ha` (ikki haqiqiy Shield + API:
+  zaxira 503, yiqilish → 3 karta tiklandi, 4-karta YELLOW `SHIELD_DEGRADED` siz, qaytgan instansiya
+  zaxira, `step_down` bilan qaytarish); tiklash o'chirilganda e2e yiqildi.
+* `scripts/compose-test.sh` (Docker Desktop): yetakchi `shield-2` SIGKILL → `shield` 8 s da oldi, 200
+  karta snapshot'dan, keyingi yukda `SHIELD_DEGRADED` = 0, qaytgan instansiya zaxira, `sum(mpay_shield_leader)`
+  = 1; p99 72 ms; PITR va loglar — OK. `promtool` — 19 qoida.
+
+### PostgreSQL replikatsiyasi va almashinuvi, nginx zaxirasi (2026-10-27, ADR-0027; checklist JM-5 ✅)
+
+* Muammo: compose'da PostgreSQL va nginx bittadan — baza yiqilsa faqat zaxiradan tiklash (soatlab),
+  nginx yiqilsa API'ga kirish yo'q.
+* PostgreSQL: `postgres` + `postgres-replica` (asinxron streaming, `deploy/postgres/pg-node.sh`):
+  bo'sh papkada yetakchidan `pg_basebackup`, `replicator` roli (faqat REPLICATION), umumiy WAL arxivi;
+  to'siq — boshqa yetakchi bo'lsa eski yetakchi ishga tushmaydi.
+* `pg` proksisi (HAProxy + `pg-primary-check`): ilovalar faqat yozish uchun ochiq tugunga, almashinuvda
+  qayta ishga tushirishsiz. `deploy/pg-failover.sh` (yiqilish / `--planned`), `deploy/pg-rejoin.sh`,
+  `deploy/lib-pg.sh` (zaxira/tiklash skriptlari joriy yetakchini topadi).
+* nginx: `lb` + `lb-2`, keepalived (VRRP unicast, `nopreempt`), VIP 10.88.0.100; ikkala nginx ishonchli
+  proksi.
+* Metrikalar `mpay_db_replicas`, `mpay_db_replicas_expected`, `mpay_db_replication_lag_bytes`;
+  ogohlantirishlar `MpayDbReplicaDown`, `MpayDbReplicationLag` (jami 21).
+* Tekshirildi:
+  * alohida loyihalarda: yiqilish → 1000/1000 qator, to'siq, qayta qo'shish, `--planned` 2001/2001;
+    VRRP: VIP 5 s da o'tdi, qaytgan lb — BACKUP;
+  * `scripts/compose-test.sh` (Docker Desktop) — `COMPOSE TEST OK`:
+    * PostgreSQL yetakchisi SIGKILL → 7 s da `postgres-replica` (timeline 2), audit 13712 → 13712;
+    * qayta yoqilgan eski yetakchi to'sildi, `pg-rejoin.sh` bilan replika;
+    * nginx VIP egasi SIGKILL → 5 s da `lb-2`, API VIP orqali (TLS + PROXY protocol);
+    * keyingi yuk yangi yetakchiga yozildi, `SHIELD_DEGRADED` = 0;
+    * PITR: almashinuvdan oldingi asosiy nusxa + WAL → almashinuvdan keyingi T, audit aynan 13712;
+    * loglarda PAN/sir yo'q.
+  * Birinchi yugurishlarda sinov skriptidagi ikki xato topildi va tuzatildi (`set -e` ostida bo'sh
+    natija; timeline checkpoint'dan oldin o'qilgani).
+* Ochiq (bank): alohida host'lar, avtomatik almashinuv, RPO (sinxron replika), tashqi VIP — BK-16.
+
+### Runbook va falokatdan tiklash (2026-10-27, ADR-0028; checklist JM-11 ✅)
+
+* `docs/runbook.md` — navbatchi qo'llanmasi: 21 ogohlantirish → birinchi qadam; hodisalar (API,
+  PostgreSQL almashinuvi/replika/kechikish/hovuz/PITR, Shield, nginx/VIP, `96`/reversal/solishtirish,
+  kechikish va 5xx, Integrity/OTP, xavfsizlik va kalit oshkor bo'lishi, HSM, kliring, host yo'qolishi);
+  muntazam ishlar; o'lchangan tiklash vaqtlari.
+* `deploy/dr-restore.sh` — bo'sh muhitga to'liq tiklash (holat + HSM → PostgreSQL → xizmatlar → audit).
+* `scripts/dr-drill.sh` (CI `dr` job'i): karta va to'lov → zaxira → barcha hajmlar o'chiriladi →
+  tiklash → o'sha token bilan to'lov va LUK to'ldirish. `mpay-tsim` loadgen image'ida.
+* Tekshirildi (Docker Desktop): `DR DRILL OK` — tiklash 24 s (holat/HSM 1, PostgreSQL 5, xizmatlar 17,
+  audit 1); falokatdan keyin o'sha token bilan `00`, ARPC to'g'ri; pinlangan server bilan PQ Link;
+  solishtirish toza; loglarda PAN/sir yo'q (`docs/dr-report.md`). Ikki urinish mashq skriptidagi
+  xatolar bilan yiqildi (Windows bind mount yo'li, faqat o'qish uchun papkadagi STAN hisoblagichi) — tuzatildi.
+
+### Bekor qilish ro'yxati build'da va mustaqil kanalda (2026-10-27, ADR-0029; checklist JM-6 ✅)
+
+* Muammo: qurilma ro'yxatni faqat PQ Link serveridan olardi — kalit oshkor bo'lsa hujumchi serveri
+  ro'yxatni bermaydi, yangi o'rnatilgan ilovada ro'yxat yo'q.
+* `uz.mpay.core.RevocationSources`: ilova build'i, mustaqil kanallar (CDN, faqat https, 64 KB, 3 s,
+  yo'naltirishsiz) va server — har biri ildiz imzosi bilan, eng katta versiya; saqlangandan kichigi
+  e'tiborsiz. `WalletConfig.bundledRevocations`, `revocationUrls`; ro'yxat pin tekshiruvidan oldin.
+* Demo: `-Pmpay.revocationsFile` → asset, `-Pmpay.revocationUrls`. Server: `mpay-server revocations-check`.
+* Tekshirildi: Kotlin `RevocationsTest` (manbalar, soxta/begona ildiz, lokal HTTP orqali yuklash
+  chegaralari), mpay-core 28/28; `revocations-check` 0/1/1; APK'dagi asset Rust imzolagan fayl bilan
+  bayt-bir xil; **emulyatorda**: ro'yxatni bermaydigan server, build'dagi ro'yxat (v5) uning barmoq
+  izini bekor qilgan → "server identifikatori bekor qilingan", handshake boshlanmadi; nazorat —
+  handshake boshlandi.
+* Ochiq: push-xabar kanali va eskirish siyosati (bank).
+
+## Mijoz hamyoni (product) — 1-bosqich: server API (2026-10-29, ADR-0030)
+
+* Maqsad: product darajadagi Android mijoz hamyoni (ko'p karta, tarix, kartani o'zim boshqarish,
+  bildirishnomalar; uz/ru/en). 1-bosqich — server tomonidagi muhrlangan API.
+* `POST /v1/wallet/tokens` — qurilmaning o'chirilmagan kartalari (faqat maskalangan DPAN/FPAN, holat,
+  `suspended_by`).
+* `POST /v1/wallet/tokens/{id}/suspend|resume|delete` — foydalanuvchi o'zi; faqat o'z kartasi
+  (`DEVICE_MISMATCH`). Vault: `suspended_by` (`DEVICE`/`BANK`, migratsiya `1004`) — bank to'xtatganini
+  ilova yoqa olmaydi (`SUSPENDED_BY_BANK` 403), tekshiruv o'tish tranzaksiyasi ichida; audit aktori
+  `device:<16 hex>`.
+* `POST /v1/wallet/tokens/{id}/transactions` — `Issuer::token_history`: emitent qaydnomasidan,
+  yangilari birinchi (`ts`, ATC, `auth_id`), kursor `<ts>.<atc>.<auth_id>` (qat'iy tahlil), holat
+  `APPROVED`/`REVERSED`/`DECLINED`, `cleared`.
+* `SoftWallet::wallet_tokens`, `wallet_set_state`, `wallet_transactions`.
+* Tekshirildi: e2e `p4_wallet_api` — ikki karta ro'yxatda, ochiq PAN yo'q; bir soniyadagi 5 yozuv
+  2 tadan 3 sahifada, tartib to'g'ri, takror/tushib qolish yo'q; noto'g'ri kursor `BAD_REQUEST`;
+  o'zi to'xtatgan karta tap'da `05`, o'zi yoqqach `00`; bank to'xtatgani `SUSPENDED_BY_BANK`; begona
+  qurilma ro'yxatda hech narsa ko'rmaydi, boshqara/o'qiy olmaydi; o'chirilgan karta ro'yxatdan chiqadi,
+  tap rad; 5 ta `device:` audit yozuvi, zanjir butun. Birinchi yugurish tartib xatosini topdi
+  (bir soniya ichida tasodifiy `auth_id` bo'yicha) — ATC qo'shildi. Workspace 269/269 (SQLite);
+  PostgreSQL — CI'da.
+* Keyingi: 2-bosqich — wallet-sdk (ko'p karta, yangi API'lar), 3-bosqich — `wallet-app` (Compose).
+
+## Mijoz hamyoni — 2-bosqich: wallet-sdk ko'p kartali (2026-10-29)
+
+* `mpay-core`:
+  * `MpayClient.walletTokens`, `walletSetState`, `transactions` (`WalletToken`, `Txn`, `TxnPage`);
+  * `CardBook` — ko'p kartali model, platformadan mustaqil: asosiy karta (birinchisi avtomatik),
+    tap kartasi (bir martalik tanlov yoki asosiy; to'xtatilgani tanlanmaydi — boshqasiga jim o'tmaydi),
+    UI ko'rinishi `WalletCard` (sirsiz; `onDevice = false` — server biladi, qurilmada profil yo'q),
+    server bilan moslash → `CardChange` (bank to'xtatdi/yoqdi, bank o'chirdi — qurilmadan ham o'chadi),
+    saqlash formati v2 va eski bitta kartali fayldan migratsiya.
+* `wallet-sdk`: `WalletStore` shifrlangan `CardBook` ni saqlaydi; `MpayWallet` — `cards`,
+  `setDefaultCard`, `nextTapCard`, `syncCards`, `suspendCard`/`resumeCard`/`deleteCard`, `transactions`,
+  karta bo'yicha `replenish`/`renewIfDue`, `replenishLow` (davriy xizmat uchun). Eski `profile()` —
+  asosiy karta (demo o'zgarishsiz ishlaydi).
+* Tekshirildi: `CardBookTest` 3/3, mpay-core 31/31; `android-interop.sh` — Kotlin client haqiqiy Rust
+  server bilan: kartalar ro'yxati, tarix 2+1 sahifa (tasdiq, CDCVM'dan keyingi tasdiq, `Q1` replay),
+  o'zim to'xtatish → `SUSPENDED/DEVICE`, yoqish → `ACTIVE`; wallet-sdk va wallet-demo kompilyatsiya.
+* Keyingi: 3-bosqich — `wallet-app` (Compose, product ilova).
+
+## Mijoz hamyoni — 3-bosqich: `wallet-app` product ilovasi (2026-10-29, checklist MB-5 ◐)
+
+* Yangi modul `android/wallet-app` (applicationId `uz.mpay.wallet`, "M-Pay"), Compose, qorong'i mavzu,
+  o'z ikonkasi (M + kontaktsiz to'lqinlar; monoxrom qatlam, bildirishnoma belgisi):
+  * onboarding (tanishuv, til, 6 raqamli PIN, biometriya, bildirishnoma ruxsati);
+  * qulf: PIN tekshirgichi — Keystore HMAC (fayl o'g'irlansa ham qurilmasiz terib bo'lmaydi), oddiy PIN rad,
+    5 xatodan keyin 30 s → 1 → 5 → 15 daqiqa; biometrik ochish; fonda 30 s → qayta qulf; FLAG_SECURE;
+  * bosh ekran (kartalar karuseli, To'lash, so'nggi to'lovlar), karta qo'shish (Luhn, MM/YY, OTP, qayta
+    yuborish), karta sahifasi (asosiy qilish, to'xtatish/yoqish — bank blokida yo'q, kalitlarni yangilash,
+    o'chirish), to'lov (karta tanlash, CDCVM, natija emitent tarixidan, javob kelmasa ogohlantirish),
+    tarix (karta bo'yicha, kunlar, cheksiz sahifalash), sozlamalar;
+  * WorkManager (15 daq): holat, kam LUK, yangi tranzaksiyalar → bildirishnomalar (qulf ekranida yashirin);
+  * 3 til (170 kalit, bitta jadvaldan), sinov vositalari faqat debug (`DebugTools`).
+* Testlar: `wallet-app` unit 13 (Format, PinPolicy, TxnWatcher, PolicyTest — islomiy ikonka siyosati,
+  3 til kalitlari va formatlari, debug ko'prik, loglarda sir); CI'da `testDebugUnitTest` + `assembleDebug`;
+  `check-release-apk.sh` ikkala hamyon uchun.
+* Emulyatorda har ekran sinaldi (`docs/android-testing.md` §11): to'liq to'lov `00`, `51`, Shield `59`,
+  bank bloki, bildirishnoma, til, PIN, tozalash; release R8 (4,4 MB) ishga tushadi. Sakkizta xato topildi va
+  tuzatildi (ro'yxat §11 da). Loglarda ochiq PAN/OTP/kalit 0.
+* Emulyator `/data` to'lgan edi — foydalanuvchi roziligi bilan 4 ta eski loyiha ilovasi AVD'dan o'chirildi.
+* Ochiq: haqiqiy telefonlar (MB-1/2), Play Integrity (MB-4), imzo/Play (MB-3).

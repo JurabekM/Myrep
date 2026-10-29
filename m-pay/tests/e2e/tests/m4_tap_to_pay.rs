@@ -17,6 +17,7 @@ fn acct(pan: &str, balance_minor: i64) -> TestAccount {
         pan: pan.into(),
         balance_minor,
         label: "e2e".into(),
+        phone: None,
     }
 }
 
@@ -74,8 +75,14 @@ async fn approved_and_every_decline_code() {
         "rad etilganda ham ARPC (ARQC to'g'ri edi)"
     );
 
-    // REVIEW — siyosat bo'yicha tasdiq.
+    // REVIEW — `step_up` siyosati (ADR-0022): biometriyasiz Q2, telefonda tasdiqlangach — tasdiq.
     let r = sb.pay(&mut card, 1_000 * UZS, "REVIEW00000001", 3).await;
+    assert_eq!(
+        (r.response_code.as_str(), r.reason.as_str()),
+        ("Q2", "REVIEW_STEP_UP")
+    );
+    card.set_cdcvm_verified(true);
+    let r = sb.pay(&mut card, 1_000 * UZS, "REVIEW00000001", 33).await;
     assert_eq!(
         (r.response_code.as_str(), r.reason.as_str()),
         ("00", "APPROVED_AFTER_REVIEW")

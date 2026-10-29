@@ -4,12 +4,15 @@ exclude = ["fuzz"]
 members = [
     "crates/mpay-common",
     "crates/mpay-crypto",
+    "crates/mpay-db",
     "crates/mpay-pqlink",
     "crates/mpay-vault",
     "crates/mpay-shield",
     "crates/mpay-issuer",
     "crates/mpay-terminal-sim",
     "crates/mpay-server",
+    "crates/mpay-smsgw",
+    "crates/mpay-integrity",
     "tests/e2e",
 ]
 
@@ -25,12 +28,15 @@ repository = "https://github.com/JurabekM/Myrep"
 # ichki crate'lar
 mpay-common = { path = "crates/mpay-common" }
 mpay-crypto = { path = "crates/mpay-crypto" }
+mpay-db = { path = "crates/mpay-db" }
 mpay-pqlink = { path = "crates/mpay-pqlink" }
 mpay-vault = { path = "crates/mpay-vault" }
 mpay-shield = { path = "crates/mpay-shield" }
 mpay-issuer = { path = "crates/mpay-issuer" }
 mpay-terminal-sim = { path = "crates/mpay-terminal-sim" }
 mpay-server = { path = "crates/mpay-server" }
+mpay-smsgw = { path = "crates/mpay-smsgw" }
+mpay-integrity = { path = "crates/mpay-integrity" }
 
 # async va tarmoq
 tokio = { version = "1.54", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal"] }
@@ -41,6 +47,7 @@ hyper-util = { version = "0.1.21", features = ["tokio", "server", "server-auto",
 http-body-util = "0.1.5"
 rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 tokio-rustls = { version = "0.26.6", default-features = false, features = ["ring", "tls12"] }
+rustls-native-certs = "0.8.5"
 reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls-no-provider"] }
 async-trait = "0.1.92"
 
@@ -48,7 +55,7 @@ async-trait = "0.1.92"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 toml = "1.1.8"
-sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "sqlite-bundled", "migrate", "macros"] }
+sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "sqlite-bundled", "postgres", "any", "migrate", "macros"] }
 time = { version = "0.3.55", features = ["serde", "formatting", "parsing", "macros"] }
 hex = "0.4.3"
 base64 = "0.23.1"

@@ -13,6 +13,7 @@ SERVER_PID=""
 cleanup() {
   if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; wait "$SERVER_PID" 2>/dev/null || true; fi
   if [ -n "${TLS_PID:-}" ]; then kill "$TLS_PID" 2>/dev/null || true; wait "$TLS_PID" 2>/dev/null || true; fi
+  if [ -n "${SMSGW_PID:-}" ]; then kill "$SMSGW_PID" 2>/dev/null || true; wait "$SMSGW_PID" 2>/dev/null || true; fi
   rm -rf "$WORK"
 }
 trap cleanup EXIT
@@ -23,9 +24,19 @@ if [ -z "${JAVA_HOME:-}" ] && [ -d "/c/Program Files/Android/Android Studio/jbr"
   export JAVA_HOME="C:/Program Files/Android/Android Studio/jbr"
 fi
 
-cargo build -q -p mpay-server
+cargo build -q -p mpay-server -p mpay-smsgw
 SRV="target/debug/mpay-server$EXE"
 "$SRV" init --dir "$WORK/sb" --listen "127.0.0.1:$PORT" > /dev/null
+
+# 2-faza P2.1: virtual SMS shlyuzi — OTP karta egasining (fiktiv) telefoniga webhook orqali.
+SMS_PORT=$((PORT + 2))
+export MPAY_SMS_TOKEN="interop-$RANDOM$RANDOM"
+"target/debug/mpay-smsgw$EXE" --listen "127.0.0.1:$SMS_PORT" 2> "$WORK/smsgw.log" &
+SMSGW_PID=$!
+sed -i 's/^channel = "sandbox"$/channel = "webhook"/' "$WORK/sb/mpay.toml"
+sed -i "s|^# \[otp.webhook\]|[otp.webhook]|; s|^# url = \"http://127.0.0.1:47700/send\"|url = \"http://127.0.0.1:$SMS_PORT/send\"|; s|^# token_env = |token_env = |" "$WORK/sb/mpay.toml"
+grep -q '^\[otp.webhook\]' "$WORK/sb/mpay.toml" || { echo "XATO: [otp.webhook] yoqilmadi"; exit 1; }
+export MPAY_SMSGW="http://127.0.0.1:$SMS_PORT"
 "$SRV" serve --config "$WORK/sb/mpay.toml" 2> "$WORK/server.log" &
 SERVER_PID=$!
 for _ in $(seq 1 100); do
@@ -66,10 +77,13 @@ export MPAY_TERMINAL_BUNDLE="$WORK/terminal-bundle.json"
 export MPAY_INTEROP_URL="http://127.0.0.1:$PORT"
 export MPAY_SANDBOX_DIR="$WORK/sb"
 (cd android && ./gradlew :mpay-core:test --tests 'uz.mpay.core.InteropTest' --rerun-tasks --no-daemon --console=plain) \
-  | grep -E "PASSED|FAILED|SKIPPED|server fp|PQ Link|token |avtorizatsiya|pin|keyingi|bekor|almashtirildi|Exception|BUILD"
+  | grep -E "PASSED|FAILED|SKIPPED|server fp|PQ Link|token |avtorizatsiya|pin|keyingi|bekor|almashtirildi|SMS|Exception|BUILD"
 
 echo "== Server logida ochiq PAN yo'q"
 for p in $(grep -E '^pan = ' "$WORK/sb/mpay.toml" | sed -E 's/pan = "([0-9]+)"/\1/'); do
   if grep -q "$p" "$WORK/server.log"; then echo "XATO: logda ochiq PAN"; exit 1; fi
 done
+echo "== Server va shlyuz loglarida OTP va to'liq telefon yo'q"
+if grep -qE '\+9980{7}[0-9]{2}' "$WORK/server.log" "$WORK/smsgw.log"; then echo "XATO: logda to'liq telefon"; exit 1; fi
+if grep -qE 'kodi [0-9]{6}' "$WORK/server.log" "$WORK/smsgw.log"; then echo "XATO: logda OTP"; exit 1; fi
 echo "INTEROP OK"

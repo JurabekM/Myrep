@@ -16,11 +16,16 @@ pub struct VaultConfig {
     pub token_validity_months: u32,
     /// Bitta qurilmadagi o'chirilmagan tokenlar chegarasi.
     pub max_tokens_per_device: u32,
+    /// Bitta karta tokenlashtirilishi mumkin bo'lgan qurilmalar soni (2-faza P2.7, ADR-0022);
+    /// 0 — cheklanmagan. `TODO(spec):` bank mahsulot siyosati.
+    pub max_devices_per_card: u32,
     pub luk: LukPolicy,
     /// OTP challenge umri (sekund).
     pub otp_ttl_secs: i64,
     /// OTP urinishlari chegarasi.
     pub otp_max_attempts: i64,
+    /// Token muddati tugashiga shuncha kun qolganda (yoki o'tgach) uzaytirish mumkin (ADR-0022).
+    pub token_renew_before_days: u32,
 }
 
 impl Default for VaultConfig {
@@ -29,9 +34,11 @@ impl Default for VaultConfig {
             token_bin: "990077".into(),
             token_validity_months: 36,
             max_tokens_per_device: 10,
+            max_devices_per_card: 3,
             luk: LukPolicy::default(),
             otp_ttl_secs: 300,
             otp_max_attempts: 3,
+            token_renew_before_days: 30,
         }
     }
 }
@@ -41,6 +48,8 @@ impl Default for VaultConfig {
 pub struct ProvisionRequest {
     pub fpan: Pan,
     pub expiry: CardExpiry,
+    /// Tekshirilgan yaxlitlik belgilari (P2.6, ADR-0021) — Shield'ga uzatiladi.
+    pub integrity: Option<mpay_common::ports::IntegritySignals>,
 }
 
 /// PQ Link sessiyasi tasdiqlagan qurilma.
@@ -77,6 +86,8 @@ pub struct TokenProfile {
     pub aid: String,
     pub scheme: String,
     pub luks: Vec<LukGrant>,
+    /// Shu lahzadan uzaytirish mumkin; `None` — karta muddati tugaydi (uzaytirib bo'lmaydi).
+    pub renew_after: Option<i64>,
 }
 
 impl std::fmt::Debug for TokenProfile {
@@ -122,4 +133,6 @@ pub struct TokenSummary {
     pub last_atc: Option<i64>,
     pub created_at: i64,
     pub updated_at: i64,
+    /// `SUSPENDED` bo'lsa kim to'xtatgan: `DEVICE` (foydalanuvchi) yoki `BANK`.
+    pub suspended_by: Option<String>,
 }

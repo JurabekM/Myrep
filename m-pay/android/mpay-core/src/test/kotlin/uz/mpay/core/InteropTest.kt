@@ -7,6 +7,8 @@ import org.bouncycastle.cert.X509v3CertificateBuilder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
@@ -85,6 +87,14 @@ class InteropTest {
     private fun cred(key: String): String =
         File(sandbox, "dev-credentials.env").readLines().first { it.startsWith("$key=") }.substringAfter("=").trim()
 
+    /** Virtual SMS shlyuzidagi xabarlar matni (`GET /messages?to=`). */
+    private fun smsInbox(gw: String, to: String): List<String> {
+        val c = java.net.URL("$gw/messages?to=" + java.net.URLEncoder.encode(to, "UTF-8")).openConnection() as java.net.HttpURLConnection
+        c.setRequestProperty("Authorization", "Bearer " + System.getenv("MPAY_SMS_TOKEN"))
+        val arr = org.json.JSONArray(c.inputStream.bufferedReader().readText())
+        return (0 until arr.length()).map { arr.getJSONObject(it).getString("text") }
+    }
+
     private fun demoPan(i: Int): String =
         File(sandbox, "mpay.toml").readLines().filter { it.startsWith("pan = ") }[i].substringAfter("\"").substringBefore("\"")
 
@@ -107,7 +117,17 @@ class InteropTest {
         val s = api.connect(identity, SoftDevice(dir, challenge = api.enrollNonce()))
         println("PQ Link sessiyasi: $s")
         val pan = demoPan(0)
-        val r = api.provision(pan, "3112")
+        // 2-faza P2.6: yaxlitlik tokeni majburiy; requestHash Kotlin'da hisoblanadi (Rust bilan bir xil),
+        // token — server mock'idan (real ilovada Play Integrity API).
+        val op = cred("MPAY_OPERATOR_KEY")
+        try {
+            api.provision(pan, "3112")
+            throw AssertionError("INTEGRITY_REQUIRED kutilgan")
+        } catch (e: ApiException) {
+            assertEquals("INTEGRITY_REQUIRED", e.code)
+        }
+        val staleHash = api.integrityRequestHash()
+        val r = api.provision(pan, "3112", api.sandboxIntegrityToken(staleHash, op))
         assertTrue("ACTIVE kutilgan: $r", r is ProvisionResult.Active)
         val profile = (r as ProvisionResult.Active).profile
         assertEquals(5, profile.luks.size)
@@ -141,6 +161,25 @@ class InteropTest {
         assertEquals("Q1", replay.responseCode)
         assertEquals("ATC_REPLAY", replay.reason)
 
+        // 4a) Hamyon API (ADR-0030): kartalar, tarix (sahifalab), o'zim to'xtatish/yoqish.
+        val cards = api.walletTokens()
+        assertEquals(listOf(profile.tokenId), cards.map { it.tokenId })
+        assertEquals("ACTIVE", cards[0].state)
+        assertEquals(maskPan(pan), cards[0].fpanMasked)
+        val h1 = api.transactions(profile.tokenId, limit = 2)
+        assertEquals(2, h1.transactions.size)
+        val h2 = api.transactions(profile.tokenId, h1.nextCursor!!, 2)
+        assertEquals(null, h2.nextCursor)
+        val all = h1.transactions + h2.transactions
+        assertEquals(3, all.map { it.id }.toSet().size)
+        assertEquals(setOf(1_250_000L, 200_000_000L), all.map { it.amountMinor }.toSet())
+        assertEquals(listOf("APPROVED", "APPROVED", "DECLINED"), all.map { it.status }.sorted())
+        assertTrue(all.zipWithNext().all { (a, b) -> a.at >= b.at })
+        val susp = api.walletSetState(profile.tokenId, "suspend")
+        assertEquals("SUSPENDED" to "DEVICE", susp.state to susp.suspendedBy)
+        val res = api.walletSetState(profile.tokenId, "resume")
+        assertEquals("ACTIVE" to null, res.state to res.suspendedBy)
+
         // 5) LUK to'ldirish.
         assertEquals(5, api.replenish(profile.tokenId).size)
 
@@ -158,13 +197,46 @@ class InteropTest {
             assertEquals("TOO_MANY_LUKS", e.code)
         }
 
+        // 5b) ADR-0022: muddatni yangilash — oyna hali ochilmagan (36 oy), profil o'zgarmaydi (Kotlin ↔ Rust).
+        val rn = api.renew(profile.tokenId)
+        assertFalse(rn.renewed)
+        assertEquals(profile.expiryYymm, rn.expiryYymm)
+        assertEquals(profile.renewAfter, rn.renewAfter)
+        assertNotNull("karta 3112, token undan oldin tugaydi — renew_after bor", rn.renewAfter)
+
         // 6) O'sha kartani ikkinchi qurilmaga — YELLOW → OTP (Shield dvigateli).
         val api2 = MpayClient(url)
         api2.connect(identity, SoftDevice(dir, challenge = api2.enrollNonce()))
-        val y = api2.provision(pan, "3112")
+        // Boshqa sessiya uchun olingan token — rad (sessiyaga bog'lanish).
+        try {
+            api2.provision(pan, "3112", api.sandboxIntegrityToken(staleHash, op))
+            throw AssertionError("INTEGRITY_INVALID kutilgan")
+        } catch (e: ApiException) {
+            assertEquals("INTEGRITY_INVALID", e.code)
+        }
+        val y = api2.provision(pan, "3112", api2.sandboxIntegrityToken(api2.integrityRequestHash(), op))
         assertTrue("PENDING_IDV kutilgan: $y", y is ProvisionResult.PendingIdv)
         y as ProvisionResult.PendingIdv
-        val otp = api2.sandboxOtp(y.challengeId, cred("MPAY_OPERATOR_KEY"))
+        val gw = System.getenv("MPAY_SMSGW")
+        val otp = if (gw != null) {
+            // 2-faza P2.1: kod emitentdagi (fiktiv) telefonga virtual SMS shlyuzi orqali keldi.
+            assertEquals("+998*******01", y.otpSentTo)
+            assertEquals("+998*******01", api2.resendOtp(y.tokenId, y.challengeId))
+            // Provisioning SMS'i fonda yuboriladi (ADR-0016) — qutida 2 ta xabarni kutamiz.
+            var inbox = smsInbox(gw, "+998000000001")
+            for (i in 0 until 30) {
+                if (inbox.size >= 2) break
+                Thread.sleep(100)
+                inbox = smsInbox(gw, "+998000000001")
+            }
+            assertEquals(2, inbox.size)
+            val codes = inbox.map { Regex("""\b(\d{6})\b""").find(it)!!.groupValues[1] }.toSet()
+            assertEquals(1, codes.size)
+            println("SMS keldi: ${y.otpSentTo} (2 ta, bir xil kod)")
+            codes.first()
+        } else {
+            api2.sandboxOtp(y.challengeId, cred("MPAY_OPERATOR_KEY"))
+        }
         val p2 = api2.verifyOtp(y.tokenId, y.challengeId, otp)
         assertEquals(5, p2.luks.size)
 
@@ -230,7 +302,11 @@ class InteropTest {
         val (identity, _) = wallet.identity()
         wallet.connect(identity, SoftDevice(dir!!, challenge = wallet.enrollNonce()))
         val pan = File(dir, "mpay.toml").readLines().filter { it.startsWith("pan = ") }[0].substringAfter("\"").substringBefore("\"")
-        val r = wallet.provision(pan, "3112")
+        // P2.6: mock yaxlitlik tokeni hamyonning o'z PQ Link sessiyasi orqali — demo ilova kabi
+        // operator kaliti va mTLS sertifikatisiz (TLS sandbox'ida operator yo'li 403 MTLS_REQUIRED).
+        val token = wallet.sandboxDeviceIntegrityToken()
+        assertTrue("mock token kutilgan", token != null)
+        val r = wallet.provision(pan, "3112", token)
         assertTrue("ACTIVE kutilgan: $r", r is ProvisionResult.Active)
         val profile = (r as ProvisionResult.Active).profile
         val applet = CardApplet({ profile }, Gate())

@@ -3,7 +3,8 @@
 
 use mpay_common::api::{
     Empty, Envelope, ErrorResponse, LuksResponse, OtpVerifyRequest, ProvisionRequest,
-    ProvisionResponse, TokenProfileDto,
+    ProvisionResponse, TokenProfileDto, TxnHistoryRequest, TxnHistoryResponse, WalletTokenDto,
+    WalletTokensResponse,
 };
 use mpay_common::{DeviceId, TokenId};
 use mpay_pqlink::sandbox::SoftDeviceKey;
@@ -21,7 +22,12 @@ pub struct SoftWallet {
     pinned: ServerIdentity,
     device: SoftDeviceKey,
     session: Option<ClientSession>,
+    integrity: Option<IntegrityProvider>,
 }
+
+/// Yaxlitlik tokeni manbai (P2.6, ADR-0021): `requestHash` → token. Real ilovada — Play Integrity
+/// API; sinovda — sandbox mock chiqaruvchisi.
+pub type IntegrityProvider = std::sync::Arc<dyn Fn(&str) -> Option<String> + Send + Sync>;
 
 impl std::fmt::Debug for SoftWallet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -39,7 +45,22 @@ impl SoftWallet {
             pinned,
             device,
             session: None,
+            integrity: None,
         }
+    }
+
+    /// Provisioning'ga yaxlitlik tokenini qo'shadi (`None` — qo'shilmaydi).
+    pub fn set_integrity(&mut self, p: Option<IntegrityProvider>) {
+        self.integrity = p;
+    }
+
+    /// Joriy PQ Link sessiyasi uchun provisioning `requestHash` i.
+    pub fn integrity_request_hash(&self) -> Result<String, WalletError> {
+        let s = self.session.as_ref().ok_or(WalletError::NotConnected)?;
+        Ok(mpay_integrity::request_hash(
+            mpay_integrity::Purpose::Provision,
+            s.session_id(),
+        ))
     }
 
     pub fn client(&self) -> &ServerClient {
@@ -53,6 +74,27 @@ impl SoftWallet {
         let sh = Self::expect_raw(sh)?;
         let (pending, cf) = hs.on_server_hello(&sh, &self.device)?;
         let sa = Self::expect_raw(self.client.post_pqlink("/v1/pqlink/finish", cf).await?)?;
+        let s = pending.on_accept(&sa)?;
+        let id = s.device_id();
+        self.session = Some(s);
+        Ok(id)
+    }
+
+    /// Keyingi so'rovlar boshqa serverga (ko'p instansiya / load balancer simulyatsiyasi).
+    pub fn set_client(&mut self, client: ServerClient) {
+        self.client = client;
+    }
+
+    /// Handshake ikki xil instansiyada: `hello` — joriy klientga, `finish` — `finish_via` ga
+    /// (sessiyalar ombori umumiy bo'lsagina muvaffaqiyatli; 2-faza P2.4).
+    pub async fn connect_split(
+        &mut self,
+        finish_via: &ServerClient,
+    ) -> Result<DeviceId, WalletError> {
+        let (hs, ch) = ClientHandshake::start(self.pinned.clone())?;
+        let sh = Self::expect_raw(self.client.post_pqlink("/v1/pqlink/hello", ch).await?)?;
+        let (pending, cf) = hs.on_server_hello(&sh, &self.device)?;
+        let sa = Self::expect_raw(finish_via.post_pqlink("/v1/pqlink/finish", cf).await?)?;
         let s = pending.on_accept(&sa)?;
         let id = s.device_id();
         self.session = Some(s);
@@ -134,9 +176,40 @@ impl SoftWallet {
         fpan: &str,
         expiry_yymm: &str,
     ) -> Result<ProvisionResponse, WalletError> {
+        let token = match &self.integrity {
+            Some(p) => p(&self.integrity_request_hash()?),
+            None => None,
+        };
+        self.provision_with(fpan, expiry_yymm, token).await
+    }
+
+    /// Sandbox: mock yaxlitlik tokeni o'z PQ Link sessiyasi orqali (`/v1/sandbox/integrity-token/device`,
+    /// operator kaliti va mTLS'siz). `preset` — sinov stsenariysi (`None` — `strong`).
+    pub async fn sandbox_integrity_token(
+        &mut self,
+        preset: Option<&str>,
+    ) -> Result<String, WalletError> {
+        let req = mpay_common::api::SandboxIntegrityRequest {
+            request_hash: self.integrity_request_hash()?,
+            preset: preset.map(str::to_owned),
+        };
+        let r: mpay_common::api::SandboxIntegrityResponse = self
+            .call("/v1/sandbox/integrity-token/device", &req)
+            .await?;
+        Ok(r.integrity_token)
+    }
+
+    /// Aniq yaxlitlik tokeni bilan (sinovlar: yaroqsiz, boshqa sessiyaniki va h.k.).
+    pub async fn provision_with(
+        &mut self,
+        fpan: &str,
+        expiry_yymm: &str,
+        integrity_token: Option<String>,
+    ) -> Result<ProvisionResponse, WalletError> {
         let req = ProvisionRequest {
             pan: Zeroizing::new(fpan.to_owned()),
             expiry: expiry_yymm.to_owned(),
+            integrity_token,
         };
         self.call("/v1/tokens", &req).await
     }
@@ -152,6 +225,19 @@ impl SoftWallet {
             otp: Zeroizing::new(otp.to_owned()),
         };
         self.call(&format!("/v1/tokens/{token_id}/idv/verify"), &req)
+            .await
+    }
+
+    /// OTP SMS'ni qayta yuborishni so'raydi (2-faza P2.1); javobda maskalangan telefon.
+    pub async fn resend_otp(
+        &mut self,
+        token_id: &TokenId,
+        challenge_id: &str,
+    ) -> Result<mpay_common::api::OtpResendResponse, WalletError> {
+        let req = mpay_common::api::OtpResendRequest {
+            challenge_id: challenge_id.to_owned(),
+        };
+        self.call(&format!("/v1/tokens/{token_id}/idv/resend"), &req)
             .await
     }
 
@@ -182,6 +268,46 @@ impl SoftWallet {
 
     pub async fn replenish(&mut self, token_id: &TokenId) -> Result<LuksResponse, WalletError> {
         self.call(&format!("/v1/tokens/{token_id}/luks"), &Empty {})
+            .await
+    }
+
+    /// Token muddatini yangilash (`renew_after` dan keyin; ADR-0022).
+    pub async fn renew(
+        &mut self,
+        token_id: &TokenId,
+    ) -> Result<mpay_common::api::RenewResponse, WalletError> {
+        self.call(&format!("/v1/tokens/{token_id}/renew"), &Empty {})
+            .await
+    }
+
+    // ------------------------------------------------------------ hamyon API (ADR-0030)
+
+    /// Shu qurilmaning kartalari.
+    pub async fn wallet_tokens(&mut self) -> Result<WalletTokensResponse, WalletError> {
+        self.call("/v1/wallet/tokens", &Empty {}).await
+    }
+
+    /// `action`: `suspend`, `resume` yoki `delete`.
+    pub async fn wallet_set_state(
+        &mut self,
+        token_id: &TokenId,
+        action: &str,
+    ) -> Result<WalletTokenDto, WalletError> {
+        self.call(&format!("/v1/wallet/tokens/{token_id}/{action}"), &Empty {})
+            .await
+    }
+
+    pub async fn wallet_transactions(
+        &mut self,
+        token_id: &TokenId,
+        cursor: Option<&str>,
+        limit: Option<u32>,
+    ) -> Result<TxnHistoryResponse, WalletError> {
+        let req = TxnHistoryRequest {
+            cursor: cursor.map(str::to_owned),
+            limit,
+        };
+        self.call(&format!("/v1/wallet/tokens/{token_id}/transactions"), &req)
             .await
     }
 }

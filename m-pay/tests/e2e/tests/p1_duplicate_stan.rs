@@ -16,6 +16,7 @@ async fn retransmission_is_idempotent_and_reused_stan_is_94() {
             pan: f,
             balance_minor: 1_000_000 * 100,
             label: "p1".into(),
+            phone: None,
         }]
     })
     .await;

@@ -1,0 +1,14 @@
+# Docker build konteksti: faqat Rust manbalari (target 20+ GB — kontekstga tushmasin).
+**/target/
+fuzz/
+android/
+shield-ml/
+docs/
+.mpay/
+deploy/secrets/
+deploy/backups/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+.env
+.git

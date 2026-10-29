@@ -55,6 +55,22 @@ impl SecurityLevel {
     }
 }
 
+/// Ilova/qurilma yaxlitligi belgilari (2-faza P2.6, ADR-0021) — Play Integrity verdict'idan
+/// (yoki sandbox mock'idan) olingan, tekshirilgan va soddalashtirilgan. Shield qoidalari shularga
+/// qaraydi; ochiq token va verdict JSON'i saqlanmaydi.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct IntegritySignals {
+    /// Ilova: 0 — baholanmagan, 1 — tanilmagan (o'zgartirilgan / Play'dan emas), 2 — tanilgan.
+    pub app: u8,
+    /// Qurilma: 0 — hech biri, 1 — basic (yoki virtual), 2 — device, 3 — strong.
+    pub device: u8,
+    /// Litsenziya: 0 — baholanmagan, 1 — litsenziyasiz, 2 — litsenziyali.
+    pub licensed: u8,
+    /// Muhit xavfi: 0 — yo'q / ma'lumot yo'q, 1 — mumkin, 2 — o'rta, 3 — yuqori
+    /// (Play Protect xavfi yoki ekranni noma'lum ilova boshqaradi/yozadi).
+    pub env_risk: u8,
+}
+
 /// Provisioning paytidagi ID&V so'rovi.
 #[derive(Debug, Clone)]
 pub struct IdvRequest {
@@ -66,6 +82,8 @@ pub struct IdvRequest {
     pub existing_tokens_for_pan: u32,
     /// Shu qurilmadagi (o'chirilmagan) tokenlar soni.
     pub existing_tokens_for_device: u32,
+    /// Yaxlitlik belgilari (`[integrity] mode = "off"` bo'lsa yoki token berilmasa — `None`).
+    pub integrity: Option<IntegritySignals>,
     pub at: OffsetDateTime,
 }
 
@@ -82,6 +100,18 @@ pub struct IdvAssessment {
 #[async_trait]
 pub trait IdvDecider: Send + Sync {
     async fn decide(&self, req: &IdvRequest) -> Result<IdvAssessment, PortError>;
+
+    /// Qurilma kaliti almashtirildi (ADR-0015): `new` — `old` ning davomi (o'sha hamyon, attestatsiya
+    /// va eski kalit imzosi bilan tasdiqlangan). Shield yangi ID'ni eski qurilma tuguniga bog'laydi —
+    /// kartalar, qurilma yoshi va tarixi (yomoni ham) saqlanadi. Standart — hech narsa qilmaydi.
+    async fn device_rekeyed(
+        &self,
+        _old: &DeviceId,
+        _new: &DeviceId,
+        _at: OffsetDateTime,
+    ) -> Result<(), PortError> {
+        Ok(())
+    }
 }
 
 // ---------------------------------------------------------------- risk (avtorizatsiya)

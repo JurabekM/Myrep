@@ -4,8 +4,9 @@ Gradle loyihasi: AGP 8.13, Kotlin 2.2, Compose, minSdk 26, targetSdk 36. Arxitek
 
 | Modul | Turi | Vazifasi |
 |---|---|---|
-| `mpay-core` | Kotlin/JVM | Platformadan mustaqil yadro: `Tlv`, `Emv` (PDOL/CDOL/IAD/Track 2), `MpayScheme` (KDF, ARQC/ARPC), `CardApplet` (HCE applet mantiqi), `TerminalKernel` (PPSE → AID → GPO), `pqlink/*` (PQ Link v1 client), `MpayClient` (HTTP API). |
-| `wallet-sdk` | Android library | Bank ilovasi uchun SDK: `MpayWallet` fasadi, `MpayHceService`, `AndroidDeviceKey` (Keystore/StrongBox + attestatsiya), `WalletStore` (shifrlangan profil), `CdcvmState` + `BiometricGate`. |
+| `mpay-core` | Kotlin/JVM | Platformadan mustaqil yadro: `Tlv`, `Emv` (PDOL/CDOL/IAD/Track 2), `MpayScheme` (KDF, ARQC/ARPC), `CardApplet` (HCE applet mantiqi), `TerminalKernel` (PPSE → AID → GPO), `pqlink/*` (PQ Link v1 client), `MpayClient` (HTTP API, hamyon API'si), `CardBook` (ko'p karta: asosiy karta, server bilan moslash, saqlash formati). |
+| `wallet-sdk` | Android library | Bank ilovasi uchun SDK: `MpayWallet` fasadi, `MpayHceService`, `AndroidDeviceKey` (Keystore/StrongBox + attestatsiya), `WalletStore` (shifrlangan `CardBook`), `CdcvmState` + `BiometricGate`. Ko'p karta (ADR-0030): `cards`, `setDefaultCard`, `nextTapCard`, `syncCards`, `suspendCard`/`resumeCard`/`deleteCard`, `transactions`, `replenishLow`. |
+| `wallet-app` | ilova | **"M-Pay" — mijoz hamyoni (product, ADR-0030)**: onboarding, PIN (Keystore HMAC) va biometriya qulfi, ko'p karta, to'lov (CDCVM), tarix, karta boshqaruvi, WorkManager sinxronlash + bildirishnomalar, uz/ru/en, FLAG_SECURE. `-Pmpay.server`, `-Pmpay.serverFingerprints`, `-Pmpay.tlsPin`, `-Pmpay.sandbox=false`, `-Pmpay.keystore` (parollar `MPAY_KEYSTORE_PASSWORD`). Sinov: `docs/android-testing.md` §11. |
 | `wallet-demo` | ilova | "M-Pay Hamyon" — SDK namoyishi: ulanish, karta qo'shish, OTP, LUK, biometriya, standart to'lov ilovasi, attestatsiya zanjirini eksport qilish. |
 | `terminal-app` | ilova | "M-Pay Terminal" — telefon-terminal: NFC reader mode → `TerminalKernel.tap` → `POST /v1/authorizations` → server qarori ekranda. |
 
@@ -39,9 +40,13 @@ Qurilmada sinash tartibi: `docs/android-testing.md`.
   `-Pmpay.tlsPin=<hex>` (`mpay-server identity` chiqishi). Pin berilmasa — TOFU, faqat sandbox
   (ekranda "Server pinlanmagan"). `https://` server faqat TLS pini bilan. `-Pmpay.rootFingerprint` —
   oflayn ildiz (ADR-0014): bekor qilish ro'yxati tekshiriladi, faqat kattaroq versiya saqlanadi.
+  `-Pmpay.revocationsFile=<mpay-server revoke chiqishi>` — ro'yxat build'ga (asset), `-Pmpay.revocationUrls=https://…`
+  — mustaqil kanal (CDN); manbalardan eng katta haqiqiy versiya olinadi (ADR-0029). Nashrdan oldin:
+  `mpay-server revocations-check --file … --root-fingerprint …`.
 * **Sandbox:** `network_security_config` cleartext HTTP'ga ruxsat beradi (emulyator va qo'lda rejim uchun).
 * **Virtual NFC (faqat debug):** `wallet-demo/src/debug` — emulyator uchun loopback APDU ko'prigi,
   `terminal-app` "Virtual tap" (`docs/android-testing.md` §5). Release'da yo'qligi —
   `scripts/check-release-apk.sh`.
 * Release ham debug kaliti bilan imzolanadi (sandbox) — haqiqiy imzo kaliti repoga tushmaydi.
-* `TODO(spec):` Play Integrity (`IntegrityProvider` hozircha stub) — 2-faza.
+* Play Integrity: SDK'da `IntegrityTokenProvider`, server tekshiruvi (ADR-0021); sandbox'da mock token.
+  `TODO(spec):` haqiqiy Google (Play Console, Cloud loyihasi) — `docs/production-checklist.md` BK-11.

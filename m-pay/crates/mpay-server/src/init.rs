@@ -24,6 +24,8 @@ pub struct InitOptions {
     pub force: bool,
     /// `memory` (dev-urug') yoki `pkcs11` (`MPAY_PKCS11_*` muhit o'zgaruvchilari, `pkcs11` feature).
     pub keystore: KeyStoreBackend,
+    /// TLS sertifikatiga qo'shimcha nomlar (SAN): masalan load balancer yoki konteyner nomi.
+    pub tls_names: Vec<String>,
 }
 
 /// `init` natijasi (kalitlar faqat bir marta ko'rsatiladi va `dev-credentials.env` ga yoziladi).
@@ -52,9 +54,18 @@ pub const TLS_KEY_FILE: &str = "tls-key.pem";
 pub const CREDENTIALS_FILE: &str = "dev-credentials.env";
 /// mTLS mijoz sertifikatlari CA'si (sandbox; production'da bankning PKI'si).
 pub const CLIENT_CA_FILE: &str = "mtls-client-ca.pem";
+/// Play Integrity mock'i kaliti (P2.6, ADR-0021; faqat sandbox).
+pub const INTEGRITY_MOCK_KEY_FILE: &str = "sandbox-integrity-mock.key.pem";
+/// Sandbox demo hamyonining paketi (android/wallet-demo `applicationId`).
+pub const WALLET_PACKAGE: &str = "uz.mpay.walletdemo";
+/// Sandbox imzo sertifikati "barmoq izi" — fiktiv: base64url(SHA-256("mpay-sandbox-wallet-signing-cert")).
+/// Mock tokenlar shu qiymat bilan chiqariladi; production'da haqiqiy reliz sertifikatining SHA-256'i.
+pub const SANDBOX_WALLET_CERT: &str = "fMmw8T2CTuOqPSYqDr-Qahk2xJG_iX3wWh9BPE4bV4I";
 /// Standart API kalitlari ID'lari — mTLS sertifikati CN'i shularga teng.
 pub const OPERATOR_ID: &str = "operator-1";
 pub const TERMINAL_ID: &str = "terminal-1";
+/// API instansiyasining Shield roliga mTLS identifikatori (2-faza P2.5; `[[auth.keys]] role = "shield"`).
+pub const SHIELD_CLIENT_ID: &str = "api-shield";
 
 /// Mijoz sertifikati fayllari: `<id>.crt.pem`, `<id>.key.pem`.
 pub fn client_cert_files(id: &str) -> (String, String) {
@@ -78,7 +89,7 @@ fn issue_client_certs(dir: &Path) -> Result<(), String> {
     write(dir, CLIENT_CA_FILE, ca_cert.pem().as_bytes())?;
     // CA kaliti saqlanmaydi: sandbox'da yangi mijoz kerak bo'lsa `init --force`.
     let issuer = Issuer::new(ca, ca_key);
-    for id in [OPERATOR_ID, TERMINAL_ID] {
+    for id in [OPERATOR_ID, TERMINAL_ID, SHIELD_CLIENT_ID] {
         let key = KeyPair::generate().map_err(err)?;
         let mut p = CertificateParams::new(Vec::<String>::new()).map_err(err)?;
         p.distinguished_name.push(DnType::CommonName, id);
@@ -119,11 +130,13 @@ pub const DEMO_ACCOUNTS: &[(&str, i64, &str)] = &[
 
 fn demo_accounts() -> Result<String, String> {
     let mut out = String::new();
-    for (prefix, balance, label) in DEMO_ACCOUNTS {
+    for (i, (prefix, balance, label)) in DEMO_ACCOUNTS.iter().enumerate() {
         let pan = mpay_common::Pan::from_prefix(prefix).map_err(|e| e.to_string())?;
+        // Telefon — fiktiv (`+998 00` operator kodi mavjud emas), faqat virtual SMS shlyuzi uchun.
         out.push_str(&format!(
-            "\n[[issuer.accounts]]\npan = \"{}\"\nbalance_minor = {balance}\nlabel = \"{label}\"\n",
-            pan.expose_digits()
+            "\n[[issuer.accounts]]\npan = \"{}\"\nbalance_minor = {balance}\nlabel = \"{label}\"\nphone = \"+9980000000{:02}\"\n",
+            pan.expose_digits(),
+            i + 1
         ));
     }
     Ok(out)
@@ -180,14 +193,18 @@ pub fn run(opts: &InitOptions) -> Result<InitOutput, String> {
     let ca = SandboxAttestationCa::generate().map_err(|e| e.to_string())?;
     write(dir, CA_CERT_FILE, ca.root_der())?;
     write(dir, CA_KEY_FILE, ca.key_pem().as_bytes())?;
+    let pi_key = rcgen::KeyPair::generate().map_err(|e| e.to_string())?;
+    write(
+        dir,
+        INTEGRITY_MOCK_KEY_FILE,
+        Zeroizing::new(pi_key.serialize_pem()).as_bytes(),
+    )?;
 
     let (tls_cert, tls_key) = if opts.tls {
         let key = rcgen::KeyPair::generate().map_err(|e| e.to_string())?;
-        let params = rcgen::CertificateParams::new(vec![
-            "localhost".to_owned(),
-            opts.listen.ip().to_string(),
-        ])
-        .map_err(|e| e.to_string())?;
+        let mut names = vec!["localhost".to_owned(), opts.listen.ip().to_string()];
+        names.extend(opts.tls_names.iter().cloned());
+        let params = rcgen::CertificateParams::new(names).map_err(|e| e.to_string())?;
         let cert = params.self_signed(&key).map_err(|e| e.to_string())?;
         write(dir, TLS_CERT_FILE, cert.pem().as_bytes())?;
         write(
@@ -222,8 +239,11 @@ sandbox = true
 listen = "{listen}"
 # Teskari proksi ortida: ishonchli proksilar (CIDR) — mijoz IP'si X-Forwarded-For dan.
 trusted_proxies = []
+# L4 load balancer (nginx stream) ortida: PROXY protocol v1 — mijoz IP'si ulanish sarlavhasidan.
+proxy_protocol = false
 {tls_cert}{tls_key}
 [database]
+# SQLite (sandbox, bitta instansiya). PostgreSQL uchun: `path` o'rniga `url_env = "MPAY_DATABASE_URL"`.
 path = "mpay.db"
 
 [keystore]
@@ -246,6 +266,10 @@ reattest_after_days = 90
 token_bin = "990077"
 token_validity_months = 36
 max_tokens_per_device = 10
+# Bitta karta nechta qurilmada tokenlashtirilishi mumkin (0 — cheklanmagan); shu qurilmada takror — 409.
+max_devices_per_card = 3
+# Token muddati tugashiga shuncha kun qolganda qurilma uni uzaytira oladi (POST /v1/tokens/{{id}}/renew).
+token_renew_before_days = 30
 otp_ttl_secs = 300
 otp_max_attempts = 3
 
@@ -276,11 +300,64 @@ api_key_per_second = 500        # operator/terminal kaliti bo'yicha
 api_key_burst = 1000
 device_per_minute = 60          # muhrlangan so'rovlar, qurilma bo'yicha
 device_burst = 30
+# shared = true                 # IP/qurilma chelaklari DB'da umumiy; berilmasa — PostgreSQL'da avtomatik
+
+# OTP yetkazish (2-faza P2.1, ADR-0016): "sandbox" — SMS yuborilmaydi (kod /v1/sandbox/otp orqali);
+# "webhook" — bankning SMS shlyuzi (sinovda virtual shlyuz `mpay-smsgw`). Token faqat muhit o'zgaruvchisida.
+[otp]
+channel = "sandbox"
+# [otp.webhook]
+# url = "http://127.0.0.1:47700/send"
+# token_env = "MPAY_SMS_TOKEN"
+
+# Emitent bilan aloqa (ADR-0024): javob kutish va natijasi noma'lum avtorizatsiyalar reversal'i.
+[acquirer]
+issuer_timeout_ms = 10000
+# reversal_interval_ms = 5000      # ishchi: qotgan PENDING'lar va navbat
+# reversal_delay_secs = 10         # birinchi 0400 dan oldin (kechikkan asl xabar emitentga yetsin)
+# reversal_max_backoff_secs = 600  # emitentga yetib bo'lmasa qayta urinishlar orasidagi eng katta oraliq
+
+# Kunlik kliring va hisob-kitob (ADR-0025): `mpay-server clearing --date …` yoki POST /v1/clearing/run.
+# Tariflar — faraz (TODO(spec): bank va sxema tariflari), bazis punktda.
+[clearing]
+merchant_fee_bps = 150           # savdo nuqtasi komissiyasi (MDR), 1,5 %
+interchange_bps = 100            # emitentga, 1,0 %
+# cutoff_grace_secs = 900        # kun tugagach kutish (javobi kutilayotganlar yopilsin)
+
+# Faqat `mpay-server shield` (ADR-0026): bir nechta Shield roli bitta bazada — yetakchi + zaxira,
+# belgilar ombori snapshot'i. API instansiyalari: [shield.remote] standby_urls.
+# [shield_ha]
+# enabled = true
+# lease_ttl_ms = 6000
+# renew_interval_ms = 1000
+# snapshot_interval_secs = 30
+
+# Prometheus metrikalari (2-faza P2.5): alohida ichki port, kalitsiz — tashqariga ochilmaydi.
+[metrics]
+# listen = "127.0.0.1:9464"
+
+# Ilova yaxlitligi (2-faza P2.6, ADR-0021): provisioning'da Play Integrity tokeni, requestHash —
+# PQ Link sessiyasiga bog'langan. "mock" — sandbox kaliti (emulyator demo tokenni
+# POST /v1/sandbox/integrity-token dan oladi); "google" — decodeIntegrityToken ([integrity.google]).
+[integrity]
+mode = "mock"
+required = true
+package_name = "{WALLET_PACKAGE}"
+certificate_sha256 = ["{SANDBOX_WALLET_CERT}"]
+max_age_secs = 120
+mock_key = "{INTEGRITY_MOCK_KEY_FILE}"
+# [integrity.google]
+# service_account_file = "/run/secrets/play_integrity_sa.json"   # yoki access_token_env / access_token_file
 
 # Emitent emulyatori: test hisoblar (FPAN — fiktiv, docs/test-data.md).
 [issuer]
 offline_bins = ["990013"]
-review_action = "approve"
+# Mahsulot siyosati (2-faza P2.7, ADR-0022). `TODO(spec):` qiymatlarni bank tasdiqlaydi.
+# Shield REVIEW: "step_up" — CDCVM (biometriya) bo'lsa tasdiq, bo'lmasa Q2 (telefonda tasdiqlab qayta tap);
+# "approve" — tasdiq; "decline" — 05.
+review_action = "step_up"
+# Shu summadan (tiyin) yuqori tap faqat CDCVM bilan (aks holda Q2); qiymat tokenga ham beriladi.
+cvm_limit_minor = 100000000      # 1 000 000,00 UZS
 {accounts}
 [auth]
 # TLS bilan: operator/terminal so'rovlari mTLS sertifikatini talab qiladi (CN = kalit id).

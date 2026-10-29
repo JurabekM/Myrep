@@ -10,6 +10,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -37,10 +41,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -258,8 +266,13 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
             Log.i(TAG, "tap: dpan=${tap.dpanMasked} atc=${tap.atc} summa=$amountMinor")
             val r = client().authorize(key(), terminalId.trim(), merchantId.trim(), nextStan(), tap.iccHex())
             Log.i(TAG, "auth: rc=${r.responseCode} rrn=${r.rrn} dpan=${r.dpanMasked}")
-            armedAmountMinor = 0
-            Screen.Result(r)
+            // Q2 (ADR-0022): bank karta egasini tasdiqlashni so'radi — telefonda biometriya, o'sha summa bilan qayta tap.
+            if (r.responseCode == "Q2") {
+                Screen.SeePhone(r.reason)
+            } else {
+                armedAmountMinor = 0
+                Screen.Result(r)
+            }
         } catch (e: TerminalException) {
             if (e.seePhone) Screen.SeePhone(null) else Screen.Error("Karta: ${e.message}")
         } catch (e: Exception) {
@@ -275,9 +288,17 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
     @Composable
     private fun App() {
         val scheme = darkColorScheme(primary = Color(0xFF8AB4F8), surface = Color(0xFF161B26), background = Color(0xFF0D1117))
+        val focus = LocalFocusManager.current
+        // Tugma bosilganda klaviatura yopiladi (aks holda pastdagi sozlamalar va holat kartasini to'sadi).
+        val act = { f: () -> Unit -> { focus.clearFocus(); f() } }
+        val done = KeyboardActions(onDone = { focus.clearFocus() })
         MaterialTheme(colorScheme = scheme) {
             Column(
                 Modifier.fillMaxSize().background(scheme.background).windowInsetsPadding(WindowInsets.safeDrawing).padding(16.dp).verticalScroll(rememberScrollState())
+                    // Ilova ochilganda boshlang'ich fokus maydonga emas, ildizga tushadi — klaviatura o'zi
+                    // ochilmaydi; bo'sh joyga tegish ham klaviaturani yopadi.
+                    .focusable()
+                    .pointerInput(Unit) { detectTapGestures { focus.clearFocus() } }
                     .semantics { testTagsAsResourceId = true },
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -285,13 +306,17 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
                 Text("Sandbox · M-Pay Test Scheme (fiktiv)", color = Color.Gray, fontSize = 12.sp)
                 if (nfc == null) Text("Bu qurilmada NFC yo'q — tap qabul qilinmaydi", color = Color(0xFFFFB74D), fontSize = 12.sp)
 
-                OutlinedTextField(amount, { amount = it.filter(Char::isDigit).take(9) }, label = { Text("Summa (so'm)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("amount"))
+                OutlinedTextField(
+                    amount, { amount = it.filter(Char::isDigit).take(9) }, label = { Text("Summa (so'm)") }, singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done), keyboardActions = done,
+                    modifier = Modifier.fillMaxWidth().testTag("amount"),
+                )
                 if (BuildConfig.DEBUG) {
-                    OutlinedButton({ virtualTap() }, enabled = screen !is Screen.Processing, modifier = Modifier.fillMaxWidth().testTag("virtual_tap")) {
+                    OutlinedButton(act { virtualTap() }, enabled = screen !is Screen.Processing, modifier = Modifier.fillMaxWidth().testTag("virtual_tap")) {
                         Text("Virtual tap (emulyator, faqat debug)")
                     }
                 }
-                Button({ arm() }, enabled = screen !is Screen.Waiting && screen !is Screen.Processing, modifier = Modifier.fillMaxWidth().testTag("charge")) {
+                Button(act { arm() }, enabled = screen !is Screen.Waiting && screen !is Screen.Processing, modifier = Modifier.fillMaxWidth().testTag("charge")) {
                     Text("To'lov qabul qilish")
                 }
                 if (screen is Screen.Waiting || screen is Screen.SeePhone) {
@@ -308,17 +333,17 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
                     Text("Kalit ${p.keyId} · mijoz kaliti Android Keystore'da", color = Color.Gray, fontSize = 12.sp)
                 } else {
                     Text("Qo'lda (oddiy HTTP, faqat sandbox). Ishlab chiqarishda — terminal paketi.", color = Color(0xFFFFB74D), fontSize = 12.sp)
-                    OutlinedTextField(server, { server = it }, label = { Text("Server") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("server"))
-                    OutlinedTextField(terminalKey, { terminalKey = it }, label = { Text("Terminal kaliti (saqlanmaydi)") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth().testTag("terminal_key"))
+                    OutlinedTextField(server, { server = it }, label = { Text("Server") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done), keyboardActions = done, modifier = Modifier.fillMaxWidth().testTag("server"))
+                    OutlinedTextField(terminalKey, { terminalKey = it }, label = { Text("Terminal kaliti (saqlanmaydi)") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done), keyboardActions = done, modifier = Modifier.fillMaxWidth().testTag("terminal_key"))
                 }
-                Button({ ping() }, enabled = screen !is Screen.Processing, modifier = Modifier.fillMaxWidth().testTag("ping")) { Text("Ulanishni tekshirish") }
+                Button(act { ping() }, enabled = screen !is Screen.Processing, modifier = Modifier.fillMaxWidth().testTag("ping")) { Text("Ulanishni tekshirish") }
                 if (p == null) {
-                    OutlinedButton({ importClicked() }, modifier = Modifier.fillMaxWidth().testTag("import")) { Text("Terminal paketini import qilish") }
+                    OutlinedButton(act { importClicked() }, modifier = Modifier.fillMaxWidth().testTag("import")) { Text("Terminal paketini import qilish") }
                 } else {
-                    OutlinedButton({ forget() }, modifier = Modifier.fillMaxWidth().testTag("forget")) { Text("Paketni o'chirish") }
+                    OutlinedButton(act { forget() }, modifier = Modifier.fillMaxWidth().testTag("forget")) { Text("Paketni o'chirish") }
                 }
-                OutlinedTextField(terminalId, { terminalId = it.take(8) }, label = { Text("Terminal ID (8)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("terminal_id"))
-                OutlinedTextField(merchantId, { merchantId = it.take(15) }, label = { Text("Merchant ID (≤15)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("merchant_id"))
+                OutlinedTextField(terminalId, { terminalId = it.take(8) }, label = { Text("Terminal ID (8)") }, singleLine = true, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = done, modifier = Modifier.fillMaxWidth().testTag("terminal_id"))
+                OutlinedTextField(merchantId, { merchantId = it.take(15) }, label = { Text("Merchant ID (≤15)") }, singleLine = true, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = done, modifier = Modifier.fillMaxWidth().testTag("merchant_id"))
             }
         }
     }
@@ -329,7 +354,15 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
             Screen.Idle -> Triple(Color(0xFF1F2633), "Tayyor", listOf("Summani kiriting va \"To'lov qabul qilish\" ni bosing"))
             Screen.Waiting -> Triple(Color(0xFF1C3A5E), "Telefonni yaqinlashtiring", listOf("${amount} so'm"))
             Screen.Processing -> Triple(Color(0xFF1C3A5E), "Ishlanmoqda…", listOf("Server qarori kutilmoqda"))
-            is Screen.SeePhone -> Triple(Color(0xFF5E4A1C), "Telefonda tasdiqlang", listOf("Summa CDCVM chegarasidan yuqori:", "biometriyadan so'ng qayta tekkizing"))
+            is Screen.SeePhone -> Triple(
+                Color(0xFF5E4A1C),
+                "Telefonda tasdiqlang",
+                if (s.masked == null) {
+                    listOf("Summa CDCVM chegarasidan yuqori:", "biometriyadan so'ng qayta tekkizing")
+                } else {
+                    listOf("Bank karta egasini tasdiqlashni so'radi (${s.masked}):", "biometriyadan so'ng qayta tekkizing")
+                },
+            )
             is Screen.Result -> {
                 val r = s.r
                 Triple(

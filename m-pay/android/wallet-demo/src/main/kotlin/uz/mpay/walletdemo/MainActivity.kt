@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -56,6 +57,7 @@ import uz.mpay.core.ProvisionResult
 import uz.mpay.core.ServerPinPolicy
 import uz.mpay.core.maskPan
 import uz.mpay.wallet.sdk.BiometricGate
+import uz.mpay.wallet.sdk.IntegrityTokenProvider
 import uz.mpay.wallet.sdk.MpayHceService
 import uz.mpay.wallet.sdk.MpayWallet
 import uz.mpay.wallet.sdk.WalletConfig
@@ -73,6 +75,8 @@ class MainActivity : FragmentActivity() {
     private var pending by mutableStateOf<ProvisionResult.PendingIdv?>(null)
     private var otp by mutableStateOf("")
     private var operatorKey by mutableStateOf("")
+    /** Sandbox Play Integrity stsenariysi (server mock'i; real ilovada — Play Integrity API). */
+    private var integrityPreset by mutableStateOf("strong")
     private var refresh by mutableIntStateOf(0)
     private val events = mutableStateOf(listOf<String>())
 
@@ -93,8 +97,16 @@ class MainActivity : FragmentActivity() {
             tlsCertSha256 = BuildConfig.TLS_PIN.takeIf { it.isNotEmpty() }?.let(Hex::decode),
             allowTofu = pins.isEmpty(),
             rootFingerprint = BuildConfig.ROOT_FINGERPRINT.takeIf { it.isNotEmpty() },
+            // ADR-0029: build'ga joylangan ro'yxat (asset bo'lmasa — null) va mustaqil kanal manzillari.
+            bundledRevocations = runCatching {
+                assets.open("mpay-revocations.json").bufferedReader().use { it.readText() }
+            }.getOrNull(),
+            revocationUrls = BuildConfig.REVOCATION_URLS.split(',').map { it.trim() }.filter { it.isNotEmpty() },
         )
         wallet.addListener(listener)
+        // P2.6: sandbox'da yaxlitlik tokeni server mock'idan — o'z PQ Link sessiyasi orqali (operator kaliti
+        // va mTLS'siz, TLS sandbox'ida ham). `hash` server tomonida shu sessiyaniki ekani tekshiriladi.
+        wallet.integrityProvider = IntegrityTokenProvider { _ -> wallet.sandboxDeviceIntegrityToken(integrityPreset) }
         setContent { App() }
     }
 
@@ -127,7 +139,8 @@ class MainActivity : FragmentActivity() {
             is ProvisionResult.Active -> "Token faol (${r.idv.decision}): ${maskPan(r.profile.dpan)}"
             is ProvisionResult.PendingIdv -> {
                 withContext(Dispatchers.Main) { pending = r }
-                "Qo'shimcha tasdiq kerak (${r.idv.decision}): OTP kiriting"
+                val sms = r.otpSentTo?.let { "kod SMS bilan $it raqamiga yuborildi" } ?: "OTP kiriting"
+                "Qo'shimcha tasdiq kerak (${r.idv.decision}): $sms"
             }
             is ProvisionResult.Declined -> "Rad etildi: ${r.idv.decision} ${r.idv.reasons}"
         }
@@ -140,6 +153,11 @@ class MainActivity : FragmentActivity() {
             withContext(Dispatchers.Main) { pending = null; otp = "" }
             "Token faol: ${maskPan(prof.dpan)}"
         }
+    }
+
+    private fun resendOtp() {
+        val p = pending ?: return
+        work("SMS qayta yuborilmoqda") { "Kod qayta yuborildi: ${wallet.resendOtp(p.tokenId, p.challengeId)}" }
     }
 
     private fun fetchOtp() {
@@ -213,13 +231,26 @@ class MainActivity : FragmentActivity() {
 
                 OutlinedTextField(pan, { pan = it.filter(Char::isDigit) }, label = { Text("Karta raqami (test FPAN)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("pan"))
                 OutlinedTextField(expiry, { expiry = it.filter(Char::isDigit).take(4) }, label = { Text("Amal qilish (YYMM)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("expiry"))
+                OutlinedTextField(operatorKey, { operatorKey = it.trim() }, label = { Text("Operator kaliti (faqat sandbox OTP uchun)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("operator"))
+                Text("Ilova yaxlitligi (sandbox mock):", color = Color.Gray, fontSize = 12.sp)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("strong", "basic", "no_integrity", "remote_control").forEach { p ->
+                        if (p == integrityPreset) {
+                            Button({ integrityPreset = p }, modifier = Modifier.testTag("pi_$p")) { Text(p, fontSize = 12.sp) }
+                        } else {
+                            OutlinedButton({ integrityPreset = p }, modifier = Modifier.testTag("pi_$p")) { Text(p, fontSize = 12.sp) }
+                        }
+                    }
+                }
                 Button({ provision() }, enabled = !busy && pan.length == 16, modifier = Modifier.fillMaxWidth().testTag("provision")) { Text("Kartani qo'shish") }
 
-                pending?.let {
+                pending?.let { p ->
                     OutlinedTextField(otp, { otp = it.filter(Char::isDigit).take(6) }, label = { Text("OTP") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("otp"))
-                    OutlinedTextField(operatorKey, { operatorKey = it.trim() }, label = { Text("Operator kaliti (faqat sandbox OTP uchun)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("operator"))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton({ fetchOtp() }, enabled = !busy && operatorKey.isNotEmpty(), modifier = Modifier.testTag("fetch_otp")) { Text("OTP olish") }
+                        if (p.otpSentTo == null) {
+                            OutlinedButton({ fetchOtp() }, enabled = !busy && operatorKey.isNotEmpty(), modifier = Modifier.testTag("fetch_otp")) { Text("OTP olish") }
+                        }
+                        OutlinedButton({ resendOtp() }, enabled = !busy, modifier = Modifier.testTag("resend_otp")) { Text("Qayta yuborish") }
                         Button({ verify() }, enabled = !busy && otp.length == 6, modifier = Modifier.testTag("verify")) { Text("Tasdiqlash") }
                     }
                 }
@@ -228,7 +259,8 @@ class MainActivity : FragmentActivity() {
                     Button({ prepareToPay() }, enabled = wallet.profile() != null && BiometricGate.available(this@MainActivity), modifier = Modifier.testTag("pay")) { Text("To'lovga tayyorlash") }
                     OutlinedButton({ work("LUK") { "Yangi LUK: ${wallet.replenish()}" } }, enabled = !busy && wallet.profile() != null, modifier = Modifier.testTag("replenish")) { Text("LUK to'ldirish") }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Tugmalar sig'masa keyingi qatorga o'tadi (tor ekranda matn harflab uzilmasin).
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton({ makeDefault() }, modifier = Modifier.testTag("default")) { Text("Standart to'lov ilovasi") }
                     if (BuildConfig.DEBUG) {
                         OutlinedButton({ startVirtualNfc() }, modifier = Modifier.testTag("virtual_nfc")) { Text("Virtual NFC") }

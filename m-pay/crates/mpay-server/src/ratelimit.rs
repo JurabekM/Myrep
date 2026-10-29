@@ -5,6 +5,9 @@
 //!   bitta IP'ga yig'adi, shuning uchun chegara yumshoq; asosiy CPU himoyasi — global semafor.
 //! * API kaliti bo'yicha — operator va terminal endpointlari.
 //! * Qurilma bo'yicha — muhrlangan (sealed) endpointlar.
+//!
+//! Ko'p instansiyada IP va qurilma chegaralari umumiy omborda ham tekshiriladi
+//! ([`crate::shared_limits`]); mahalliy chelak — tez oldindan filtr.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -30,6 +33,10 @@ pub struct RateLimitConfig {
     /// Qurilma bo'yicha muhrlangan so'rovlar, daqiqasiga.
     pub device_per_minute: u32,
     pub device_burst: u32,
+    /// IP va qurilma chegaralarini instansiyalar orasida umumiy (DB) qilish. Berilmasa — sessiyalar
+    /// ombori umumiy bo'lganda (PostgreSQL yoki `session_store = "database"`) yoqiladi.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shared: Option<bool>,
 }
 
 impl Default for RateLimitConfig {
@@ -43,6 +50,7 @@ impl Default for RateLimitConfig {
             api_key_burst: 1000,
             device_per_minute: 60,
             device_burst: 30,
+            shared: None,
         }
     }
 }
@@ -142,6 +150,7 @@ pub struct RateLimits {
     ip: KeyedLimiter,
     api_key: KeyedLimiter,
     device: KeyedLimiter,
+    shared: Option<Arc<crate::shared_limits::SharedLimits>>,
 }
 
 impl RateLimits {
@@ -157,7 +166,18 @@ impl RateLimits {
             ip: KeyedLimiter::per_minute(cfg.ip_handshake_per_minute, cfg.ip_handshake_burst),
             api_key: KeyedLimiter::new(f64::from(cfg.api_key_per_second), cfg.api_key_burst),
             device: KeyedLimiter::per_minute(cfg.device_per_minute, cfg.device_burst),
+            shared: None,
         }
+    }
+
+    /// IP va qurilma chegaralari umumiy omborda ham tekshiriladi.
+    pub fn with_shared(mut self, s: Arc<crate::shared_limits::SharedLimits>) -> Self {
+        self.shared = Some(s);
+        self
+    }
+
+    pub fn is_shared(&self) -> bool {
+        self.enabled && self.shared.is_some()
     }
 
     /// Cheklovsiz (testlar va `enabled = false`).
@@ -168,11 +188,14 @@ impl RateLimits {
         })
     }
 
-    pub fn ip(&self, ip: &str) -> Result<(), Limited> {
-        if self.enabled {
-            self.ip.check(ip)
-        } else {
-            Ok(())
+    pub async fn ip(&self, ip: &str) -> Result<(), Limited> {
+        if !self.enabled {
+            return Ok(());
+        }
+        self.ip.check(ip)?;
+        match &self.shared {
+            Some(s) => s.ip.check(ip, crate::shared_limits::now_ms()).await,
+            None => Ok(()),
         }
     }
 
@@ -184,11 +207,14 @@ impl RateLimits {
         }
     }
 
-    pub fn device(&self, id: &str) -> Result<(), Limited> {
-        if self.enabled {
-            self.device.check(id)
-        } else {
-            Ok(())
+    pub async fn device(&self, id: &str) -> Result<(), Limited> {
+        if !self.enabled {
+            return Ok(());
+        }
+        self.device.check(id)?;
+        match &self.shared {
+            Some(s) => s.device.check(id, crate::shared_limits::now_ms()).await,
+            None => Ok(()),
         }
     }
 
@@ -261,8 +287,8 @@ mod tests {
         assert!(l.check_at(&(PRUNE_AT - 1).to_string(), later).is_err());
     }
 
-    #[test]
-    fn handshake_semaphore_and_disable() {
+    #[tokio::test]
+    async fn handshake_semaphore_and_disable() {
         let r = RateLimits::new(&RateLimitConfig {
             max_concurrent_handshakes: 1,
             ..RateLimitConfig::default()
@@ -275,7 +301,7 @@ mod tests {
 
         let off = RateLimits::disabled();
         for _ in 0..10_000 {
-            assert!(off.ip("1.2.3.4").is_ok());
+            assert!(off.ip("1.2.3.4").await.is_ok());
         }
         assert!(off.handshake_permit().unwrap().is_none());
     }

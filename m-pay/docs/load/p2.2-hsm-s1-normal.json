@@ -1,0 +1,32 @@
+{
+  "amount_minor": 1250000,
+  "authorization": {
+    "codes": {
+      "00 APPROVED": 1200,
+      "59 RISK_DECLINE": 27780
+    },
+    "count": 28980,
+    "errors": 0,
+    "max_ms": 129.092,
+    "p50_ms": 60.726,
+    "p95_ms": 79.616,
+    "p99_ms": 87.12,
+    "seconds": 60.04,
+    "throughput_per_s": 482.7
+  },
+  "cards": 200,
+  "concurrency": 32,
+  "provisioning": {
+    "codes": {
+      "Green": 200
+    },
+    "count": 200,
+    "errors": 0,
+    "max_ms": 153.629,
+    "p50_ms": 84.912,
+    "p95_ms": 131.268,
+    "p99_ms": 149.269,
+    "seconds": 0.56,
+    "throughput_per_s": 355.0
+  }
+}

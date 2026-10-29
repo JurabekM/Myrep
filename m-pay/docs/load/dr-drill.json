@@ -1,0 +1,7 @@
+{
+  "scenario": "host yo'qoldi: barcha konteyner va hajmlar o'chirildi, shifrlangan zaxiradan tiklandi",
+  "backup_created_utc": "20261027T100422Z",
+  "restore_seconds": 24,
+  "payment_after_restore": "00",
+  "recon": "clean"
+}

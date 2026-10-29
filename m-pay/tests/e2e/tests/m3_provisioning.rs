@@ -90,7 +90,7 @@ async fn green_provisioning_lifecycle_over_http() {
     assert_eq!(a["entries"].as_i64().unwrap(), 7, "{a}");
 
     // PAN, DPAN va LUK'lar DB fayllarida ochiq ko'rinishda yo'q.
-    let raw = sb.db_bytes();
+    let raw = sb.db_bytes().await;
     for secret in [fpan.as_str(), profile.dpan.as_str()] {
         assert!(!contains(&raw, secret.as_bytes()), "DB'da ochiq PAN");
     }
@@ -208,6 +208,7 @@ async fn pqlink_protections_over_http() {
     let req = mpay_common::api::ProvisionRequest {
         pan: zeroize::Zeroizing::new(test_fpan(1, 5005)),
         expiry: "3112".into(),
+        integrity_token: None,
     };
     let body = w.seal_request(&req).unwrap();
     let _: ProvisionResponse = w.send_sealed("/v1/tokens", body.clone()).await.unwrap();

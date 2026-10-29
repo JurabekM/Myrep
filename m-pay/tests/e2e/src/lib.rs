@@ -3,6 +3,8 @@
 #![forbid(unsafe_code)]
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
+pub mod apifuzz;
+
 use std::io::Write;
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -109,12 +111,22 @@ impl Sandbox {
             tls,
             force: false,
             keystore,
+            tls_names: Vec::new(),
         })
         .unwrap();
         let mut cfg = Config::load(&out.config_path).unwrap();
         // M3/M4 testlari deterministik stub'ga tayanadi; M5 testlari `engine` ni o'zi yoqadi.
         cfg.shield.engine = mpay_server::config::ShieldEngine::Stub;
+        // P2.6: `init` yaxlitlik tokenini majburiy qiladi; eski testlar qo'lda yaratgan hamyonlar
+        // tokensiz qolishi uchun standart — ixtiyoriy. `wallet()` baribir mock token yuboradi
+        // (tekshiruv yo'li ishlaydi); `p2_integrity` majburiy rejimni o'zi yoqadi.
+        cfg.integrity.required = false;
         tweak(&mut cfg);
+        // 2-faza P2.3: `MPAY_TEST_PG_URL` (PostgreSQL admin URL'i) bo'lsa — har sandbox o'z PG bazasida.
+        if let Ok(admin) = std::env::var("MPAY_TEST_PG_URL") {
+            cfg.database.url = Some(mpay_db::fresh_test_database(&admin).await.unwrap());
+            cfg.database.path = None;
+        }
         cfg.validate().unwrap();
         let server = mpay_server::start(&cfg).await.unwrap();
         let ca_key = std::fs::read_to_string(dir.path().join(init::CA_KEY_FILE)).unwrap();
@@ -201,18 +213,61 @@ impl Sandbox {
             self.pinned_identity().await,
             self.enrolled_device(SecurityLevel::StrongBox).await,
         );
+        w.set_integrity(self.integrity_provider(mpay_integrity::mock::Preset::Strong));
         w.connect().await.unwrap();
         w
     }
 
+    /// Sandbox mock yaxlitlik tokenlari manbai (`[integrity] mode = "mock"` bo'lsa).
+    pub fn integrity_provider(
+        &self,
+        preset: mpay_integrity::mock::Preset,
+    ) -> Option<mpay_terminal_sim::wallet::IntegrityProvider> {
+        let issuer = std::sync::Arc::new(mpay_server::integrity::sandbox_issuer(&self.cfg).ok()??);
+        Some(std::sync::Arc::new(move |hash: &str| {
+            Some(issuer.issue(preset, hash, now_ms()))
+        }))
+    }
+
     /// DB fayllari (asosiy + WAL) baytlari.
-    pub fn db_bytes(&self) -> Vec<u8> {
-        let mut raw = std::fs::read(self.db_path()).unwrap_or_default();
-        for ext in ["mpay.db-wal", "mpay.db-shm"] {
-            if let Ok(b) = std::fs::read(self.dir.path().join(ext)) {
-                raw.extend_from_slice(&b);
+    /// SQLite — fayl, WAL va SHM baytlari; PostgreSQL — barcha jadval qatorlarining matn ko'rinishi
+    /// (`row::text`, BYTEA hex sifatida). Bo'sh bo'lmasligi tekshiriladi (aks holda "yo'q" tekshiruvlari
+    /// jim o'tib ketardi).
+    pub async fn db_bytes(&self) -> Vec<u8> {
+        let pool = self.server.state.vault.pool();
+        let raw = match self.server.state.vault.db().dialect() {
+            mpay_db::Dialect::Sqlite => {
+                let mut raw = std::fs::read(self.db_path()).unwrap_or_default();
+                for ext in ["mpay.db-wal", "mpay.db-shm"] {
+                    if let Ok(b) = std::fs::read(self.dir.path().join(ext)) {
+                        raw.extend_from_slice(&b);
+                    }
+                }
+                raw
             }
-        }
+            mpay_db::Dialect::Postgres => {
+                let tables: Vec<String> = sqlx::query_scalar(
+                    "SELECT tablename::text FROM pg_tables WHERE schemaname = 'public'",
+                )
+                .fetch_all(pool)
+                .await
+                .unwrap();
+                let mut raw = Vec::new();
+                for t in tables {
+                    let rows: Vec<String> = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+                        "SELECT x::text FROM {t} x"
+                    )))
+                    .fetch_all(pool)
+                    .await
+                    .unwrap();
+                    for r in rows {
+                        raw.extend_from_slice(r.as_bytes());
+                    }
+                }
+                raw
+            }
+        };
+        assert!(raw.len() > 1024, "DB tarkibi o'qilmadi");
         raw
     }
 }
@@ -304,4 +359,12 @@ pub fn test_fpan(scenario: u8, account: u32) -> String {
 /// `haystack` ichida `needle` bormi.
 pub fn contains(haystack: &[u8], needle: &[u8]) -> bool {
     !needle.is_empty() && haystack.windows(needle.len()).any(|w| w == needle)
+}
+
+/// Joriy vaqt, millisekund (mock yaxlitlik tokenlari uchun).
+pub fn now_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
 }

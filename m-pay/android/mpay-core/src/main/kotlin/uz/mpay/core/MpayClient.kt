@@ -19,9 +19,49 @@ data class Idv(val decision: String, val score: Int, val reasons: List<String>)
 
 sealed class ProvisionResult {
     class Active(val profile: CardProfile, val idv: Idv) : ProvisionResult()
-    class PendingIdv(val tokenId: String, val challengeId: String, val idv: Idv) : ProvisionResult()
+    /** `otpSentTo` — OTP SMS yuborilgan telefon (maskalangan); sandbox kanalida yoki yuborilmasa `null`. */
+    class PendingIdv(val tokenId: String, val challengeId: String, val idv: Idv, val otpSentTo: String? = null) : ProvisionResult()
     class Declined(val idv: Idv) : ProvisionResult()
 }
+
+/** `POST /v1/tokens/{id}/luks` javobi. */
+class LukBatch(val luks: List<CardLuk>, val cvmLimitMinor: Long?)
+
+/** Token muddatini yangilash natijasi: `renewed = false` — hali erta yoki uzaytirib bo'lmaydi. */
+class RenewResult(val renewed: Boolean, val expiryYymm: String, val renewAfter: Long?)
+
+/**
+ * Hamyondagi karta (ADR-0030): faqat maskalangan PAN'lar. `state`: `ACTIVE`, `SUSPENDED`, `PENDING_IDV`,
+ * `DELETED`; `suspendedBy`: `DEVICE` (foydalanuvchi o'zi) yoki `BANK` (faqat bank qayta yoqadi).
+ */
+data class WalletToken(
+    val tokenId: String,
+    val state: String,
+    val dpanMasked: String,
+    val fpanMasked: String,
+    val dpanExpiry: String,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val suspendedBy: String?,
+)
+
+/** Karta bo'yicha tranzaksiya (PAN yo'q). `status`: `APPROVED`, `REVERSED`, `DECLINED`. */
+data class Txn(
+    val id: String,
+    val at: Long,
+    val amountMinor: Long,
+    val currency: Int,
+    val merchantId: String,
+    val terminalId: String,
+    val rrn: String,
+    val status: String,
+    val responseCode: String,
+    val reason: String,
+    val cleared: Boolean,
+)
+
+/** Tarix sahifasi; `nextCursor == null` — oxirgi sahifa. */
+data class TxnPage(val transactions: List<Txn>, val nextCursor: String?)
 
 /** Terminal avtorizatsiyasi natijasi. */
 data class AuthResult(
@@ -197,13 +237,31 @@ class MpayClient(
         psn = d.getInt("psn"),
         luks = luks(d.getJSONArray("luks")),
         atc = 0,
+        cvmLimitMinor = d.optLong("cvm_limit_minor", DEFAULT_CVM_LIMIT_MINOR),
+        renewAfter = renewAfter(d),
     )
 
-    fun provision(pan: String, expiryYymm: String): ProvisionResult {
-        val d = sealed("/v1/tokens", JSONObject().put("pan", pan).put("expiry", expiryYymm))
+    private fun renewAfter(d: JSONObject): Long? = if (d.has("renew_after")) d.getLong("renew_after") else null
+
+    /** P2.6: provisioning `requestHash` — joriy PQ Link sessiyasiga bog'langan ([Integrity]). */
+    fun integrityRequestHash(): String {
+        val s = session ?: throw ApiException(0, "NOT_CONNECTED", "PQ Link sessiyasi yo'q")
+        return Integrity.requestHash(Integrity.PURPOSE_PROVISION, s.sessionId)
+    }
+
+    /** `integrityToken` — Play Integrity (sandbox: mock) tokeni, [integrityRequestHash] uchun olingan. */
+    fun provision(pan: String, expiryYymm: String, integrityToken: String? = null): ProvisionResult {
+        val body = JSONObject().put("pan", pan).put("expiry", expiryYymm)
+        if (integrityToken != null) body.put("integrity_token", integrityToken)
+        val d = sealed("/v1/tokens", body)
         return when (d.getString("status")) {
             "ACTIVE" -> ProvisionResult.Active(profile(d), idv(d.getJSONObject("idv")))
-            "PENDING_IDV" -> ProvisionResult.PendingIdv(d.getString("token_id"), d.getString("challenge_id"), idv(d.getJSONObject("idv")))
+            "PENDING_IDV" -> ProvisionResult.PendingIdv(
+                d.getString("token_id"),
+                d.getString("challenge_id"),
+                idv(d.getJSONObject("idv")),
+                if (d.has("otp_sent_to")) d.getString("otp_sent_to") else null,
+            )
             else -> ProvisionResult.Declined(idv(d.getJSONObject("idv")))
         }
     }
@@ -211,7 +269,107 @@ class MpayClient(
     fun verifyOtp(tokenId: String, challengeId: String, otp: String): CardProfile =
         profile(sealed("/v1/tokens/$tokenId/idv/verify", JSONObject().put("challenge_id", challengeId).put("otp", otp)))
 
-    fun replenish(tokenId: String): List<CardLuk> = luks(sealed("/v1/tokens/$tokenId/luks", JSONObject()).getJSONArray("luks"))
+    /** OTP SMS'ni qayta yuborish (2-faza P2.1); qaytaradi: maskalangan telefon. Chegara — 3 marta (`429 OTP_RESEND_LIMIT`). */
+    fun resendOtp(tokenId: String, challengeId: String): String =
+        sealed("/v1/tokens/$tokenId/idv/resend", JSONObject().put("challenge_id", challengeId)).getString("otp_sent_to")
+
+    fun replenish(tokenId: String): List<CardLuk> = replenishBatch(tokenId).luks
+
+    /** LUK to'ldirish + joriy CVM chegarasi (bank siyosatni o'zgartirsa qurilma yangilaydi; ADR-0022). */
+    fun replenishBatch(tokenId: String): LukBatch {
+        val d = sealed("/v1/tokens/$tokenId/luks", JSONObject())
+        return LukBatch(luks(d.getJSONArray("luks")), if (d.has("cvm_limit_minor")) d.getLong("cvm_limit_minor") else null)
+    }
+
+    /** Token muddatini yangilash (`renew_after` dan keyin; takroriy chaqiruv xavfsiz; ADR-0022). */
+    fun renew(tokenId: String): RenewResult {
+        val d = sealed("/v1/tokens/$tokenId/renew", JSONObject())
+        return RenewResult(d.getBoolean("renewed"), d.getString("dpan_expiry"), renewAfter(d))
+    }
+
+    // ------------------------------------------------------------ hamyon (ADR-0030)
+
+    private fun walletToken(d: JSONObject) = WalletToken(
+        tokenId = d.getString("token_id"),
+        state = d.getString("state"),
+        dpanMasked = d.getString("dpan_masked"),
+        fpanMasked = d.getString("fpan_masked"),
+        dpanExpiry = d.getString("dpan_expiry"),
+        createdAt = d.getLong("created_at"),
+        updatedAt = d.getLong("updated_at"),
+        suspendedBy = if (d.isNull("suspended_by")) null else d.optString("suspended_by", null),
+    )
+
+    /** Shu qurilmaning serverdagi kartalari (o'chirilganlarsiz). */
+    fun walletTokens(): List<WalletToken> {
+        val a = sealed("/v1/wallet/tokens", JSONObject()).getJSONArray("tokens")
+        return List(a.length()) { walletToken(a.getJSONObject(it)) }
+    }
+
+    /**
+     * Kartani o'zi boshqarish: `action` — `suspend`, `resume` yoki `delete`. Bank to'xtatgan kartani
+     * yoqish — `SUSPENDED_BY_BANK` (403).
+     */
+    fun walletSetState(tokenId: String, action: String): WalletToken {
+        require(action in setOf("suspend", "resume", "delete")) { "action: $action" }
+        return walletToken(sealed("/v1/wallet/tokens/$tokenId/$action", JSONObject()))
+    }
+
+    /** Karta tarixi, yangilari birinchi; `cursor` — oldingi sahifaning [TxnPage.nextCursor]. */
+    fun transactions(tokenId: String, cursor: String? = null, limit: Int? = null): TxnPage {
+        val body = JSONObject()
+        if (cursor != null) body.put("cursor", cursor)
+        if (limit != null) body.put("limit", limit)
+        val d = sealed("/v1/wallet/tokens/$tokenId/transactions", body)
+        val a = d.getJSONArray("transactions")
+        val txns = List(a.length()) { i ->
+            val t = a.getJSONObject(i)
+            Txn(
+                id = t.getString("id"),
+                at = t.getLong("at"),
+                amountMinor = t.getLong("amount_minor"),
+                currency = t.getInt("currency"),
+                merchantId = t.getString("merchant_id"),
+                terminalId = t.getString("terminal_id"),
+                rrn = t.getString("rrn"),
+                status = t.getString("status"),
+                responseCode = t.getString("response_code"),
+                reason = t.getString("reason"),
+                cleared = t.getBoolean("cleared"),
+            )
+        }
+        return TxnPage(txns, if (d.isNull("next_cursor")) null else d.optString("next_cursor", null))
+    }
+
+    /**
+     * Sandbox: Play Integrity o'rnida mock token (`[integrity] mode = "mock"`, operator kaliti).
+     * `preset`: `strong` (standart), `device`, `basic`, `no_integrity`, `unrecognized`,
+     * `play_protect_risk`, `remote_control`. Rejim `off` bo'lsa — `null` (404).
+     */
+    fun sandboxIntegrityToken(requestHash: String, operatorKey: String, preset: String? = null): String? {
+        val body = JSONObject().put("request_hash", requestHash)
+        if (preset != null) body.put("preset", preset)
+        return try {
+            json("POST", "/v1/sandbox/integrity-token", body, operatorKey).getString("integrity_token")
+        } catch (e: ApiException) {
+            if (e.status == 404) null else throw e
+        }
+    }
+
+    /**
+     * Sandbox: mock yaxlitlik tokeni qurilmaning o'z PQ Link sessiyasi orqali — operator kaliti va mTLS
+     * kerak emas (TLS sandbox'ida ham ishlaydi). Token shu sessiyaning [integrityRequestHash] i uchun.
+     * Rejim `off` bo'lsa — `null` (404).
+     */
+    fun sandboxDeviceIntegrityToken(preset: String? = null): String? {
+        val body = JSONObject().put("request_hash", integrityRequestHash())
+        if (preset != null) body.put("preset", preset)
+        return try {
+            sealed("/v1/sandbox/integrity-token/device", body).getString("integrity_token")
+        } catch (e: ApiException) {
+            if (e.status == 404 || e.code == "NOT_FOUND") null else throw e
+        }
+    }
 
     /** Sandbox: OTP'ni operator kaliti bilan oladi (haqiqiy tizimda SMS/push). */
     fun sandboxOtp(challengeId: String, operatorKey: String): String =

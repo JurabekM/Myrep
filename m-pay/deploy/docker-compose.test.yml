@@ -1,0 +1,15 @@
+# Faqat sinov (scripts/compose-test.sh): bootstrap yuk sinovi hisoblarini qo'shadi va so'rovlar
+# chegarasini o'chiradi; `loadgen` — yuk generatori (nginx orqali, TLS + mTLS).
+services:
+  bootstrap:
+    image: ${MPAY_LOADGEN_IMAGE:-mpay-loadgen:local}
+    environment:
+      MPAY_LOAD_CARDS: ${MPAY_LOAD_CARDS:-200}
+
+  loadgen:
+    image: ${MPAY_LOADGEN_IMAGE:-mpay-loadgen:local}
+    profiles: [test]
+    networks: [mpay]
+    entrypoint: ["mpay-load"]
+    volumes:
+      - state:/var/lib/mpay/state:ro

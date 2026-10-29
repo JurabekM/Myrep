@@ -17,6 +17,18 @@ use mpay_pqlink::{
 
 const PLAINTEXT: &[u8] = b"{\"pan\":\"fuzz\"}";
 
+/// Server API async (sessiyalar ombori, ADR-0019); xotiradagi ombor kelajaklari darhol tayyor —
+/// runtime'siz bitta poll yetarli (tayyor bo'lmasa qayta poll).
+fn block_on<F: std::future::Future>(f: F) -> F::Output {
+    let mut f = std::pin::pin!(f);
+    let mut cx = std::task::Context::from_waker(std::task::Waker::noop());
+    loop {
+        if let std::task::Poll::Ready(v) = f.as_mut().poll(&mut cx) {
+            return v;
+        }
+    }
+}
+
 struct State {
     signer: Arc<KeyStoreServerSigner>,
     server: PqLinkServer,
@@ -58,14 +70,14 @@ impl State {
         device: &SoftDeviceKey,
     ) -> ClientSession {
         let (hs, ch) = ClientHandshake::start(signer.identity().clone()).expect("start");
-        let sh = server.handle_hello(&ch).expect("hello");
+        let sh = block_on(server.handle_hello(&ch)).expect("hello");
         let (pending, cf) = hs.on_server_hello(&sh, device).expect("server hello");
-        let (_, sa) = server.handle_finish(&cf).expect("finish");
+        let (_, sa) = block_on(server.handle_finish(&cf)).expect("finish");
         pending.on_accept(&sa).expect("accept")
     }
 
     fn reconnect(&mut self) {
-        self.server.close(self.client.session_id());
+        block_on(self.server.close(self.client.session_id()));
         self.client = Self::connect(&self.signer, &self.server, &self.device);
     }
 }
@@ -89,7 +101,7 @@ fuzz_target!(|data: &[u8]| {
         _ => {}
     }
 
-    match st.server.open(&bad) {
+    match block_on(st.server.open(&bad)) {
         Ok((_, pt)) => {
             assert_eq!(bad, rec, "o'zgartirilgan yozuv qabul qilindi");
             assert_eq!(&pt[..], PLAINTEXT);

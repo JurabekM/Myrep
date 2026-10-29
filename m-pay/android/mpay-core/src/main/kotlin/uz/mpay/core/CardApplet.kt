@@ -6,13 +6,21 @@ class CardLuk(val seq: Long, val key: ByteArray, val expiresAt: Long, var usesLe
 }
 
 /** Token profili (kartada). */
+/** Server CVM chegarasini bermagan bo'lsa (eski profil): 1 000 000,00 UZS (Rust `DEFAULT_CVM_LIMIT_MINOR`). */
+const val DEFAULT_CVM_LIMIT_MINOR: Long = 100_000_000
+
 class CardProfile(
     val tokenId: String,
     val dpan: String,
-    val expiryYymm: String,
+    /** DPAN muddati (YYMM); token yangilansa o'zgaradi ([MpayClient.renew]). */
+    var expiryYymm: String,
     val psn: Int,
     val luks: MutableList<CardLuk>,
     var atc: Int,
+    /** Shu summadan (tiyin) yuqori tap'da CDCVM (biometriya) — bank siyosati, server beradi (ADR-0022). */
+    var cvmLimitMinor: Long = DEFAULT_CVM_LIMIT_MINOR,
+    /** Shu lahzadan (unix) muddatni yangilash mumkin; `null` — karta muddati tugaydi (ADR-0022). */
+    var renewAfter: Long? = null,
 ) {
     override fun toString() = "CardProfile($tokenId, ${maskPan(dpan)}, luks=${luks.size}, atc=$atc)"
 }
@@ -35,7 +43,8 @@ interface CdcvmGate {
 class CardApplet(
     private val profileProvider: () -> CardProfile?,
     private val cdcvm: CdcvmGate,
-    private val cdcvmLimitMinor: Long = 100_000_000,
+    /** `null` — profildagi (server bergan) chegara; testlar uchun majburiy qiymat. */
+    private val cdcvmLimitMinor: Long? = null,
     private val now: () -> Long = { System.currentTimeMillis() / 1000 },
     private val onChanged: (CardProfile) -> Unit = {},
 ) {
@@ -131,7 +140,7 @@ class CardApplet(
         }
         if (pdol.size != Emv.PDOL_DATA_LEN) return sw(SW_WRONG_DATA)
         val td = try { TerminalData.fromPdolData(pdol) } catch (e: IllegalArgumentException) { return sw(SW_WRONG_DATA) }
-        val cdcvmRequired = td.amountMinor > cdcvmLimitMinor
+        val cdcvmRequired = td.amountMinor > (cdcvmLimitMinor ?: profile.cvmLimitMinor)
         val cdcvmOk = cdcvm.isVerified()
         if (cdcvmRequired && !cdcvmOk) return sw(SW_SEE_PHONE)
         val t = now()

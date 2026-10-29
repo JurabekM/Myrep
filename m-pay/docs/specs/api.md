@@ -36,19 +36,29 @@ Client javob `Content-Type` iga qarab uni ochadi yoki ochiq xato sifatida o'qiyd
 | POST | `/v1/pqlink/finish` | qurilma | PQ Link | ClientFinished → ServerAccept |
 | POST | `/v1/tokens` | qurilma | sealed | provisioning |
 | POST | `/v1/tokens/{token_id}/idv/verify` | qurilma | sealed | YELLOW: OTP |
+| POST | `/v1/tokens/{token_id}/idv/resend` | qurilma | sealed | OTP SMS'ni qayta yuborish (ADR-0016) |
 | POST | `/v1/tokens/{token_id}/luks` | qurilma | sealed | LUK to'ldirish |
 | GET | `/v1/tokens/{token_id}` | operator | — | token holati (maskalangan) |
 | POST | `/v1/tokens/{token_id}/suspend` | operator | — | ACTIVE → SUSPENDED |
 | POST | `/v1/tokens/{token_id}/resume` | operator | — | SUSPENDED → ACTIVE |
 | DELETE | `/v1/tokens/{token_id}` | operator | — | → DELETED (LUK'lar bekor qilinadi, qaytarib bo'lmaydi) |
 | GET | `/v1/audit/verify` | operator | — | audit xesh-zanjirini tekshirish |
+| GET | `/v1/recon?date=YYYY-MM-DD` | operator | — | solishtirish hisoboti: acquirer jurnali ↔ emitent (ADR-0024) |
+| POST | `/v1/clearing/run` | operator | `{"date"?}` | kunlik kliring → emitent → hisob-kitob (ADR-0025) |
+| GET | `/v1/clearing/{date}` | operator | — | paket hisoboti (pozitsiyalar, rad etilganlar) |
+| GET | `/v1/clearing/{date}/{clearing.txt\|ack.txt\|payouts.csv}` | operator | — | kliring fayli, emitent tasdig'i, to'lovlar CSV |
 | GET | `/v1/sandbox/otp/{challenge_id}` | operator, faqat sandbox | — | simulyatsiya qilingan OTP |
 | POST | `/v1/authorizations` | terminal | JSON | tap natijasi → ISO 8583 `0100` → `0110` |
 | GET | `/v1/pqlink/revocations` | — | — | oflayn ildiz imzolagan bekor qilingan identifikatorlar (ADR-0014; sozlanmagan — 404) |
 | POST | `/v1/devices/rekey` | qurilma (sealed) | `{cert_chain[], signature}` | qurilma kalitini almashtirish, tokenlar ko'chadi (ADR-0015) |
+| POST | `/v1/wallet/tokens` | qurilma (sealed) | `{}` | shu qurilmaning kartalari (§3.13, ADR-0030) |
+| POST | `/v1/wallet/tokens/{token_id}/suspend\|resume\|delete` | qurilma (sealed) | `{}` | kartani o'zi to'xtatish, qayta yoqish, o'chirish (§3.13) |
+| POST | `/v1/wallet/tokens/{token_id}/transactions` | qurilma (sealed) | `{cursor?, limit?}` | karta bo'yicha tranzaksiyalar tarixi (§3.13) |
 | POST | `/v1/pqlink/enroll` | — (IP chegarasi) | `{}` | yangi qurilma uchun bir martalik nonce: `{nonce, expires_at}` (P1.7) |
 | GET | `/v1/terminal/ping` | terminal | — | diagnostika: `{key_id, mtls, server_time}` (kalit, mTLS, chegaralar) |
 | GET | `/v1/sandbox/accounts` | operator, faqat sandbox | — | emitent test hisoblari va qoldiqlar |
+| POST | `/v1/sandbox/integrity-token` | operator, faqat `[integrity] mode = "mock"` | `{request_hash, preset?}` | Play Integrity o'rnida mock token (§3.10, ADR-0021) |
+| POST | `/v1/sandbox/integrity-token/device` | qurilma (sealed), faqat `mode = "mock"` | `{request_hash, preset?}` | o'sha mock token o'z PQ Link sessiyasi uchun — operator kaliti/mTLS'siz (§3.10) |
 
 ## 3. Sxemalar
 
@@ -71,8 +81,14 @@ bilan solishtiradi. Production'da barmoq izi ilovaga oldindan joylanadi.
 So'rov:
 
 ```json
-{ "pan": "9900121000010014", "expiry": "3112" }
+{ "pan": "9900121000010014", "expiry": "3112", "integrity_token": "<Play Integrity tokeni>" }
 ```
+
+`integrity_token` (2-faza P2.6, ADR-0021) — Play Integrity standart so'rovi tokeni,
+`requestHash = base64url(SHA-256("MPAY-PI-V1" ‖ 0x00 ‖ "provision" ‖ 0x00 ‖ PQ Link sessiya ID))`
+(paddingsiz; PAN kirmaydi). `[integrity] required = true` bo'lsa majburiy. Server: token haqiqiyligi
+(mock — ES256 imzo, google — `decodeIntegrityToken`), paket nomi, imzo sertifikati, `requestHash` va
+yangilik (`max_age_secs`); verdict sifati Shield ID&V qoidalarida (`IDV_INTEGRITY_*`).
 
 Javob (`data`) — `status` bo'yicha:
 
@@ -81,15 +97,27 @@ Javob (`data`) — `status` bo'yicha:
   "token_id": "tok_<32 hex>", "dpan": "990077…", "dpan_expiry": "2910", "psn": 0,
   "aid": "F04D50415901", "scheme": "MPAY-AES128-CMAC-V1",
   "luks": [ { "seq": 1, "key": "<32 hex>", "issued_at": 1792, "expires_at": 1793, "max_uses": 10 } ],
+  "cvm_limit_minor": 100000000,
   "idv": { "decision": "GREEN", "score": 100, "reasons": ["STUB_SCENARIO_10"] } }
 
 { "status": "PENDING_IDV", "token_id": "tok_…", "challenge_id": "chl_<32 hex>",
-  "otp_expires_at": 1792, "idv": { "decision": "YELLOW", … } }
+  "otp_expires_at": 1792, "idv": { "decision": "YELLOW", … },
+  "otp_sent_to": "+998*******01" }
 
 { "status": "DECLINED", "idv": { "decision": "RED", … } }
 ```
 
-Xatolar: `BAD_REQUEST` (FPAN emas, real BIN, Luhn, muddat), `TOO_MANY_TOKENS`, `IDV_UNAVAILABLE`.
+`otp_sent_to` — `[otp] channel = "webhook"` da kod yuborishga qo'yilgan emitentdagi telefon
+(maskalangan). SMS fonda yuboriladi — shlyuz sekin bo'lsa ham javob kechikmaydi; yetib kelmasa
+qurilma `/idv/resend` qiladi. Sandbox kanalida yoki emitentda raqam bo'lmasa maydon yo'q (ADR-0016).
+
+`cvm_limit_minor` (P2.7, ADR-0022) — shu summadan (tiyin) yuqori tap'da qurilma CDCVM so'raydi; emitent
+ham tekshiradi (`Q2`). LUK to'ldirish javobida (`{"luks": [...], "cvm_limit_minor": …}`) joriy qiymat keladi.
+
+Xatolar: `BAD_REQUEST` (FPAN emas, real BIN, Luhn, muddat), `TOO_MANY_TOKENS`, `TOO_MANY_DEVICES`,
+`CARD_ALREADY_ON_DEVICE`, `IDV_UNAVAILABLE`,
+`INTEGRITY_REQUIRED` (403), `INTEGRITY_INVALID` (403: imzo, paket, sertifikat, boshqa sessiya, eskirgan —
+sabab faqat server logida), `INTEGRITY_UNAVAILABLE` (503 + `Retry-After`: Google javob bermadi).
 
 ### 3.3 `POST /v1/tokens/{token_id}/idv/verify` (sealed)
 
@@ -97,6 +125,15 @@ So'rov: `{"challenge_id": "chl_…", "otp": "123456"}`. Javob: token profili (`A
 `token_id … luks` maydonlari, `status` va `idv` siz).
 Xatolar: `OTP_INVALID` (422), `OTP_EXPIRED` (410), `OTP_LOCKED` (423, 3 urinish),
 `CHALLENGE_NOT_FOUND`, `DEVICE_MISMATCH` (403), `INVALID_STATE` (409).
+
+### 3.3a `POST /v1/tokens/{token_id}/idv/resend` (sealed)
+
+So'rov: `{"challenge_id": "chl_…"}`. Javob: `{"otp_sent_to": "+998*******01"}` — o'sha kod
+karta egasining emitentdagi raqamiga qayta yuborildi (ADR-0016).
+Xatolar: `OTP_RESEND_LIMIT` (429, challenge uchun 3 marta; SMS aniq ketmagan urinishlar hisoblanmaydi),
+`OTP_LOCKED` (423, 3 noto'g'ri kod — SMS yuborilmaydi), `OTP_EXPIRED` (410), `CHALLENGE_NOT_FOUND` (404),
+`INVALID_STATE` (409, token `PENDING_IDV` emas), `DEVICE_MISMATCH` (403), `NO_CONTACT` (409, emitentda
+raqam yo'q), `OTP_CHANNEL_DISABLED` (409, sandbox kanali), `OTP_DELIVERY_FAILED` (502, shlyuz javob bermadi).
 
 ### 3.4 `POST /v1/tokens/{token_id}/luks` (sealed)
 
@@ -121,6 +158,20 @@ LUK'lar `2 × batch_size` dan ko'p bo'lsa `TOO_MANY_LUKS`.
 ### 3.7 `GET /v1/sandbox/otp/{challenge_id}`
 
 `{"challenge_id": "chl_…", "otp": "123456"}` — faqat `sandbox = true` va `sandbox_api.expose_otp = true`.
+
+### 3.10 `POST /v1/sandbox/integrity-token` (operator, faqat sandbox)
+
+```json
+{ "request_hash": "<43 belgi base64url>", "preset": "strong" }
+```
+
+→ `{"integrity_token": "<JWS>"}`. Stsenariylar: `strong` (standart), `device`, `basic`, `no_integrity`,
+`unrecognized`, `play_protect_risk`, `remote_control`. Faqat `[integrity] mode = "mock"` (u faqat
+`sandbox = true` bilan ruxsat); aks holda 404. `mpay-tsim` shu yerdan oladi.
+
+`POST /v1/sandbox/integrity-token/device` — o'sha so'rov, lekin **muhrlangan** (PQ Link): kalit va mTLS
+sertifikati kerak emas, `request_hash` **shu sessiyaniki** bo'lishi shart (aks holda 400). Emulyatordagi
+demo ilova shundan foydalanadi — TLS + mTLS sandbox'ida ham (operator yo'li u yerda `403 MTLS_REQUIRED`).
 
 ### 3.8 `POST /v1/authorizations` (terminal)
 
@@ -147,13 +198,102 @@ Javob:
   "issuer_auth_data": "<ARPC(4) ‖ ARC(2), hex>", "risk_score": 50 }
 ```
 
-`response_code`: `00`, `05`, `51`, `59`, `91`, `Q1` (ADR-0007). `reason`: `APPROVED`,
+`response_code`: `00`, `05`, `51`, `54`, `59`, `91`, `Q1`, `Q2` (ADR-0007, ADR-0022). `Q2` — terminal
+"telefonda tasdiqlang" ko'rsatadi va o'sha summa bilan qayta tap kutadi. `reason`: `APPROVED`,
 `APPROVED_AFTER_REVIEW`, `UNKNOWN_TOKEN`, `TOKEN_NOT_ACTIVE`, `LUK_UNKNOWN`, `LUK_EXPIRED`,
 `LUK_EXHAUSTED`, `ARQC_MISMATCH`, `ATC_REPLAY`, `FIELD_MISMATCH`, `ICC_DATA_MISSING`,
 `UNSUPPORTED_SCHEME`, `ISSUER_OFFLINE`, `RISK_DECLINE`, `RISK_REVIEW`, `ACCOUNT_NOT_FOUND`,
-`CURRENCY_MISMATCH`, `INSUFFICIENT_FUNDS`. `issuer_auth_data` faqat ARQC to'g'ri bo'lganda
+`CURRENCY_MISMATCH`, `INSUFFICIENT_FUNDS`, `TOKEN_EXPIRED` (54), `CVM_REQUIRED` va `REVIEW_STEP_UP`
+(Q2). `issuer_auth_data` faqat ARQC to'g'ri bo'lganda
 (replay'da — yo'q). Xatolar: `BAD_REQUEST` (ICC hex/TLV, Track 2, maydon uzunliklari),
 `ISSUER_ERROR` / `ISSUER_FORMAT` (502).
+
+`96` — natija noma'lum (ADR-0024): `ISSUER_TIMEOUT` (emitent `[acquirer] issuer_timeout_ms` ichida
+javob bermadi), `ISSUER_RESPONSE_UNREADABLE`, `OUTCOME_UNKNOWN` (avvalgi ishlov tugamagan). Emitent pul
+yechgan bo'lsa, server uni avtomatik reversal (`0400`/`0401`) bilan qaytaradi. Terminal o'sha so'rovni
+qayta yuborsa — o'sha `96`; xaridni davom ettirish uchun yangi tap (yangi STAN).
+
+### 3.11 `GET /v1/recon` (operator)
+
+Solishtirish (ADR-0024): `?date=YYYY-MM-DD` — sxema vaqti bo'yicha kun (UTC+5; berilmasa — bugun) yoki
+`?from=<unix>&to=<unix>` (≤ 7 kun). Acquirer jurnali 3 kun saqlanadi — undan eski davr `BAD_REQUEST`.
+
+```json
+{ "from": 1793041200, "to": 1793127600, "generated_at": 1793090000,
+  "acquirer_records": 120, "issuer_records": 121, "matched": 119,
+  "approved": [{ "currency": 860, "count": 101, "amount_minor": 125000000 }],
+  "discrepancies": [{ "kind": "ISSUER_ONLY_APPROVED", "terminal_id": "TERM0001",
+    "merchant_id": "SHOP0000000001", "stan": "000011", "rrn": "630014000011",
+    "dpan_masked": "990077******1234", "at": 1793050000, "acquirer_code": null,
+    "acquirer_amount_minor": null, "issuer_code": "00", "issuer_amount_minor": 200000,
+    "issuer_reversed": false, "currency": 860, "reversal": null }],
+  "notes": [] }
+```
+
+`kind`: `ISSUER_ONLY_APPROVED`, `ACQUIRER_ONLY_APPROVED`, `AMOUNT_MISMATCH`, `REVERSAL_FAILED`
+(tafovutlar); `CLEARING_REJECTED` — kliringda rad etilgan (ADR-0025); `REVERSAL_PENDING`, `IN_FLIGHT`
+(`notes` — vaqtinchalik). Har qatorda `clearing` (`ACCEPTED`, `REJECTED:<sabab>`), hisobotda `cleared`.
+PAN yo'q. CLI: `mpay-server recon --date … [--out report.json]` (tafovut bo'lsa chiqish kodi 1).
+
+### 3.12 Kliring (operator, ADR-0025)
+
+`POST /v1/clearing/run` `{"date": "2026-10-26"}` (berilmasa — kecha, UTC+5): paket yaratiladi →
+emitentga → hisob-kitob. Qayta chaqirish xavfsiz (o'sha natija). Kun tugagach `[clearing]
+cutoff_grace_secs` o'tmagan yoki kun ichida javobi noma'lum avtorizatsiya bor — `409
+CLEARING_NOT_READY`; jurnal muddatidan (3 kun) eski — `400`; emitent ishlamadi — `502 ISSUER_ERROR`.
+
+```json
+{ "batch_id": "MPAY20261026", "business_date": "2026-10-26", "state": "SETTLED",
+  "period_from": 1792954800, "period_to": 1793041200, "records": 3, "accepted": 2, "rejected": 1,
+  "totals": [{ "currency": 860, "count": 3, "amount_minor": 1750000 }],
+  "file_sha256": "<64 hex>", "merchant_fee_bps": 150, "interchange_bps": 100,
+  "rejected_items": [{ "seq": 3, "terminal_id": "TERM0001", "merchant_id": "SHOP0000000001",
+    "stan": "000003", "rrn": "630014000003", "dpan_masked": "990077******1234",
+    "amount_minor": 250000, "currency": 860, "code": "12", "reason": "NOT_APPROVED" }],
+  "positions": [
+    { "party": "ACQUIRER", "party_id": "mpay", "currency": 860, "count": 2, "gross_minor": 22500, "fee_minor": 15000, "net_minor": 7500 },
+    { "party": "ISSUER", "party_id": "issuer", "currency": 860, "count": 2, "gross_minor": 1500000, "fee_minor": 15000, "net_minor": 1485000 },
+    { "party": "MERCHANT", "party_id": "SHOP0000000001", "currency": 860, "count": 1, "gross_minor": 1000000, "fee_minor": 15000, "net_minor": 985000 },
+    { "party": "MERCHANT", "party_id": "SHOP0000000002", "currency": 860, "count": 1, "gross_minor": 500000, "fee_minor": 7500, "net_minor": 492500 } ] }
+```
+
+`state`: `BUILT` → `ACKED` → `SETTLED`. `GET /v1/clearing/{date}` — o'sha hisobot (paket yo'q — 404);
+`…/clearing.txt` va `…/ack.txt` — `text/plain` (format: `crates/mpay-common/src/clearing.rs`),
+`…/payouts.csv` — `text/csv` (faqat `SETTLED`).
+
+### 3.13 Hamyon (qurilma, sealed; ADR-0030)
+
+`POST /v1/wallet/tokens` → shu qurilmaning o'chirilmagan kartalari (`created_at` bo'yicha):
+
+```json
+{ "tokens": [ { "token_id": "tok_…", "state": "SUSPENDED", "dpan_masked": "990077******1234",
+  "fpan_masked": "990012******0014", "dpan_expiry": "2910", "created_at": 1792,
+  "updated_at": 1800, "suspended_by": "DEVICE" } ] }
+```
+
+`suspended_by` — faqat `SUSPENDED` da: `DEVICE` (foydalanuvchi) yoki `BANK` (operator).
+
+`POST /v1/wallet/tokens/{token_id}/suspend|resume|delete` (`{}`) → yuqoridagi bitta karta:
+
+* faqat o'z kartasi, aks holda `DEVICE_MISMATCH` (403);
+* bank to'xtatganini qayta yoqish — `SUSPENDED_BY_BANK` (403);
+* ruxsat etilmagan o'tish — `INVALID_STATE` (409);
+* `delete` qaytarib bo'lmaydi; audit aktori `device:<16 hex>`.
+
+`POST /v1/wallet/tokens/{token_id}/transactions`:
+
+* so'rov `{"cursor": "…", "limit": 20}` — ikkalasi ixtiyoriy, `limit` 1–100;
+* javob — yangilari birinchi:
+
+```json
+{ "transactions": [ { "id": "ath_…", "at": 1792, "amount_minor": 1250000, "currency": 860,
+  "merchant_id": "SHOP0000000001", "terminal_id": "TERM0001", "rrn": "…",
+  "status": "APPROVED", "response_code": "00", "reason": "APPROVED", "cleared": false } ],
+  "next_cursor": "1792.7.ath_…" }
+```
+
+* `status`: `APPROVED`, `REVERSED` (reversal bilan qaytarilgan) yoki `DECLINED`;
+* `next_cursor` yo'q — oxirgi sahifa; noto'g'ri kursor — `BAD_REQUEST`.
 
 ### 3.9 `GET /v1/sandbox/accounts` (operator, faqat sandbox)
 
@@ -167,10 +307,14 @@ Emitent test hisoblari: `[{"account_id", "pan_masked", "label", "currency", "bal
 | `UNAUTHORIZED` / `FORBIDDEN` | 401 / 403 |
 | `TOKEN_NOT_FOUND`, `CHALLENGE_NOT_FOUND`, `NOT_FOUND` | 404 |
 | `INVALID_STATE`, `TOO_MANY_TOKENS`, `TOO_MANY_LUKS` | 409 |
+| `TOO_MANY_DEVICES` (karta `max_devices_per_card` qurilmada), `CARD_ALREADY_ON_DEVICE` (ADR-0022) | 409 |
+| `TOKEN_EXPIRED` (LUK to'ldirish; token muddati o'tgan) | 410 |
 | `DEVICE_MISMATCH` | 403 |
+| `SUSPENDED_BY_BANK` (hamyon: bank to'xtatgan kartani qayta yoqish, ADR-0030) | 403 |
 | `OTP_INVALID` / `OTP_EXPIRED` / `OTP_LOCKED` | 422 / 410 / 423 |
 | `UNSUPPORTED_MEDIA_TYPE` | 415 |
-| `IDV_UNAVAILABLE`, `PQLINK_BUSY` | 503 |
+| `IDV_UNAVAILABLE`, `PQLINK_BUSY`, `INTEGRITY_UNAVAILABLE` | 503 |
+| `INTEGRITY_REQUIRED`, `INTEGRITY_INVALID` (provisioning, ADR-0021) | 403 |
 | `PQLINK_MALFORMED`, `PQLINK_HANDSHAKE` | 400 |
 | `PQLINK_ATTESTATION`, `PQLINK_AUTH`, `PQLINK_ENROLLMENT` | 403 |
 | `PQLINK_SESSION` / `PQLINK_REPLAY` | 401 / 409 |

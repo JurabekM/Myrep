@@ -62,16 +62,3 @@ object BiometricGate {
         prompt.authenticate(info)
     }
 }
-
-/**
- * Play Integrity — hozircha interfeys va stub (`TODO(spec):` Google Play Integrity API, server
- * tomonida token tekshiruvi, M7+).
- */
-interface IntegrityProvider {
-    /** `nonce` uchun integrity token (null — mavjud emas). */
-    fun token(nonce: ByteArray): String?
-}
-
-object StubIntegrityProvider : IntegrityProvider {
-    override fun token(nonce: ByteArray): String? = null
-}

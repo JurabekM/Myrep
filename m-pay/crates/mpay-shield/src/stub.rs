@@ -116,6 +116,7 @@ mod tests {
             attestation_level: level,
             existing_tokens_for_pan: 0,
             existing_tokens_for_device: 0,
+            integrity: None,
             at: OffsetDateTime::UNIX_EPOCH,
         }
     }

@@ -40,7 +40,7 @@ TB4: server ↔ DB (DB ishonchsiz deb qaraladi — faqat shifrmatn).
 | ID | Kategoriya | Tahdid | Nazorat | Holat |
 |---|---|---|---|---|
 | S1 | Spoofing | Soxta server qurilmaga LUK beradi | Gibrid imzo Ed25519 **va** ML-DSA-65, server kaliti build vaqtida pinlangan (P1.5); kalit almashtirish faqat joriy kalit tasdig'i bilan (P1.6, ADR-0012); oshkor bo'lgan kalit — oflayn ildiz imzolagan bekor qilish ro'yxati (ADR-0014) | M2/P1.5/P1.6 |
-| S2 | Spoofing | Emulyator/rootlangan qurilma o'zini haqiqiy deb ko'rsatadi; eski (root'dan oldingi) attestatsiyani qayta ishlatadi | Android Key Attestation zanjiri, xavfsizlik darajasi siyosati; yangi qurilma challenge'i — server nonce'i, qurilmalar reyestri (P1.7, ADR-0013), davriy qayta attestatsiya — kalit almashtirish (ADR-0015); Play Integrity (stub) | M2/M6/P1.7 |
+| S2 | Spoofing | Emulyator/rootlangan qurilma o'zini haqiqiy deb ko'rsatadi; eski (root'dan oldingi) attestatsiyani qayta ishlatadi | Android Key Attestation zanjiri, xavfsizlik darajasi siyosati; yangi qurilma challenge'i — server nonce'i, qurilmalar reyestri (P1.7, ADR-0013), davriy qayta attestatsiya — kalit almashtirish (ADR-0015); provisioning'da Play Integrity (ADR-0021): token sessiyaga bog'langan, root/tanilmagan ilova/masofaviy boshqaruv — RED, basic — step-up OTP (sandbox'da mock; Google bilan integratsiya `TODO(spec)`) | M2/M6/P1.7/P2.6 |
 | S3 | Spoofing | Soxta terminal yoki operator API'ga murojaat (o'g'irlangan kalit) | Rol bo'yicha Bearer kalitlari (SHA-256 xesh, constant-time solishtirish) + mTLS: sertifikat CN'i kalit ID'siga teng (ADR-0011) | M3/P1.3 |
 | S4 | Spoofing | Ko'chirilgan token boshqa qurilmada ishlatiladi | Token qurilmaga bog'langan; LUK faqat bog'langan qurilma sessiyasida to'ldiriladi | M3 |
 | T1 | Tampering | Summa/valyuta APDU yoki ISO 8583 da o'zgartiriladi | ARQC CDOL ichida summa/valyuta/UN; issuer maydon 4/49 ni 9F02/5F2A bilan solishtiradi | M4 |
@@ -56,7 +56,8 @@ TB4: server ↔ DB (DB ishonchsiz deb qaraladi — faqat shifrmatn).
 | D1 | DoS | Noto'g'ri kriptogramma bilan LUK hisoblagichini "yoqish" | LUK foydalanishi faqat ARQC muvaffaqiyatli tekshirilgandan keyin hisoblanadi | M4 |
 | D2 | DoS | Handshake toshqini (ML-KEM/ML-DSA qimmat) | Sessiyalar soni va TTL; bir vaqtdagi handshake'lar semafori (503), IP / API kaliti / qurilma bo'yicha token bucket (429 + Retry-After) | M2/P1.1 |
 | E1 | Elevation | Terminal kaliti bilan detokenizatsiya | Detokenizatsiya HTTP'da ochilmagan; faqat issuer moduliga beriladigan port | M3 |
-| E2 | Elevation | Muddati o'tgan/to'xtatilgan token bilan to'lov | Issuer token holatini va LUK TTL/limitini har tranzaksiyada tekshiradi | M4 |
+| E2 | Elevation | Muddati o'tgan/to'xtatilgan token bilan to'lov | Issuer token holatini, DPAN muddatini (`54`) va LUK TTL/limitini har tranzaksiyada tekshiradi; LUK token muddatidan oshmaydi (ADR-0022) | M4/P2.7 |
+| E4 | Elevation | O'zgartirilgan hamyon CDCVM'siz katta summa o'tkazadi; o'g'irlangan (qulfi ochiq) telefondan REVIEW to'lov | Emitent CVM chegarasini CVR bo'yicha o'zi tekshiradi (`Q2`; CVR ARQC bilan himoyalangan); REVIEW `step_up` — CDCVM'siz `Q2` (ADR-0022) | P2.7 |
 | E3 | Elevation | Takroriy (replay) tranzaksiya | ATC token bo'yicha qat'iy o'sishi shart; UN terminal tomonidan tasodifiy | M4 |
 | E4 | Tampering | Terminal STAN'ini boshqa tranzaksiya uchun qayta ishlatish; timeout'dan keyingi qayta yuborish noto'g'ri `Q1` beradi | Acquirer `(terminal, STAN, sana)` jadvali: bir xil so'rov — avvalgi javob, boshqa mazmun — `94` (ADR-0010) | P1.2 |
 

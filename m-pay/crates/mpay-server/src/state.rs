@@ -65,6 +65,8 @@ pub struct AppState {
     pub limits: crate::ratelimit::RateLimits,
     pub require_mtls: bool,
     pub trusted_proxies: Vec<crate::clientip::Cidr>,
+    /// OTP yetkazish kanali.
+    pub otp: crate::otp::OtpChannel,
     /// Davriy qayta attestatsiya muddati (soniya); 0 — o'chiq.
     pub reattest_after_secs: i64,
     /// Kalit almashtirish: keyingi identifikator va joriy kalitlar tasdig'i (boot paytida hisoblanadi).
@@ -75,6 +77,18 @@ pub struct AppState {
     pub enrollment: Option<Arc<crate::enroll::Enrollment>>,
     pub sandbox: bool,
     pub expose_otp: bool,
+    /// Play Integrity tekshiruvi (`[integrity] mode = "off"` — `None`; ADR-0021).
+    pub integrity: Option<Arc<mpay_integrity::Integrity>>,
+    /// Sandbox mock tokenlari chiqaruvchisi (`mode = "mock"`).
+    pub integrity_mock: Option<Arc<crate::integrity::SandboxIssuer>>,
+    /// CVM chegarasi (`[issuer] cvm_limit_minor`) — token profilida qurilmaga beriladi (ADR-0022).
+    pub cvm_limit_minor: u64,
+    /// Emitent timeout'i va reversal (ADR-0024).
+    pub acquirer: crate::config::AcquirerConfig,
+    /// Kliring tariflari (ADR-0025).
+    pub clearing: crate::config::ClearingConfig,
+    /// Kutilgan PostgreSQL replikalari (ADR-0027, metrika uchun).
+    pub expected_replicas: u32,
 }
 
 impl std::fmt::Debug for AppState {
@@ -129,6 +143,7 @@ impl AppState {
             ));
         }
         self.limits.api_key(&c.id).map_err(|l| {
+            crate::metrics::rate_limited(crate::metrics::Limit::ApiKey);
             tracing::warn!(key = %c.id, "rate-limit: API kaliti");
             crate::error::ApiError::rate_limited(l, false)
         })?;
@@ -236,49 +251,69 @@ fn pem_to_der(pem: &str) -> Vec<Vec<u8>> {
 /// Shield port'lari: `(ID&V, risk)`.
 pub type ShieldPorts = (Arc<dyn IdvDecider>, Arc<dyn RiskScorer>);
 
-/// Shield port'lari (ID&V va risk) — konfiguratsiya bo'yicha dvigatel yoki stub.
+/// Shield port'lari (ID&V va risk) — konfiguratsiya bo'yicha dvigatel, Shield roli (masofaviy,
+/// mahalliy zaxira bilan) yoki stub.
 pub fn build_shield(cfg: &Config) -> Result<ShieldPorts, BootError> {
-    use crate::config::ShieldEngine;
-    let sc = &cfg.shield;
-    match sc.engine {
-        ShieldEngine::Stub => {
+    use crate::config::{ShieldEngine, ShieldMode};
+    match (cfg.shield.engine, cfg.shield.mode) {
+        (ShieldEngine::Stub, _) => {
             tracing::warn!("Shield: deterministik STUB (faqat testlar)");
             let s = Arc::new(StubShield::new(cfg.shield_stub.clone()));
             Ok((s.clone(), s))
         }
-        ShieldEngine::Engine => {
-            let rules = match &sc.rules_file {
-                Some(p) => RuleSet::parse(&String::from_utf8_lossy(&read(&cfg.resolve(p))?)),
-                None => RuleSet::default_rules(),
-            }
-            .map_err(BootError::Config)?;
-            let ml: Option<Arc<dyn MlScorer>> = if sc.disable_ml {
-                None
-            } else {
-                let m = match (&sc.model_file, &sc.model_meta_file) {
-                    (Some(m), Some(j)) => TractScorer::load(
-                        &read(&cfg.resolve(m))?,
-                        &String::from_utf8_lossy(&read(&cfg.resolve(j))?),
-                    ),
-                    (None, None) => TractScorer::default_model(),
-                    _ => {
-                        return Err(BootError::Config(
-                            "shield.model_file va model_meta_file birga".into(),
-                        ))
-                    }
-                }
-                .map_err(BootError::Config)?;
-                tracing::info!(
-                    model = m.meta().version,
-                    "Shield: ONNX model yuklandi (tract)"
-                );
-                Some(Arc::new(m))
-            };
-            tracing::info!(rules = %rules.version, txn_rules = rules.txn_rule.len(), idv_rules = rules.idv_rule.len(), "Shield: dvigatel");
-            let s = Arc::new(Shield::new(rules, ml));
+        (ShieldEngine::Engine, ShieldMode::Local) => {
+            let s = build_engine(cfg)?;
             Ok((s.clone(), s))
         }
+        (ShieldEngine::Engine, ShieldMode::Remote) => {
+            let rc = cfg.shield.remote.as_ref().ok_or_else(|| {
+                BootError::Config("shield.mode = remote uchun [shield.remote] kerak".into())
+            })?;
+            // Zaxira: Shield roli javob bermasa — shu instansiyaning o'z dvigateli (belgilar faqat
+            // shu instansiya ko'rgan hodisalardan — tezlik qoidalari yumshoqroq, `SHIELD_DEGRADED`).
+            let local = build_engine(cfg)?;
+            let r = Arc::new(
+                crate::shield_client::RemoteShield::new(rc, |p| cfg.resolve(p), local)
+                    .map_err(BootError::Config)?,
+            );
+            tracing::info!(url = %rc.url, standby = ?rc.standby_urls, "Shield: masofaviy rol (mahalliy zaxira bilan)");
+            Ok((r.clone(), r))
+        }
     }
+}
+
+/// Shield dvigateli (qoidalar + ixtiyoriy ML) — `local` rejim, zaxira va Shield rolining o'zi.
+pub fn build_engine(cfg: &Config) -> Result<Arc<Shield>, BootError> {
+    let sc = &cfg.shield;
+    let rules = match &sc.rules_file {
+        Some(p) => RuleSet::parse(&String::from_utf8_lossy(&read(&cfg.resolve(p))?)),
+        None => RuleSet::default_rules(),
+    }
+    .map_err(BootError::Config)?;
+    let ml: Option<Arc<dyn MlScorer>> = if sc.disable_ml {
+        None
+    } else {
+        let m = match (&sc.model_file, &sc.model_meta_file) {
+            (Some(m), Some(j)) => TractScorer::load(
+                &read(&cfg.resolve(m))?,
+                &String::from_utf8_lossy(&read(&cfg.resolve(j))?),
+            ),
+            (None, None) => TractScorer::default_model(),
+            _ => {
+                return Err(BootError::Config(
+                    "shield.model_file va model_meta_file birga".into(),
+                ))
+            }
+        }
+        .map_err(BootError::Config)?;
+        tracing::info!(
+            model = m.meta().version,
+            "Shield: ONNX model yuklandi (tract)"
+        );
+        Some(Arc::new(m))
+    };
+    tracing::info!(rules = %rules.version, txn_rules = rules.txn_rule.len(), idv_rules = rules.idv_rule.len(), "Shield: dvigatel");
+    Ok(Arc::new(Shield::new(rules, ml)))
 }
 
 /// Bekor qilish ro'yxatini o'qiydi; joriy yoki keyingi identifikator ro'yxatda bo'lsa — ishga tushmaydi.
@@ -319,6 +354,14 @@ fn load_revocations(
         "PQ Link: bekor qilish ro'yxati"
     );
     Ok(Some(dto))
+}
+
+/// CLI buyruqlari (`identity`, `audit-verify`, …) uchun: tarmoqqa chiqmaydigan komponentlar —
+/// OTP kanali `sandbox` (SMS shlyuzi tokeni talab qilinmaydi).
+pub async fn build_offline(cfg: &Config) -> Result<AppState, BootError> {
+    let mut cfg = cfg.clone();
+    cfg.otp = crate::otp::OtpConfig::default();
+    build(&cfg).await
 }
 
 /// Barcha komponentlarni yig'adi.
@@ -362,18 +405,21 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         },
         ..ServerConfig::default()
     };
-    let db_path = cfg.resolve(&cfg.database.path);
-    let pool = mpay_vault::db::open_pool_with(
-        &format!("sqlite://{}", db_path.display()),
-        cfg.database.synchronous,
-        cfg.database.max_connections,
-    )
-    .await?;
-    crate::dedup::migrate(&pool).await?;
+    let url = cfg
+        .database
+        .connect_url(|p| cfg.resolve(p))
+        .map_err(BootError::Config)?;
+    let db = mpay_vault::db::Db::open(&url, cfg.database.synchronous, cfg.database.max_connections)
+        .await
+        .map_err(|e| BootError::Config(format!("ma'lumotlar bazasi: {e}")))?;
+    tracing::info!(dialect = ?db.dialect(), "ma'lumotlar bazasi");
+    crate::dedup::migrate(&db).await?;
+    let pool = db.pool().clone();
     let enrollment = match cfg.pqlink.enrollment {
         crate::config::EnrollmentMode::Required => Some(Arc::new(
             crate::enroll::Enrollment::new(
                 pool.clone(),
+                ks.clone(),
                 clock.clone(),
                 cfg.pqlink.enrollment_nonce_ttl_secs,
             )
@@ -385,6 +431,29 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         }
     };
     let mut pq = PqLinkServer::new(signer, anchors, pq_cfg, clock.clone());
+    let shared_sessions = match cfg.pqlink.session_store {
+        crate::config::SessionStoreKind::Auto => db.dialect() == mpay_vault::db::Dialect::Postgres,
+        crate::config::SessionStoreKind::Memory => false,
+        crate::config::SessionStoreKind::Database => true,
+    };
+    if shared_sessions {
+        // Ko'p instansiya: sessiyalar DB'da (kalitlar KEK bilan shifrlangan).
+        pq = pq.with_store(Arc::new(crate::sessions::DbSessionStore::new(
+            pool.clone(),
+            ks.clone(),
+            clock.clone(),
+        )));
+    }
+    tracing::info!(shared = shared_sessions, "PQ Link sessiyalari ombori");
+    let mut limits = crate::ratelimit::RateLimits::new(&cfg.rate_limit);
+    if cfg.rate_limit.enabled && cfg.rate_limit.shared.unwrap_or(shared_sessions) {
+        // Ko'p instansiya: IP va qurilma chegaralari umumiy (ADR-0019).
+        limits = limits.with_shared(crate::shared_limits::SharedLimits::new(
+            db.clone(),
+            &cfg.rate_limit,
+        ));
+    }
+    tracing::info!(shared = limits.is_shared(), "so'rovlar chegarasi");
     if let Some(e) = &enrollment {
         pq = pq.with_enrollment(e.clone());
     }
@@ -392,7 +461,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let (idv, risk) = build_shield(cfg)?;
     let vault = Arc::new(
         Vault::open(
-            pool.clone(),
+            db.clone(),
             ks.clone(),
             scheme.clone(),
             idv,
@@ -405,7 +474,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
     let detok = Arc::new(VaultDetokenizer::new(vault.clone(), "issuer"));
     let issuer = Arc::new(
         Issuer::open(
-            pool,
+            db,
             ks.clone(),
             scheme.clone(),
             detok,
@@ -421,6 +490,7 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         server_fp = %hex::encode(pqlink.identity().fingerprint()),
         "mpay-server komponentlari tayyor"
     );
+    let (integrity, integrity_mock) = crate::integrity::build(cfg).map_err(BootError::Config)?;
     Ok(AppState {
         vault,
         issuer,
@@ -429,14 +499,22 @@ pub async fn build(cfg: &Config) -> Result<AppState, BootError> {
         scheme,
         clock,
         auth: Authenticator::new(&cfg.auth.keys),
-        limits: crate::ratelimit::RateLimits::new(&cfg.rate_limit),
+        limits,
         require_mtls: cfg.auth.require_mtls,
         trusted_proxies: cfg.http.trusted_proxies.clone(),
+        otp: crate::otp::OtpChannel::from_config(&cfg.otp, |p| cfg.resolve(p))
+            .map_err(BootError::Config)?,
         reattest_after_secs: i64::from(cfg.pqlink.reattest_after_days) * 86_400,
         next_identity,
         revocations,
         enrollment,
         sandbox: cfg.sandbox,
         expose_otp: cfg.sandbox && cfg.sandbox_api.expose_otp,
+        integrity,
+        integrity_mock,
+        cvm_limit_minor: cfg.issuer.cvm_limit_minor,
+        acquirer: cfg.acquirer.clone(),
+        clearing: cfg.clearing.clone(),
+        expected_replicas: cfg.database.expected_replicas,
     })
 }

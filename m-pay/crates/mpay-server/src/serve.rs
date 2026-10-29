@@ -4,6 +4,7 @@ use std::future::Future;
 use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::Arc;
+use std::time::Duration;
 
 use axum::extract::ConnectInfo;
 use axum::Router;
@@ -60,38 +61,89 @@ pub fn load_tls(
     Ok(Arc::new(cfg))
 }
 
-/// Serverni ishga tushiradi; `shutdown` tugaganda yangi ulanishlar qabul qilinmaydi.
+/// Ulanish qabul qilish sozlamalari.
+#[derive(Clone, Default)]
+pub struct Accept {
+    pub tls: Option<Arc<rustls::ServerConfig>>,
+    /// Bekor qilingan mijoz sertifikatlari (SHA-256).
+    pub revoked: Arc<std::collections::HashSet<[u8; 32]>>,
+    /// PROXY protocol v1 (`[http] proxy_protocol`): shu tarmoqlardan kelgan ulanish sarlavha bilan
+    /// boshlanishi shart, boshqalari to'g'ridan-to'g'ri (masalan ichki sog'liq tekshiruvi).
+    pub proxy_from: Option<Arc<Vec<crate::clientip::Cidr>>>,
+}
+
+/// TLS handshake shu vaqtda tugamasa ulanish yopiladi (sekin mijoz ulanish slotini band qilmasin).
+const TLS_HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
+/// To'xtatishda ochiq so'rovlarni kutish (Docker `stop_grace_period` dan kichik).
+const DRAIN_TIMEOUT: Duration = Duration::from_secs(8);
+
+/// Serverni ishga tushiradi. `shutdown` tugaganda yangi ulanishlar qabul qilinmaydi, ochiq
+/// ulanishlar joriy so'rovni tugatib yopiladi (graceful, [`DRAIN_TIMEOUT`] gacha) — load balancer
+/// ortidagi instansiya to'xtatilganda so'rovlar uzilmaydi.
 pub async fn serve(
     listener: TcpListener,
     app: Router,
-    tls: Option<Arc<rustls::ServerConfig>>,
-    revoked: Arc<std::collections::HashSet<[u8; 32]>>,
+    opts: Accept,
     shutdown: impl Future<Output = ()> + Send + 'static,
 ) -> std::io::Result<()> {
-    let Some(tls) = tls else {
+    if opts.tls.is_none() && opts.proxy_from.is_none() {
         return axum::serve(
             listener,
             app.into_make_service_with_connect_info::<SocketAddr>(),
         )
         .with_graceful_shutdown(shutdown)
         .await;
-    };
-    let acceptor = TlsAcceptor::from(tls);
+    }
+    let acceptor = opts.tls.map(TlsAcceptor::from);
+    let (stop_tx, stop_rx) = tokio::sync::watch::channel(false);
+    let mut conns = tokio::task::JoinSet::new();
     tokio::pin!(shutdown);
     loop {
-        let (tcp, peer) = tokio::select! {
-            r = listener.accept() => r?,
-            () = &mut shutdown => return Ok(()),
+        let (mut tcp, mut peer) = tokio::select! {
+            r = listener.accept() => match r {
+                Ok(x) => x,
+                // Masalan fayl deskriptorlari tugadi (EMFILE): server to'xtamaydi, biroz kutadi.
+                Err(e) => {
+                    tracing::warn!(error = %e, "ulanishni qabul qilib bo'lmadi");
+                    tokio::time::sleep(Duration::from_millis(50)).await;
+                    continue;
+                }
+            },
+            () = &mut shutdown => break,
         };
+        while conns.try_join_next().is_some() {}
         let acceptor = acceptor.clone();
-        let revoked = revoked.clone();
+        let revoked = opts.revoked.clone();
+        let proxy_from = opts.proxy_from.clone();
+        let stop = stop_rx.clone();
         // Mijoz manzili (IP chegarasi) va mTLS sertifikat CN'i so'rov kengaytmalariga qo'yiladi.
         let app = app.clone();
-        tokio::spawn(async move {
-            let tls = match acceptor.accept(tcp).await {
-                Ok(s) => s,
-                Err(e) => {
+        conns.spawn(async move {
+            if proxy_from.is_some_and(|n| n.iter().any(|c| c.contains(peer.ip()))) {
+                match crate::proxyproto::read_v1(&mut tcp).await {
+                    Ok(Some(client)) => peer = client,
+                    // `UNKNOWN` — proksining o'z tekshiruvi: manzil proksiniki qoladi.
+                    Ok(None) => {}
+                    Err(e) => {
+                        crate::metrics::proxy_rejected();
+                        tracing::warn!(%peer, error = %e, "PROXY protocol sarlavhasi yaroqsiz");
+                        return;
+                    }
+                }
+            }
+            let Some(acceptor) = acceptor else {
+                serve_conn(TokioIo::new(tcp), app, peer, None, stop).await;
+                return;
+            };
+            let tls = match tokio::time::timeout(TLS_HANDSHAKE_TIMEOUT, acceptor.accept(tcp)).await
+            {
+                Ok(Ok(s)) => s,
+                Ok(Err(e)) => {
                     tracing::debug!(%peer, error = %e, "TLS handshake xatosi");
+                    return;
+                }
+                Err(_) => {
+                    tracing::debug!(%peer, "TLS handshake vaqti tugadi");
                     return;
                 }
             };
@@ -110,20 +162,52 @@ pub async fn serve(
                         crate::auth::cert_cn(c.as_ref())
                     }
                 });
-            let svc = TowerToHyperService::new(tower::ServiceExt::map_request(
-                app,
-                move |mut r: axum::http::Request<hyper::body::Incoming>| {
-                    r.extensions_mut().insert(ConnectInfo(peer));
-                    r.extensions_mut().insert(crate::auth::PeerCert(cn.clone()));
-                    r
-                },
-            ));
-            if let Err(e) = Builder::new(TokioExecutor::new())
-                .serve_connection(TokioIo::new(tls), svc)
-                .await
-            {
-                tracing::debug!(%peer, error = %e, "ulanish xatosi");
-            }
+            serve_conn(TokioIo::new(tls), app, peer, cn, stop).await;
         });
+    }
+    drop(listener);
+    let _ = stop_tx.send(true);
+    let open = conns.len();
+    let drain = async { while conns.join_next().await.is_some() {} };
+    if tokio::time::timeout(DRAIN_TIMEOUT, drain).await.is_err() {
+        tracing::warn!(
+            open,
+            "to'xtatish: ochiq ulanishlar kutish vaqtida tugamadi — uziladi"
+        );
+        conns.abort_all();
+    }
+    Ok(())
+}
+
+async fn serve_conn<I>(
+    io: TokioIo<I>,
+    app: Router,
+    peer: SocketAddr,
+    cn: Option<String>,
+    mut stop: tokio::sync::watch::Receiver<bool>,
+) where
+    I: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static,
+{
+    let svc = TowerToHyperService::new(tower::ServiceExt::map_request(
+        app,
+        move |mut r: axum::http::Request<hyper::body::Incoming>| {
+            r.extensions_mut().insert(ConnectInfo(peer));
+            r.extensions_mut().insert(crate::auth::PeerCert(cn.clone()));
+            r
+        },
+    ));
+    let builder = Builder::new(TokioExecutor::new());
+    let conn = builder.serve_connection(io, svc);
+    tokio::pin!(conn);
+    let r = tokio::select! {
+        r = conn.as_mut() => r,
+        () = async { drop(stop.wait_for(|s| *s).await) } => {
+            // Joriy so'rov tugaydi, keep-alive ulanish yopiladi.
+            conn.as_mut().graceful_shutdown();
+            conn.await
+        }
+    };
+    if let Err(e) = r {
+        tracing::debug!(%peer, error = %e, "ulanish xatosi");
     }
 }

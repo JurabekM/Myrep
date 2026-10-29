@@ -131,3 +131,66 @@ all = [
   { feature = "card_device_count", op = ">=", value = 2 },
   { feature = "device_age_secs_log", op = "<=", value = 8.19 },
 ]
+
+# ------------------------------------------------------------------ yaxlitlik (P2.6, ADR-0021)
+# Play Integrity (yoki sandbox mock) verdict'i — server token haqiqiyligi, paket, imzo sertifikati,
+# requestHash va yangilikni allaqachon tekshirgan. Bu yerda faqat verdict sifati baholanadi.
+
+[[idv_rule]]
+id = "IDV_INTEGRITY_APP_UNRECOGNIZED"
+reason = "Ilova Play tomonidan tanilmagan yoki baholanmagan (o'zgartirilgan / Play'dan tashqari o'rnatilgan)"
+points = 800
+action = "DECLINE"
+all = [
+  { feature = "integrity_present", op = "==", value = 1 },
+  { feature = "integrity_app", op = "<=", value = 1 },
+]
+
+[[idv_rule]]
+id = "IDV_INTEGRITY_DEVICE_NONE"
+reason = "Qurilma yaxlitlik talabiga javob bermaydi (root, buzilgan tizim)"
+points = 800
+action = "DECLINE"
+all = [
+  { feature = "integrity_present", op = "==", value = 1 },
+  { feature = "integrity_device", op = "==", value = 0 },
+]
+
+[[idv_rule]]
+id = "IDV_INTEGRITY_BASIC_ONLY"
+reason = "Qurilma faqat basic yaxlitlikda (sertifikatlanmagan yoki virtual) — step-up OTP"
+points = 450
+action = "REVIEW"
+all = [
+  { feature = "integrity_present", op = "==", value = 1 },
+  { feature = "integrity_device", op = "==", value = 1 },
+]
+
+[[idv_rule]]
+id = "IDV_INTEGRITY_ENV_RISK"
+reason = "Qurilma muhitida xavf (Play Protect ogohlantirishi) — step-up OTP"
+points = 450
+action = "REVIEW"
+all = [
+  { feature = "integrity_present", op = "==", value = 1 },
+  { feature = "integrity_env_risk", op = ">=", value = 2 },
+]
+
+[[idv_rule]]
+id = "IDV_INTEGRITY_ENV_HIGH_RISK"
+reason = "Yuqori muhit xavfi: zararli ilova yoki ekranni noma'lum ilova boshqaradi (masofaviy kirish firibgarligi)"
+points = 800
+action = "DECLINE"
+all = [
+  { feature = "integrity_present", op = "==", value = 1 },
+  { feature = "integrity_env_risk", op = ">=", value = 3 },
+]
+
+[[idv_rule]]
+id = "IDV_INTEGRITY_UNLICENSED"
+reason = "Ilova litsenziyasiz (Play'dan o'rnatilmagan)"
+points = 300
+all = [
+  { feature = "integrity_present", op = "==", value = 1 },
+  { feature = "integrity_licensed", op = "==", value = 1 },
+]

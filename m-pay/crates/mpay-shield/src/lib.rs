@@ -9,11 +9,14 @@ pub mod engine;
 pub mod features;
 pub mod graph;
 pub mod model;
+pub mod remote;
 pub mod replay;
 pub mod rules;
+pub mod snapshot;
 pub mod stub;
 
 pub use engine::Shield;
+pub use snapshot::SnapshotError;
 pub use stub::{StubShield, StubShieldConfig};
 
 /// Crate versiyasi.

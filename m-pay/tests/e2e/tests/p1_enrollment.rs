@@ -103,6 +103,16 @@ async fn enrollment_off_only_in_sandbox() {
     prod.sandbox_api.expose_otp = false;
     prod.http.tls_cert = Some("tls-cert.pem".into());
     prod.http.tls_key = Some("tls-key.pem".into());
+    // P2.6: production'da mock yaxlitlik taqiqlangan — Google dekodlash.
+    prod.integrity.mode = mpay_server::config::IntegrityMode::Google;
+    prod.integrity.mock_key = None;
+    prod.integrity.google = Some(mpay_server::config::GoogleIntegrityConfig {
+        base_url: "https://playintegrity.googleapis.com".into(),
+        access_token_env: Some("MPAY_PLAY_INTEGRITY_TOKEN".into()),
+        access_token_file: None,
+        service_account_file: None,
+        timeout_ms: 2000,
+    });
     let err = prod.validate().unwrap_err().to_string();
     assert!(err.contains("pqlink.enrollment"), "{err}");
     prod.pqlink.enrollment = EnrollmentMode::Required;

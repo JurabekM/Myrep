@@ -23,3 +23,14 @@ __pycache__/
 /android/.kotlin/
 /fuzz/logs/
 /fuzz/logs-*.txt
+
+# compose muhiti (2-faza P2.5): sirlar va zaxiralar
+/deploy/secrets/
+/deploy/backups/
+
+# Jazzer: lokal korpus va crash fayllari (regressiya kirishlari — src/test/resources)
+/android/mpay-core/.cifuzz-corpus/
+/android/mpay-core/crash-*
+
+# Tayyor APK/installerlar (build papkasidan ko'chiriladi, repoga tushmaydi)
+/dist/

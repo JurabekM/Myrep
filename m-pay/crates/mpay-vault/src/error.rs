@@ -20,6 +20,12 @@ pub enum VaultError {
     TooManyTokens,
     #[error("faol LUK'lar limiti to'ldi")]
     TooManyLuks,
+    #[error("karta ruxsat etilgan sondagi qurilmada tokenlashtirilgan")]
+    TooManyDevices,
+    #[error("bu karta shu qurilmada allaqachon tokenlashtirilgan")]
+    CardAlreadyOnDevice,
+    #[error("token muddati o'tgan")]
+    TokenExpired,
     #[error("ID&V rad etdi")]
     IdvDeclined,
     #[error("ID&V xizmati javob bermadi: {0}")]
@@ -32,6 +38,10 @@ pub enum VaultError {
     OtpExpired,
     #[error("OTP urinishlari tugadi")]
     OtpLocked,
+    #[error("OTP qayta yuborish chegarasi tugadi")]
+    OtpResendLimit,
+    #[error("kartani bank to'xtatgan — faqat bank qayta yoqadi")]
+    SuspendedByBank,
     #[error("audit zanjiri buzilgan: seq {0}")]
     AuditBroken(i64),
     #[error("kriptografiya xatosi: {0}")]
@@ -50,12 +60,17 @@ impl VaultError {
             Self::DeviceMismatch => "DEVICE_MISMATCH",
             Self::TooManyTokens => "TOO_MANY_TOKENS",
             Self::TooManyLuks => "TOO_MANY_LUKS",
+            Self::TooManyDevices => "TOO_MANY_DEVICES",
+            Self::CardAlreadyOnDevice => "CARD_ALREADY_ON_DEVICE",
+            Self::TokenExpired => "TOKEN_EXPIRED",
             Self::IdvDeclined => "IDV_DECLINED",
             Self::IdvUnavailable(_) => "IDV_UNAVAILABLE",
             Self::ChallengeNotFound => "CHALLENGE_NOT_FOUND",
             Self::OtpInvalid => "OTP_INVALID",
             Self::OtpExpired => "OTP_EXPIRED",
             Self::OtpLocked => "OTP_LOCKED",
+            Self::OtpResendLimit => "OTP_RESEND_LIMIT",
+            Self::SuspendedByBank => "SUSPENDED_BY_BANK",
             Self::AuditBroken(_) => "AUDIT_BROKEN",
             Self::Crypto(_) => "CRYPTO_ERROR",
             Self::Db(_) => "DB_ERROR",

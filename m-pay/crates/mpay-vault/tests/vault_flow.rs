@@ -28,9 +28,16 @@ struct Env {
 async fn env_with(cfg: VaultConfig) -> Env {
     let dir = tempfile::tempdir().unwrap();
     let db_path = dir.path().join("vault.db");
-    let pool = mpay_vault::db::open_pool(&format!("sqlite://{}", db_path.display()))
-        .await
-        .unwrap();
+    // 2-faza P2.3: `MPAY_TEST_PG_URL` bo'lsa — PostgreSQL (har test o'z bazasida).
+    let pool = match std::env::var("MPAY_TEST_PG_URL") {
+        Ok(admin) => {
+            let url = mpay_db::fresh_test_database(&admin).await.unwrap();
+            mpay_vault::db::Db::open(&url, mpay_vault::db::Durability::Full, None)
+                .await
+                .unwrap()
+        }
+        Err(_) => mpay_vault::db::Db::open_sqlite(&db_path).await.unwrap(),
+    };
     let ks: Arc<dyn KeyStore> = Arc::new(MemoryKeyStore::from_seed([7; 32]));
     ensure_standard_keys(ks.as_ref()).unwrap();
     let clock = Arc::new(ManualClock::new(OffsetDateTime::now_utc()));
@@ -73,6 +80,7 @@ fn req(p: &Pan) -> ProvisionRequest {
     ProvisionRequest {
         fpan: p.clone(),
         expiry: CardExpiry::new(2031, 12).unwrap(),
+        integrity: None,
     }
 }
 
@@ -396,30 +404,63 @@ async fn pan_is_only_stored_encrypted() {
         .unwrap();
     assert_eq!(cards, 1);
 
-    sqlx::query("PRAGMA wal_checkpoint(TRUNCATE)")
-        .execute(e.vault.pool())
-        .await
-        .unwrap();
-    let mut raw = std::fs::read(&e.db_path).unwrap();
-    if let Ok(wal) = std::fs::read(e.db_path.with_extension("db-wal")) {
-        raw.extend_from_slice(&wal);
-    }
+    let raw = db_dump(&e).await;
+    let has = |needle: &[u8]| raw.windows(needle.len()).any(|w| w == needle);
     for secret in [p.expose_digits(), profile.dpan.expose_digits()] {
         let needle = secret.as_bytes();
-        assert!(
-            !raw.windows(needle.len()).any(|w| w == needle),
-            "DB faylida ochiq PAN topildi"
-        );
-        // Track 2 BCD ko'rinishi ham yo'q.
+        assert!(!has(needle), "DB'da ochiq PAN topildi");
+        // Track 2 BCD ko'rinishi ham yo'q (PostgreSQL dump'ida BYTEA hex sifatida).
         let bcd: Vec<u8> = needle
             .chunks(2)
             .map(|c| ((c[0] - b'0') << 4) | (c[1] - b'0'))
             .collect();
-        assert!(!raw.windows(bcd.len()).any(|w| w == bcd.as_slice()));
+        assert!(!has(&bcd));
+        assert!(!has(hex::encode(&bcd).as_bytes()));
     }
     // LUK kalitlari ham DB'da yo'q.
     let key = profile.luks[0].key.expose();
-    assert!(!raw.windows(16).any(|w| w == key));
+    assert!(!has(key));
+    assert!(!has(hex::encode(key).as_bytes()));
+}
+
+/// DB'dagi barcha ma'lumot baytlari: SQLite — fayl va WAL; PostgreSQL — har jadval qatorlarining
+/// matn ko'rinishi (`row::text`, BYTEA — hex).
+async fn db_dump(e: &Env) -> Vec<u8> {
+    use mpay_vault::db::Dialect;
+    match e.vault.db().dialect() {
+        Dialect::Sqlite => {
+            sqlx::query("PRAGMA wal_checkpoint(TRUNCATE)")
+                .execute(e.vault.pool())
+                .await
+                .unwrap();
+            let mut raw = std::fs::read(&e.db_path).unwrap();
+            if let Ok(wal) = std::fs::read(e.db_path.with_extension("db-wal")) {
+                raw.extend_from_slice(&wal);
+            }
+            raw
+        }
+        Dialect::Postgres => {
+            let tables: Vec<String> = sqlx::query_scalar(
+                "SELECT tablename::text FROM pg_tables WHERE schemaname = 'public'",
+            )
+            .fetch_all(e.vault.pool())
+            .await
+            .unwrap();
+            assert!(tables.iter().any(|t| t == "vault_cards"));
+            let mut raw = Vec::new();
+            for t in tables {
+                let rows: Vec<String> =
+                    sqlx::query_scalar(sqlx::AssertSqlSafe(format!("SELECT x::text FROM {t} x")))
+                        .fetch_all(e.vault.pool())
+                        .await
+                        .unwrap();
+                for r in rows {
+                    raw.extend_from_slice(r.as_bytes());
+                }
+            }
+            raw
+        }
+    }
 }
 
 #[tokio::test]
@@ -454,10 +495,11 @@ async fn audit_chain_verifies_and_is_append_only() {
         .is_err());
 
     // Trigger'ni chetlab o'tgan hujumchi (DB fayliga to'g'ridan-to'g'ri yozish) — zanjir tekshiruvi aniqlaydi.
-    sqlx::query("DROP TRIGGER vault_audit_no_update")
-        .execute(e.vault.pool())
-        .await
-        .unwrap();
+    let drop = match e.vault.db().dialect() {
+        mpay_vault::db::Dialect::Sqlite => "DROP TRIGGER vault_audit_no_update",
+        mpay_vault::db::Dialect::Postgres => "DROP TRIGGER vault_audit_no_update ON vault_audit",
+    };
+    sqlx::query(drop).execute(e.vault.pool()).await.unwrap();
     sqlx::query("UPDATE vault_audit SET details = '{}' WHERE seq = 3")
         .execute(e.vault.pool())
         .await
@@ -489,6 +531,7 @@ async fn validation_errors() {
     let expired = ProvisionRequest {
         fpan: fpan(1, 1),
         expiry: CardExpiry::new(2020, 1).unwrap(),
+        integrity: None,
     };
     assert!(matches!(
         e.vault.provision(expired, dev(1)).await,
@@ -514,14 +557,16 @@ async fn validation_errors() {
 #[tokio::test]
 async fn reopen_with_same_seed_reads_existing_data() {
     let dir = tempfile::tempdir().unwrap();
-    let url = format!("sqlite://{}", dir.path().join("v.db").display());
+    let url = mpay_vault::db::sqlite_url(&dir.path().join("v.db"));
     let mk = |seed: [u8; 32]| {
         let url = url.clone();
         async move {
             let ks: Arc<dyn KeyStore> = Arc::new(MemoryKeyStore::from_seed(seed));
             ensure_standard_keys(ks.as_ref()).unwrap();
             Vault::open(
-                mpay_vault::db::open_pool(&url).await.unwrap(),
+                mpay_vault::db::Db::open(&url, mpay_vault::db::Durability::Full, None)
+                    .await
+                    .unwrap(),
                 ks,
                 Arc::new(MpayAes128CmacV1),
                 Arc::new(StubShield::default()),
@@ -597,4 +642,243 @@ async fn concurrent_provisioning_respects_device_limit() {
         }
     }
     assert_eq!(ok, 2, "limit 2 — aynan 2 ta token");
+}
+
+/// 2-faza P2.3: bir xil kriptogramma (ATC) bilan parallel iste'mol — faqat bittasi o'tadi.
+/// PostgreSQL'da parallel tranzaksiyalar: token qatori `FOR UPDATE` bilan qulflanmasa ikkalasi ham
+/// `last_atc` ni eski holda o'qib, "yangi" deb o'tib ketardi (`MPAY_TEST_PG_URL` bilan sinaladi).
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn concurrent_same_atc_consumed_once() {
+    let e = env_with(VaultConfig {
+        luk: mpay_common::config::LukPolicy {
+            max_uses: 100,
+            ttl_secs: 3600,
+            batch_size: 2,
+        },
+        ..VaultConfig::default()
+    })
+    .await;
+    let ProvisionOutcome::Active { profile, .. } =
+        e.vault.provision(req(&fpan(2, 77)), dev(11)).await.unwrap()
+    else {
+        panic!()
+    };
+    let det = Arc::new(VaultDetokenizer::new(e.vault.clone(), "issuer"));
+    // Hovuz ulanishlarini oldindan ochamiz — aks holda birinchi ulanish kechikishi vazifalarni
+    // amalda ketma-ket qilib, poygani yashirardi.
+    let warm: Vec<_> = (0..16)
+        .map(|_| {
+            let pool = e.vault.pool().clone();
+            tokio::spawn(async move {
+                sqlx::query("SELECT 1").execute(&pool).await.unwrap();
+            })
+        })
+        .collect();
+    for w in warm {
+        w.await.unwrap();
+    }
+    for atc in [7u16, 8, 9, 10, 11] {
+        let start = Arc::new(tokio::sync::Barrier::new(16));
+        let tasks: Vec<_> = (0..16)
+            .map(|_| {
+                let det = det.clone();
+                let t = profile.token_id.clone();
+                let start = start.clone();
+                tokio::spawn(async move {
+                    start.wait().await;
+                    det.consume(&t, 1, atc).await.unwrap()
+                })
+            })
+            .collect();
+        let mut consumed = 0;
+        for t in tasks {
+            match t.await.unwrap() {
+                ConsumeOutcome::Consumed => consumed += 1,
+                ConsumeOutcome::AtcReplay => {}
+                other => panic!("{other:?}"),
+            }
+        }
+        assert_eq!(consumed, 1, "ATC {atc} faqat bir marta");
+    }
+}
+
+fn token_of(out: ProvisionOutcome) -> mpay_vault::TokenProfile {
+    match out {
+        ProvisionOutcome::Active { profile, .. } => profile,
+        _ => panic!("ACTIVE kutilgan"),
+    }
+}
+
+/// 2-faza P2.7 (ADR-0022): karta qurilmalari chegarasi va shu qurilmada takroriy karta.
+#[tokio::test]
+async fn card_device_policy() {
+    let e = env_with(VaultConfig {
+        max_devices_per_card: 2,
+        ..VaultConfig::default()
+    })
+    .await;
+    let p = fpan(10, 7101);
+    let a = token_of(e.vault.provision(req(&p), dev(1)).await.unwrap());
+    // Shu karta shu qurilmada yana — rad (ikki token ma'nosiz, LUK'lar ikkilanadi).
+    assert!(matches!(
+        e.vault.provision(req(&p), dev(1)).await,
+        Err(VaultError::CardAlreadyOnDevice)
+    ));
+    token_of(e.vault.provision(req(&p), dev(2)).await.unwrap());
+    assert!(matches!(
+        e.vault.provision(req(&p), dev(3)).await,
+        Err(VaultError::TooManyDevices)
+    ));
+    // Boshqa karta 3-qurilmada — chegara karta bo'yicha.
+    token_of(
+        e.vault
+            .provision(req(&fpan(10, 7102)), dev(3))
+            .await
+            .unwrap(),
+    );
+    // 1-qurilmadagi token o'chirilsa joy bo'shaydi.
+    e.vault.delete(&a.token_id, "operator:test").await.unwrap();
+    token_of(e.vault.provision(req(&p), dev(3)).await.unwrap());
+
+    // 0 — cheklanmagan.
+    let e = env_with(VaultConfig {
+        max_devices_per_card: 0,
+        ..VaultConfig::default()
+    })
+    .await;
+    for d in 1..=5 {
+        token_of(e.vault.provision(req(&p), dev(d)).await.unwrap());
+    }
+}
+
+/// ADR-0022: LUK token muddatidan keyin yashamaydi; muddati o'tgan tokenga LUK berilmaydi.
+#[tokio::test]
+async fn token_expiry_caps_luks_and_blocks_replenish() {
+    let e = env().await;
+    // Karta shu oy oxirida tugaydi — token muddati ham (karta muddatidan oshmaydi).
+    let now = e.clock.now();
+    let card = CardExpiry::new(now.year() as u16, now.month() as u8).unwrap();
+    // LUK umri 24 soat: oy oxiriga 24 soatdan kam qolgan lahzaga suramiz.
+    e.clock
+        .set(OffsetDateTime::from_unix_timestamp(card.end_unix() - 3_600).unwrap());
+    let r = ProvisionRequest {
+        fpan: fpan(10, 7201),
+        expiry: card,
+        integrity: None,
+    };
+    let prof = token_of(e.vault.provision(r, dev(1)).await.unwrap());
+    assert_eq!(prof.dpan_expiry, card.to_yymm());
+    assert!(prof.luks.iter().all(|l| l.expires_at == card.end_unix()));
+
+    e.clock.advance(Duration::hours(2));
+    assert!(matches!(
+        e.vault.replenish_luks(&prof.token_id, dev(1)).await,
+        Err(VaultError::TokenExpired)
+    ));
+}
+
+fn at(y: i32, m: u8, d: u8, h: u8) -> OffsetDateTime {
+    time::Date::from_calendar_date(y, time::Month::try_from(m).unwrap(), d)
+        .unwrap()
+        .with_hms(h, 0, 0)
+        .unwrap()
+        .assume_utc()
+}
+
+/// Token muddatini yangilash (ADR-0022): oynadan oldin o'zgarmaydi, oynada karta muddatigacha
+/// uzaytiriladi, takroriy chaqiruv xavfsiz, karta tugasa `renew_after` yo'q.
+#[tokio::test]
+async fn token_renewal_window_and_card_cap() {
+    let e = env_with(VaultConfig {
+        token_validity_months: 12,
+        ..VaultConfig::default()
+    })
+    .await;
+    e.clock.set(at(2026, 1, 15, 10));
+    let r = ProvisionRequest {
+        fpan: fpan(10, 7301),
+        expiry: CardExpiry::new(2027, 6).unwrap(),
+        integrity: None,
+    };
+    let prof = token_of(e.vault.provision(r, dev(1)).await.unwrap());
+    let t = prof.token_id.clone();
+    assert_eq!(prof.dpan_expiry, "2701");
+    let window = CardExpiry::new(2027, 1).unwrap().end_unix() - 30 * 86_400;
+    assert_eq!(prof.renew_after, Some(window));
+
+    // Hali erta — o'zgarishsiz.
+    let (renewed, p) = e.vault.renew_token(&t, dev(1)).await.unwrap();
+    assert!(!renewed);
+    assert_eq!(p.dpan_expiry, "2701");
+    assert!(p.luks.is_empty());
+    // Boshqa qurilma — rad.
+    assert!(matches!(
+        e.vault.renew_token(&t, dev(2)).await,
+        Err(VaultError::DeviceMismatch)
+    ));
+
+    // Oyna ochildi: hozir + 12 oy = 2028-01, karta 2027-06 — karta muddatigacha.
+    e.clock
+        .set(OffsetDateTime::from_unix_timestamp(window).unwrap());
+    let (renewed, p) = e.vault.renew_token(&t, dev(1)).await.unwrap();
+    assert!(renewed);
+    assert_eq!(p.dpan_expiry, "2706");
+    // Endi karta muddati = token muddati: uzaytirib bo'lmaydi.
+    assert_eq!(p.renew_after, None);
+    let (renewed, p) = e.vault.renew_token(&t, dev(1)).await.unwrap();
+    assert!(!renewed);
+    assert_eq!(p.dpan_expiry, "2706");
+
+    // Eski muddat o'tdi — LUK'lar yangi muddat bilan beriladi.
+    e.clock.set(at(2027, 3, 1, 0));
+    let luks = e.vault.replenish_luks(&t, dev(1)).await.unwrap();
+    let end = CardExpiry::new(2027, 6).unwrap().end_unix();
+    assert!(luks.iter().all(|l| l.expires_at <= end));
+    assert!(luks
+        .iter()
+        .any(|l| l.expires_at > at(2027, 2, 1, 0).unix_timestamp()));
+    e.vault.verify_audit().await.unwrap();
+}
+
+/// Muddati o'tgan token qayta qo'shishga xalaqit bermaydi (yangilangan karta); muddat UTC+5 bo'yicha.
+#[tokio::test]
+async fn expired_token_frees_card_and_device_uzbekistan_time() {
+    let e = env().await;
+    let card = CardExpiry::new(2027, 6).unwrap();
+    e.clock.set(at(2027, 6, 30, 10));
+    let r = |exp| ProvisionRequest {
+        fpan: fpan(10, 7302),
+        expiry: exp,
+        integrity: None,
+    };
+    let old = token_of(e.vault.provision(r(card), dev(1)).await.unwrap());
+    assert_eq!(old.dpan_expiry, "2706");
+    // 2027-06-30 18:59 UTC (Toshkentda 23:59) — token hali tirik: takroriy karta rad.
+    e.clock.set(at(2027, 6, 30, 18));
+    assert!(matches!(
+        e.vault
+            .provision(r(CardExpiry::new(2030, 6).unwrap()), dev(1))
+            .await,
+        Err(VaultError::CardAlreadyOnDevice)
+    ));
+    // 19:00 UTC = Toshkentda 1-iyul 00:00 — muddat tugadi (UTC bo'yicha hali iyun).
+    e.clock.set(at(2027, 6, 30, 19));
+    assert!(matches!(
+        e.vault.replenish_luks(&old.token_id, dev(1)).await,
+        Err(VaultError::TokenExpired)
+    ));
+    assert!(matches!(
+        e.vault.provision(r(card), dev(1)).await,
+        Err(VaultError::BadRequest(_))
+    ));
+    let new = token_of(
+        e.vault
+            .provision(r(CardExpiry::new(2032, 6).unwrap()), dev(1))
+            .await
+            .unwrap(),
+    );
+    assert_ne!(new.token_id, old.token_id);
+    // Toshkentda iyul: 2027-07 + 36 oy; keyin o'z karta muddati bilan uzaytiriladi (eskisiniki emas).
+    assert_eq!(new.dpan_expiry, "3007");
+    assert!(new.renew_after.is_some());
 }

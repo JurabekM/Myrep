@@ -24,7 +24,7 @@ use mpay_terminal_sim::apdu::Loopback;
 use mpay_terminal_sim::card::{CardPolicy, CardProfile, SoftCard};
 use mpay_terminal_sim::http::ServerClient;
 use mpay_terminal_sim::terminal::{tap, TxnParams};
-use mpay_terminal_sim::wallet::SoftWallet;
+use mpay_terminal_sim::wallet::{IntegrityProvider, SoftWallet};
 use mpay_terminal_sim::WalletError;
 
 #[derive(Parser)]
@@ -116,6 +116,25 @@ fn credential(dir: &std::path::Path, name: &str) -> Result<String, String> {
         .ok_or_else(|| format!("{name} topilmadi"))
 }
 
+/// Server mijozi: `http://` — oddiy; `https://` — `dir` dagi TLS sertifikati va `id` mTLS identifikatori.
+fn client_for(dir: &std::path::Path, base: &str, id: &str) -> Result<ServerClient, String> {
+    if !base.starts_with("https://") {
+        return ServerClient::new(base, None).map_err(|e| e.to_string());
+    }
+    let read = |f: &str| std::fs::read(dir.join(f)).map_err(|e| format!("{f}: {e}"));
+    let root = read(mpay_server::init::TLS_CERT_FILE)?;
+    let (c, k) = mpay_server::init::client_cert_files(id);
+    let (c, k) = (read(&c)?, read(&k)?);
+    ServerClient::with_identity(base, Some(&root), Some((&c, &k))).map_err(|e| e.to_string())
+}
+
+fn unix_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
+}
+
 fn pct(sorted: &[u32], p: f64) -> f64 {
     if sorted.is_empty() {
         return 0.0;
@@ -159,11 +178,16 @@ impl Stats {
 
 /// Bitta kartani tokenlashtiradi (har biri alohida qurilma — haqiqiy hamyon kabi).
 async fn provision_one(
-    client: ServerClient,
+    clients: Arc<Vec<ServerClient>>,
     ca: Arc<SandboxAttestationCa>,
     operator: Arc<String>,
+    integrity: Option<IntegrityProvider>,
     i: u32,
 ) -> Result<(SoftCard, String), String> {
+    // Ko'p instansiya (P2.4): nonce, hello, finish va provisioning — har biri boshqa instansiyada.
+    let n = clients.len();
+    let pick = |k: u32| clients[(i as usize + k as usize) % n].clone();
+    let client = pick(0);
     let device = ca
         .issue_device(
             SecurityLevel::StrongBox,
@@ -172,10 +196,16 @@ async fn provision_one(
         .map_err(|e| e.to_string())?;
     let (identity, _) = client.identity().await.map_err(|e| e.to_string())?;
     let mut w = SoftWallet::new(client.clone(), identity, device);
+    w.set_integrity(integrity);
     // Server band (503) yoki chegara (429) — real hamyon kabi kutib, qayta urinadi.
     let mut attempt: u64 = 0;
     loop {
-        match w.connect().await {
+        let r = if n > 1 {
+            w.connect_split(&pick(1)).await
+        } else {
+            w.connect().await
+        };
+        match r {
             Ok(_) => break,
             Err(WalletError::Api {
                 status: 503 | 429, ..
@@ -185,6 +215,9 @@ async fn provision_one(
             }
             Err(e) => return Err(e.to_string()),
         }
+    }
+    if n > 1 {
+        w.set_client(pick(2));
     }
     let (profile, decision) = match w
         .provision(&load_fpan(i), "3112")
@@ -234,7 +267,28 @@ async fn run(
         .map_err(|e| e.to_string())?;
     let der = std::fs::read(dir.join("sandbox-attestation-root.der")).map_err(|e| e.to_string())?;
     let ca = Arc::new(SandboxAttestationCa::from_parts(&key, der).map_err(|e| e.to_string())?);
-    let client = ServerClient::new(&server, None).map_err(|e| e.to_string())?;
+    // `--server` — vergul bilan bir nechta instansiya (round-robin: load balancer simulyatsiyasi).
+    // `https://` — `init --tls` sandbox'i: server sertifikati pin, operator/terminal — mTLS.
+    let clients_as = |id: &str| -> Result<Arc<Vec<ServerClient>>, String> {
+        server
+            .split(',')
+            .map(|s| client_for(&dir, s.trim(), id))
+            .collect::<Result<Vec<_>, _>>()
+            .map(Arc::new)
+    };
+    let clients = clients_as(mpay_server::init::OPERATOR_ID)?;
+    let term_clients = clients_as(mpay_server::init::TERMINAL_ID)?;
+    println!("Instansiyalar: {}", clients.len());
+    // P2.6: `[integrity] mode = "mock"` — sandbox kaliti bilan token (real hamyonda Play Integrity).
+    let cfg =
+        mpay_server::config::Config::load(&dir.join("mpay.toml")).map_err(|e| e.to_string())?;
+    let integrity: Option<IntegrityProvider> =
+        mpay_server::integrity::sandbox_issuer(&cfg)?.map(|iss| {
+            let iss = Arc::new(iss);
+            Arc::new(move |h: &str| {
+                Some(iss.issue(mpay_integrity::mock::Preset::Strong, h, unix_ms()))
+            }) as IntegrityProvider
+        });
 
     // 1) Provisioning: concurrency ta parallel hamyon.
     println!("Provisioning: {cards} karta, {concurrency} parallel…");
@@ -242,11 +296,17 @@ async fn run(
     let t0 = Instant::now();
     let mut set = tokio::task::JoinSet::new();
     for i in 0..cards {
-        let (client, ca, op, sem) = (client.clone(), ca.clone(), operator.clone(), sem.clone());
+        let (clients, ca, op, sem, pi) = (
+            clients.clone(),
+            ca.clone(),
+            operator.clone(),
+            sem.clone(),
+            integrity.clone(),
+        );
         set.spawn(async move {
             let _p = sem.acquire_owned().await;
             let s = Instant::now();
-            let r = provision_one(client, ca, op, i).await;
+            let r = provision_one(clients, ca, op, pi, i).await;
             (r, s.elapsed())
         });
     }
@@ -288,7 +348,7 @@ async fn run(
     let t1 = Instant::now();
     let mut set = tokio::task::JoinSet::new();
     for (w, mut cards) in buckets.into_iter().enumerate() {
-        let (client, terminal, stan) = (client.clone(), terminal.clone(), stan.clone());
+        let (clients, terminal, stan) = (term_clients.clone(), terminal.clone(), stan.clone());
         set.spawn(async move {
             let mut st = Stats::default();
             let merchant = format!("LOADSHOP{w:07}");
@@ -312,6 +372,7 @@ async fn run(
                     icc_data: icc,
                 };
                 let s = Instant::now();
+                let client = &clients[(w + k) % clients.len()];
                 let r: Result<AuthorizationResponse, _> = client
                     .post_json("/v1/authorizations", Some(terminal.as_str()), &req)
                     .await;

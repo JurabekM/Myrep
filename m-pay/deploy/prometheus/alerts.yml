@@ -1,0 +1,160 @@
+# M-Pay ogohlantirish qoidalari (2-faza P2.5, ADR-0020). Chegaralar — pilot SLA
+# (200 TPS, avtorizatsiya p99 < 300 ms). `severity`: critical — darhol navbatchiga, warning — ish vaqtida.
+# Tekshirish: promtool check rules deploy/prometheus/alerts.yml
+
+groups:
+  - name: mpay-availability
+    rules:
+      - alert: MpayInstanceDown
+        expr: up{job=~"mpay-api|mpay-shield"} == 0
+        for: 30s
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.job }} {{ $labels.instance }} javob bermayapti"
+          description: "Metrikalar porti 30 s dan beri ochilmaydi. API bo'lsa nginx qolgan instansiyaga yo'naltiradi; Shield bo'lsa API'lar mahalliy zaxirada (SHIELD_DEGRADED)."
+
+      - alert: MpayApiCapacityReduced
+        expr: count(up{job="mpay-api"} == 1) < 2 or absent(up{job="mpay-api"} == 1)
+        for: 1m
+        labels: { severity: warning }
+        annotations:
+          summary: "Ishlayotgan API instansiyalari 2 tadan kam"
+
+      - alert: MpayDatabaseDown
+        expr: mpay_db_up == 0
+        for: 30s
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.instance }}: PostgreSQL javob bermayapti"
+
+  - name: mpay-sla
+    rules:
+      - alert: MpayAuthorizationLatencyHigh
+        expr: |
+          histogram_quantile(0.99,
+            sum by (le) (rate(mpay_http_request_duration_seconds_bucket{route="/v1/authorizations"}[5m]))
+          ) > 0.3
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Avtorizatsiya p99 {{ $value | humanizeDuration }} — SLA 300 ms dan yuqori"
+
+      - alert: MpayHttp5xxRate
+        expr: |
+          sum(rate(mpay_http_requests_total{status=~"5.."}[5m]))
+            / clamp_min(sum(rate(mpay_http_requests_total[5m])), 1e-9) > 0.01
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "HTTP 5xx ulushi {{ $value | humanizePercentage }} (> 1%)"
+
+      - alert: MpaySystemErrorResponses
+        expr: sum(increase(mpay_authorizations_total{code="96"}[5m])) > 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "Avtorizatsiyada 96 (tizim xatosi) javoblari: {{ $value }} ta / 5 daqiqa"
+          description: "Emitent javobi o'qilmadi yoki natija noma'lum (qotib qolgan PENDING) — loglar va DB'ni tekshiring."
+
+  - name: mpay-dependencies
+    rules:
+      - alert: MpayShieldDegraded
+        expr: sum(increase(mpay_shield_degraded_total[5m])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Shield roli javob bermadi — qarorlar mahalliy zaxirada ({{ $value }} ta / 5 daqiqa)"
+
+      - alert: MpayShieldNoLeader
+        expr: (sum(mpay_shield_leader) or vector(0)) < 1
+        for: 1m
+        labels: { severity: warning }
+        annotations:
+          summary: "Shield'da yetakchi yo'q — API'lar mahalliy zaxirada (belgilar instansiyalar bo'yicha bo'lingan)"
+
+      - alert: MpayShieldSplitBrain
+        expr: sum(mpay_shield_leader) > 1
+        for: 30s
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $value }} ta Shield instansiyasi o'zini yetakchi deb hisoblaydi — soatlar (NTP) va instance_id ni tekshiring"
+
+      - alert: MpayShieldSnapshotStale
+        expr: max(mpay_shield_snapshot_age_seconds) > 300
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Shield snapshot'i {{ $value }} s dan beri yozilmagan — yetakchi yiqilsa belgilar yo'qoladi"
+
+      - alert: MpayIntegrityUnavailable
+        expr: sum(increase(mpay_integrity_checks_total{result="unavailable"}[5m])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Play Integrity dekodlash javob bermayapti — provisioning to'xtagan ({{ $value }} ta / 5 daqiqa)"
+
+      - alert: MpayIntegrityInvalidSpike
+        expr: sum(increase(mpay_integrity_checks_total{result="invalid"}[10m])) > 20
+        labels: { severity: warning }
+        annotations:
+          summary: "Yaroqsiz yaxlitlik tokenlari ko'paydi ({{ $value }} ta / 10 daqiqa) — klon ilova yoki hujum"
+
+      - alert: MpayOtpDeliveryFailing
+        expr: sum(increase(mpay_otp_delivery_failures_total[10m])) > 5
+        labels: { severity: warning }
+        annotations:
+          summary: "OTP SMS yetkazilmayapti ({{ $value }} ta / 10 daqiqa)"
+
+      - alert: MpayReversalFailed
+        expr: max(mpay_reversals{state="failed"}) > 0
+        labels: { severity: critical }
+        annotations:
+          summary: "Emitent {{ $value }} ta reversal'ni rad etdi — mijoz puli qaytmagan bo'lishi mumkin, qo'lda ko'rib chiqing (mpay-server recon)"
+
+      - alert: MpayReversalBacklog
+        expr: max(mpay_reversal_oldest_pending_seconds) > 900
+        labels: { severity: warning }
+        annotations:
+          summary: "Reversal 15 daqiqadan beri yuborilmayapti — emitent bilan aloqani tekshiring"
+
+      - alert: MpayDbReplicaDown
+        expr: max(mpay_db_replicas) < max(mpay_db_replicas_expected)
+        for: 2m
+        labels: { severity: warning }
+        annotations:
+          summary: "PostgreSQL replikasi ulanmagan — yetakchi yiqilsa almashinuv yo'q (deploy/pg-rejoin.sh)"
+
+      - alert: MpayDbReplicationLag
+        expr: max(mpay_db_replication_lag_bytes) > 16777216
+        for: 2m
+        labels: { severity: warning }
+        annotations:
+          summary: "PostgreSQL replikasi {{ $value }} bayt orqada — almashinuvda shuncha ma'lumot yo'qolishi mumkin"
+
+      - alert: MpayDbPoolExhausted
+        expr: |
+          mpay_db_pool_connections{state="idle"} == 0
+            and on (instance) mpay_db_pool_connections{state="busy"} >= on (instance) mpay_db_pool_max_connections
+        for: 2m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.instance }}: DB ulanishlar hovuzi to'la"
+
+  - name: mpay-security
+    rules:
+      - alert: MpayRateLimitSpike
+        expr: sum by (kind) (rate(mpay_rate_limited_total[5m])) > 10
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "So'rovlar chegarasi ({{ $labels.kind }}) sekundiga {{ $value }} marta — hujum yoki chegara noto'g'ri"
+
+      - alert: MpayRateLimitStoreErrors
+        expr: sum(increase(mpay_rate_limit_store_errors_total[5m])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Umumiy chegara ombori xatosi — instansiyalar faqat mahalliy chegara bilan ishlayapti (fail-open)"
+
+      - alert: MpayProxyProtocolRejected
+        expr: sum(increase(mpay_proxy_protocol_rejected_total[5m])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Ishonchli proksidan yaroqsiz PROXY sarlavhasi — nginx sozlamasini tekshiring"

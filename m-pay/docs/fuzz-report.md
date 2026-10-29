@@ -53,8 +53,47 @@ attestatsiya zanjiri) — bu maqsad uzunroq yugurtirildi (yuqoridagi qo'shimcha 
 
 ## 4. Qamrovdan tashqarida
 
-* HTTP/JSON qatlami (axum, serde) — tashqi crate'lar; API'ni fuzz qilish (`TODO(spec):` schemathesis
-  yoki o'z HTTP fuzzer'i) keyingi bosqich.
-* Kotlin tomoni (`android/mpay-core`) fuzz qilinmagan — umumiy test vektorlari va interop testi bilan
-  qoplangan; `TODO(spec):` Jazzer.
+* ~~HTTP/JSON qatlami~~ — §5 (`http_api`, 2026-10-26).
+* ~~Kotlin tomoni~~ — §5 (Jazzer, 2026-10-26).
 * PKCS#11 (SoftHSM) chegarasi fuzz qilinmagan.
+
+## 5. HTTP API va Kotlin (Jazzer) — 2026-10-26 (3-faza tayyorgarligi)
+
+**`http_api` (cargo-fuzz).** `mpay-server` router'i jarayon ichida, tarmoqsiz (`tests/e2e/src/apifuzz.rs`).
+Bir kirish → bitta so'rov:
+
+* ochiq rejim: 20 marshrut × metod × API kaliti (yo'q / operator / terminal / soxta) × `Content-Type` × tana;
+* muhrlangan rejim: ixtiyoriy tana **haqiqiy PQ Link sessiyasi** bilan muhrlanadi (provisioning, OTP,
+  LUK, rekey, sandbox yaxlitlik) — JSON tahlili va handler mantig'i kriptografiya to'sig'idan o'tib sinanadi.
+
+Invariantlar: panic yo'q; `500` yo'q (`502` faqat `/v1/authorizations`, `503` — ataylab); muhrlanmagan
+xato — `{"error": {"code"}}`; muhrlangan javob ochiladi va konvert bo'ladi, `INTERNAL`/`DB_ERROR` yo'q.
+Lug'at — `fuzz/http_api.dict` (API JSON kalitlari), seed'lar — `fuzz/seeds/http_api/`. Xuddi shu harness
+`tests/api_robustness.rs` da proptest bilan har `cargo test` da (Windows ham) va qamrovni tasdiqlovchi
+aniq test bilan ishlaydi (muhrlangan provisioning token yaratadi, takror — `CARD_ALREADY_ON_DEVICE`).
+
+| Maqsad | Vaqt, s | Yugurishlar | exec/s | Qamrov (cov) | Korpus | Natija |
+|---|---|---|---|---|---|---|
+| `http_api` | 300 | 195 957 | 651 | 12 506 | 1 288 | toza |
+
+**Kotlin (Jazzer 0.30, JUnit 5).** `android/mpay-core/src/test/kotlin/uz/mpay/core/FuzzTests.kt`, oddiy
+`test` da — regressiya rejimi, `bash scripts/android-fuzz.sh` — haqiqiy fuzzing. Faqat hujjatlashtirilgan
+xatolar ushlanadi.
+
+| Test | Hujum yuzasi / invariant | Yugurishlar | exec/s | Natija |
+|---|---|---|---|---|
+| `tlvRoundtrip` | BER-TLV: tahlil → kodlash → tahlil | 3 335 908 | 54 687 | toza |
+| `hexStrict` | `decode → encode` = kirish | 2 286 466 | 73 756 | **topilma** → tuzatildi, toza |
+| `appletApduSequence` | HCE applet: ixtiyoriy C-APDU; javob ≥ 2, ATC kamaymaydi, LUK limiti | 13 200 996 | 216 409 | toza |
+| `serverHello` | MITM'dan ixtiyoriy ServerHello: faqat `PqLinkException` | 453 007 | 7 426 | toza |
+| `recordOpen` | soxta PQ Link yozuvi ochilmaydi | 2 445 379 | 78 883 | toza |
+| `revocationsJson` | imzosiz bekor qilish ro'yxati qabul qilinmaydi | 2 134 883 | 68 867 | toza |
+| `terminalBundle` | buzilgan terminal paketi: faqat hujjatlashtirilgan xatolar | 2 315 777 | 74 702 | toza |
+
+**Topilma.** Kotlin `Hex.decode` `String.toInt(16)` ishlatardi — u `+`/`-` belgisini qabul qiladi:
+`"+9000000"` va `"-1"` hex sifatida o'tardi (`"-1"` → `0xFF`). Ta'siri past (bir xil baytlarga turli
+satrlar — kanonik bo'lmagan qabul; barmoq izlari bayt bo'yicha solishtiriladi), lekin qat'iy hex'ga
+o'tkazildi. Kirishlar regressiya korpusida (`FuzzTestsInputs/hexStrict/`).
+
+CI: `fuzz` job'i `http_api` ni ham yuguradi (har maqsad 60 s); yangi `kotlin` job'i — `mpay-core`
+testlari va Jazzer kampaniyasi.

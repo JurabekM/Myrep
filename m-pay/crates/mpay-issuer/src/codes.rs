@@ -17,6 +17,11 @@ pub enum ResponseCode {
     IssuerUnavailable,
     /// `Q1` — kriptogramma/LUK/ATC tekshiruvi o'tmadi.
     CardAuthFailed,
+    /// `54` — token muddati o'tgan (2-faza P2.7, ADR-0022).
+    ExpiredCard,
+    /// `Q2` — karta egasini qurilmada tasdiqlash (CDCVM) talab qilinadi: telefonda tasdiqlab qayta
+    /// tap qilish kerak (M-Pay profili kodi, ADR-0022).
+    CvmRequired,
 }
 
 impl ResponseCode {
@@ -28,6 +33,8 @@ impl ResponseCode {
             Self::SuspectedFraud => "59",
             Self::IssuerUnavailable => "91",
             Self::CardAuthFailed => "Q1",
+            Self::ExpiredCard => "54",
+            Self::CvmRequired => "Q2",
         }
     }
 
@@ -45,6 +52,8 @@ impl ResponseCode {
             "59" => Self::SuspectedFraud,
             "91" => Self::IssuerUnavailable,
             "Q1" => Self::CardAuthFailed,
+            "54" => Self::ExpiredCard,
+            "Q2" => Self::CvmRequired,
             _ => return None,
         })
     }
@@ -72,6 +81,12 @@ pub enum Reason {
     AccountNotFound,
     CurrencyMismatch,
     InsufficientFunds,
+    /// Token (DPAN) muddati o'tgan.
+    TokenExpired,
+    /// Summa CVM chegarasidan yuqori va CDCVM bajarilmagan.
+    CvmRequired,
+    /// Shield REVIEW, siyosat `step_up`: CDCVM bajarilmagan.
+    ReviewStepUp,
 }
 
 impl Reason {
@@ -88,6 +103,8 @@ impl Reason {
             IssuerOffline => ResponseCode::IssuerUnavailable,
             RiskDecline => ResponseCode::SuspectedFraud,
             InsufficientFunds => ResponseCode::InsufficientFunds,
+            TokenExpired => ResponseCode::ExpiredCard,
+            CvmRequired | ReviewStepUp => ResponseCode::CvmRequired,
         }
     }
 
@@ -112,6 +129,64 @@ impl Reason {
             AccountNotFound => "ACCOUNT_NOT_FOUND",
             CurrencyMismatch => "CURRENCY_MISMATCH",
             InsufficientFunds => "INSUFFICIENT_FUNDS",
+            TokenExpired => "TOKEN_EXPIRED",
+            CvmRequired => "CVM_REQUIRED",
+            ReviewStepUp => "REVIEW_STEP_UP",
+        }
+    }
+}
+
+/// Reversal natijasi (`0410` maydon 39, ADR-0024). Acquirer `00` va `25` ni yakuniy deb oladi,
+/// qolganlari — qo'lda ko'rib chiqish (`FAILED`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ReversalReason {
+    /// Yechilgan summa hisobga qaytarildi.
+    Reversed,
+    /// Asl avtorizatsiya rad etilgan edi — qaytariladigan pul yo'q.
+    NothingToReverse,
+    /// Avval qaytarilgan (takroriy `0401`) — ikkinchi marta qaytarilmaydi.
+    AlreadyReversed,
+    /// Asl avtorizatsiya topilmadi — emitent `0100` ni ko'rmagan.
+    OriginalNotFound,
+    /// Bir nechta mos yozuv — avtomatik qaytarilmaydi (solishtirish hisobotida chiqadi).
+    AmbiguousOriginal,
+    /// Summa yoki valyuta asl avtorizatsiyaga mos emas.
+    AmountMismatch,
+    /// Tasdiqlangan, lekin yechilgan hisob yozilmagan (eski yozuv).
+    AccountUnknown,
+    /// Kliringdan o'tgan (yakuniy) — reversal bilan emas, qaytarish (refund) bilan (ADR-0025).
+    AlreadyCleared,
+    /// Majburiy maydon yo'q yoki maydon 90 noto'g'ri.
+    FormatError,
+}
+
+impl ReversalReason {
+    /// Maydon 39 qiymati.
+    pub fn code(self) -> &'static str {
+        use ReversalReason::*;
+        match self {
+            Reversed | NothingToReverse | AlreadyReversed => "00",
+            OriginalNotFound | AmbiguousOriginal => "25",
+            AmountMismatch => "13",
+            AccountUnknown => "96",
+            AlreadyCleared => "12",
+            FormatError => "30",
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        use ReversalReason::*;
+        match self {
+            Reversed => "REVERSED",
+            NothingToReverse => "NOTHING_TO_REVERSE",
+            AlreadyReversed => "ALREADY_REVERSED",
+            OriginalNotFound => "ORIGINAL_NOT_FOUND",
+            AmbiguousOriginal => "AMBIGUOUS_ORIGINAL",
+            AmountMismatch => "AMOUNT_MISMATCH",
+            AccountUnknown => "ACCOUNT_UNKNOWN",
+            AlreadyCleared => "ALREADY_CLEARED",
+            FormatError => "FORMAT_ERROR",
         }
     }
 }
@@ -129,7 +204,10 @@ mod tests {
         assert_eq!(Reason::IssuerOffline.code().as_str(), "91");
         assert_eq!(Reason::InsufficientFunds.code().as_str(), "51");
         assert_eq!(ResponseCode::Approved.arc(), *b"00");
-        for c in ["00", "05", "51", "59", "91", "Q1"] {
+        assert_eq!(Reason::TokenExpired.code().as_str(), "54");
+        assert_eq!(Reason::CvmRequired.code().as_str(), "Q2");
+        assert_eq!(Reason::ReviewStepUp.code().as_str(), "Q2");
+        for c in ["00", "05", "51", "54", "59", "91", "Q1", "Q2"] {
             assert_eq!(ResponseCode::parse(c).unwrap().as_str(), c);
         }
         assert!(

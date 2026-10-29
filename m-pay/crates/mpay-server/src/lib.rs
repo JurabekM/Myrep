@@ -6,16 +6,28 @@
 
 pub mod acquirer;
 pub mod auth;
+pub mod clearing;
 pub mod clientip;
 pub mod config;
 pub mod dedup;
 pub mod enroll;
 pub mod error;
 pub mod init;
+pub mod integrity;
+pub mod metrics;
+pub mod otp;
+pub mod proxyproto;
 pub mod ratelimit;
+pub mod recon;
+pub mod reversal;
 pub mod revocations;
 pub mod routes;
 pub mod serve;
+pub mod sessions;
+pub mod shared_limits;
+pub mod shield_client;
+pub mod shield_ha;
+pub mod shield_role;
 pub mod state;
 
 use std::sync::Arc;
@@ -28,8 +40,13 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Ishga tushgan server (testlar va CLI uchun).
 pub struct RunningServer {
     pub addr: std::net::SocketAddr,
+    /// `/metrics` porti (`[metrics] listen` berilgan bo'lsa).
+    pub metrics_addr: Option<std::net::SocketAddr>,
     pub state: Arc<state::AppState>,
     shutdown: Option<tokio::sync::oneshot::Sender<()>>,
+    metrics: Option<tokio::task::JoinHandle<()>>,
+    /// Reversal ishchisi (ADR-0024).
+    reversals: Option<tokio::task::AbortHandle>,
     pub handle: tokio::task::JoinHandle<std::io::Result<()>>,
 }
 
@@ -47,6 +64,28 @@ impl RunningServer {
         if let Some(tx) = self.shutdown.take() {
             let _ = tx.send(());
         }
+        if let Some(m) = self.metrics.take() {
+            m.abort();
+        }
+        if let Some(r) = self.reversals.take() {
+            r.abort();
+        }
+    }
+}
+
+/// `[http]` dan ulanish qabul qilish sozlamalari.
+pub(crate) fn accept_opts(
+    cfg: &config::Config,
+    tls: Option<Arc<rustls::ServerConfig>>,
+    revoked: Arc<std::collections::HashSet<[u8; 32]>>,
+) -> serve::Accept {
+    serve::Accept {
+        tls,
+        revoked,
+        proxy_from: cfg
+            .http
+            .proxy_protocol
+            .then(|| Arc::new(cfg.http.trusted_proxies.clone())),
     }
 }
 
@@ -84,14 +123,67 @@ pub async fn start(cfg: &config::Config) -> Result<RunningServer, String> {
             })
             .collect::<std::collections::HashSet<_>>(),
     );
-    let handle = tokio::spawn(serve::serve(listener, app, tls, revoked, async move {
+    let (metrics_addr, metrics) = match cfg.metrics.listen {
+        Some(listen) => {
+            let st = state.clone();
+            let gather: metrics::Gather = Arc::new(move || {
+                let st = st.clone();
+                Box::pin(async move {
+                    let mut t = metrics::Text::default();
+                    metrics::render_common(&mut t, "api");
+                    metrics::render_db(&mut t, st.vault.pool()).await;
+                    metrics::render_replication(
+                        &mut t,
+                        st.vault.pool(),
+                        st.vault.db().dialect(),
+                        st.expected_replicas,
+                    )
+                    .await;
+                    t.gauge(
+                        "mpay_pqlink_sessions",
+                        "PQ Link sessiyalari (umumiy ombor bo'lsa — klaster bo'yicha)",
+                        "",
+                        st.pqlink.session_count().await as f64,
+                    );
+                    // Navbat umumiy (DB) — qiymat klaster bo'yicha, har instansiyada bir xil.
+                    if let Ok((pending, failed, oldest)) =
+                        reversal::queue_stats(st.vault.db(), st.clock.unix()).await
+                    {
+                        t.gauge(
+                            "mpay_reversals",
+                            "Reversal navbati (pending — yuborilmoqda, failed — qo'lda ko'rib chiqish)",
+                            "state=\"pending\"",
+                            pending as f64,
+                        );
+                        t.sample("mpay_reversals", "state=\"failed\"", failed as f64);
+                        t.gauge(
+                            "mpay_reversal_oldest_pending_seconds",
+                            "Eng eski yakunlanmagan reversal yoshi",
+                            "",
+                            oldest as f64,
+                        );
+                    }
+                    t.finish()
+                })
+            });
+            let (a, h) = metrics::start(listen, gather).await?;
+            (Some(a), Some(h))
+        }
+        None => (None, None),
+    };
+    let reversals = Some(reversal::spawn_worker(state.clone()));
+    let opts = accept_opts(cfg, tls, revoked);
+    let handle = tokio::spawn(serve::serve(listener, app, opts, async move {
         let _ = rx.await;
     }));
-    tracing::info!(%addr, "mpay-server tinglayapti");
+    tracing::info!(%addr, proxy_protocol = cfg.http.proxy_protocol, "mpay-server tinglayapti");
     Ok(RunningServer {
         addr,
+        metrics_addr,
         state,
         shutdown: Some(tx),
+        metrics,
+        reversals,
         handle,
     })
 }

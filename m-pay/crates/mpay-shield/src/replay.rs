@@ -72,6 +72,7 @@ pub fn parse_events(
                 attestation_level: num(c[8])? as u8,
                 existing_tokens_for_pan: 0,
                 existing_tokens_for_device: 0,
+                integrity: None,
             }),
             k => return Err(format!("{}-qator: noma'lum tur {k}", i + 2)),
         };

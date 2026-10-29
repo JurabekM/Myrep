@@ -15,9 +15,13 @@ use mpay_crypto::keystore::{KeyLabel, KeyStore};
 use mpay_crypto::scheme::CryptogramScheme;
 use mpay_crypto::{ct_eq, rng};
 use serde_json::json;
-use sqlx::sqlite::SqliteRow;
-use sqlx::{Row, Sqlite, SqlitePool, Transaction};
+use sqlx::any::AnyRow;
+use sqlx::AnyConnection;
+use sqlx::{Any, Row};
+
+use crate::db::{Db, LockKey};
 use time::OffsetDateTime;
+use zeroize::Zeroizing;
 
 use crate::audit::{self, AuditEntry, AuditReport};
 use crate::model::{
@@ -28,9 +32,13 @@ use crate::VaultError;
 
 const ACTOR_DEVICE: &str = "device";
 
+/// Bitta OTP challenge uchun SMS qayta yuborishlar chegarasi.
+/// TODO(spec): pilot bank bilan kelishiladi (SMS narxi va foydalanuvchi tajribasi).
+pub const MAX_OTP_RESENDS: i64 = 3;
+
 /// Token Vault.
 pub struct Vault {
-    db: SqlitePool,
+    db: Db,
     ks: Arc<dyn KeyStore>,
     scheme: Arc<dyn CryptogramScheme>,
     idv: Arc<dyn IdvDecider>,
@@ -41,8 +49,6 @@ pub struct Vault {
     pan_idx: KeyLabel,
     active_dek: String,
     deks: RwLock<HashMap<String, Arc<Dek>>>,
-    /// SQLite yozuvlarini (va audit zanjirini) ketma-ketlashtiradi.
-    write: tokio::sync::Mutex<()>,
 }
 
 impl std::fmt::Debug for Vault {
@@ -57,15 +63,28 @@ fn new_id(prefix: &str) -> Result<String, VaultError> {
     Ok(format!("{prefix}{}", hex::encode(rng::array::<16>()?)))
 }
 
-fn state_of(row: &SqliteRow) -> Result<TokenState, VaultError> {
+fn state_of(row: &AnyRow) -> Result<TokenState, VaultError> {
     let s: String = row.try_get("state")?;
     TokenState::parse(&s).ok_or(VaultError::Db("noma'lum holat".into()))
 }
 
 /// Joriy sanaga `months` qo'shadi va karta muddati bilan cheklaydi.
+/// Provisioning paytidagi tokenlar soni (karta va qurilma bo'yicha).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Counts {
+    for_pan: i64,
+    for_device: i64,
+    /// Shu karta shu qurilmada (o'chirilmagan token).
+    same_device: i64,
+    /// Shu karta tokenlashtirilgan boshqa qurilmalar.
+    other_devices: i64,
+}
+
+/// Token muddati: sxema vaqti bo'yicha joriy oydan `months` keyin, karta muddatidan oshmaydi.
 fn token_expiry(now: OffsetDateTime, months: u32, card: CardExpiry) -> CardExpiry {
-    let total = u32::from(now.month() as u8) - 1 + months;
-    let year = (now.year() as u32 + total / 12).min(2099) as u16;
+    let cur = CardExpiry::current(now);
+    let total = u32::from(cur.month) - 1 + months;
+    let year = (u32::from(cur.year) + total / 12).min(2099) as u16;
     let month = (total % 12 + 1) as u8;
     let candidate = CardExpiry { year, month };
     candidate.min(card)
@@ -74,7 +93,7 @@ fn token_expiry(now: OffsetDateTime, months: u32, card: CardExpiry) -> CardExpir
 impl Vault {
     /// Vault'ni ochadi: migratsiyalar, faol DEK (yo'q bo'lsa yaratiladi).
     pub async fn open(
-        db: SqlitePool,
+        db: Db,
         ks: Arc<dyn KeyStore>,
         scheme: Arc<dyn CryptogramScheme>,
         idv: Arc<dyn IdvDecider>,
@@ -107,13 +126,17 @@ impl Vault {
             pan_idx: KeyLabel::new(KeyLabel::PAN_INDEX),
             active_dek: String::new(),
             deks: RwLock::new(HashMap::new()),
-            write: tokio::sync::Mutex::new(()),
         };
         v.active_dek = v.ensure_active_dek().await?;
         Ok(v)
     }
 
-    pub fn pool(&self) -> &SqlitePool {
+    pub fn pool(&self) -> &sqlx::AnyPool {
+        self.db.pool()
+    }
+
+    /// Ma'lumotlar bazasi (dialekt va yozuvchi tranzaksiyalar) — server va emitent bilan umumiy.
+    pub fn db(&self) -> &Db {
         &self.db
     }
 
@@ -125,7 +148,7 @@ impl Vault {
         if let Some(r) = sqlx::query(
             "SELECT dek_id FROM vault_deks WHERE active = 1 ORDER BY created_at DESC LIMIT 1",
         )
-        .fetch_optional(&self.db)
+        .fetch_optional(self.db.pool())
         .await?
         {
             let id: String = r.try_get("dek_id")?;
@@ -134,9 +157,23 @@ impl Vault {
         }
         let dek = Dek::generate(new_id("dek_")?)?;
         let w = dek.wrap(self.ks.as_ref(), &self.kek)?;
-        let _g = self.write.lock().await;
-        let mut tx = crate::db::begin_write(&self.db).await?;
-        sqlx::query("INSERT INTO vault_deks (dek_id, kek_label, nonce, wrapped, created_at, active) VALUES (?, ?, ?, ?, ?, 1)")
+        let mut tx = self.db.begin_write().await?;
+        self.db
+            .lock(&mut tx, LockKey::Named("vault.dek", b""))
+            .await?;
+        if let Some(r) = sqlx::query(
+            "SELECT dek_id FROM vault_deks WHERE active = 1 ORDER BY created_at DESC LIMIT 1",
+        )
+        .fetch_optional(&mut *tx)
+        .await?
+        {
+            // Boshqa instansiya ulgurdi — o'shani ishlatamiz.
+            tx.commit().await?;
+            let id: String = r.try_get("dek_id")?;
+            self.dek(&id).await?;
+            return Ok(id);
+        }
+        sqlx::query("INSERT INTO vault_deks (dek_id, kek_label, nonce, wrapped, created_at, active) VALUES ($1, $2, $3, $4, $5, 1)")
             .bind(&w.dek_id)
             .bind(&w.kek_label)
             .bind(w.nonce.as_slice())
@@ -145,6 +182,7 @@ impl Vault {
             .execute(&mut *tx)
             .await?;
         audit::append(
+            &self.db,
             &mut tx,
             self.clock.unix(),
             &AuditEntry {
@@ -175,10 +213,10 @@ impl Vault {
             return Ok(d.clone());
         }
         let r = sqlx::query(
-            "SELECT dek_id, kek_label, nonce, wrapped FROM vault_deks WHERE dek_id = ?",
+            "SELECT dek_id, kek_label, nonce, wrapped FROM vault_deks WHERE dek_id = $1",
         )
         .bind(id)
-        .fetch_optional(&self.db)
+        .fetch_optional(self.db.pool())
         .await?
         .ok_or(VaultError::Db("DEK topilmadi".into()))?;
         let nonce: Vec<u8> = r.try_get("nonce")?;
@@ -256,7 +294,7 @@ impl Vault {
         ))
     }
 
-    /// Kartaning va qurilmaning "tirik" tokenlari: `DELETED` va tashlab ketilgan `PENDING_IDV`
+    /// Kartaning va qurilmaning "tirik" tokenlari: `DELETED`, muddati o'tgan va tashlab ketilgan `PENDING_IDV`
     /// (challenge'i muddati o'tgan, bloklangan yoki ishlatilgan) hisoblanmaydi.
     async fn token_counts<'e, E>(
         &self,
@@ -264,29 +302,64 @@ impl Vault {
         pan_fp: &PanFingerprint,
         dev_hex: &str,
         now: i64,
-    ) -> Result<(i64, i64), VaultError>
+    ) -> Result<Counts, VaultError>
     where
-        E: sqlx::Executor<'e, Database = Sqlite>,
+        E: sqlx::Executor<'e, Database = Any>,
     {
         let r = sqlx::query(
             "SELECT \
-               COALESCE(SUM(CASE WHEN c.pan_fp = ? THEN 1 ELSE 0 END), 0) AS for_pan, \
-               COALESCE(SUM(CASE WHEN t.device_id = ? THEN 1 ELSE 0 END), 0) AS for_dev \
+               COALESCE(SUM(CASE WHEN c.pan_fp = $1 THEN 1 ELSE 0 END), 0) AS for_pan, \
+               COALESCE(SUM(CASE WHEN t.device_id = $2 THEN 1 ELSE 0 END), 0) AS for_dev, \
+               COALESCE(SUM(CASE WHEN c.pan_fp = $3 AND t.device_id = $4 THEN 1 ELSE 0 END), 0) AS same_dev, \
+               COUNT(DISTINCT CASE WHEN c.pan_fp = $5 AND t.device_id != $6 THEN t.device_id END) AS other_devices \
              FROM vault_tokens t JOIN vault_cards c ON c.card_id = t.card_id \
-             WHERE (c.pan_fp = ? OR t.device_id = ?) AND t.state != 'DELETED' \
+             WHERE (c.pan_fp = $7 OR t.device_id = $8) AND t.state != 'DELETED' \
                AND NOT (t.state = 'PENDING_IDV' AND NOT EXISTS ( \
                  SELECT 1 FROM vault_idv_challenges ch WHERE ch.token_id = t.token_id \
-                   AND ch.consumed = 0 AND ch.expires_at > ? AND ch.attempts < ?))",
+                   AND ch.consumed = 0 AND ch.expires_at > $9 AND ch.attempts < $10)) \
+               AND t.dpan_expiry >= $11",
         )
+        .bind(pan_fp.0.as_slice())
+        .bind(dev_hex)
+        .bind(pan_fp.0.as_slice())
+        .bind(dev_hex)
         .bind(pan_fp.0.as_slice())
         .bind(dev_hex)
         .bind(pan_fp.0.as_slice())
         .bind(dev_hex)
         .bind(now)
         .bind(self.cfg.otp_max_attempts)
+        // Muddati o'tgan tokenlar hisoblanmaydi (YYMM satrlari 2000–2099 da tartib bo'yicha
+        // solishtiriladi): yangilangan karta bilan qayta qo'shish mumkin.
+        .bind(
+            CardExpiry::current(
+                OffsetDateTime::from_unix_timestamp(now).unwrap_or(OffsetDateTime::UNIX_EPOCH),
+            )
+            .to_yymm(),
+        )
         .fetch_one(exec)
         .await?;
-        Ok((r.try_get("for_pan")?, r.try_get("for_dev")?))
+        Ok(Counts {
+            for_pan: r.try_get("for_pan")?,
+            for_device: r.try_get("for_dev")?,
+            same_device: r.try_get("same_dev")?,
+            other_devices: r.try_get("other_devices")?,
+        })
+    }
+
+    /// Mahsulot siyosati (ADR-0022): qurilmadagi tokenlar, karta qurilmalari, takroriy karta.
+    fn check_limits(&self, c: &Counts) -> Result<(), VaultError> {
+        if c.same_device > 0 {
+            return Err(VaultError::CardAlreadyOnDevice);
+        }
+        if c.for_device >= i64::from(self.cfg.max_tokens_per_device) {
+            return Err(VaultError::TooManyTokens);
+        }
+        let max = self.cfg.max_devices_per_card;
+        if max > 0 && c.other_devices >= i64::from(max) {
+            return Err(VaultError::TooManyDevices);
+        }
+        Ok(())
     }
 
     /// Bitta urinish; `None` — hisoblar ID&V'dan keyin o'zgardi (qayta urinish kerak).
@@ -299,21 +372,17 @@ impl Vault {
             return Err(VaultError::BadRequest("FPAN kutilgan (990000–990049)"));
         }
         let now = self.clock.now();
-        if req
-            .expiry
-            .is_expired_at(now.year() as u16, now.month() as u8)
-        {
+        if req.expiry.is_expired(now) {
             return Err(VaultError::BadRequest("karta muddati o'tgan"));
         }
         let pan_fp = self.fingerprint(&req.fpan)?;
         let dev_hex = dev.device_id.to_hex();
 
-        let (existing_for_pan, existing_for_device) = self
-            .token_counts(&self.db, &pan_fp, &dev_hex, now.unix_timestamp())
+        let counts = self
+            .token_counts(self.db.pool(), &pan_fp, &dev_hex, now.unix_timestamp())
             .await?;
-        if existing_for_device >= i64::from(self.cfg.max_tokens_per_device) {
-            return Err(VaultError::TooManyTokens);
-        }
+        self.check_limits(&counts)?;
+        let (existing_for_pan, existing_for_device) = (counts.for_pan, counts.for_device);
 
         let idv = self
             .idv
@@ -324,6 +393,7 @@ impl Vault {
                 attestation_level: dev.security_level,
                 existing_tokens_for_pan: existing_for_pan as u32,
                 existing_tokens_for_device: existing_for_device as u32,
+                integrity: req.integrity,
                 at: now,
             })
             .await
@@ -331,10 +401,8 @@ impl Vault {
         tracing::info!(fpan = %req.fpan.masked(), device = %dev.device_id, decision = ?idv.decision, score = idv.score, "vault: ID&V qarori");
 
         if idv.decision == IdvDecision::Red {
-            let _g = self.write.lock().await;
-            let mut tx = crate::db::begin_write(&self.db).await?;
-            audit::append(
-                &mut tx,
+            let mut tx = self.db.begin_write().await?;
+            audit::append(&self.db, &mut tx,
                 now.unix_timestamp(),
                 &AuditEntry {
                     actor: ACTOR_DEVICE,
@@ -364,20 +432,27 @@ impl Vault {
         };
         let ts = now.unix_timestamp();
 
-        let _g = self.write.lock().await;
-        let mut tx = crate::db::begin_write(&self.db).await?;
-        // Qulf ostida qayta sanash: ID&V ko'rgan holat o'zgargan bo'lsa (bir vaqtdagi so'rov) — qaytadan.
-        if self.token_counts(&mut *tx, &pan_fp, &dev_hex, ts).await?
-            != (existing_for_pan, existing_for_device)
-        {
+        let mut tx = self.db.begin_write().await?;
+        // PostgreSQL: shu karta va shu qurilma bo'yicha provisioning'lar ketma-ket (SQLite'da yozuvchi
+        // baribir bitta). Qulf ostida qayta sanash: ID&V ko'rgan holat o'zgargan bo'lsa — qaytadan.
+        self.db
+            .lock_all(
+                &mut tx,
+                &[
+                    LockKey::Named("vault.pan", &pan_fp.0),
+                    LockKey::Named("vault.device", dev_hex.as_bytes()),
+                ],
+            )
+            .await?;
+        if self.token_counts(&mut *tx, &pan_fp, &dev_hex, ts).await? != counts {
             tracing::info!(fpan = %req.fpan.masked(), "vault: bir vaqtdagi provisioning — ID&V qaytadan");
             return Ok(None);
         }
         let card_id = self.upsert_card(&mut tx, req, &pan_fp, ts).await?;
         sqlx::query(
             "INSERT INTO vault_tokens (token_id, card_id, device_id, dpan_fp, dpan_dek, dpan_nonce, dpan_ct, dpan_masked, \
-             dpan_expiry, psn, state, idv_decision, idv_score, last_atc, next_luk_seq, created_at, updated_at) \
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 1, ?, ?)",
+             dpan_expiry, psn, state, idv_decision, idv_score, last_atc, next_luk_seq, created_at, updated_at, card_expiry) \
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NULL, 1, $14, $15, $16)",
         )
         .bind(token_id.as_str())
         .bind(&card_id)
@@ -394,10 +469,10 @@ impl Vault {
         .bind(i64::from(idv.score))
         .bind(ts)
         .bind(ts)
+        .bind(req.expiry.to_yymm())
         .execute(&mut *tx)
         .await?;
-        audit::append(
-            &mut tx,
+        audit::append(&self.db, &mut tx,
             ts,
             &AuditEntry {
                 actor: ACTOR_DEVICE,
@@ -416,19 +491,27 @@ impl Vault {
                 .issue_luks_tx(&mut tx, &token_id, &dpan, psn, self.cfg.luk.batch_size, ts)
                 .await?;
             ProvisionOutcome::Active {
-                profile: self.profile(token_id.clone(), dpan.clone(), dpan_exp, psn, luks),
+                profile: self.profile(
+                    token_id.clone(),
+                    dpan.clone(),
+                    dpan_exp,
+                    req.expiry,
+                    psn,
+                    luks,
+                ),
                 idv,
             }
         } else {
             let challenge_id = new_id("chl_")?;
             let exp = ts + self.cfg.otp_ttl_secs;
-            sqlx::query("INSERT INTO vault_idv_challenges (challenge_id, token_id, expires_at) VALUES (?, ?, ?)")
+            sqlx::query("INSERT INTO vault_idv_challenges (challenge_id, token_id, expires_at) VALUES ($1, $2, $3)")
                 .bind(&challenge_id)
                 .bind(token_id.as_str())
                 .bind(exp)
                 .execute(&mut *tx)
                 .await?;
             audit::append(
+                &self.db,
                 &mut tx,
                 ts,
                 &AuditEntry {
@@ -453,14 +536,14 @@ impl Vault {
 
     async fn upsert_card(
         &self,
-        tx: &mut Transaction<'_, Sqlite>,
+        tx: &mut AnyConnection,
         req: &ProvisionRequest,
         pan_fp: &PanFingerprint,
         ts: i64,
     ) -> Result<String, VaultError> {
-        if let Some(r) = sqlx::query("SELECT card_id FROM vault_cards WHERE pan_fp = ?")
+        if let Some(r) = sqlx::query("SELECT card_id FROM vault_cards WHERE pan_fp = $1")
             .bind(pan_fp.0.as_slice())
-            .fetch_optional(&mut **tx)
+            .fetch_optional(&mut *tx)
             .await?
         {
             return Ok(r.try_get("card_id")?);
@@ -471,7 +554,7 @@ impl Vault {
             .await?;
         sqlx::query(
             "INSERT INTO vault_cards (card_id, pan_fp, pan_dek, pan_nonce, pan_ct, pan_masked, expiry, created_at) \
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
         )
         .bind(&card_id)
         .bind(pan_fp.0.as_slice())
@@ -481,7 +564,7 @@ impl Vault {
         .bind(req.fpan.masked())
         .bind(req.expiry.to_yymm())
         .bind(ts)
-        .execute(&mut **tx)
+        .execute(&mut *tx)
         .await?;
         Ok(card_id)
     }
@@ -492,9 +575,9 @@ impl Vault {
             let dpan = Pan::from_prefix(&format!("{}{acct:09}", self.cfg.token_bin))
                 .map_err(|_| VaultError::BadRequest("DPAN generatsiyasi"))?;
             let fp = self.fingerprint(&dpan)?;
-            let taken = sqlx::query("SELECT 1 FROM vault_tokens WHERE dpan_fp = ?")
+            let taken = sqlx::query("SELECT 1 FROM vault_tokens WHERE dpan_fp = $1")
                 .bind(fp.0.as_slice())
-                .fetch_optional(&self.db)
+                .fetch_optional(self.db.pool())
                 .await?
                 .is_some();
             if !taken {
@@ -509,6 +592,7 @@ impl Vault {
         token_id: TokenId,
         dpan: Pan,
         exp: CardExpiry,
+        card: CardExpiry,
         psn: u8,
         luks: Vec<LukGrant>,
     ) -> TokenProfile {
@@ -520,38 +604,62 @@ impl Vault {
             aid: hex::encode_upper(emv::AID),
             scheme: self.scheme.name().to_owned(),
             luks,
+            renew_after: self.renew_after(exp, card),
         }
+    }
+
+    /// Uzaytirish oynasi boshlanishi; karta muddati token muddatidan keyin bo'lmasa — `None`.
+    fn renew_after(&self, exp: CardExpiry, card: CardExpiry) -> Option<i64> {
+        (card > exp).then(|| exp.end_unix() - i64::from(self.cfg.token_renew_before_days) * 86_400)
+    }
+
+    /// Token provisioning'ida tasdiqlangan karta muddati (eski yozuvlarda — karta yozuvidan).
+    fn card_expiry_of(row: &AnyRow) -> Result<CardExpiry, VaultError> {
+        let s: Option<String> = row.try_get("card_expiry")?;
+        let s = match s {
+            Some(s) => s,
+            None => row.try_get("card_expiry_fallback")?,
+        };
+        CardExpiry::parse_yymm(&s).ok_or(VaultError::Db("karta muddati".into()))
     }
 
     async fn issue_luks_tx(
         &self,
-        tx: &mut Transaction<'_, Sqlite>,
+        tx: &mut AnyConnection,
         token_id: &TokenId,
         dpan: &Pan,
         psn: u8,
         count: u32,
         ts: i64,
     ) -> Result<Vec<LukGrant>, VaultError> {
-        let next: i64 = sqlx::query("SELECT next_luk_seq FROM vault_tokens WHERE token_id = ?")
-            .bind(token_id.as_str())
-            .fetch_one(&mut **tx)
-            .await?
-            .try_get("next_luk_seq")?;
+        let row =
+            sqlx::query("SELECT next_luk_seq, dpan_expiry FROM vault_tokens WHERE token_id = $1")
+                .bind(token_id.as_str())
+                .fetch_one(&mut *tx)
+                .await?;
+        let next: i64 = row.try_get("next_luk_seq")?;
+        // ADR-0022: LUK token muddatidan keyin yashamaydi; muddati o'tgan tokenga LUK berilmaydi.
+        let token_end = CardExpiry::parse_yymm(&row.try_get::<String, _>("dpan_expiry")?)
+            .ok_or(VaultError::Db("muddat".into()))?
+            .end_unix();
+        if token_end <= ts {
+            return Err(VaultError::TokenExpired);
+        }
         let first = u32::try_from(next).map_err(|_| VaultError::Db("LUK seq".into()))?;
         let last = first.checked_add(count).ok_or(VaultError::TooManyLuks)?;
         let mk = self
             .scheme
             .token_master_key(self.ks.as_ref(), &self.imk, dpan, psn)?;
-        let expires = ts + self.cfg.luk.ttl_secs as i64;
+        let expires = (ts + self.cfg.luk.ttl_secs as i64).min(token_end);
         let mut out = Vec::with_capacity(count as usize);
         for seq in first..last {
-            sqlx::query("INSERT INTO vault_luks (token_id, seq, issued_at, expires_at, max_uses) VALUES (?, ?, ?, ?, ?)")
+            sqlx::query("INSERT INTO vault_luks (token_id, seq, issued_at, expires_at, max_uses) VALUES ($1, $2, $3, $4, $5)")
                 .bind(token_id.as_str())
                 .bind(i64::from(seq))
                 .bind(ts)
                 .bind(expires)
                 .bind(i64::from(self.cfg.luk.max_uses))
-                .execute(&mut **tx)
+                .execute(&mut *tx)
                 .await?;
             out.push(LukGrant {
                 seq,
@@ -562,14 +670,15 @@ impl Vault {
             });
         }
         drop(mk);
-        sqlx::query("UPDATE vault_tokens SET next_luk_seq = ?, updated_at = ? WHERE token_id = ?")
-            .bind(i64::from(last))
-            .bind(ts)
-            .bind(token_id.as_str())
-            .execute(&mut **tx)
-            .await?;
-        audit::append(
-            tx,
+        sqlx::query(
+            "UPDATE vault_tokens SET next_luk_seq = $1, updated_at = $2 WHERE token_id = $3",
+        )
+        .bind(i64::from(last))
+        .bind(ts)
+        .bind(token_id.as_str())
+        .execute(&mut *tx)
+        .await?;
+        audit::append(&self.db, tx,
             ts,
             &AuditEntry {
                 actor: "vault",
@@ -582,18 +691,18 @@ impl Vault {
         Ok(out)
     }
 
-    async fn token_row(&self, token_id: &TokenId) -> Result<SqliteRow, VaultError> {
+    async fn token_row(&self, token_id: &TokenId) -> Result<AnyRow, VaultError> {
         sqlx::query(
-            "SELECT t.*, c.pan_masked, c.expiry AS card_expiry, c.pan_fp, c.pan_dek, c.pan_nonce, c.pan_ct \
-             FROM vault_tokens t JOIN vault_cards c ON c.card_id = t.card_id WHERE t.token_id = ?",
+            "SELECT t.*, c.pan_masked, c.expiry AS card_expiry_fallback, c.pan_fp, c.pan_dek, c.pan_nonce, c.pan_ct \
+             FROM vault_tokens t JOIN vault_cards c ON c.card_id = t.card_id WHERE t.token_id = $1",
         )
         .bind(token_id.as_str())
-        .fetch_optional(&self.db)
+        .fetch_optional(self.db.pool())
         .await?
         .ok_or(VaultError::TokenNotFound)
     }
 
-    async fn dpan_of(&self, row: &SqliteRow) -> Result<Pan, VaultError> {
+    async fn dpan_of(&self, row: &AnyRow) -> Result<Pan, VaultError> {
         let token_id: String = row.try_get("token_id")?;
         self.open_pan(
             row.try_get("dpan_dek")?,
@@ -604,11 +713,94 @@ impl Vault {
         .await
     }
 
-    fn check_device(row: &SqliteRow, dev: &DeviceContext) -> Result<(), VaultError> {
+    fn check_device(row: &AnyRow, dev: &DeviceContext) -> Result<(), VaultError> {
         let bound: String = row.try_get("device_id")?;
         if !ct_eq(bound.as_bytes(), dev.device_id.to_hex().as_bytes()) {
             return Err(VaultError::DeviceMismatch);
         }
+        Ok(())
+    }
+
+    /// OTP'ni qayta yuborish uchun (2-faza P2.1): challenge shu token va qurilmaga tegishli,
+    /// token `PENDING_IDV` da, challenge iste'mol qilinmagan, bloklanmagan (`otp_max_attempts`), muddati
+    /// o'tmagan va [`MAX_OTP_RESENDS`] chegarasi tugamagan bo'lsa —
+    /// hisoblagichni oshiradi va `(FPAN, OTP, qolgan soniyalar)` qaytaradi. Kod o'zgarmaydi
+    /// (challenge'dan HMAC), urinishlar hisoblagichi ham — qayta yuborish tekshiruvni yangilamaydi.
+    /// FPAN faqat emitentdan telefonni topish uchun (Vault'dan tashqariga chiqmaydi, logga yozilmaydi).
+    pub async fn otp_resend_material(
+        &self,
+        token_id: &TokenId,
+        challenge_id: &str,
+        dev: &DeviceContext,
+    ) -> Result<(Pan, Zeroizing<String>, i64), VaultError> {
+        let row = self.token_row(token_id).await?;
+        Self::check_device(&row, dev)?;
+        let st = state_of(&row)?;
+        if st != TokenState::PendingIdv {
+            return Err(VaultError::InvalidState {
+                from: st.as_str(),
+                to: TokenState::Active.as_str(),
+            });
+        }
+        let ch = sqlx::query(
+            "SELECT expires_at, consumed, attempts FROM vault_idv_challenges WHERE challenge_id = $1 AND token_id = $2",
+        )
+        .bind(challenge_id)
+        .bind(token_id.as_str())
+        .fetch_optional(self.db.pool())
+        .await?
+        .ok_or(VaultError::ChallengeNotFound)?;
+        if ch.try_get::<i64, _>("consumed")? != 0 {
+            return Err(VaultError::ChallengeNotFound);
+        }
+        // Bloklangan challenge uchun kod endi qabul qilinmaydi — SMS yuborish ma'nosiz (va xarajat).
+        if ch.try_get::<i64, _>("attempts")? >= self.cfg.otp_max_attempts {
+            return Err(VaultError::OtpLocked);
+        }
+        let left = ch.try_get::<i64, _>("expires_at")? - self.clock.unix();
+        if left <= 0 {
+            return Err(VaultError::OtpExpired);
+        }
+        {
+            let mut tx = self.db.begin_write().await?;
+            let n = sqlx::query(
+                "UPDATE vault_idv_challenges SET resends = resends + 1 \
+                 WHERE challenge_id = $1 AND consumed = 0 AND resends < $2 AND attempts < $3",
+            )
+            .bind(challenge_id)
+            .bind(MAX_OTP_RESENDS)
+            .bind(self.cfg.otp_max_attempts)
+            .execute(&mut *tx)
+            .await?
+            .rows_affected();
+            tx.commit().await?;
+            if n == 0 {
+                return Err(VaultError::OtpResendLimit);
+            }
+        }
+        let card_id: String = row.try_get("card_id")?;
+        let fpan = self
+            .open_pan(
+                row.try_get("pan_dek")?,
+                row.try_get("pan_nonce")?,
+                row.try_get("pan_ct")?,
+                &format!("card:{card_id}:pan"),
+            )
+            .await?;
+        Ok((fpan, Zeroizing::new(self.otp_for(challenge_id)?), left))
+    }
+
+    /// SMS aniq yuborilmagan bo'lsa (emitentda raqam yo'q, shlyuz ulanmadi yoki rad etdi) qayta yuborish
+    /// hisoblagichini qaytaradi — shlyuz nosozligi foydalanuvchining chegarasini yemasin.
+    pub async fn otp_resend_refund(&self, challenge_id: &str) -> Result<(), VaultError> {
+        let mut tx = self.db.begin_write().await?;
+        sqlx::query(
+            "UPDATE vault_idv_challenges SET resends = resends - 1 WHERE challenge_id = $1 AND resends > 0",
+        )
+        .bind(challenge_id)
+        .execute(&mut *tx)
+        .await?;
+        tx.commit().await?;
         Ok(())
     }
 
@@ -636,11 +828,11 @@ impl Vault {
         let expected = self.otp_for(challenge_id)?;
         let ts = self.clock.unix();
 
-        let _g = self.write.lock().await;
-        let mut tx = crate::db::begin_write(&self.db).await?;
-        let ch = sqlx::query(
-            "SELECT * FROM vault_idv_challenges WHERE challenge_id = ? AND token_id = ?",
-        )
+        let mut tx = self.db.begin_write().await?;
+        let ch = sqlx::query(sqlx::AssertSqlSafe(format!(
+            "SELECT * FROM vault_idv_challenges WHERE challenge_id = $1 AND token_id = $2{}",
+            self.db.for_update()
+        )))
         .bind(challenge_id)
         .bind(token_id.as_str())
         .fetch_optional(&mut *tx)
@@ -658,12 +850,13 @@ impl Vault {
         }
         if !ct_eq(expected.as_bytes(), otp.as_bytes()) {
             sqlx::query(
-                "UPDATE vault_idv_challenges SET attempts = attempts + 1 WHERE challenge_id = ?",
+                "UPDATE vault_idv_challenges SET attempts = attempts + 1 WHERE challenge_id = $1",
             )
             .bind(challenge_id)
             .execute(&mut *tx)
             .await?;
             audit::append(
+                &self.db,
                 &mut tx,
                 ts,
                 &AuditEntry {
@@ -681,7 +874,7 @@ impl Vault {
                 VaultError::OtpInvalid
             });
         }
-        sqlx::query("UPDATE vault_idv_challenges SET consumed = 1 WHERE challenge_id = ?")
+        sqlx::query("UPDATE vault_idv_challenges SET consumed = 1 WHERE challenge_id = $1")
             .bind(challenge_id)
             .execute(&mut *tx)
             .await?;
@@ -692,39 +885,111 @@ impl Vault {
             ACTOR_DEVICE,
             "IDV_OTP_VERIFIED",
             ts,
+            false,
         )
         .await?;
         let luks = self
             .issue_luks_tx(&mut tx, token_id, &dpan, psn, self.cfg.luk.batch_size, ts)
             .await?;
         tx.commit().await?;
-        Ok(self.profile(token_id.clone(), dpan, exp, psn, luks))
+        let card = Self::card_expiry_of(&row)?;
+        Ok(self.profile(token_id.clone(), dpan, exp, card, psn, luks))
+    }
+
+    /// Token muddatini yangilash (ADR-0022): muddat tugashiga `token_renew_before_days` qolganda (yoki
+    /// o'tgach) DPAN muddati `min(hozir + token_validity_months, karta muddati)` gacha uzaytiriladi.
+    /// DPAN, PSN va LUK'lar o'zgarmaydi (LUK muddati eski chegara bilan qoladi). Hali erta yoki karta
+    /// muddati tugaydigan bo'lsa — o'zgarishsiz `(false, profil)`: takroriy chaqiruv xavfsiz, javob
+    /// yo'qolsa qurilma qayta so'raydi.
+    pub async fn renew_token(
+        &self,
+        token_id: &TokenId,
+        dev: DeviceContext,
+    ) -> Result<(bool, TokenProfile), VaultError> {
+        let row = self.token_row(token_id).await?;
+        Self::check_device(&row, &dev)?;
+        let st = state_of(&row)?;
+        if st != TokenState::Active {
+            return Err(VaultError::InvalidState {
+                from: st.as_str(),
+                to: "RENEW",
+            });
+        }
+        let dpan = self.dpan_of(&row).await?;
+        let psn = row.try_get::<i64, _>("psn")? as u8;
+        let cur_s: String = row.try_get("dpan_expiry")?;
+        let cur = CardExpiry::parse_yymm(&cur_s).ok_or(VaultError::Db("muddat".into()))?;
+        let card = Self::card_expiry_of(&row)?;
+        let now = self.clock.now();
+        let ts = now.unix_timestamp();
+        let next = token_expiry(now, self.cfg.token_validity_months, card);
+        let due = self.renew_after(cur, card).is_some_and(|t| ts >= t);
+        if !due || next <= cur {
+            return Ok((
+                false,
+                self.profile(token_id.clone(), dpan, cur, card, psn, vec![]),
+            ));
+        }
+        let mut tx = self.db.begin_write().await?;
+        // Optimistik: parallel yangilash bo'lsa — ikkinchisi o'zgartirmaydi.
+        let n = sqlx::query(
+            "UPDATE vault_tokens SET dpan_expiry = $1, updated_at = $2 \
+             WHERE token_id = $3 AND dpan_expiry = $4 AND state = 'ACTIVE'",
+        )
+        .bind(next.to_yymm())
+        .bind(ts)
+        .bind(token_id.as_str())
+        .bind(&cur_s)
+        .execute(&mut *tx)
+        .await?
+        .rows_affected();
+        if n == 0 {
+            return Err(VaultError::InvalidState {
+                from: "CHANGED",
+                to: "RENEW",
+            });
+        }
+        audit::append(
+            &self.db,
+            &mut tx,
+            ts,
+            &AuditEntry {
+                actor: ACTOR_DEVICE,
+                action: "TOKEN_RENEWED",
+                token_id: Some(token_id.as_str()),
+                details: json!({ "old_expiry": cur_s, "new_expiry": next.to_yymm() }),
+            },
+        )
+        .await?;
+        tx.commit().await?;
+        tracing::info!(token_id = %token_id, old = %cur_s, new = %next.to_yymm(), "vault: token muddati uzaytirildi");
+        Ok((
+            true,
+            self.profile(token_id.clone(), dpan, next, card, psn, vec![]),
+        ))
     }
 
     /// Sandbox: simulyatsiya qilingan OTP (haqiqiy tizimda SMS/push orqali yuboriladi).
     pub async fn sandbox_otp(&self, challenge_id: &str) -> Result<String, VaultError> {
-        sqlx::query("SELECT 1 FROM vault_idv_challenges WHERE challenge_id = ? AND consumed = 0")
+        sqlx::query("SELECT 1 FROM vault_idv_challenges WHERE challenge_id = $1 AND consumed = 0")
             .bind(challenge_id)
-            .fetch_optional(&self.db)
+            .fetch_optional(self.db.pool())
             .await?
             .ok_or(VaultError::ChallengeNotFound)?;
         self.otp_for(challenge_id)
     }
 
-    /// Qurilma so'rovi bilan LUK to'ldirish.
     /// Qurilma kalitini almashtirish (ADR-0015): eski qurilmaga bog'langan tokenlar yangisiga o'tadi.
     pub async fn rebind_device(&self, old: &DeviceId, new: &DeviceId) -> Result<u64, VaultError> {
         let ts = self.clock.unix();
-        let _g = self.write.lock().await;
-        let mut tx = crate::db::begin_write(&self.db).await?;
-        let n = sqlx::query("UPDATE vault_tokens SET device_id = ? WHERE device_id = ?")
+        let mut tx = self.db.begin_write().await?;
+        let n = sqlx::query("UPDATE vault_tokens SET device_id = $1 WHERE device_id = $2")
             .bind(new.to_hex())
             .bind(old.to_hex())
             .execute(&mut *tx)
             .await?
             .rows_affected();
-        audit::append(
-            &mut tx,
+        audit::append(&self.db, &mut tx,
             ts,
             &AuditEntry {
                 actor: ACTOR_DEVICE,
@@ -736,9 +1001,15 @@ impl Vault {
         .await?;
         tx.commit().await?;
         tracing::info!(old = %old, new = %new, tokens = n, "vault: qurilma kaliti almashtirildi");
+        // Shield grafida yangi kalit eski qurilmaning davomi (ADR-0015). Yetkazilmasa — faqat log:
+        // tokenlar allaqachon ko'chgan, oqibat esa xavfsiz tomonga (ortiqcha step-up).
+        if let Err(e) = self.idv.device_rekeyed(old, new, self.clock.now()).await {
+            tracing::warn!(error = %e, "vault: rekey Shield'ga yetkazilmadi");
+        }
         Ok(n)
     }
 
+    /// Qurilma so'rovi bilan LUK to'ldirish.
     pub async fn replenish_luks(
         &self,
         token_id: &TokenId,
@@ -756,10 +1027,16 @@ impl Vault {
         let dpan = self.dpan_of(&row).await?;
         let psn = row.try_get::<i64, _>("psn")? as u8;
         let ts = self.clock.unix();
-        let _g = self.write.lock().await;
-        let mut tx = crate::db::begin_write(&self.db).await?;
+        let mut tx = self.db.begin_write().await?;
+        sqlx::query(sqlx::AssertSqlSafe(format!(
+            "SELECT token_id FROM vault_tokens WHERE token_id = $1{}",
+            self.db.for_update()
+        )))
+        .bind(token_id.as_str())
+        .fetch_optional(&mut *tx)
+        .await?;
         let active: i64 = sqlx::query(
-            "SELECT COUNT(*) AS n FROM vault_luks WHERE token_id = ? AND revoked = 0 AND expires_at > ? AND used < max_uses",
+            "SELECT COUNT(*) AS n FROM vault_luks WHERE token_id = $1 AND revoked = 0 AND expires_at > $2 AND used < max_uses",
         )
         .bind(token_id.as_str())
         .bind(ts)
@@ -776,20 +1053,27 @@ impl Vault {
         Ok(luks)
     }
 
+    /// `device` — o'zgarish qurilmadan (hamyon): bank to'xtatgan tokenni qayta yoqib bo'lmaydi.
+    /// Tekshiruv shu tranzaksiyada, qator qulfi ostida — bank bilan poyga yo'q.
+    #[allow(clippy::too_many_arguments)]
     async fn set_state_tx(
         &self,
-        tx: &mut Transaction<'_, Sqlite>,
+        tx: &mut AnyConnection,
         token_id: &TokenId,
         to: TokenState,
         actor: &str,
         action: &str,
         ts: i64,
+        device: bool,
     ) -> Result<TokenState, VaultError> {
-        let r = sqlx::query("SELECT state FROM vault_tokens WHERE token_id = ?")
-            .bind(token_id.as_str())
-            .fetch_optional(&mut **tx)
-            .await?
-            .ok_or(VaultError::TokenNotFound)?;
+        let r = sqlx::query(sqlx::AssertSqlSafe(format!(
+            "SELECT state, suspended_by FROM vault_tokens WHERE token_id = $1{}",
+            self.db.for_update()
+        )))
+        .bind(token_id.as_str())
+        .fetch_optional(&mut *tx)
+        .await?
+        .ok_or(VaultError::TokenNotFound)?;
         let from = state_of(&r)?;
         let allowed = matches!(
             (from, to),
@@ -807,19 +1091,32 @@ impl Vault {
                 to: to.as_str(),
             });
         }
-        sqlx::query("UPDATE vault_tokens SET state = ?, updated_at = ? WHERE token_id = ?")
-            .bind(to.as_str())
-            .bind(ts)
-            .bind(token_id.as_str())
-            .execute(&mut **tx)
-            .await?;
+        if device
+            && from == TokenState::Suspended
+            && to == TokenState::Active
+            && r.try_get::<Option<String>, _>("suspended_by")?.as_deref() != Some("DEVICE")
+        {
+            return Err(VaultError::SuspendedByBank);
+        }
+        let suspended_by =
+            (to == TokenState::Suspended).then_some(if device { "DEVICE" } else { "BANK" });
+        sqlx::query(
+            "UPDATE vault_tokens SET state = $1, updated_at = $2, suspended_by = $3 WHERE token_id = $4",
+        )
+        .bind(to.as_str())
+        .bind(ts)
+        .bind(suspended_by)
+        .bind(token_id.as_str())
+        .execute(&mut *tx)
+        .await?;
         if to == TokenState::Deleted {
-            sqlx::query("UPDATE vault_luks SET revoked = 1 WHERE token_id = ?")
+            sqlx::query("UPDATE vault_luks SET revoked = 1 WHERE token_id = $1")
                 .bind(token_id.as_str())
-                .execute(&mut **tx)
+                .execute(&mut *tx)
                 .await?;
         }
         audit::append(
+            &self.db,
             tx,
             ts,
             &AuditEntry {
@@ -840,12 +1137,12 @@ impl Vault {
         to: TokenState,
         actor: &str,
         action: &str,
+        device: bool,
     ) -> Result<TokenSummary, VaultError> {
         let ts = self.clock.unix();
         {
-            let _g = self.write.lock().await;
-            let mut tx = crate::db::begin_write(&self.db).await?;
-            self.set_state_tx(&mut tx, token_id, to, actor, action, ts)
+            let mut tx = self.db.begin_write().await?;
+            self.set_state_tx(&mut tx, token_id, to, actor, action, ts, device)
                 .await?;
             tx.commit().await?;
         }
@@ -857,8 +1154,14 @@ impl Vault {
         token_id: &TokenId,
         actor: &str,
     ) -> Result<TokenSummary, VaultError> {
-        self.transition(token_id, TokenState::Suspended, actor, "TOKEN_SUSPENDED")
-            .await
+        self.transition(
+            token_id,
+            TokenState::Suspended,
+            actor,
+            "TOKEN_SUSPENDED",
+            false,
+        )
+        .await
     }
 
     pub async fn resume(
@@ -866,7 +1169,7 @@ impl Vault {
         token_id: &TokenId,
         actor: &str,
     ) -> Result<TokenSummary, VaultError> {
-        self.transition(token_id, TokenState::Active, actor, "TOKEN_RESUMED")
+        self.transition(token_id, TokenState::Active, actor, "TOKEN_RESUMED", false)
             .await
     }
 
@@ -875,8 +1178,59 @@ impl Vault {
         token_id: &TokenId,
         actor: &str,
     ) -> Result<TokenSummary, VaultError> {
-        self.transition(token_id, TokenState::Deleted, actor, "TOKEN_DELETED")
+        self.transition(token_id, TokenState::Deleted, actor, "TOKEN_DELETED", false)
             .await
+    }
+
+    // ------------------------------------------------------------------ hamyon (qurilma o'zi)
+
+    /// Qurilmaning tokenlari (o'chirilganlarsiz), qo'shilgan tartibda.
+    pub async fn device_tokens(
+        &self,
+        dev: &DeviceContext,
+    ) -> Result<Vec<TokenSummary>, VaultError> {
+        let ids: Vec<String> = sqlx::query_scalar(
+            "SELECT token_id FROM vault_tokens WHERE device_id = $1 AND state <> 'DELETED' \
+             ORDER BY created_at, token_id",
+        )
+        .bind(dev.device_id.to_hex())
+        .fetch_all(self.db.pool())
+        .await?;
+        let mut out = Vec::with_capacity(ids.len());
+        for id in ids {
+            let id = TokenId::parse(&id).ok_or(VaultError::Db("token_id".into()))?;
+            out.push(self.summary(&id).await?);
+        }
+        Ok(out)
+    }
+
+    /// Token shu qurilmaniki ekanini tekshirib, ko'rinishini qaytaradi.
+    pub async fn device_token(
+        &self,
+        token_id: &TokenId,
+        dev: &DeviceContext,
+    ) -> Result<TokenSummary, VaultError> {
+        Self::check_device(&self.token_row(token_id).await?, dev)?;
+        self.summary(token_id).await
+    }
+
+    /// Foydalanuvchi kartani o'zi to'xtatadi, qayta yoqadi yoki o'chiradi (hamyon). Faqat o'z qurilmasi;
+    /// bank to'xtatganini qayta yoqib bo'lmaydi (`SUSPENDED_BY_BANK`). Audit aktori — `device:<id>`.
+    pub async fn device_set_state(
+        &self,
+        token_id: &TokenId,
+        dev: &DeviceContext,
+        to: TokenState,
+    ) -> Result<TokenSummary, VaultError> {
+        Self::check_device(&self.token_row(token_id).await?, dev)?;
+        let action = match to {
+            TokenState::Suspended => "TOKEN_SUSPENDED",
+            TokenState::Active => "TOKEN_RESUMED",
+            TokenState::Deleted => "TOKEN_DELETED",
+            TokenState::PendingIdv => return Err(VaultError::BadRequest("holat")),
+        };
+        let actor = format!("device:{}", &dev.device_id.to_hex()[..16]);
+        self.transition(token_id, to, &actor, action, true).await
     }
 
     /// Operator ko'rinishi (maskalangan).
@@ -885,12 +1239,12 @@ impl Vault {
         let ts = self.clock.unix();
         let counts = sqlx::query(
             "SELECT COUNT(*) AS issued, \
-             COALESCE(SUM(CASE WHEN revoked = 0 AND expires_at > ? AND used < max_uses THEN 1 ELSE 0 END), 0) AS active \
-             FROM vault_luks WHERE token_id = ?",
+             COALESCE(SUM(CASE WHEN revoked = 0 AND expires_at > $1 AND used < max_uses THEN 1 ELSE 0 END), 0) AS active \
+             FROM vault_luks WHERE token_id = $2",
         )
         .bind(ts)
         .bind(token_id.as_str())
-        .fetch_one(&self.db)
+        .fetch_one(self.db.pool())
         .await?;
         Ok(TokenSummary {
             token_id: token_id.clone(),
@@ -905,17 +1259,18 @@ impl Vault {
             last_atc: r.try_get("last_atc")?,
             created_at: r.try_get("created_at")?,
             updated_at: r.try_get("updated_at")?,
+            suspended_by: r.try_get("suspended_by")?,
         })
     }
 
     /// Audit zanjirini tekshiradi.
     pub async fn verify_audit(&self) -> Result<AuditReport, VaultError> {
-        audit::verify(&self.db).await
+        audit::verify(self.db.pool()).await
     }
 
     // ------------------------------------------------------------------ detokenizatsiya (ichki)
 
-    fn luk_status(row: Option<&SqliteRow>, now: i64) -> Result<LukStatus, VaultError> {
+    fn luk_status(row: Option<&AnyRow>, now: i64) -> Result<LukStatus, VaultError> {
         let Some(r) = row else {
             return Ok(LukStatus::Unknown);
         };
@@ -946,11 +1301,11 @@ impl Vault {
         }
         let fp = self.fingerprint(dpan)?;
         let Some(row) = sqlx::query(
-            "SELECT t.*, c.expiry AS card_expiry, c.pan_fp, c.pan_dek, c.pan_nonce, c.pan_ct, c.card_id AS cid \
-             FROM vault_tokens t JOIN vault_cards c ON c.card_id = t.card_id WHERE t.dpan_fp = ?",
+            "SELECT t.*, c.expiry AS card_expiry_fallback, c.pan_fp, c.pan_dek, c.pan_nonce, c.pan_ct, c.card_id AS cid \
+             FROM vault_tokens t JOIN vault_cards c ON c.card_id = t.card_id WHERE t.dpan_fp = $1",
         )
         .bind(fp.0.as_slice())
-        .fetch_optional(&self.db)
+        .fetch_optional(self.db.pool())
         .await?
         else {
             return Ok(None);
@@ -967,10 +1322,10 @@ impl Vault {
             )
             .await?;
         let now = self.clock.unix();
-        let luk_row = sqlx::query("SELECT * FROM vault_luks WHERE token_id = ? AND seq = ?")
+        let luk_row = sqlx::query("SELECT * FROM vault_luks WHERE token_id = $1 AND seq = $2")
             .bind(token_id.as_str())
             .bind(i64::from(luk_seq))
-            .fetch_optional(&self.db)
+            .fetch_optional(self.db.pool())
             .await?;
         let luk = Self::luk_status(luk_row.as_ref(), now)?;
         let pan_fp: Vec<u8> = row.try_get("pan_fp")?;
@@ -982,7 +1337,7 @@ impl Vault {
             token_id: token_id.clone(),
             state: state_of(&row)?,
             fpan,
-            fpan_expiry: parse_exp("card_expiry")?,
+            fpan_expiry: Self::card_expiry_of(&row)?,
             dpan_expiry: parse_exp("dpan_expiry")?,
             psn: row.try_get::<i64, _>("psn")? as u8,
             device_id: DeviceId::from_hex(&row.try_get::<String, _>("device_id")?)
@@ -1010,19 +1365,21 @@ impl Vault {
         actor: &str,
     ) -> Result<ConsumeOutcome, VaultError> {
         let now = self.clock.unix();
-        let _g = self.write.lock().await;
-        let mut tx = crate::db::begin_write(&self.db).await?;
-        let Some(t) = sqlx::query("SELECT state, last_atc FROM vault_tokens WHERE token_id = ?")
-            .bind(token_id.as_str())
-            .fetch_optional(&mut *tx)
-            .await?
+        let mut tx = self.db.begin_write().await?;
+        let Some(t) = sqlx::query(sqlx::AssertSqlSafe(format!(
+            "SELECT state, last_atc FROM vault_tokens WHERE token_id = $1{}",
+            self.db.for_update()
+        )))
+        .bind(token_id.as_str())
+        .fetch_optional(&mut *tx)
+        .await?
         else {
             return Ok(ConsumeOutcome::TokenNotActive);
         };
         if state_of(&t)? != TokenState::Active {
             return Ok(ConsumeOutcome::TokenNotActive);
         }
-        let luk_row = sqlx::query("SELECT * FROM vault_luks WHERE token_id = ? AND seq = ?")
+        let luk_row = sqlx::query("SELECT * FROM vault_luks WHERE token_id = $1 AND seq = $2")
             .bind(token_id.as_str())
             .bind(i64::from(luk_seq))
             .fetch_optional(&mut *tx)
@@ -1038,7 +1395,7 @@ impl Vault {
                 return Ok(ConsumeOutcome::AtcReplay);
             }
         }
-        let updated = sqlx::query("UPDATE vault_luks SET used = used + 1 WHERE token_id = ? AND seq = ? AND used < max_uses")
+        let updated = sqlx::query("UPDATE vault_luks SET used = used + 1 WHERE token_id = $1 AND seq = $2 AND used < max_uses")
             .bind(token_id.as_str())
             .bind(i64::from(luk_seq))
             .execute(&mut *tx)
@@ -1046,13 +1403,14 @@ impl Vault {
         if updated.rows_affected() != 1 {
             return Ok(ConsumeOutcome::LukExhausted);
         }
-        sqlx::query("UPDATE vault_tokens SET last_atc = ?, updated_at = ? WHERE token_id = ?")
+        sqlx::query("UPDATE vault_tokens SET last_atc = $1, updated_at = $2 WHERE token_id = $3")
             .bind(i64::from(atc))
             .bind(now)
             .bind(token_id.as_str())
             .execute(&mut *tx)
             .await?;
         audit::append(
+            &self.db,
             &mut tx,
             now,
             &AuditEntry {

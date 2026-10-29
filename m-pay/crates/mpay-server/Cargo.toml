@@ -15,11 +15,13 @@ path = "src/main.rs"
 
 [dependencies]
 mpay-common.workspace = true
+mpay-db.workspace = true
 mpay-crypto.workspace = true
 mpay-pqlink = { workspace = true, features = ["sandbox-attestation"] }
 mpay-vault.workspace = true
 mpay-shield.workspace = true
 mpay-issuer.workspace = true
+mpay-integrity.workspace = true
 tokio.workspace = true
 axum.workspace = true
 tower.workspace = true
@@ -37,11 +39,13 @@ tracing-subscriber.workspace = true
 thiserror.workspace = true
 time.workspace = true
 sha2.workspace = true
-hmac.workspace = true
+async-trait.workspace = true
 hex.workspace = true
 base64.workspace = true
 zeroize.workspace = true
 sqlx.workspace = true
+reqwest.workspace = true
+rustls-native-certs.workspace = true
 x509-cert.workspace = true
 der.workspace = true
 

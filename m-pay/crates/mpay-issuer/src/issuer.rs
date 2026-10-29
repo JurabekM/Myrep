@@ -25,8 +25,9 @@ use mpay_crypto::index::pan_fingerprint;
 use mpay_crypto::keystore::{KeyLabel, KeyStore};
 use mpay_crypto::scheme::CryptogramScheme;
 use mpay_crypto::{rng, SecretKey16};
+use mpay_db::Db;
 use serde::{Deserialize, Serialize};
-use sqlx::{Row, SqlitePool};
+use sqlx::Row;
 
 use crate::codes::{Reason, ResponseCode};
 use crate::IssuerError;
@@ -40,30 +41,60 @@ pub struct TestAccount {
     pub balance_minor: i64,
     #[serde(default = "default_label")]
     pub label: String,
+    /// Karta egasining telefoni (E.164, sandbox'da fiktiv) — OTP SMS uchun (2-faza P2.1).
+    #[serde(default)]
+    pub phone: Option<String>,
 }
 
 fn default_label() -> String {
     "Sandbox hisob".into()
 }
 
-/// REVIEW qarorida nima qilish.
+/// Shield REVIEW qarorida nima qilish (ADR-0022).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 pub enum ReviewAction {
-    #[default]
+    /// Tasdiqlanadi (`APPROVED_AFTER_REVIEW`).
     Approve,
+    /// Rad (`05 RISK_REVIEW`).
     Decline,
+    /// Karta egasi qurilmada tasdiqlagan (CDCVM) bo'lsa — tasdiq, aks holda `Q2`: telefonda tasdiqlab
+    /// qayta tap qiladi. Firibgar o'g'irlangan/bloklanmagan telefondan biometriyasiz o'tolmaydi.
+    #[default]
+    StepUp,
 }
 
+/// Qurilmada tasdiqlashsiz (CDCVM'siz) ruxsat etilgan eng katta summa (tiyin): 1 000 000,00 UZS.
+/// `TODO(spec):` bank mahsulot siyosati.
+pub const DEFAULT_CVM_LIMIT_MINOR: u64 = 100_000_000;
+
 /// Emitent sozlamalari.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct IssuerConfig {
     /// Shu BIN'lar "ishlamayotgan emitent" (javob `91`).
     pub offline_bins: Vec<String>,
     pub review_action: ReviewAction,
+    /// Shu summadan yuqori to'lov faqat CDCVM bilan (aks holda `Q2`). Chegara tokenga ham beriladi —
+    /// qurilma o'zi so'raydi; emitent tekshiruvi o'zgartirilgan hamyonga qarshi. 0 — har doim CDCVM.
+    pub cvm_limit_minor: u64,
     /// Ishga tushganda yaratiladigan test hisoblar (mavjudlari o'zgartirilmaydi).
     pub accounts: Vec<TestAccount>,
+    /// Sandbox: `0110` javobini shuncha ms kechiktirish (yechim commit qilingandan keyin) — sekin
+    /// tarmoqni va acquirer timeout'i → reversal yo'lini sinash uchun (ADR-0024). 0 — kechikishsiz.
+    pub response_delay_ms: u64,
+}
+
+impl Default for IssuerConfig {
+    fn default() -> Self {
+        Self {
+            offline_bins: Vec::new(),
+            review_action: ReviewAction::default(),
+            cvm_limit_minor: DEFAULT_CVM_LIMIT_MINOR,
+            accounts: Vec::new(),
+            response_delay_ms: 0,
+        }
+    }
 }
 
 /// Avtorizatsiya natijasi (terminal javobi va audit uchun).
@@ -108,12 +139,12 @@ struct Parsed {
 
 /// Emitent emulyatori.
 pub struct Issuer {
-    db: SqlitePool,
+    pub(crate) db: Db,
     ks: Arc<dyn KeyStore>,
     scheme: Arc<dyn CryptogramScheme>,
     detok: Arc<dyn Detokenizer>,
     risk: Arc<dyn RiskScorer>,
-    clock: Arc<dyn Clock>,
+    pub(crate) clock: Arc<dyn Clock>,
     cfg: IssuerConfig,
     imk: KeyLabel,
     pan_idx: KeyLabel,
@@ -134,7 +165,7 @@ fn reject(reason: Reason) -> Result<(), Reason> {
 impl Issuer {
     /// Migratsiyalar va test hisoblarini tayyorlaydi.
     pub async fn open(
-        db: SqlitePool,
+        db: Db,
         ks: Arc<dyn KeyStore>,
         scheme: Arc<dyn CryptogramScheme>,
         detok: Arc<dyn Detokenizer>,
@@ -142,9 +173,11 @@ impl Issuer {
         clock: Arc<dyn Clock>,
         cfg: IssuerConfig,
     ) -> Result<Self, IssuerError> {
-        let mut m = sqlx::migrate!("./migrations");
-        m.set_ignore_missing(true);
-        m.run(&db).await?;
+        db.migrate_with(
+            sqlx::migrate!("./migrations/sqlite"),
+            sqlx::migrate!("./migrations/postgres"),
+        )
+        .await?;
         let issuer = Self {
             db,
             ks,
@@ -162,12 +195,43 @@ impl Issuer {
             issuer
                 .ensure_account(&pan, a.balance_minor, &a.label)
                 .await?;
+            // Konfiguratsiya — manba: raqam olib tashlansa bazadagi eskisi ham o'chadi (kod eski egaga ketmasin).
+            issuer.set_phone(&pan, a.phone.as_deref()).await?;
         }
         Ok(issuer)
     }
 
     fn fp(&self, pan: &Pan) -> Result<PanFingerprint, IssuerError> {
         Ok(pan_fingerprint(self.ks.as_ref(), &self.pan_idx, pan)?)
+    }
+
+    /// Karta egasining telefonini yozadi (E.164: `+` va 7–15 raqam).
+    /// `None` — raqamni o'chiradi.
+    pub async fn set_phone(&self, pan: &Pan, phone: Option<&str>) -> Result<(), IssuerError> {
+        if phone.is_some_and(|p| !mpay_common::phone::is_e164(p)) {
+            return Err(IssuerError::Config(
+                "issuer.accounts.phone: E.164 (+998…) kutilgan",
+            ));
+        }
+        sqlx::query("UPDATE issuer_accounts SET phone = $1, updated_at = $2 WHERE pan_fp = $3")
+            .bind(phone)
+            .bind(self.clock.unix())
+            .bind(self.fp(pan)?.0.as_slice())
+            .execute(self.db.pool())
+            .await?;
+        Ok(())
+    }
+
+    /// OTP yuborish uchun karta egasining telefoni (bo'lmasa `None`). Faqat emitent biladi.
+    pub async fn contact_phone(&self, pan: &Pan) -> Result<Option<String>, IssuerError> {
+        use sqlx::Row;
+        Ok(
+            sqlx::query("SELECT phone FROM issuer_accounts WHERE pan_fp = $1")
+                .bind(self.fp(pan)?.0.as_slice())
+                .fetch_optional(self.db.pool())
+                .await?
+                .and_then(|r| r.try_get::<Option<String>, _>("phone").ok().flatten()),
+        )
     }
 
     /// Test hisobini yaratadi (mavjud bo'lsa o'zgartirmaydi) va uning ko'rinishini qaytaradi.
@@ -185,7 +249,7 @@ impl Issuer {
         let id = format!("acc_{}", hex::encode(rng::array::<8>()?));
         sqlx::query(
             "INSERT INTO issuer_accounts (account_id, pan_fp, pan_masked, label, currency, balance_minor, created_at, updated_at) \
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(pan_fp) DO NOTHING",
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT(pan_fp) DO NOTHING",
         )
         .bind(&id)
         .bind(fp.0.as_slice())
@@ -195,7 +259,7 @@ impl Issuer {
         .bind(balance_minor)
         .bind(ts)
         .bind(ts)
-        .execute(&self.db)
+        .execute(self.db.pool())
         .await?;
         self.account_by_fp(&fp)
             .await?
@@ -203,9 +267,9 @@ impl Issuer {
     }
 
     async fn account_by_fp(&self, fp: &PanFingerprint) -> Result<Option<AccountView>, IssuerError> {
-        let r = sqlx::query("SELECT * FROM issuer_accounts WHERE pan_fp = ?")
+        let r = sqlx::query("SELECT * FROM issuer_accounts WHERE pan_fp = $1")
             .bind(fp.0.as_slice())
-            .fetch_optional(&self.db)
+            .fetch_optional(self.db.pool())
             .await?;
         r.map(|r| -> Result<AccountView, IssuerError> {
             Ok(AccountView {
@@ -222,7 +286,7 @@ impl Issuer {
     /// Barcha hisoblar (sandbox operator ko'rinishi).
     pub async fn accounts(&self) -> Result<Vec<AccountView>, IssuerError> {
         let rows = sqlx::query("SELECT * FROM issuer_accounts ORDER BY created_at, account_id")
-            .fetch_all(&self.db)
+            .fetch_all(self.db.pool())
             .await?;
         rows.iter()
             .map(|r| {
@@ -244,6 +308,9 @@ impl Issuer {
     ) -> Result<(Vec<u8>, AuthOutcome), IssuerError> {
         let msg = IsoMessage::unpack(request)?;
         let (resp, out) = self.authorize(&msg).await?;
+        if self.cfg.response_delay_ms > 0 {
+            tokio::time::sleep(std::time::Duration::from_millis(self.cfg.response_delay_ms)).await;
+        }
         Ok((resp.pack(), out))
     }
 
@@ -287,8 +354,8 @@ impl Issuer {
             Err(reason) => {
                 out.reason = reason;
                 out.code = reason.code();
-                let mut tx = self.db.begin_with("BEGIN IMMEDIATE").await?;
-                self.finish(&mut tx, &mut resp, &out, None).await?;
+                let mut tx = self.db.begin_write().await?;
+                self.finish(&mut tx, &mut resp, &out, None, None).await?;
                 tx.commit().await?;
                 return Ok((resp, out));
             }
@@ -302,11 +369,13 @@ impl Issuer {
         // Pul yechish va avtorizatsiya yozuvi — bitta tranzaksiya: biri yozilib, ikkinchisi yozilmay
         // qolmasin (aks holda pul yechilgan-u, yozuv yo'q yoki aksincha). `BEGIN IMMEDIATE` — SQLite'da
         // o'qishdan yozishga o'tishdagi `SQLITE_BUSY` bo'lmasin.
-        let mut tx = self.db.begin_with("BEGIN IMMEDIATE").await?;
+        let mut tx = self.db.begin_write().await?;
+        // Yechilgan hisob avtorizatsiya qatoriga yoziladi — reversal shu hisobga qaytaradi (ADR-0024).
+        let mut debited: Option<&str> = None;
         if let Some((account_id, amount)) = &debit {
             let n = sqlx::query(
-                "UPDATE issuer_accounts SET balance_minor = balance_minor - ?, updated_at = ? \
-                 WHERE account_id = ? AND balance_minor >= ?",
+                "UPDATE issuer_accounts SET balance_minor = balance_minor - $1, updated_at = $2 \
+                 WHERE account_id = $3 AND balance_minor >= $4",
             )
             .bind(amount)
             .bind(self.clock.unix())
@@ -315,7 +384,9 @@ impl Issuer {
             .execute(&mut *tx)
             .await?
             .rows_affected();
-            if n != 1 {
+            if n == 1 {
+                debited = Some(account_id.as_str());
+            } else {
                 reason = Reason::InsufficientFunds;
             }
         }
@@ -327,7 +398,8 @@ impl Issuer {
             iad91.extend_from_slice(&out.code.arc());
             out.issuer_auth_data = Some(hex::encode(&iad91));
         }
-        self.finish(&mut tx, &mut resp, &out, Some(&parsed)).await?;
+        self.finish(&mut tx, &mut resp, &out, Some(&parsed), debited)
+            .await?;
         tx.commit().await?;
         tracing::info!(
             token_id = ?out.token_id.as_ref().map(TokenId::as_str),
@@ -361,6 +433,13 @@ impl Issuer {
             }
         };
         out.token_id = Some(view.token_id.clone());
+        // ADR-0022: muddati o'tgan token (DPAN muddati oyning oxirigacha amal qiladi) — LUK holatidan
+        // oldin: LUK muddati token muddatidan oshmaydi, aks holda mijoz `Q1` ko'rardi, `54` emas.
+        // DPAN muddati sir emas (track2'da bor), ARQC tekshiruvisiz aytish xavfsiz.
+        let now = self.clock.now();
+        if view.dpan_expiry.is_expired(now) {
+            return Err(Reason::TokenExpired);
+        }
         match view.luk {
             LukStatus::Valid { .. } => {}
             LukStatus::Unknown => reject(Reason::LukUnknown)?,
@@ -418,6 +497,12 @@ impl Issuer {
             reject(Reason::IssuerOffline)?;
         }
 
+        // CVM siyosati: katta summa faqat qurilmada tasdiqlangan bo'lsa (CVR ARQC bilan himoyalangan).
+        let cdcvm = p.iad.cvr & emv::cvr::CDCVM_PERFORMED != 0;
+        if p.amount > self.cfg.cvm_limit_minor && !cdcvm {
+            reject(Reason::CvmRequired)?;
+        }
+
         let risk = self
             .risk
             .score(&RiskRequest {
@@ -430,7 +515,7 @@ impl Issuer {
                 terminal_id: p.terminal_id.clone(),
                 country: p.td.country,
                 atc: p.atc,
-                cdcvm_performed: p.iad.cvr & emv::cvr::CDCVM_PERFORMED != 0,
+                cdcvm_performed: cdcvm,
                 at: self.clock.now(),
             })
             .await
@@ -443,6 +528,8 @@ impl Issuer {
             RiskDecision::Review => match self.cfg.review_action {
                 ReviewAction::Approve => reviewed = true,
                 ReviewAction::Decline => reject(Reason::RiskReview)?,
+                ReviewAction::StepUp if cdcvm => reviewed = true,
+                ReviewAction::StepUp => reject(Reason::ReviewStepUp)?,
             },
         }
 
@@ -468,10 +555,11 @@ impl Issuer {
 
     async fn finish(
         &self,
-        tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        tx: &mut sqlx::AnyConnection,
         resp: &mut IsoMessage,
         out: &AuthOutcome,
         p: Option<&Parsed>,
+        account_id: Option<&str>,
     ) -> Result<(), IssuerError> {
         resp.set_str(39, out.code.as_str())?;
         if let Some(iad) = &out.issuer_auth_data {
@@ -486,13 +574,14 @@ impl Issuer {
         sqlx::query(
             "INSERT INTO issuer_authorizations (auth_id, ts, stan, rrn, token_id, account_id, dpan_masked, amount_minor, currency, \
              terminal_id, merchant_id, atc, luk_seq, response_code, reason, risk_score, risk_decision) \
-             VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)",
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NULL)",
         )
         .bind(&auth_id)
         .bind(self.clock.unix())
         .bind(p.map(|p| p.stan.as_str()).unwrap_or(""))
         .bind(p.map(|p| p.rrn.as_str()).unwrap_or(""))
         .bind(out.token_id.as_ref().map(TokenId::as_str))
+        .bind(account_id)
         .bind(out.dpan_masked.as_deref())
         .bind(out.amount_minor as i64)
         .bind(i64::from(out.currency))
@@ -503,7 +592,7 @@ impl Issuer {
         .bind(out.code.as_str())
         .bind(out.reason.as_str())
         .bind(out.risk_score.map(i64::from))
-        .execute(&mut **tx)
+        .execute(&mut *tx)
         .await?;
         Ok(())
     }

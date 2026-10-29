@@ -70,7 +70,9 @@ Talab: p99 < 50 ms — bajarildi.
 * Ma'lumotlar **sintetik** va stsenariylar generator qoidalari bilan aniq ajraladi — real
   ma'lumotlarda natijalar sezilarli past bo'ladi. Bu raqamlar dvigatel va quvur to'g'ri ishlashining
   isboti, real samaradorlikning bahosi emas.
-* Belgilar ombori va graf xotirada, bitta instansiya uchun (`TODO(spec):` taqsimlangan ombor).
+* Belgilar ombori va graf xotirada; API instansiyalari ularni bitta Shield roli orqali bo'lishadi
+  (ADR-0019). Yetakchi Shield holatni davriy snapshot'ga yozadi, zaxira instansiya yetakchilikni
+  olganda tiklaydi (ADR-0026); yiqilishda oxirgi snapshot'dan keyingi hodisalar yo'qoladi.
 * Geo-anomaliya faqat mamlakat darajasida (terminal koordinatalari ISO 8583 subsetida yo'q).
 * Merchant toifasi (P2P) prefiks bo'yicha; production'da MCC kerak.
 * `ort` backend (ADR-0005) qo'shilmagan: tract p99 talabini 25× zaxira bilan bajaradi.

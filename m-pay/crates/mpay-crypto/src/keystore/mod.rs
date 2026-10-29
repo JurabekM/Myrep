@@ -70,6 +70,8 @@ impl KeyLabel {
     pub const PAN_INDEX: &'static str = "mpay.pan-idx.v1";
     /// PQ Link server Ed25519 imzo kaliti.
     pub const SERVER_ED25519: &'static str = "mpay.srv-ed25519.v1";
+    /// Qurilmani ro'yxatdan o'tkazish nonce'lari MAC kaliti (HMAC-SHA256; ko'p instansiyada umumiy).
+    pub const ENROLL_NONCE: &'static str = "mpay.enroll-nonce.v1";
 
     pub fn new(s: impl Into<String>) -> Self {
         Self(s.into())

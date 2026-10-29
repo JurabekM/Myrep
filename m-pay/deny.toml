@@ -10,8 +10,9 @@ yanked = "deny"
 ignore = [
     # Marvin (RSA shifr ochishdagi vaqt yon kanali). Biz `rsa` ni FAQAT attestatsiya zanjiridagi ochiq
     # kalit bilan imzo tekshiruvi uchun ishlatamiz (Google RSA-4096 ildizi); maxfiy RSA kalit va
-    # shifr ochish yo'q — hujum qo'llanmaydi. `rsa` 0.10 barqaror bo'lganda qayta ko'riladi.
-    { id = "RUSTSEC-2023-0071", reason = "faqat RSA imzo tekshiruvi (ochiq kalit), maxfiy kalit yo'q" },
+    # shifr ochish yo'q — hujum qo'llanmaydi. Testlarda (dev) faqat kalit yaratish; ishlab chiqarishdagi
+    # RSA imzosi (Google xizmat akkaunti JWT) — `ring` (doimiy vaqtli). `rsa` 0.10 barqaror bo'lganda qayta ko'riladi.
+    { id = "RUSTSEC-2023-0071", reason = "faqat RSA imzo tekshiruvi (ochiq kalit) va testlarda kalit yaratish; RSA imzolash (Google xizmat akkaunti) — ring" },
 ]
 
 [licenses]

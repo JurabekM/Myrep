@@ -709,6 +709,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7c1832837b905bbfb5101e07cc24c8deddf52f93225eee6ead5f4d63d53ddcb"
 dependencies = [
  "const-oid 0.9.6",
+ "pem-rfc7468 0.7.0",
  "zeroize",
 ]
 
@@ -721,7 +722,7 @@ dependencies = [
  "const-oid 0.10.2",
  "der_derive",
  "flagset",
- "pem-rfc7468",
+ "pem-rfc7468 1.0.0",
  "zeroize",
 ]
 
@@ -887,7 +888,7 @@ dependencies = [
  "ff",
  "group",
  "hybrid-array",
- "pem-rfc7468",
+ "pem-rfc7468 1.0.0",
  "pkcs8 0.11.0",
  "rand_core 0.10.1",
  "sec1",
@@ -1831,6 +1832,7 @@ dependencies = [
  "proptest",
  "serde",
  "serde_json",
+ "sha2 0.11.1",
  "subtle",
  "thiserror",
  "time",
@@ -1864,23 +1866,69 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpay-db"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.11.1",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
 name = "mpay-e2e"
 version = "0.1.0"
 dependencies = [
+ "axum",
+ "base64 0.23.1",
  "clap",
  "hex",
  "mpay-common",
  "mpay-crypto",
+ "mpay-db",
+ "mpay-integrity",
  "mpay-issuer",
  "mpay-pqlink",
  "mpay-server",
+ "mpay-smsgw",
  "mpay-terminal-sim",
+ "proptest",
+ "rand_core 0.6.4",
+ "rcgen",
+ "ring",
+ "rsa",
  "serde_json",
+ "sha2 0.11.1",
  "sqlx",
  "tempfile",
  "tokio",
+ "tower",
  "tracing",
  "tracing-subscriber",
+ "zeroize",
+]
+
+[[package]]
+name = "mpay-integrity"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "axum",
+ "base64 0.23.1",
+ "mpay-common",
+ "p256",
+ "rand_core 0.6.4",
+ "rcgen",
+ "reqwest",
+ "ring",
+ "rsa",
+ "rustls",
+ "serde",
+ "serde_json",
+ "sha2 0.11.1",
+ "thiserror",
+ "tokio",
+ "tracing",
  "zeroize",
 ]
 
@@ -1892,11 +1940,13 @@ dependencies = [
  "hex",
  "mpay-common",
  "mpay-crypto",
+ "mpay-db",
  "mpay-shield",
  "mpay-vault",
  "proptest",
  "serde",
  "serde_json",
+ "sha2 0.11.1",
  "sqlx",
  "tempfile",
  "thiserror",
@@ -1910,6 +1960,7 @@ dependencies = [
 name = "mpay-pqlink"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "chacha20poly1305",
  "der 0.8.2",
  "ed25519-dalek",
@@ -1934,6 +1985,7 @@ dependencies = [
  "subtle",
  "thiserror",
  "time",
+ "tokio",
  "tracing",
  "x25519-dalek",
  "x509-cert",
@@ -1944,22 +1996,26 @@ dependencies = [
 name = "mpay-server"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
  "base64 0.23.1",
  "clap",
  "der 0.8.2",
  "hex",
- "hmac",
  "hyper",
  "hyper-util",
  "mpay-common",
  "mpay-crypto",
+ "mpay-db",
+ "mpay-integrity",
  "mpay-issuer",
  "mpay-pqlink",
  "mpay-shield",
  "mpay-vault",
  "rcgen",
+ "reqwest",
  "rustls",
+ "rustls-native-certs",
  "serde",
  "serde_json",
  "sha2 0.11.1",
@@ -1982,7 +2038,9 @@ name = "mpay-shield"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "hex",
  "mpay-common",
+ "proptest",
  "serde",
  "serde_json",
  "sha2 0.11.1",
@@ -1994,6 +2052,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpay-smsgw"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "clap",
+ "mpay-common",
+ "serde",
+ "serde_json",
+ "subtle",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "zeroize",
+]
+
+[[package]]
 name = "mpay-terminal-sim"
 version = "0.1.0"
 dependencies = [
@@ -2001,6 +2075,7 @@ dependencies = [
  "hex",
  "mpay-common",
  "mpay-crypto",
+ "mpay-integrity",
  "mpay-pqlink",
  "proptest",
  "reqwest",
@@ -2023,6 +2098,7 @@ dependencies = [
  "hex",
  "mpay-common",
  "mpay-crypto",
+ "mpay-db",
  "mpay-shield",
  "serde",
  "serde_json",
@@ -2266,6 +2342,15 @@ checksum = "d354a98a3d1251555de99e8fdd8afda05573c31b82f59063a7b0a29b5527f120"
 dependencies = [
  "base64 0.23.1",
  "serde_core",
+]
+
+[[package]]
+name = "pem-rfc7468"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88b39c9bfcfc231068454382784bb460aae594343fb030d46e9f50a645418412"
+dependencies = [
+ "base64ct",
 ]
 
 [[package]]
@@ -3268,6 +3353,7 @@ dependencies = [
  "serde_json",
  "sha2 0.10.9",
  "sqlx-core",
+ "sqlx-postgres",
  "sqlx-sqlite",
  "syn 2.0.119",
  "thiserror",

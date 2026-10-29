@@ -100,11 +100,17 @@ impl From<VaultError> for ApiError {
             VaultError::TokenNotFound | VaultError::ChallengeNotFound => StatusCode::NOT_FOUND,
             VaultError::InvalidState { .. }
             | VaultError::TooManyTokens
-            | VaultError::TooManyLuks => StatusCode::CONFLICT,
-            VaultError::DeviceMismatch | VaultError::IdvDeclined => StatusCode::FORBIDDEN,
+            | VaultError::TooManyLuks
+            | VaultError::TooManyDevices
+            | VaultError::CardAlreadyOnDevice => StatusCode::CONFLICT,
+            VaultError::TokenExpired => StatusCode::GONE,
+            VaultError::DeviceMismatch | VaultError::IdvDeclined | VaultError::SuspendedByBank => {
+                StatusCode::FORBIDDEN
+            }
             VaultError::OtpInvalid => StatusCode::UNPROCESSABLE_ENTITY,
             VaultError::OtpExpired => StatusCode::GONE,
             VaultError::OtpLocked => StatusCode::LOCKED,
+            VaultError::OtpResendLimit => StatusCode::TOO_MANY_REQUESTS,
             VaultError::IdvUnavailable(_) => StatusCode::SERVICE_UNAVAILABLE,
             VaultError::AuditBroken(_) | VaultError::Crypto(_) | VaultError::Db(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR

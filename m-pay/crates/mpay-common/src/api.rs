@@ -118,12 +118,20 @@ pub struct ProvisionRequest {
     pub pan: Zeroizing<String>,
     /// YYMM.
     pub expiry: String,
+    /// Play Integrity (yoki sandbox mock) tokeni, `requestHash` = PQ Link sessiyasiga bog'langan
+    /// (2-faza P2.6, ADR-0021). `[integrity] required` bo'lsa majburiy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub integrity_token: Option<String>,
 }
 
 impl fmt::Debug for ProvisionRequest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ProvisionRequest")
             .field("expiry", &self.expiry)
+            .field(
+                "integrity_token",
+                &self.integrity_token.as_ref().map(|_| "<token>"),
+            )
             .finish_non_exhaustive()
     }
 }
@@ -155,6 +163,14 @@ pub struct TokenProfileDto {
     pub aid: String,
     pub scheme: String,
     pub luks: Vec<LukDto>,
+    /// Shu summadan (tiyin) yuqori tap'da qurilma karta egasini tasdiqlaydi (CDCVM; 2-faza P2.7,
+    /// ADR-0022). Emitent ham tekshiradi (`Q2`). Eski server javobida yo'q — qurilma standartini oladi.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cvm_limit_minor: Option<u64>,
+    /// Shu lahzadan (unix) `POST /v1/tokens/{id}/renew` DPAN muddatini uzaytiradi. Yo'q — uzaytirib
+    /// bo'lmaydi (karta muddati tugaydi: yangi muddatli karta bilan qayta qo'shish kerak) yoki eski server.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub renew_after: Option<i64>,
 }
 
 impl fmt::Debug for TokenProfileDto {
@@ -180,10 +196,41 @@ pub enum ProvisionResponse {
         challenge_id: String,
         otp_expires_at: i64,
         idv: IdvAssessment,
+        /// OTP SMS yuborilgan telefon (maskalangan); sandbox kanalida yoki yuborilmasa yo'q.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        otp_sent_to: Option<String>,
     },
     Declined {
         idv: IdvAssessment,
     },
+}
+
+/// `POST /v1/tokens/{id}/idv/resend` (sealed) so'rovi va javobi (2-faza P2.1).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OtpResendRequest {
+    pub challenge_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OtpResendResponse {
+    pub otp_sent_to: String,
+}
+
+/// `POST /v1/sandbox/integrity-token` (faqat sandbox, operator kaliti): emulyatordagi demo ilova
+/// uchun mock yaxlitlik tokeni (haqiqiy Play Integrity o'rniga; ADR-0021).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SandboxIntegrityRequest {
+    /// Hamyon hisoblagan `requestHash` (PQ Link sessiyasiga bog'langan).
+    pub request_hash: String,
+    /// Stsenariy: `strong` (standart), `device`, `basic`, `no_integrity`, `unrecognized`,
+    /// `play_protect_risk`, `remote_control`.
+    #[serde(default)]
+    pub preset: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SandboxIntegrityResponse {
+    pub integrity_token: String,
 }
 
 /// `POST /v1/tokens/{id}/idv/verify` so'rovi.
@@ -205,6 +252,18 @@ impl fmt::Debug for OtpVerifyRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LuksResponse {
     pub luks: Vec<LukDto>,
+    /// Joriy CVM chegarasi — bank siyosatni o'zgartirsa qurilma LUK to'ldirishda yangilaydi.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cvm_limit_minor: Option<u64>,
+}
+
+/// `POST /v1/tokens/{id}/renew` javobi (muhrlangan). `luks` bo'sh — mavjud LUK'lar amal qiladi.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RenewResponse {
+    /// `false` — hali erta yoki uzaytirib bo'lmaydi; profil o'zgarishsiz (takroriy chaqiruv xavfsiz).
+    pub renewed: bool,
+    #[serde(flatten)]
+    pub profile: TokenProfileDto,
 }
 
 /// Bo'sh so'rov tanasi.
@@ -256,6 +315,67 @@ pub struct AuthorizationResponse {
     pub risk_score: Option<u16>,
 }
 
+// ---------------------------------------------------------------- hamyon (ADR-0030)
+
+/// Hamyon ilovasidagi karta ko'rinishi: faqat maskalangan PAN'lar, sirlar yo'q.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WalletTokenDto {
+    pub token_id: TokenId,
+    pub state: crate::ports::TokenState,
+    pub dpan_masked: String,
+    /// Bank kartasi (`990012******3456`) — foydalanuvchi qaysi kartasi ekanini taniydi.
+    pub fpan_masked: String,
+    pub dpan_expiry: String,
+    pub created_at: i64,
+    pub updated_at: i64,
+    /// `SUSPENDED` bo'lsa: `DEVICE` (foydalanuvchi o'zi — qayta yoqa oladi) yoki `BANK`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub suspended_by: Option<String>,
+}
+
+/// `POST /v1/wallet/tokens` (muhrlangan) javobi: shu qurilmaning o'chirilmagan kartalari.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WalletTokensResponse {
+    pub tokens: Vec<WalletTokenDto>,
+}
+
+/// `POST /v1/wallet/tokens/{id}/transactions` (muhrlangan) so'rovi.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct TxnHistoryRequest {
+    /// Oldingi javobning `next_cursor` i; yo'q — eng yangilaridan.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cursor: Option<String>,
+    /// 1–100, standart 20.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<u32>,
+}
+
+/// Tarixdagi bitta tranzaksiya (PAN yo'q).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TxnDto {
+    pub id: String,
+    pub at: i64,
+    pub amount_minor: i64,
+    pub currency: u16,
+    pub merchant_id: String,
+    pub terminal_id: String,
+    pub rrn: String,
+    /// `APPROVED`, `REVERSED`, `DECLINED`.
+    pub status: String,
+    pub response_code: String,
+    pub reason: String,
+    /// Kliringdan o'tgan — yakuniy.
+    pub cleared: bool,
+}
+
+/// Tarix sahifasi; yangilari birinchi.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TxnHistoryResponse {
+    pub transactions: Vec<TxnDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub next_cursor: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -278,6 +398,8 @@ mod tests {
                     expires_at: 2,
                     max_uses: 10,
                 }],
+                cvm_limit_minor: Some(100_000_000),
+                renew_after: Some(1_900_000_000),
             },
             idv: IdvAssessment {
                 decision: IdvDecision::Green,

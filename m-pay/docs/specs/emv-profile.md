@@ -171,7 +171,7 @@ CDOL ma'lumoti (41 bayt) — quyidagi qiymatlarning ketma-ket ulanishi (teglarsi
   GPO `6986` ("telefonga qarang") qaytaradi.
 * CDCVM bir martalik: muvaffaqiyatli GPO'dan keyin bayroq tushiriladi. IAD CVR: `80` bajarildi,
   `40` talab qilingan edi.
-* `TODO(spec):` issuer tomonidagi CVM siyosati (M6, `BiometricPrompt` bilan).
+* Emitent ham tekshiradi: summa chegaradan yuqori va CVR'da CDCVM yo'q → `Q2 CVM_REQUIRED` (ADR-0022).
 
 ## 9. KAT vektorlari
 
@@ -206,5 +206,5 @@ RFC 4231 #6–#7 (HMAC-SHA256), GCM test case 13/14, RFC 8032 #1–#2 (Ed25519).
 
 ## 10. Ochiq savollar
 
-* `TODO(spec):` CVM limiti va CDCVM talabining issuer tomonidagi siyosati (M6).
+* CVM limiti emitent tomonida — ADR-0022 (`[issuer] cvm_limit_minor`); qiymatini bank tasdiqlaydi.
 * `TODO(spec):` Real sxema profili ulanganda IAD formati va ARPC metodi qayta ko'rib chiqiladi.

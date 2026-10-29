@@ -69,3 +69,4 @@ SoftHSM2 testlari (Docker): `bash scripts/softhsm-test.sh` va `bash scripts/soft
 Android ilovalari va telefonda sinash: `android/README.md`, `docs/android-testing.md`.
 
 Batafsil: `docs/PROGRESS.md`, `docs/specs/`, har crate'ning `README.md` fayli.
+Production'gacha qolgan ishlar: `docs/production-checklist.md`. Navbatchi qo'llanmasi: `docs/runbook.md`.

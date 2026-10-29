@@ -196,9 +196,24 @@ object Hex {
         return sb.toString()
     }
 
+    /**
+     * Qat'iy hex (bo'shliqlar e'tiborsiz). `String.toInt(16)` ishlatilmaydi: u `+`/`-` belgisini qabul
+     * qiladi (`"-1"` → `0xFF`) — bir xil baytlarga turli satrlar (Jazzer `hexStrict` topdi).
+     */
     fun decode(s: String): ByteArray {
         val t = s.replace(" ", "")
         require(t.length % 2 == 0) { "hex uzunligi toq" }
-        return ByteArray(t.length / 2) { i -> t.substring(2 * i, 2 * i + 2).toInt(16).toByte() }
+        return ByteArray(t.length / 2) { i ->
+            val hi = nibble(t[2 * i])
+            val lo = nibble(t[2 * i + 1])
+            ((hi shl 4) or lo).toByte()
+        }
+    }
+
+    private fun nibble(c: Char): Int = when (c) {
+        in '0'..'9' -> c - '0'
+        in 'a'..'f' -> c - 'a' + 10
+        in 'A'..'F' -> c - 'A' + 10
+        else -> throw IllegalArgumentException("hex belgisi emas")
     }
 }

@@ -6,10 +6,16 @@
 //!
 //! Mexanizmlar: `CKM_AES_KEY_GEN`, `CKM_AES_CMAC`, `CKM_AES_GCM`, `CKM_GENERIC_SECRET_KEY_GEN`,
 //! `CKM_SHA256_HMAC`, `CKM_EC_EDWARDS_KEY_PAIR_GEN`, `CKM_EDDSA`.
+//!
+//! Sessiyalar (2-faza P2.2): `N` ta R/W sessiya pool'i (`MPAY_PKCS11_SESSIONS`, standart 4) — bitta
+//! sessiya barcha kriptografiyani ketma-ket qilardi. Sessiya yo'qolsa (HSM qayta ishga tushdi, tarmoq
+//! HSM uzildi, login tushib qoldi) u qayta ochiladi, qayta kiriladi va operatsiya bir marta takrorlanadi.
 
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::{Mutex, OnceLock};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Mutex, OnceLock, RwLock};
 
 use cryptoki::context::{CInitializeArgs, CInitializeFlags, Pkcs11};
 use cryptoki::error::RvError;
@@ -18,6 +24,7 @@ use cryptoki::mechanism::eddsa::{EddsaParams, EddsaSignatureScheme};
 use cryptoki::mechanism::Mechanism;
 use cryptoki::object::{Attribute, AttributeType, KeyType, ObjectClass, ObjectHandle};
 use cryptoki::session::{Session, UserType};
+use cryptoki::slot::Slot;
 use cryptoki::types::AuthPin;
 use zeroize::Zeroizing;
 
@@ -35,7 +42,12 @@ pub struct Pkcs11Config {
     pub token_label: String,
     /// Foydalanuvchi PIN'i (muhit o'zgaruvchisidan; repoga tushmaydi).
     pub user_pin: Zeroizing<String>,
+    /// Sessiyalar soni (bir vaqtdagi HSM operatsiyalari).
+    pub sessions: usize,
 }
+
+/// Standart sessiyalar soni.
+pub const DEFAULT_SESSIONS: usize = 4;
 
 impl std::fmt::Debug for Pkcs11Config {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -43,12 +55,14 @@ impl std::fmt::Debug for Pkcs11Config {
             .field("module", &self.module)
             .field("token_label", &self.token_label)
             .field("user_pin", &"<maxfiy>")
+            .field("sessions", &self.sessions)
             .finish()
     }
 }
 
 impl Pkcs11Config {
-    /// `MPAY_PKCS11_LIB`, `MPAY_PKCS11_TOKEN_LABEL`, `MPAY_PKCS11_PIN` muhit o'zgaruvchilaridan.
+    /// `MPAY_PKCS11_LIB`, `MPAY_PKCS11_TOKEN_LABEL`, `MPAY_PKCS11_PIN` (va ixtiyoriy
+    /// `MPAY_PKCS11_SESSIONS`) muhit o'zgaruvchilaridan.
     pub fn from_env() -> Result<Self, CryptoError> {
         let get = |k: &str| {
             std::env::var(k).map_err(|_| CryptoError::Backend(format!("{k} o'rnatilmagan")))
@@ -57,13 +71,60 @@ impl Pkcs11Config {
             module: PathBuf::from(get("MPAY_PKCS11_LIB")?),
             token_label: get("MPAY_PKCS11_TOKEN_LABEL")?,
             user_pin: Zeroizing::new(get("MPAY_PKCS11_PIN")?),
+            sessions: match std::env::var("MPAY_PKCS11_SESSIONS") {
+                Ok(v) => v
+                    .parse::<usize>()
+                    .ok()
+                    .filter(|n| (1..=64).contains(n))
+                    .ok_or_else(|| CryptoError::Backend("MPAY_PKCS11_SESSIONS: 1–64".into()))?,
+                Err(_) => DEFAULT_SESSIONS,
+            },
         })
     }
 }
 
-/// PKCS#11 KeyStore. Bitta R/W sessiya `Mutex` ostida (cryptoki `Session` — `Send`, `!Sync`).
+thread_local! {
+    /// Joriy operatsiyada sessiya yo'qolgani aniqlandimi (`be` belgilaydi, `with_session` o'qiydi).
+    static SESSION_LOST: Cell<bool> = const { Cell::new(false) };
+}
+
+/// Sessiyani qayta ochish bilan tuzaladigan PKCS#11 xatolari.
+fn session_lost(rv: RvError) -> bool {
+    matches!(
+        rv,
+        RvError::SessionHandleInvalid
+            | RvError::SessionClosed
+            | RvError::UserNotLoggedIn
+            | RvError::DeviceRemoved
+            | RvError::TokenNotPresent
+            | RvError::DeviceError
+            // Keshlangan kalit handle'i eskirgan (HSM qayta ishga tushgan) — kesh tozalanib takrorlanadi.
+            | RvError::KeyHandleInvalid
+            | RvError::ObjectHandleInvalid
+    )
+}
+
+/// Xato sessiya yo'qolgani haqida bo'lsa — belgilab qo'yadi.
+fn note(e: &dyn std::any::Any) {
+    if let Some(cryptoki::error::Error::Pkcs11(rv, _)) = e.downcast_ref::<cryptoki::error::Error>()
+    {
+        if session_lost(*rv) {
+            SESSION_LOST.with(|c| c.set(true));
+        }
+    }
+}
+
+/// PKCS#11 KeyStore. R/W sessiyalar pool'i, har biri `Mutex` ostida (cryptoki `Session` — `Send`,
+/// `!Sync`). `None` — sessiya yopilgan, keyingi foydalanishda qayta ochiladi.
 pub struct Pkcs11KeyStore {
-    session: Mutex<Session>,
+    pool: Vec<Mutex<Option<Session>>>,
+    next: AtomicUsize,
+    /// Yorliq → (handle, turi). Token obyektlari handle'i ilovaning barcha sessiyalarida bir xil:
+    /// har operatsiyada `C_FindObjects` + `C_GetAttributeValue` (tarmoq HSM'ida round-trip'lar)
+    /// o'rniga bitta chaqiruv. Sessiya yo'qolganda va kalit yaratilganda tozalanadi.
+    handles: RwLock<HashMap<String, (ObjectHandle, KeyKind)>>,
+    slot: Slot,
+    pin: Zeroizing<String>,
     token_label: String,
     // Sessiyadan keyin yopilishi uchun oxirgi maydon.
     _ctx: Pkcs11,
@@ -77,8 +138,11 @@ impl std::fmt::Debug for Pkcs11KeyStore {
     }
 }
 
-fn be<E: std::fmt::Display>(what: &'static str) -> impl FnOnce(E) -> CryptoError {
-    move |e| CryptoError::Backend(format!("{what}: {e}"))
+fn be<E: std::fmt::Display + 'static>(what: &'static str) -> impl FnOnce(E) -> CryptoError {
+    move |e| {
+        note(&e);
+        CryptoError::Backend(format!("{what}: {e}"))
+    }
 }
 
 impl Pkcs11KeyStore {
@@ -95,29 +159,98 @@ impl Pkcs11KeyStore {
                     .unwrap_or(false)
             })
             .ok_or_else(|| CryptoError::Backend(format!("token topilmadi: {}", cfg.token_label)))?;
-        let session = ctx.open_rw_session(slot).map_err(be("C_OpenSession"))?;
-        let pin = AuthPin::from(cfg.user_pin.as_str().to_owned());
+        let n = cfg.sessions.clamp(1, 64);
+        let ks = Self {
+            pool: (0..n).map(|_| Mutex::new(None)).collect(),
+            next: AtomicUsize::new(0),
+            handles: RwLock::new(HashMap::new()),
+            slot,
+            pin: cfg.user_pin.clone(),
+            token_label: cfg.token_label.clone(),
+            _ctx: ctx,
+        };
+        // Birinchi sessiya darhol: noto'g'ri PIN yoki token ishga tushishda aniqlansin.
+        let first = ks.open_session()?;
+        *ks.pool[0]
+            .lock()
+            .map_err(|_| CryptoError::Backend("lock".into()))? = Some(first);
+        Ok(ks)
+    }
+
+    /// Yangi R/W sessiya va foydalanuvchi sifatida kirish.
+    fn open_session(&self) -> Result<Session, CryptoError> {
+        let session = self
+            ._ctx
+            .open_rw_session(self.slot)
+            .map_err(be("C_OpenSession"))?;
+        let pin = AuthPin::from(self.pin.as_str().to_owned());
         // Login holati butun ilova uchun umumiy: ikkinchi sessiya uchun "allaqachon kirgan" — normal.
         match session.login(UserType::User, Some(&pin)) {
             Ok(()) | Err(cryptoki::error::Error::Pkcs11(RvError::UserAlreadyLoggedIn, _)) => {}
             Err(e) => return Err(be("C_Login")(e)),
         }
-        Ok(Self {
-            session: Mutex::new(session),
-            token_label: cfg.token_label.clone(),
-            _ctx: ctx,
-        })
+        Ok(session)
     }
 
+    /// Bo'sh sessiyani oladi (hammasi band bo'lsa — navbatdagisini kutadi); sessiya yo'qolgan bo'lsa
+    /// qayta ochib, operatsiyani bir marta takrorlaydi.
     fn with_session<T>(
         &self,
-        f: impl FnOnce(&Session) -> Result<T, CryptoError>,
+        f: impl Fn(&Session) -> Result<T, CryptoError>,
     ) -> Result<T, CryptoError> {
-        let s = self
-            .session
+        let n = self.pool.len();
+        let start = self.next.fetch_add(1, Ordering::Relaxed);
+        let mut guard = None;
+        for k in 0..n {
+            if let Ok(g) = self.pool[(start + k) % n].try_lock() {
+                guard = Some(g);
+                break;
+            }
+        }
+        let mut guard = match guard {
+            Some(g) => g,
+            None => self.pool[start % n]
+                .lock()
+                .map_err(|_| CryptoError::Backend("lock".into()))?,
+        };
+        for attempt in 0..2 {
+            if guard.is_none() {
+                *guard = Some(self.open_session()?);
+            }
+            let Some(s) = guard.as_ref() else {
+                return Err(CryptoError::Backend("sessiya yo'q".into()));
+            };
+            SESSION_LOST.with(|c| c.set(false));
+            let r = f(s);
+            if r.is_err() && attempt == 0 && SESSION_LOST.with(Cell::get) {
+                tracing::warn!(token = %self.token_label, "pkcs11: sessiya yo'qoldi — qayta ochilmoqda");
+                self.forget_handles();
+                // Eski sessiyani yopish xatosi muhim emas (handle allaqachon yaroqsiz bo'lishi mumkin).
+                drop(guard.take());
+                continue;
+            }
+            return r;
+        }
+        Err(CryptoError::Backend(
+            "pkcs11: sessiyani tiklab bo'lmadi".into(),
+        ))
+    }
+
+    /// Sinov: ilova login holatini tushiradi (HSM qayta ishga tushishi o'rnida).
+    #[doc(hidden)]
+    pub fn simulate_logout(&self) -> Result<(), CryptoError> {
+        let g = self.pool[0]
             .lock()
             .map_err(|_| CryptoError::Backend("lock".into()))?;
-        f(&s)
+        if let Some(s) = g.as_ref() {
+            s.logout().map_err(be("C_Logout"))?;
+        }
+        Ok(())
+    }
+
+    /// Pool hajmi.
+    pub fn session_count(&self) -> usize {
+        self.pool.len()
     }
 
     /// Yorliq bo'yicha obyekt (sinfi bilan).
@@ -141,11 +274,27 @@ impl Pkcs11KeyStore {
         }
     }
 
+    /// Sessiya foydalanuvchi sifatida kirganmi; yo'q bo'lsa — sessiya yo'qolgan deb belgilanadi.
+    fn ensure_logged_in(s: &Session) -> Result<(), CryptoError> {
+        let info = s.get_session_info().map_err(be("C_GetSessionInfo"))?;
+        if info.session_state() == cryptoki::session::SessionState::RwUser {
+            Ok(())
+        } else {
+            SESSION_LOST.with(|c| c.set(true));
+            Err(CryptoError::Backend(
+                "pkcs11: sessiya login holatida emas".into(),
+            ))
+        }
+    }
+
     fn kind_of(s: &Session, label: &KeyLabel) -> Result<Option<KeyKind>, CryptoError> {
         if Self::find(s, label, ObjectClass::PRIVATE_KEY)?.is_some() {
             return Ok(Some(KeyKind::Ed25519));
         }
         let Some(h) = Self::find(s, label, ObjectClass::SECRET_KEY)? else {
+            // Login tushib qolsa yopiq kalitlar ko'rinmaydi: "yo'q" jim javob bo'lsa `ensure_key`
+            // takroriy kalit yaratardi. Faqat shu (kam uchraydigan) yo'lda sessiya holati tekshiriladi.
+            Self::ensure_logged_in(s)?;
             return Ok(None);
         };
         let attrs = s
@@ -172,7 +321,38 @@ impl Pkcs11KeyStore {
         })
     }
 
-    fn require(s: &Session, label: &KeyLabel, kind: KeyKind) -> Result<ObjectHandle, CryptoError> {
+    fn forget_handles(&self) {
+        if let Ok(mut m) = self.handles.write() {
+            m.clear();
+        }
+    }
+
+    /// Keshdan yoki HSM'dan kalit handle'i (turi tekshirilgan).
+    fn require(
+        &self,
+        s: &Session,
+        label: &KeyLabel,
+        kind: KeyKind,
+    ) -> Result<ObjectHandle, CryptoError> {
+        if let Some((h, k)) = self
+            .handles
+            .read()
+            .ok()
+            .and_then(|m| m.get(label.as_str()).copied())
+        {
+            if k != kind {
+                return Err(wrong_kind(label, kind, k));
+            }
+            return Ok(h);
+        }
+        let h = Self::lookup(s, label, kind)?;
+        if let Ok(mut m) = self.handles.write() {
+            m.insert(label.as_str().to_owned(), (h, kind));
+        }
+        Ok(h)
+    }
+
+    fn lookup(s: &Session, label: &KeyLabel, kind: KeyKind) -> Result<ObjectHandle, CryptoError> {
         let actual =
             Self::kind_of(s, label)?.ok_or_else(|| CryptoError::KeyNotFound(label.to_string()))?;
         if actual != kind {
@@ -291,6 +471,7 @@ impl KeyStore for Pkcs11KeyStore {
                         .map_err(be("Ed25519 keygen"))?;
                 }
             }
+            self.forget_handles();
             tracing::info!(label = %label, kind = kind.name(), "pkcs11: yangi kalit yaratildi");
             Ok(())
         })
@@ -356,7 +537,7 @@ impl KeyStore for Pkcs11KeyStore {
 
     fn aes_cmac(&self, label: &KeyLabel, data: &[u8]) -> Result<[u8; 16], CryptoError> {
         self.with_session(|s| {
-            let h = Self::require(s, label, KeyKind::Aes128)?;
+            let h = self.require(s, label, KeyKind::Aes128)?;
             let mac = s.sign(&Mechanism::AesCMac, h, data).map_err(be("CMAC"))?;
             mac.as_slice()
                 .try_into()
@@ -372,7 +553,7 @@ impl KeyStore for Pkcs11KeyStore {
     ) -> Result<GcmSealed, CryptoError> {
         let nonce = rng::array::<12>()?;
         self.with_session(|s| {
-            let h = Self::require(s, label, KeyKind::Aes256)?;
+            let h = self.require(s, label, KeyKind::Aes256)?;
             let mut iv = nonce;
             let params = GcmParams::new(&mut iv, aad, ulong(128)?).map_err(be("GCM params"))?;
             let ct = s
@@ -393,18 +574,21 @@ impl KeyStore for Pkcs11KeyStore {
         ciphertext: &[u8],
     ) -> Result<Zeroizing<Vec<u8>>, CryptoError> {
         self.with_session(|s| {
-            let h = Self::require(s, label, KeyKind::Aes256)?;
+            let h = self.require(s, label, KeyKind::Aes256)?;
             let mut iv = *nonce;
             let params = GcmParams::new(&mut iv, aad, ulong(128)?).map_err(be("GCM params"))?;
             s.decrypt(&Mechanism::AesGcm(params), h, ciphertext)
                 .map(Zeroizing::new)
-                .map_err(|_| CryptoError::Decrypt)
+                .map_err(|e| {
+                    note(&e);
+                    CryptoError::Decrypt
+                })
         })
     }
 
     fn hmac_sha256(&self, label: &KeyLabel, data: &[u8]) -> Result<[u8; 32], CryptoError> {
         self.with_session(|s| {
-            let h = Self::require(s, label, KeyKind::HmacSha256)?;
+            let h = self.require(s, label, KeyKind::HmacSha256)?;
             let mac = s
                 .sign(&Mechanism::Sha256Hmac, h, data)
                 .map_err(be("HMAC"))?;
@@ -416,7 +600,7 @@ impl KeyStore for Pkcs11KeyStore {
 
     fn ed25519_sign(&self, label: &KeyLabel, msg: &[u8]) -> Result<[u8; 64], CryptoError> {
         self.with_session(|s| {
-            let h = Self::require(s, label, KeyKind::Ed25519)?;
+            let h = self.require(s, label, KeyKind::Ed25519)?;
             let mech = Mechanism::Eddsa(EddsaParams::new(EddsaSignatureScheme::Pure));
             let sig = s.sign(&mech, h, msg).map_err(be("EdDSA"))?;
             sig.as_slice()
@@ -460,6 +644,7 @@ mod tests {
             module: "x".into(),
             token_label: "t".into(),
             user_pin: Zeroizing::new("1234".into()),
+            sessions: DEFAULT_SESSIONS,
         };
         assert!(!format!("{c:?}").contains("1234"));
     }

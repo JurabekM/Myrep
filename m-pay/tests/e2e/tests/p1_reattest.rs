@@ -40,6 +40,7 @@ async fn stale_device_rekeys_and_keeps_tokens() {
             pan: f,
             balance_minor: 1_000_000 * 100,
             label: "reattest".into(),
+            phone: None,
         }];
     })
     .await;

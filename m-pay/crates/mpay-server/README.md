@@ -19,14 +19,17 @@ cargo run -p mpay-server -- serve --config .mpay/mpay.toml
 
 ```bash
 cargo run -p mpay-server -- audit-verify --config .mpay/mpay.toml
+cargo run -p mpay-server -- recon --config .mpay/mpay.toml --date 2026-10-27 --out recon.json
+cargo run -p mpay-server -- clearing --config .mpay/mpay.toml --date 2026-10-26 --out-dir clearing/
 ```
 
 ## Konfiguratsiya
 
-`mpay.toml` bo'limlari: `sandbox`, `[http]` (listen, TLS), `[database]`, `[keystore]`
+`mpay.toml` bo'limlari: `sandbox`, `[http]` (listen, TLS), `[database]` (`path` — SQLite yoki
+`url_env` — PostgreSQL URL'i turgan muhit o'zgaruvchisi, ADR-0018), `[keystore]`
 (`memory` — faqat sandbox; `pkcs11` — `--features pkcs11` va `MPAY_PKCS11_*` muhit o'zgaruvchilari),
 `[pqlink]` (ML-DSA blob, attestatsiya ildizlari, minimal xavfsizlik darajasi), `[vault]`,
-`[vault.luk]`, `[shield]`, `[shield_stub]`, `[issuer]`, `[sandbox_api]`, `[rate_limit]`,
+`[vault.luk]`, `[shield]`, `[shield_stub]`, `[issuer]`, `[acquirer]`, `[clearing]`, `[sandbox_api]`, `[rate_limit]`,
 `[[auth.keys]]` (faqat SHA-256 xesh). `[database]`: `synchronous`, `max_connections` (ADR-0009).
 Nisbiy yo'llar konfiguratsiya fayli papkasiga nisbatan.
 
@@ -46,8 +49,45 @@ yozilmaydi (`RUST_LOG`, `--log-json`).
   `[pqlink] revocations`, `root_fingerprint`; `GET /v1/pqlink/revocations`. O'z identifikatori
   ro'yxatda bo'lsa server ishga tushmaydi.
 * **Qayta attestatsiya** (ADR-0015): `[pqlink] reattest_after_days`; eskirgan qurilma — `REATTEST_REQUIRED`;
-  `POST /v1/devices/rekey` — yangi kalit (nonce bilan), tokenlar ko'chadi, audit `DEVICE_REKEY`.
+  `POST /v1/devices/rekey` — yangi kalit (nonce bilan), tokenlar ko'chadi, audit `DEVICE_REKEY`;
+  Shield grafida yangi kalit eski qurilmaning davomi (`/internal/shield/rekey`).
+* **Token muddatini yangilash** (ADR-0022): `POST /v1/tokens/{id}/renew` (muhrlangan, bog'langan
+  qurilmadan) — profildagi `renew_after` dan keyin; javob `renewed` + profil (LUK'siz).
+* **Hamyon API'si** (ADR-0030): muhrlangan `POST /v1/wallet/tokens` (qurilma kartalari),
+  `/v1/wallet/tokens/{id}/suspend|resume|delete` (foydalanuvchi o'zi; bank to'xtatganini yoqa olmaydi —
+  `SUSPENDED_BY_BANK`), `/v1/wallet/tokens/{id}/transactions` (emitent qaydnomasidan, kursor bilan).
+* **Ko'p instansiya** (ADR-0019): `sessions.rs` — PQ Link sessiyalari DB'da (KEK bilan shifrlangan,
+  `[pqlink] session_store`), ro'yxatdan o'tish nonce'lari umumiy; `shield_role.rs` — `mpay-server shield`
+  (yagona belgilar ombori, ichki API), `shield_client.rs` — `[shield] mode = "remote"` (zaxira bilan).
+* **Shield yuqori mavjudligi** (`shield_ha.rs`, `[shield_ha]`, migratsiya `3007`, ADR-0026): bir nechta
+  Shield roli bitta bazada — DB ijarasi bilan bittasi yetakchi, zaxiralar `503 SHIELD_STANDBY`;
+  yetakchi belgilar omborini davriy snapshot'ga yozadi (`epoch` bilan to'silgan), yangi yetakchi
+  tiklab oladi; `SIGTERM` — yakuniy snapshot va ijarani bo'shatish. Mijoz: `[shield.remote] standby_urls`.
+* **Deployment** (ADR-0020, `deploy/README.md`): `proxyproto.rs` — PROXY protocol v1
+  (`[http] proxy_protocol`, sarlavha faqat `trusted_proxies` dan; L4 load balancer ortida TLS/mTLS
+  end-to-end); `metrics.rs` — Prometheus `/metrics` alohida portda (`[metrics] listen`, yorliqlarda
+  PAN/ID yo'q); SIGTERM'da graceful to'xtatish; `mpay-server bootstrap` — migratsiyalar va HSM
+  kalitlari bir marta (ko'p instansiyadan oldin); `init --tls-san <nom>`.
+* **Play Integrity** (ADR-0021, `integrity.rs`, `[integrity]`): provisioning'da token — haqiqiylik,
+  paket, imzo sertifikati, PQ Link sessiyasiga bog'langan `requestHash` va yangilik serverda; verdict
+  belgilari Shield'ga. `mock` (faqat sandbox, `POST /v1/sandbox/integrity-token`) yoki `google`.
+* **OTP kanali** (`otp.rs`, `[otp]`, ADR-0016): `sandbox` yoki `webhook` — kod karta egasining
+  emitentdagi telefoniga SMS; `PENDING_IDV` da `otp_sent_to` (maskalangan), `POST /v1/tokens/{id}/idv/resend`
+  (3 marta). Sinov shlyuzi — `mpay-smsgw`.
 * **So'rovlar chegarasi** (`ratelimit.rs`, `[rate_limit]`): IP / API kaliti / qurilma bo'yicha token
-  bucket (429 + `Retry-After`) va bir vaqtdagi PQ Link handshake'lari semafori (503 `BUSY`).
+  bucket (429 + `Retry-After`) va bir vaqtdagi PQ Link handshake'lari semafori (503 `BUSY`). Ko'p
+  instansiyada IP va qurilma chelaklari DB'da umumiy (`shared_limits.rs`, `migrations/3004_rate_buckets.sql`,
+  ADR-0019 §4); ombor xatosida fail-open.
 * **Takroriy avtorizatsiyalar** (`dedup.rs`, `migrations/3001_acquirer_requests.sql`, ADR-0010):
-  bir xil so'rov — avvalgi javob; shu STAN boshqa mazmun bilan — `94`.
+  bir xil so'rov — avvalgi javob; shu STAN boshqa mazmun bilan — `94`. Jadval acquirer jurnali ham
+  (RRN, summa, maskalangan DPAN, javob kodi; migratsiya `3005`).
+* **Reversal** (`reversal.rs`, `[acquirer]`, ADR-0024): emitent javob bermasa (`issuer_timeout_ms`),
+  `0110` o'qilmasa yoki yozuv qotib qolsa — terminalga `96`, navbatga reversal (bitta tranzaksiyada).
+  Fon ishchisi `0400`/`0401` ni emitentga yuboradi (kutish bilan qayta urinish, instansiyalar orasida
+  band qilish); `00`/`25` — `DONE`, boshqa kod — `FAILED` (qo'lda). Metrikalar `mpay_reversals*`.
+* **Solishtirish** (`recon.rs`, ADR-0024): acquirer jurnali ↔ emitent qaydnomasi — `GET /v1/recon`
+  (operator) va `mpay-server recon` (tafovut bo'lsa chiqish kodi 1); kliring natijasi bilan.
+* **Kliring va hisob-kitob** (`clearing.rs`, `[clearing]`, migratsiya `3006`, ADR-0025): kunlik paket
+  (acquirer `00` bergan yozuvlar) → emitent tasdig'i → pozitsiyalar (MERCHANT, ISSUER, ACQUIRER;
+  MDR va interchange). `POST /v1/clearing/run`, `GET /v1/clearing/{date}[/clearing.txt|ack.txt|payouts.csv]`,
+  `mpay-server clearing` (rad etilgan yozuv bo'lsa chiqish kodi 1). Bosqichlar idempotent.

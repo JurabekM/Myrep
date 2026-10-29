@@ -12,6 +12,7 @@ use mpay_common::ports::{
     IdvAssessment, IdvDecider, IdvDecision, IdvRequest, PortError, RiskAssessment, RiskDecision,
     RiskRequest, RiskScorer,
 };
+use mpay_common::DeviceId;
 
 use crate::features::{FeatureStore, ProvisionEvent, TxnEvent, IDV_FEATURES, TXN_FEATURES};
 use crate::model::MlScorer;
@@ -68,6 +69,11 @@ impl Shield {
 
     pub fn rules(&self) -> &RuleSet {
         &self.rules
+    }
+
+    /// Belgilar ombori hajmi: `(kartalar, qurilmalar, savdo nuqtalari, graf tugunlari)`.
+    pub fn stats(&self) -> (usize, usize, usize, usize) {
+        self.store.lock().map(|s| s.stats()).unwrap_or_default()
     }
 
     fn store(&self) -> std::sync::MutexGuard<'_, FeatureStore> {
@@ -144,6 +150,29 @@ impl Shield {
         }
     }
 
+    /// Belgilar omborining snapshot'i (ADR-0026). Yozish paytida ombor qulflanadi.
+    pub fn snapshot(&self) -> Vec<u8> {
+        self.store().snapshot()
+    }
+
+    /// Ombor holatini snapshot'dan almashtiradi (zaxira instansiya yetakchilikni olganda). Xato
+    /// bo'lsa joriy holat o'zgarmaydi.
+    pub fn restore(&self, data: &[u8]) -> Result<(), crate::SnapshotError> {
+        let s = FeatureStore::restore(data)?;
+        *self.store() = s;
+        Ok(())
+    }
+
+    /// Ombor bo'sh holatga (zaxira instansiya snapshot topmasa).
+    pub fn reset(&self) {
+        *self.store() = FeatureStore::new();
+    }
+
+    /// Qurilma kaliti almashtirildi (ADR-0015): yangi ID eski qurilma tuguniga bog'lanadi.
+    pub fn link_rekeyed_device(&self, old: [u8; 32], new: [u8; 32]) -> bool {
+        self.store().device_rekeyed(old, new)
+    }
+
     /// Port so'rovini hodisaga aylantiradi.
     pub fn txn_event(&self, r: &RiskRequest) -> TxnEvent {
         TxnEvent {
@@ -188,9 +217,21 @@ impl IdvDecider for Shield {
             attestation_level: req.attestation_level as u8,
             existing_tokens_for_pan: req.existing_tokens_for_pan,
             existing_tokens_for_device: req.existing_tokens_for_device,
+            integrity: req.integrity,
         });
         tracing::info!(score = d.assessment.score, decision = ?d.assessment.decision, reasons = ?d.assessment.reasons, "shield: ID&V");
         Ok(d.assessment)
+    }
+
+    async fn device_rekeyed(
+        &self,
+        old: &DeviceId,
+        new: &DeviceId,
+        _at: time::OffsetDateTime,
+    ) -> Result<(), PortError> {
+        let linked = self.link_rekeyed_device(old.0, new.0);
+        tracing::info!(old = %old, new = %new, linked, "shield: qurilma kaliti almashtirildi");
+        Ok(())
     }
 }
 
@@ -246,6 +287,7 @@ mod tests {
             attestation_level: lvl,
             existing_tokens_for_pan: 0,
             existing_tokens_for_device: u32::from(c),
+            integrity: None,
         };
         let d: Vec<_> = (0..6)
             .map(|c| s.assess_provision(&ev(c, 2)).assessment.decision)

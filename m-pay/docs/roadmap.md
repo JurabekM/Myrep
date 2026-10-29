@@ -2,13 +2,14 @@
 
 Sana: 2026-10-24. 0-faza boshlang'ich topshiriqda belgilangan; 1–4-fazalar 0-faza yakunidagi ochiq
 ishlar (`TODO(spec):`, ADR'lar, hisobotlar) asosida taklif qilingan va 2026-10-24 da qabul qilingan.
-Har faza tugaganda `docs/PROGRESS.md` ga hisobot yoziladi.
+Har faza tugaganda `docs/PROGRESS.md` ga hisobot yoziladi. Production'gacha qolgan ishlarning yagona
+ro'yxati (kim, qachon, pilotga chiqish mezoni) — `docs/production-checklist.md`.
 
 | Faza | Nomi | Holat | Kimga bog'liq |
 |---|---|---|---|
 | 0 | Pay Sandbox | ✅ tayyor (M0–M7) | — |
-| 1 | Xavfsizlikni kuchaytirish | ishda | jamoa (tashqi ma'lumot kerak emas) |
-| 2 | Pilot tayyorgarligi | reja | pilot bank: TPS/SLA, HSM modeli, infratuzilma |
+| 1 | Xavfsizlikni kuchaytirish | ✅ (P1.8 radio — qurilmalar kerak) | jamoa (tashqi ma'lumot kerak emas) |
+| 2 | Pilot tayyorgarligi | ✅ virtual muhitda (P2.1–P2.7) | pilot bank: TPS/SLA, HSM modeli, infratuzilma |
 | 3 | Pilot | reja | bank, mustaqil auditor |
 | 4 | Sertifikatsiya va production | reja | to'lov sxemasi, regulyator, yuristlar |
 
@@ -42,17 +43,27 @@ server identifikatorlari (ADR-0014), davriy qayta attestatsiya (ADR-0015).
 Qabul mezoni: har band testlar bilan, tahdid modeli yangilangan, `scripts/demo.sh` va smoke CI'da yashil.
 P1.8 qurilmalar mavjud bo'lganda bajariladi.
 
-## 2-faza — Pilot tayyorgarligi
+## 2-faza — Pilot tayyorgarligi (virtual muhitda)
 
-* PostgreSQL va migratsiya strategiyasi; avtorizatsiya yozuvlarini bitta tranzaksiyada birlashtirish (ADR-0009).
-* Ko'p instansiya: PQ Link sessiyalari, Shield belgilar ombori va qurilma grafi uchun umumiy saqlash.
-* Haqiqiy HSM (to'lov HSM'i): KDF/CMAC HSM ichida (`CKM_*_DERIVE`), HSM bilan yuk sinovi.
-* OTP kanali (SMS / push / bank ilovasi).
-* Play Integrity: Google Cloud loyihasi va server tomonida token tekshiruvi.
-* Deployment: konteyner, monitoring va ogohlantirishlar, zaxira nusxa, DR, kalit marosimi tartibi.
-* Mahsulot siyosatlari: REVIEW standarti, emitent CVM siyosati, token muddati, karta–qurilma cheklovi.
+Pilot bank hali tanlanmagan — 2-faza **virtual muhitda** sinaladi (2026-10-25 qarorlari):
+
+* **SLA maqsadi (faraz):** 200 TPS, p99 < 300 ms. `TODO(spec):` pilot bank bilan tasdiqlash.
+* **Umumiy ombor:** PostgreSQL (sessiyalar va nonce'lar ham — KEK bilan shifrlangan); Redis yo'q.
+* **Tartib:** avval OTP kanali va HSM, keyin PostgreSQL va ko'p instansiya.
+
+| # | Ish | Virtual o'rinbosar | Holat |
+|---|---|---|---|
+| P2.1 | OTP kanali: emitentdagi telefon raqamiga SMS | virtual SMS shlyuzi (webhook) | ✅ (ADR-0016) |
+| P2.2 | HSM bilan yuk sinovi (KDF/CMAC HSM ichida) | SoftHSM2 (Docker) | ✅ (ADR-0017) |
+| P2.3 | PostgreSQL + avtorizatsiya bitta tranzaksiyada (TPS'ni qaytarish) | PostgreSQL (Docker) | ✅ (ADR-0018; HSM bilan 368 /s, p99 118 ms) |
+| P2.4 | Ko'p instansiya: sessiyalar, nonce'lar, Shield ombori umumiy | 2 server + PostgreSQL + Shield roli | ✅ (ADR-0019) |
+| P2.5 | Deployment: docker-compose, monitoring, zaxira nusxa | Docker Desktop | ✅ (ADR-0020; nginx orqali 332 /s, p99 164 ms, API to'xtatilganda xato 0) |
+| P2.6 | Play Integrity | mock tekshiruvchi | ✅ (ADR-0021; Google bilan integratsiya `TODO(spec)`) |
+| P2.7 | Mahsulot siyosatlari: REVIEW, CVM, token muddati, karta–qurilma | konfiguratsiya | ✅ (ADR-0022; qiymatlar bank bilan `TODO(spec)`) |
 
 ## 3-faza — Pilot
+
+Pilotga chiqish mezoni va har band egasi — `docs/production-checklist.md` §8.
 
 * Bitta bank bilan cheklangan ishga tushirish (yopiq foydalanuvchilar guruhi).
 * Shield'ni real ma'lumotda qayta o'qitish, chegaralarni kalibrlash, MCC va geo belgilar.

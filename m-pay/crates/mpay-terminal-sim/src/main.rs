@@ -101,6 +101,28 @@ fn creds(dir: &Path, key: &str) -> Result<Zeroizing<String>, WalletError> {
         .ok_or_else(|| WalletError::Config(format!("{key} topilmadi")))
 }
 
+/// Sandbox: Play Integrity o'rnida mock token — emulyatordagi demo ilova kabi operator endpointidan
+/// (P2.6, ADR-0021). `[integrity] mode = "off"` bo'lsa (404) tokensiz.
+async fn sandbox_integrity_token(cli: &Cli, w: &SoftWallet) -> Result<Option<String>, WalletError> {
+    let op = creds(&cli.sandbox, "MPAY_OPERATOR_KEY")?;
+    let req = mpay_common::api::SandboxIntegrityRequest {
+        request_hash: w.integrity_request_hash()?,
+        preset: None,
+    };
+    match client_as(cli, Some("operator-1"))?
+        .post_json::<_, mpay_common::api::SandboxIntegrityResponse>(
+            "/v1/sandbox/integrity-token",
+            Some(&op),
+            &req,
+        )
+        .await
+    {
+        Ok(r) => Ok(Some(r.integrity_token)),
+        Err(WalletError::Api { status: 404, .. }) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
 fn client(cli: &Cli) -> Result<ServerClient, WalletError> {
     client_as(cli, None)
 }
@@ -210,7 +232,8 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
         Cmd::Provision { pan, expiry } => {
             let mut st = load_or_create(&cli, &c).await?;
             let mut w = connected_wallet(&c, &st).await?;
-            let profile = match w.provision(pan, expiry).await? {
+            let token = sandbox_integrity_token(&cli, &w).await?;
+            let profile = match w.provision_with(pan, expiry, token).await? {
                 ProvisionResponse::Active { profile, idv } => {
                     println!(
                         "ID&V: {:?} (skor {}) {:?}",
@@ -250,7 +273,9 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
                 card.dpan.masked(),
                 card.luks.len()
             );
-            st.upsert(StoredToken::from_profile(&card));
+            let mut stored = StoredToken::from_profile(&card);
+            stored.cvm_limit_minor = profile.cvm_limit_minor;
+            st.upsert(stored);
             st.save(&cli.wallet)?;
         }
         Cmd::Tap {
@@ -262,7 +287,12 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
         } => {
             let mut st = WalletState::load(&cli.wallet)?;
             let stored = st.token(token_arg(token)?.as_ref())?.clone();
-            let mut card = SoftCard::new(stored.to_profile()?, CardPolicy::default());
+            // CVM chegarasi — bank siyosati (server bergan), bo'lmasa karta standarti.
+            let mut policy = CardPolicy::default();
+            if let Some(l) = stored.cvm_limit_minor {
+                policy.cdcvm_limit_minor = l;
+            }
+            let mut card = SoftCard::new(stored.to_profile()?, policy);
             card.set_cdcvm_verified(*cdcvm);
             let amount = parse_amount(amount)?;
             let tap = {
@@ -278,7 +308,9 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
                 })?
             };
             // ATC va LUK foydalanishi o'zgardi — natijadan qat'i nazar saqlaymiz.
-            st.upsert(StoredToken::from_profile(card.profile()));
+            let mut updated = StoredToken::from_profile(card.profile());
+            updated.cvm_limit_minor = stored.cvm_limit_minor;
+            st.upsert(updated);
             st.save(&cli.wallet)?;
             let stan = next_terminal_stan(&cli.sandbox, tid)?;
             println!("Tap: {} ATC={}", tap.dpan_masked, tap.atc);
@@ -323,6 +355,9 @@ async fn run(cli: Cli) -> Result<(), WalletError> {
             let mut w = connected_wallet(&c, &st).await?;
             let r = w.replenish(&stored.token_id).await?;
             stored.add_luks(&r.luks);
+            if r.cvm_limit_minor.is_some() {
+                stored.cvm_limit_minor = r.cvm_limit_minor;
+            }
             println!("{} ta yangi LUK", r.luks.len());
             st.upsert(stored);
             st.save(&cli.wallet)?;

@@ -4,14 +4,18 @@ import android.content.Context
 import android.util.Log
 import uz.mpay.core.ApiException
 import uz.mpay.core.CardApplet
+import uz.mpay.core.CardChange
 import uz.mpay.core.CardLuk
 import uz.mpay.core.CardProfile
 import uz.mpay.core.MpayClient
 import uz.mpay.core.ProvisionResult
 import uz.mpay.core.Hex
-import uz.mpay.core.Revocations
+import uz.mpay.core.RevocationSources
 import uz.mpay.core.ServerPinPolicy
 import uz.mpay.core.TlsConfig
+import uz.mpay.core.TxnPage
+import uz.mpay.core.WalletCard
+import uz.mpay.core.WalletToken
 import uz.mpay.core.maskPan
 import uz.mpay.core.pqlink.ServerIdentity
 import java.util.concurrent.CopyOnWriteArrayList
@@ -26,19 +30,29 @@ class WalletConfig(
     val pinnedFingerprints: List<String> = emptyList(),
     val tlsCertSha256: ByteArray? = null,
     val allowTofu: Boolean = false,
-    /** Oflayn ildiz barmoq izi (ADR-0014): berilsa, serverdan bekor qilish ro'yxati olinib tekshiriladi. */
+    /** Oflayn ildiz barmoq izi (ADR-0014): berilsa, bekor qilish ro'yxati olinib tekshiriladi. */
     val rootFingerprint: String? = null,
+    /**
+     * Ilova build'iga joylangan imzolangan ro'yxat (ADR-0029) — yangi o'rnatilgan ilova ham oshkor
+     * kalitni darhol rad etadi. Ildiz imzosi baribir tekshiriladi.
+     */
+    val bundledRevocations: String? = null,
+    /**
+     * Mustaqil kanal (ADR-0029): PQ Link serveridan alohida statik fayllar (CDN), faqat `https://`.
+     * Hujumchi serveri ro'yxatni bermasa ham qurilma uni shu yerdan oladi.
+     */
+    val revocationUrls: List<String> = emptyList(),
 )
 
 /**
- * Wallet SDK fasadi: PQ Link ulanish, provisioning, OTP, LUK to'ldirish, HCE applet va CDCVM.
+ * Wallet SDK fasadi: PQ Link ulanish, provisioning, OTP, LUK to'ldirish, HCE applet va CDCVM; ko'p
+ * karta — ro'yxat, asosiy karta, server bilan moslash, kartani o'zi boshqarish, tarix (ADR-0030).
  * Tarmoq chaqiruvlari bloklovchi — UI'da fon oqimidan (`Dispatchers.IO`) chaqiring.
  */
 class MpayWallet private constructor(context: Context) {
     private val app = context.applicationContext
     val store = WalletStore(app)
     val cdcvm = CdcvmState(app)
-    var integrity: IntegrityProvider = StubIntegrityProvider
 
     /** Ulanishdan oldin o'rnatiladi; standart — pin yo'q va TOFU o'chiq (xavfsiz rad). */
     var config: WalletConfig = WalletConfig()
@@ -46,11 +60,22 @@ class MpayWallet private constructor(context: Context) {
     private var pinnedFingerprint: String? = null
     private val listeners = CopyOnWriteArrayList<(String) -> Unit>()
 
+    /**
+     * Keyingi bitta tap uchun tanlangan karta (asosiy o'rniga); tap'dan keyin tozalanadi. To'xtatilgan
+     * karta tanlanmaydi ([uz.mpay.core.CardBook.tapCard]).
+     */
+    @Volatile
+    var nextTapCard: String? = null
+
     /** HCE applet (bitta nusxa — servis va UI bir xil holatni ko'radi). */
     val applet = CardApplet(
-        profileProvider = { runCatching { store.load() }.getOrNull() },
+        profileProvider = { runCatching { store.read { it.tapCard(nextTapCard) } }.getOrNull() },
         cdcvm = cdcvm,
-        onChanged = { p -> store.save(p); emit("Tap: ATC=${p.atc}, LUK ${p.luks.count { it.usesLeft > 0 }} ta yaroqli") },
+        onChanged = { p ->
+            store.update { it.put(p) }
+            nextTapCard = null
+            emit("Tap: ${maskPan(p.dpan)}, ATC=${p.atc}, LUK ${p.luks.count { it.usesLeft > 0 }} ta yaroqli")
+        },
     )
 
     companion object {
@@ -135,22 +160,37 @@ class MpayWallet private constructor(context: Context) {
     }
 
     /**
-     * Bekor qilish ro'yxati: ildiz pinlangan bo'lsa olinadi va tekshiriladi; faqat kattaroq versiya
-     * saqlanadi (orqaga qaytarib bo'lmaydi). Tarmoq yoki imzo xatosida saqlangan ro'yxat ishlatiladi.
+     * Bekor qilish ro'yxati (ADR-0014, ADR-0029): ildiz pinlangan bo'lsa build nusxasi, mustaqil kanallar
+     * va server — har biri ildiz imzosi bilan tekshiriladi, eng katta versiya olinadi. Faqat qurilmada
+     * saqlangandan kattasi saqlanadi (orqaga qaytarib bo'lmaydi). Hech biri yetmasa — saqlangani.
+     * Ro'yxat server identifikatori tekshirilishidan **oldin** yangilanadi.
      */
     private fun refreshRevocations(c: MpayClient, cfg: WalletConfig, prefs: android.content.SharedPreferences): Set<String> {
         val stored = prefs.getStringSet("revoked", emptySet())!!.toSet()
-        val root = cfg.rootFingerprint ?: return stored
-        val fresh = runCatching { c.revocationsJson()?.let { Revocations.verify(it, root) } }
-            .onFailure { emit("Bekor qilish ro'yxati rad etildi: ${it.message}") }
-            .getOrNull() ?: return stored
+        val root = cfg.rootFingerprint ?: run {
+            check(cfg.bundledRevocations == null && cfg.revocationUrls.isEmpty()) {
+                "bekor qilish ro'yxati manbalari uchun WalletConfig.rootFingerprint kerak"
+            }
+            return stored
+        }
+        val candidates = buildList {
+            add(RevocationSources.Candidate("ilova", cfg.bundledRevocations))
+            cfg.revocationUrls.forEach { add(RevocationSources.Candidate(it, RevocationSources.fetch(it))) }
+            add(RevocationSources.Candidate("server", runCatching { c.revocationsJson() }.getOrNull()))
+        }
+        val sel = RevocationSources.select(root, candidates)
+        sel.rejected.forEach { emit("Bekor qilish ro'yxati rad etildi ($it)") }
+        val fresh = sel.best ?: return stored
         if (fresh.version <= prefs.getLong("revoked_version", -1)) return stored
         prefs.edit().putStringSet("revoked", fresh.revoked).putLong("revoked_version", fresh.version).apply()
-        emit("Bekor qilish ro'yxati yangilandi: versiya ${fresh.version}, ${fresh.revoked.size} ta")
+        emit("Bekor qilish ro'yxati yangilandi: versiya ${fresh.version} (${sel.bestSource}), ${fresh.revoked.size} ta")
         return fresh.revoked
     }
 
     private fun c(): MpayClient = client ?: throw IllegalStateException("avval serverga ulaning")
+
+    /** PQ Link sessiyasi bormi (server sessiyani unutgan bo'lsa ham `true` — birinchi chaqiruv `PQLINK_SESSION`). */
+    val isConnected: Boolean get() = client?.connected == true
 
     /**
      * Davriy qayta attestatsiya (ADR-0015): server `REATTEST_REQUIRED` desa — yangi alias ostida nonce
@@ -180,8 +220,15 @@ class MpayWallet private constructor(context: Context) {
 
     fun provision(pan: String, expiryYymm: String): ProvisionResult = withReattest { provisionOnce(pan, expiryYymm) }
 
+    /** Provisioning'ga yaxlitlik tokeni (P2.6); `null` — yuborilmaydi. */
+    @Volatile
+    var integrityProvider: IntegrityTokenProvider? = null
+
     private fun provisionOnce(pan: String, expiryYymm: String): ProvisionResult {
-        val r = c().provision(pan, expiryYymm)
+        val c = c()
+        // Qayta attestatsiyadan keyin sessiya yangi — hash ham har urinishda qayta hisoblanadi.
+        val token = integrityProvider?.token(c.integrityRequestHash())
+        val r = c.provision(pan, expiryYymm, token)
         if (r is ProvisionResult.Active) save(r.profile)
         return r
     }
@@ -189,24 +236,127 @@ class MpayWallet private constructor(context: Context) {
     fun verifyOtp(tokenId: String, challengeId: String, otp: String): CardProfile =
         withReattest { c().verifyOtp(tokenId, challengeId, otp) }.also { save(it) }
 
+    /** OTP SMS'ni karta egasining telefoniga qayta yuboradi; qaytaradi: maskalangan telefon. */
+    fun resendOtp(tokenId: String, challengeId: String): String = withReattest { c().resendOtp(tokenId, challengeId) }
+
     fun sandboxOtp(challengeId: String, operatorKey: String): String = c().sandboxOtp(challengeId, operatorKey)
 
-    fun replenish(): Int {
-        val p = store.load() ?: throw IllegalStateException("token yo'q")
-        val luks: List<CardLuk> = withReattest { c().replenish(p.tokenId) }
-        p.luks.removeAll { it.usesLeft <= 0 || it.expiresAt <= System.currentTimeMillis() / 1000 }
-        p.luks.addAll(luks)
-        store.save(p)
+    /** Sandbox: mock token o'z PQ Link sessiyasi orqali (operator kaliti va mTLS'siz). */
+    fun sandboxDeviceIntegrityToken(preset: String? = null): String? = c().sandboxDeviceIntegrityToken(preset)
+
+    /** Sandbox: Play Integrity o'rnida server mock tokeni operator kaliti bilan (`preset` — sinov stsenariysi). */
+    fun sandboxIntegrityToken(requestHash: String, operatorKey: String, preset: String? = null): String? =
+        c().sandboxIntegrityToken(requestHash, operatorKey, preset)
+
+    private fun card(tokenId: String?): CardProfile? =
+        store.read { b -> (tokenId ?: b.defaultId)?.let { b.profile(it) } }
+
+    /**
+     * Token muddati yaqinlashgan bo'lsa (`renewAfter` o'tgan) — serverda uzaytiradi va profilni yangilaydi
+     * (keyingi tap'larda yangi muddat). `tokenId == null` — asosiy karta. Qaytaradi: muddat o'zgardimi.
+     */
+    fun renewIfDue(tokenId: String? = null, nowUnix: Long = System.currentTimeMillis() / 1000): Boolean {
+        val p = card(tokenId) ?: return false
+        val due = p.renewAfter ?: return false
+        if (nowUnix < due) return false
+        val r = withReattest { c().renew(p.tokenId) }
+        val changed = store.update { b ->
+            val cur = b.profile(p.tokenId) ?: return@update false
+            cur.renewAfter = r.renewAfter
+            val ch = r.expiryYymm != cur.expiryYymm
+            cur.expiryYymm = r.expiryYymm
+            ch
+        }
+        if (changed) emit("Token muddati yangilandi: ${maskPan(p.dpan)}, ${r.expiryYymm.take(2)}/${r.expiryYymm.drop(2)}")
+        return changed
+    }
+
+    /** LUK to'ldirish (`tokenId == null` — asosiy karta). Qaytaradi: yangi LUK'lar soni. */
+    fun replenish(tokenId: String? = null): Int {
+        val id = card(tokenId)?.tokenId ?: throw IllegalStateException("token yo'q")
+        // Muddati o'tgan tokenga LUK berilmaydi — avval yangilashga urinish (xato LUK to'ldirishni to'xtatmaydi).
+        runCatching { renewIfDue(id) }.onFailure { emit("Muddatni yangilab bo'lmadi: ${it.message}") }
+        val batch = withReattest { c().replenishBatch(id) }
+        val luks: List<CardLuk> = batch.luks
+        val now = System.currentTimeMillis() / 1000
+        store.update { b ->
+            val p = b.profile(id) ?: return@update
+            p.luks.removeAll { it.usesLeft <= 0 || it.expiresAt <= now }
+            p.luks.addAll(luks)
+            batch.cvmLimitMinor?.let { p.cvmLimitMinor = it }
+        }
         emit("LUK to'ldirildi: +${luks.size}")
         return luks.size
     }
 
+    /**
+     * Davriy xizmat (fon sinxronlash): to'lash mumkin bo'lgan har kartada yaroqli LUK `minLuks` dan kam
+     * bo'lsa to'ldiradi. Bitta kartadagi xato boshqalarini to'xtatmaydi. Qaytaradi: to'ldirilgan kartalar.
+     */
+    fun replenishLow(minLuks: Int = 2): List<String> = cards().filter { it.payable && it.luksLeft < minLuks }.mapNotNull { w ->
+        runCatching { replenish(w.tokenId) }.onFailure { emit("LUK to'ldirilmadi (${w.dpanMasked}): ${it.message}") }
+            .getOrNull()?.let { w.tokenId }
+    }
+
     private fun save(p: CardProfile) {
-        store.save(p)
+        store.update { it.put(p) }
         emit("Token faol: ${maskPan(p.dpan)}, ${p.luks.size} ta LUK")
     }
 
-    fun profile(): CardProfile? = runCatching { store.load() }.getOrNull()
+    /** Asosiy karta profili (eski bitta kartali API bilan moslik). */
+    fun profile(): CardProfile? = runCatching { card(null) }.getOrNull()
+
+    // ------------------------------------------------------------ ko'p karta (ADR-0030)
+
+    /** Hamyondagi kartalar (sirlarsiz): qurilmadagilar, so'ng faqat serverdagilar. */
+    fun cards(): List<WalletCard> = store.read { it.view() }
+
+    fun setDefaultCard(tokenId: String) {
+        store.update { it.setDefault(tokenId) }
+        emit("Asosiy karta: ${cards().first { it.tokenId == tokenId }.dpanMasked}")
+    }
+
+    /**
+     * Server bilan moslash: holatlar (bank to'xtatgan/yoqqan), bank o'chirgan kartalar qurilmadan ham
+     * o'chadi. Qaytaradi: o'zgarishlar (bildirishnoma uchun).
+     */
+    fun syncCards(): List<CardChange> {
+        val tokens = withReattest { c().walletTokens() }
+        val changes = store.update { it.applyServer(tokens) }
+        changes.forEach { emit("Karta o'zgardi: $it") }
+        return changes
+    }
+
+    /** Kartani o'zi to'xtatadi (yo'qotdim/shubha) — tap'lar rad etiladi, o'zi qayta yoqa oladi. */
+    fun suspendCard(tokenId: String): WalletToken = setState(tokenId, "suspend")
+
+    /** O'zi to'xtatgan kartani yoqadi; bank to'xtatgan bo'lsa — `ApiException(SUSPENDED_BY_BANK)`. */
+    fun resumeCard(tokenId: String): WalletToken = setState(tokenId, "resume")
+
+    /**
+     * Kartani o'chiradi (serverda va qurilmada; qaytarib bo'lmaydi). Serverda allaqachon yo'q bo'lsa ham
+     * qurilmadan o'chadi.
+     */
+    fun deleteCard(tokenId: String) {
+        try {
+            setState(tokenId, "delete")
+        } catch (e: ApiException) {
+            if (e.code != "TOKEN_NOT_FOUND") throw e
+        }
+        store.update { it.remove(tokenId) }
+        if (nextTapCard == tokenId) nextTapCard = null
+    }
+
+    private fun setState(tokenId: String, action: String): WalletToken {
+        val t = withReattest { c().walletSetState(tokenId, action) }
+        store.update { it.applyServer(t) }
+        emit("Karta ${t.dpanMasked}: ${t.state}")
+        return t
+    }
+
+    /** Karta tarixi (yangilari birinchi); `cursor` — oldingi sahifaning `nextCursor` i. */
+    fun transactions(tokenId: String, cursor: String? = null, limit: Int = 20): TxnPage =
+        withReattest { c().transactions(tokenId, cursor, limit) }
 
     fun reset() {
         store.clear()
