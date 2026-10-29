@@ -154,6 +154,7 @@ real ma'lumotda o'qitish.
 
 <!-- todo-index:start -->
 * `android/README.md` — BK-11
+* `android/wallet-app/src/main/kotlin/uz/mpay/wallet/app/WalletSetup.kt` — MB-4
 * `android/wallet-sdk/src/main/kotlin/uz/mpay/wallet/sdk/IntegrityTokenProvider.kt` — BK-11, MB-4
 * `crates/mpay-common/src/clearing.rs` — SX-2
 * `crates/mpay-common/src/pan.rs` — SX-3

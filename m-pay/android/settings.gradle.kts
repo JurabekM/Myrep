@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "mpay-android"
-include(":mpay-core", ":wallet-sdk", ":wallet-demo", ":terminal-app")
+include(":mpay-core", ":wallet-sdk", ":wallet-demo", ":terminal-app", ":wallet-app")

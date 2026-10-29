@@ -132,6 +132,10 @@ jobs:
       - name: mpay-core testlari (Jazzer regressiya rejimi bilan)
         working-directory: m-pay/android
         run: ./gradlew --no-daemon :mpay-core:test
+      # Mijoz hamyoni (ADR-0030): siyosat va mantiq testlari, debug build (Android SDK runner'da bor).
+      - name: wallet-app testlari va build
+        working-directory: m-pay/android
+        run: ./gradlew --no-daemon :wallet-app:testDebugUnitTest :wallet-app:assembleDebug
       - name: Jazzer fuzzing (har test o'z maxDuration'i)
         run: bash scripts/android-fuzz.sh
       - if: failure()

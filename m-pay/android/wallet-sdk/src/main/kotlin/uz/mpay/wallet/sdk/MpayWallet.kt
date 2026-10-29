@@ -189,6 +189,9 @@ class MpayWallet private constructor(context: Context) {
 
     private fun c(): MpayClient = client ?: throw IllegalStateException("avval serverga ulaning")
 
+    /** PQ Link sessiyasi bormi (server sessiyani unutgan bo'lsa ham `true` — birinchi chaqiruv `PQLINK_SESSION`). */
+    val isConnected: Boolean get() = client?.connected == true
+
     /**
      * Davriy qayta attestatsiya (ADR-0015): server `REATTEST_REQUIRED` desa — yangi alias ostida nonce
      * bilan kalit yaratiladi, `rekey` (tokenlar ko'chadi), eski kalit o'chiriladi, qayta ulanib so'rov

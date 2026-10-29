@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Qorong'i oyna foni: ishga tushishda oq chaqnash bo'lmasin. -->
+    <style name="Theme.Mpay" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/mpay_background</item>
+        <item name="android:statusBarColor">@color/mpay_background</item>
+        <item name="android:navigationBarColor">@color/mpay_background</item>
+    </style>
+</resources>
