@@ -1,8 +1,8 @@
 """Server testlari: haqiqiy PostgreSQL 16 (testcontainers) + Alembic migratsiyalari.
 
 - `ZANJIR_TEST_DATABASE_URL` berilsa — shu baza ishlatiladi (masalan, lokal klaster), aks holda Docker konteyner.
-- Image: `ZANJIR_TEST_PG_IMAGE` (standart — Docker Hub limitlaridan qochish uchun ECR ko'zgusi).
-- Image: `ZANJIR_TEST_PG_IMAGE` (standart — ECR ko'zgusi, Docker Hub limitlaridan qochish uchun).
+- Image: `ZANJIR_TEST_PG_IMAGE` (standart — Docker Hub `postgres:16-alpine`; cheklangan muhitda ko'zgu,
+  masalan `public.ecr.aws/docker/library/postgres:16-alpine`).
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from zanjir_server.config import Argon2Params, Settings
 from zanjir_server.main import create_app
 from zanjir_server.middleware import RateLimiter
 
-PG_IMAGE = os.environ.get("ZANJIR_TEST_PG_IMAGE", "public.ecr.aws/docker/library/postgres:16-alpine")
+PG_IMAGE = os.environ.get("ZANJIR_TEST_PG_IMAGE", "postgres:16-alpine")
 
 
 def migrate(url: str, target: str = "head", *, down: bool = False) -> None:

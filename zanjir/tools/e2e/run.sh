@@ -8,7 +8,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-PG_IMAGE="${ZANJIR_TEST_PG_IMAGE:-public.ecr.aws/docker/library/postgres:16-alpine}"
+PG_IMAGE="${ZANJIR_TEST_PG_IMAGE:-postgres:16-alpine}"
 PORT="${ZANJIR_E2E_PORT:-18080}"
 CONTAINER=""
 SERVER_PID=""

@@ -168,8 +168,23 @@ Future<(TestEnv, DemoSite, String)> startWithSession(
 }
 
 /// Dangasa `ListView` ichidagi elementni ko'rinadigan qilish (birinchi Scrollable bo'yicha).
-Future<void> reveal(WidgetTester tester, Finder f) =>
-    tester.scrollUntilVisible(f, 200, scrollable: find.byType(Scrollable).first);
+/// Lazy ro'yxatdagi elementni ko'rinadigan qilish: sahifaning vertikal ro'yxati (gorizontal chip qatorlari emas) element
+/// qurilguncha avval pastga, keyin tepaga aylantiriladi, so'ng element ekran markaziga keltiriladi (pastki doimiy
+/// ogohlantirish banneri bosishni to'smasin).
+Future<void> reveal(WidgetTester tester, Finder f) async {
+  final list = find
+      .byWidgetPredicate((w) => w is Scrollable && axisDirectionToAxis(w.axisDirection) == Axis.vertical)
+      .first;
+  for (final dy in [-200.0, 200.0]) {
+    for (var i = 0; i < 40 && f.evaluate().isEmpty; i++) {
+      await tester.drag(list, Offset(0, dy));
+      await tester.pump();
+    }
+  }
+  expect(f, findsWidgets, reason: 'aylantirib topilmadi');
+  await Scrollable.ensureVisible(tester.element(f.first), alignment: 0.5);
+  await tester.pump();
+}
 
 /// FLAG_SECURE holati (Android kanali o'rniga).
 class FakeSecureScreen implements SecureScreen {

@@ -51,7 +51,8 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Ilova: `cd app && flutter pub get && dart format --output=none --set-exit-if-changed lib test && flutter analyze --fatal-infos && flutter test`
 - Server: `cd server && uv sync && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run pytest --cov=zanjir_server --cov-branch`
   (Docker kerak — testcontainers PostgreSQL 16; Docker o'rniga `ZANJIR_TEST_DATABASE_URL`; konteynerda `dockerd &` va
-  `TESTCONTAINERS_RYUK_DISABLED=true`). Migratsiya: `uv run alembic upgrade head` (`ZANJIR_DATABASE_URL`).
+  `TESTCONTAINERS_RYUK_DISABLED=true`; Docker Hub cheklangan bo'lsa `ZANJIR_TEST_PG_IMAGE=public.ecr.aws/docker/library/postgres:16-alpine`).
+  Migratsiya: `uv run alembic upgrade head` (`ZANJIR_DATABASE_URL`).
 - Normalar: `cd tools/norms && uv sync && uv run pytest && uv run python -I check_norms.py ../../norms` (`--release` — release darvozasi)
 - E2E (ilova sync ↔ server): `tools/e2e/run.sh` (Docker'da PostgreSQL yoki `ZANJIR_E2E_OWNER_URL`; `dart test -P e2e-run test/e2e`).
   Sinxronlash sxemasi shartnomasi: `ZANJIR_UPDATE_SYNC_SCHEMA=1 uv run pytest tests/test_sync_schema.py` → `tools/vectors/sync_schema.json`.
@@ -137,7 +138,8 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
   PDF ulashish — testlarda soxtasi), `config.dart` (`ZANJIR_VERIFY_BASE_URL`); `lib/router.dart` — go_router (`/n/:id`, `/v/:token`).
 - `lib/features/*` — ekranlar; `lib/l10n/app_{uz,ru}.arb` + `labels.dart` (domen kodlari → matn).
 - Testlar: `test/support/harness.dart` (xotiradagi baza, `startWithSession`, `goTo`, `settle`, `reveal`); asosiy oqim —
-  `test/flow/main_flow.dart` (widget testi va `integration_test/`). `assets/norms/v0.yaml` = `norms/v0.yaml` (test nazoratida).
+  `test/flow/main_flow.dart` (widget testi — katta va kichik 360×640 ekran — va `integration_test/`). Lazy ro'yxatdagi
+  elementlar uchun `reveal` (vertikal ro'yxat, ekran markaziga). `assets/norms/v0.yaml` = `norms/v0.yaml` (test nazoratida).
 
 ## Deploy (ADR-0015)
 - `deploy/`: bitta `compose.yaml` (db, migrate, api, caddy, backup), muhit — `deploy/environments/<muhit>.env` (commit

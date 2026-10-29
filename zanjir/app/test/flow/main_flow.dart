@@ -7,14 +7,22 @@ import '../support/harness.dart';
 /// Asosiy oqim (widget testi va qurilmadagi integration_test uchun umumiy):
 /// oflayn profil → asbob → obyekt → graf (3 tugun) → sessiya → o'lchov (PASS) → xulosa → sessiyani yopish.
 Future<void> runMainFlow(WidgetTester tester, TestEnv env) async {
+  /// Kichik ekranda element lazy ro'yxatda hali qurilmagan yoki banner ostida bo'lishi mumkin (`reveal`).
+  Future<void> show(Finder f) => reveal(tester, f);
+
   Future<void> tapText(String text) async {
-    await tester.ensureVisible(find.text(text).last);
+    await show(find.text(text).last);
     await tester.tap(find.text(text).last);
     await settle(tester);
   }
 
+  Future<void> type(String key, String text) async {
+    await show(find.byKey(Key(key)));
+    await tester.enterText(find.byKey(Key(key)), text);
+  }
+
   Future<void> tapKey(String key) async {
-    await tester.ensureVisible(find.byKey(Key(key)));
+    await show(find.byKey(Key(key)));
     await tester.tap(find.byKey(Key(key)));
     await settle(tester);
   }
@@ -42,9 +50,10 @@ Future<void> runMainFlow(WidgetTester tester, TestEnv env) async {
   }) async {
     await tapKey('site.addNode');
     await choose('node.kind', kind);
-    await tester.enterText(find.byKey(const Key('node.label')), label);
+    await type('node.label', label);
     for (final e in attrs.entries) {
       final field = find.byKey(Key('node.attr.${e.key}'));
+      await show(field);
       if (tester.widget(field) is TextFormField) {
         await tester.enterText(field, e.value);
       } else {
@@ -60,9 +69,9 @@ Future<void> runMainFlow(WidgetTester tester, TestEnv env) async {
   await tester.pumpWidget(env.app());
   await settle(tester);
   await tapText('Oflayn profil yaratish');
-  await tester.enterText(find.byKey(const Key('onboarding.lab')), 'Elektrolab');
-  await tester.enterText(find.byKey(const Key('onboarding.name')), 'Karimov A.');
-  await tester.enterText(find.byKey(const Key('onboarding.phone')), '+998901234567');
+  await type('onboarding.lab', 'Elektrolab');
+  await type('onboarding.name', 'Karimov A.');
+  await type('onboarding.phone', '+998901234567');
   await tapKey('onboarding.create');
   await settle(tester, frames: 40);
   expect(find.text('Hozircha obyekt yo\'q'), findsOneWidget);
@@ -72,9 +81,9 @@ Future<void> runMainFlow(WidgetTester tester, TestEnv env) async {
   await settle(tester);
   expect(find.text('Normalar hali litsenziyali muhandis tomonidan tekshirilmagan'), findsOneWidget);
   await tapKey('settings.addInstrument');
-  await tester.enterText(find.byKey(const Key('instrument.model')), 'MI 3152');
-  await tester.enterText(find.byKey(const Key('instrument.serial')), 'SN-001');
-  await tester.enterText(find.byKey(const Key('instrument.until')), '2027-03-01');
+  await type('instrument.model', 'MI 3152');
+  await type('instrument.serial', 'SN-001');
+  await type('instrument.until', '2027-03-01');
   await tapKey('instrument.save');
   expect(find.textContaining('MI 3152 · SN-001'), findsOneWidget);
   await tester.tap(find.byType(BackButton));
@@ -82,7 +91,7 @@ Future<void> runMainFlow(WidgetTester tester, TestEnv env) async {
 
   // 3. Obyekt.
   await tapKey('sites.add');
-  await tester.enterText(find.byKey(const Key('site.name')), 'Savdo markazi');
+  await type('site.name', 'Savdo markazi');
   await choose('site.earthing', 'TN-C-S');
   await tapKey('site.save');
   expect(find.text('Savdo markazi'), findsWidgets);
@@ -106,16 +115,17 @@ Future<void> runMainFlow(WidgetTester tester, TestEnv env) async {
   // 5. Sessiya.
   await tapText('Sessiyalar');
   await tapKey('site.startSession');
-  await tester.enterText(find.byKey(const Key('session.temp')), '21,5');
+  await type('session.temp', '21,5');
   await tapKey('session.start');
   await settle(tester, frames: 30);
   expect(find.text('O\'lchov kiritish'), findsOneWidget);
 
   // 6. O'lchov: XS1, Zs = 0,84 Ω → Normada.
   await choose('measure.point', 'XS1 · Rozetkalar guruhi');
-  await tester.enterText(find.byKey(const Key('measure.zs')), '0,84');
+  await type('measure.zs', '0,84');
   await tapKey('measure.save');
   await settle(tester, frames: 30);
+  await show(find.byKey(const Key('measure.result')));
   expect(find.byKey(const Key('measure.result')), findsOneWidget);
   expect(find.text('Normada'), findsOneWidget);
   expect(find.textContaining('XS1'), findsWidgets);

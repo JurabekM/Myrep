@@ -118,9 +118,9 @@ main() {
     keygen)
       [[ -n "${1:-}" && ! -e "$1" ]] || die "keygen <yangi-fayl> (mavjud fayl ustiga yozilmaydi)"
       umask 077
-      (cd "$DIR" && ZANJIR_BUILD_CA="${ZANJIR_BUILD_CA:-./environments/build-ca.empty}" docker build -q -t zanjir-backup:keygen \
-        --build-arg REGISTRY="${ZANJIR_REGISTRY:-docker.io/library}" \
-        --secret id=build_ca,src="${ZANJIR_BUILD_CA:-./environments/build-ca.empty}" backup >/dev/null)
+      local ca="${ZANJIR_BUILD_CA:-./environments/build-ca.empty}"
+      (cd "$DIR" && docker build -q -t zanjir-backup:keygen --build-arg REGISTRY="${ZANJIR_REGISTRY:-docker.io/library}" \
+        --secret id=build_ca,src="$ca" backup >/dev/null)
       docker run --rm --entrypoint age-keygen zanjir-backup:keygen > "$1"
       echo "maxfiy kalit: $1 — serverda saqlamang. Ochiq kalit (env'ga): $(grep -o 'age1[0-9a-z]*' "$1")" ;;
     *) sed -n '2,17p' "${BASH_SOURCE[0]}"; exit 2 ;;

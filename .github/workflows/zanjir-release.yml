@@ -38,7 +38,10 @@ jobs:
       - name: shellcheck
         run: shellcheck --severity=warning zanjir/app/tool/*.sh
       - name: Ikonkalar geometriyaga mos
-        run: pip install pillow==12.3.0 && python3 -I zanjir/app/tool/gen_icons.py --check
+        run: |
+          python3 -m venv "$RUNNER_TEMP/icons"
+          "$RUNNER_TEMP/icons/bin/pip" install --quiet pillow==12.3.0
+          "$RUNNER_TEMP/icons/bin/python" -I zanjir/app/tool/gen_icons.py --check
       - run: flutter pub get
         working-directory: zanjir/app
       - name: Texnik release build (bir martalik kalit) + AAB tekshiruvi
