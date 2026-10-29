@@ -4,8 +4,8 @@ Gradle loyihasi: AGP 8.13, Kotlin 2.2, Compose, minSdk 26, targetSdk 36. Arxitek
 
 | Modul | Turi | Vazifasi |
 |---|---|---|
-| `mpay-core` | Kotlin/JVM | Platformadan mustaqil yadro: `Tlv`, `Emv` (PDOL/CDOL/IAD/Track 2), `MpayScheme` (KDF, ARQC/ARPC), `CardApplet` (HCE applet mantiqi), `TerminalKernel` (PPSE → AID → GPO), `pqlink/*` (PQ Link v1 client), `MpayClient` (HTTP API). |
-| `wallet-sdk` | Android library | Bank ilovasi uchun SDK: `MpayWallet` fasadi, `MpayHceService`, `AndroidDeviceKey` (Keystore/StrongBox + attestatsiya), `WalletStore` (shifrlangan profil), `CdcvmState` + `BiometricGate`. |
+| `mpay-core` | Kotlin/JVM | Platformadan mustaqil yadro: `Tlv`, `Emv` (PDOL/CDOL/IAD/Track 2), `MpayScheme` (KDF, ARQC/ARPC), `CardApplet` (HCE applet mantiqi), `TerminalKernel` (PPSE → AID → GPO), `pqlink/*` (PQ Link v1 client), `MpayClient` (HTTP API, hamyon API'si), `CardBook` (ko'p karta: asosiy karta, server bilan moslash, saqlash formati). |
+| `wallet-sdk` | Android library | Bank ilovasi uchun SDK: `MpayWallet` fasadi, `MpayHceService`, `AndroidDeviceKey` (Keystore/StrongBox + attestatsiya), `WalletStore` (shifrlangan `CardBook`), `CdcvmState` + `BiometricGate`. Ko'p karta (ADR-0030): `cards`, `setDefaultCard`, `nextTapCard`, `syncCards`, `suspendCard`/`resumeCard`/`deleteCard`, `transactions`, `replenishLow`. |
 | `wallet-demo` | ilova | "M-Pay Hamyon" — SDK namoyishi: ulanish, karta qo'shish, OTP, LUK, biometriya, standart to'lov ilovasi, attestatsiya zanjirini eksport qilish. |
 | `terminal-app` | ilova | "M-Pay Terminal" — telefon-terminal: NFC reader mode → `TerminalKernel.tap` → `POST /v1/authorizations` → server qarori ekranda. |
 

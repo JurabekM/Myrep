@@ -161,6 +161,25 @@ class InteropTest {
         assertEquals("Q1", replay.responseCode)
         assertEquals("ATC_REPLAY", replay.reason)
 
+        // 4a) Hamyon API (ADR-0030): kartalar, tarix (sahifalab), o'zim to'xtatish/yoqish.
+        val cards = api.walletTokens()
+        assertEquals(listOf(profile.tokenId), cards.map { it.tokenId })
+        assertEquals("ACTIVE", cards[0].state)
+        assertEquals(maskPan(pan), cards[0].fpanMasked)
+        val h1 = api.transactions(profile.tokenId, limit = 2)
+        assertEquals(2, h1.transactions.size)
+        val h2 = api.transactions(profile.tokenId, h1.nextCursor!!, 2)
+        assertEquals(null, h2.nextCursor)
+        val all = h1.transactions + h2.transactions
+        assertEquals(3, all.map { it.id }.toSet().size)
+        assertEquals(setOf(1_250_000L, 200_000_000L), all.map { it.amountMinor }.toSet())
+        assertEquals(listOf("APPROVED", "APPROVED", "DECLINED"), all.map { it.status }.sorted())
+        assertTrue(all.zipWithNext().all { (a, b) -> a.at >= b.at })
+        val susp = api.walletSetState(profile.tokenId, "suspend")
+        assertEquals("SUSPENDED" to "DEVICE", susp.state to susp.suspendedBy)
+        val res = api.walletSetState(profile.tokenId, "resume")
+        assertEquals("ACTIVE" to null, res.state to res.suspendedBy)
+
         // 5) LUK to'ldirish.
         assertEquals(5, api.replenish(profile.tokenId).size)
 

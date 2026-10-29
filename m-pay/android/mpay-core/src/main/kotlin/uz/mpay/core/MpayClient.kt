@@ -30,6 +30,39 @@ class LukBatch(val luks: List<CardLuk>, val cvmLimitMinor: Long?)
 /** Token muddatini yangilash natijasi: `renewed = false` — hali erta yoki uzaytirib bo'lmaydi. */
 class RenewResult(val renewed: Boolean, val expiryYymm: String, val renewAfter: Long?)
 
+/**
+ * Hamyondagi karta (ADR-0030): faqat maskalangan PAN'lar. `state`: `ACTIVE`, `SUSPENDED`, `PENDING_IDV`,
+ * `DELETED`; `suspendedBy`: `DEVICE` (foydalanuvchi o'zi) yoki `BANK` (faqat bank qayta yoqadi).
+ */
+data class WalletToken(
+    val tokenId: String,
+    val state: String,
+    val dpanMasked: String,
+    val fpanMasked: String,
+    val dpanExpiry: String,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val suspendedBy: String?,
+)
+
+/** Karta bo'yicha tranzaksiya (PAN yo'q). `status`: `APPROVED`, `REVERSED`, `DECLINED`. */
+data class Txn(
+    val id: String,
+    val at: Long,
+    val amountMinor: Long,
+    val currency: Int,
+    val merchantId: String,
+    val terminalId: String,
+    val rrn: String,
+    val status: String,
+    val responseCode: String,
+    val reason: String,
+    val cleared: Boolean,
+)
+
+/** Tarix sahifasi; `nextCursor == null` — oxirgi sahifa. */
+data class TxnPage(val transactions: List<Txn>, val nextCursor: String?)
+
 /** Terminal avtorizatsiyasi natijasi. */
 data class AuthResult(
     val approved: Boolean,
@@ -252,6 +285,60 @@ class MpayClient(
     fun renew(tokenId: String): RenewResult {
         val d = sealed("/v1/tokens/$tokenId/renew", JSONObject())
         return RenewResult(d.getBoolean("renewed"), d.getString("dpan_expiry"), renewAfter(d))
+    }
+
+    // ------------------------------------------------------------ hamyon (ADR-0030)
+
+    private fun walletToken(d: JSONObject) = WalletToken(
+        tokenId = d.getString("token_id"),
+        state = d.getString("state"),
+        dpanMasked = d.getString("dpan_masked"),
+        fpanMasked = d.getString("fpan_masked"),
+        dpanExpiry = d.getString("dpan_expiry"),
+        createdAt = d.getLong("created_at"),
+        updatedAt = d.getLong("updated_at"),
+        suspendedBy = if (d.isNull("suspended_by")) null else d.optString("suspended_by", null),
+    )
+
+    /** Shu qurilmaning serverdagi kartalari (o'chirilganlarsiz). */
+    fun walletTokens(): List<WalletToken> {
+        val a = sealed("/v1/wallet/tokens", JSONObject()).getJSONArray("tokens")
+        return List(a.length()) { walletToken(a.getJSONObject(it)) }
+    }
+
+    /**
+     * Kartani o'zi boshqarish: `action` — `suspend`, `resume` yoki `delete`. Bank to'xtatgan kartani
+     * yoqish — `SUSPENDED_BY_BANK` (403).
+     */
+    fun walletSetState(tokenId: String, action: String): WalletToken {
+        require(action in setOf("suspend", "resume", "delete")) { "action: $action" }
+        return walletToken(sealed("/v1/wallet/tokens/$tokenId/$action", JSONObject()))
+    }
+
+    /** Karta tarixi, yangilari birinchi; `cursor` — oldingi sahifaning [TxnPage.nextCursor]. */
+    fun transactions(tokenId: String, cursor: String? = null, limit: Int? = null): TxnPage {
+        val body = JSONObject()
+        if (cursor != null) body.put("cursor", cursor)
+        if (limit != null) body.put("limit", limit)
+        val d = sealed("/v1/wallet/tokens/$tokenId/transactions", body)
+        val a = d.getJSONArray("transactions")
+        val txns = List(a.length()) { i ->
+            val t = a.getJSONObject(i)
+            Txn(
+                id = t.getString("id"),
+                at = t.getLong("at"),
+                amountMinor = t.getLong("amount_minor"),
+                currency = t.getInt("currency"),
+                merchantId = t.getString("merchant_id"),
+                terminalId = t.getString("terminal_id"),
+                rrn = t.getString("rrn"),
+                status = t.getString("status"),
+                responseCode = t.getString("response_code"),
+                reason = t.getString("reason"),
+                cleared = t.getBoolean("cleared"),
+            )
+        }
+        return TxnPage(txns, if (d.isNull("next_cursor")) null else d.optString("next_cursor", null))
     }
 
     /**

@@ -1093,3 +1093,21 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   (bir soniya ichida tasodifiy `auth_id` bo'yicha) — ATC qo'shildi. Workspace 269/269 (SQLite);
   PostgreSQL — CI'da.
 * Keyingi: 2-bosqich — wallet-sdk (ko'p karta, yangi API'lar), 3-bosqich — `wallet-app` (Compose).
+
+## Mijoz hamyoni — 2-bosqich: wallet-sdk ko'p kartali (2026-10-29)
+
+* `mpay-core`:
+  * `MpayClient.walletTokens`, `walletSetState`, `transactions` (`WalletToken`, `Txn`, `TxnPage`);
+  * `CardBook` — ko'p kartali model, platformadan mustaqil: asosiy karta (birinchisi avtomatik),
+    tap kartasi (bir martalik tanlov yoki asosiy; to'xtatilgani tanlanmaydi — boshqasiga jim o'tmaydi),
+    UI ko'rinishi `WalletCard` (sirsiz; `onDevice = false` — server biladi, qurilmada profil yo'q),
+    server bilan moslash → `CardChange` (bank to'xtatdi/yoqdi, bank o'chirdi — qurilmadan ham o'chadi),
+    saqlash formati v2 va eski bitta kartali fayldan migratsiya.
+* `wallet-sdk`: `WalletStore` shifrlangan `CardBook` ni saqlaydi; `MpayWallet` — `cards`,
+  `setDefaultCard`, `nextTapCard`, `syncCards`, `suspendCard`/`resumeCard`/`deleteCard`, `transactions`,
+  karta bo'yicha `replenish`/`renewIfDue`, `replenishLow` (davriy xizmat uchun). Eski `profile()` —
+  asosiy karta (demo o'zgarishsiz ishlaydi).
+* Tekshirildi: `CardBookTest` 3/3, mpay-core 31/31; `android-interop.sh` — Kotlin client haqiqiy Rust
+  server bilan: kartalar ro'yxati, tarix 2+1 sahifa (tasdiq, CDCVM'dan keyingi tasdiq, `Q1` replay),
+  o'zim to'xtatish → `SUSPENDED/DEVICE`, yoqish → `ACTIVE`; wallet-sdk va wallet-demo kompilyatsiya.
+* Keyingi: 3-bosqich — `wallet-app` (Compose, product ilova).
