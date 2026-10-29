@@ -1,13 +1,27 @@
 # Algoritm (`:core:analysis`, versiya 1.0.0)
 
 Barcha raqamlar `AnalysisConfig` da; quyidagilar standart (prompt §6). Tasodifiylik faqat `Random(seed)`; seed natijaga yoziladi.
-Talqinlar: `docs/DECISIONS.md` ADR-008.
+Talqinlar: `docs/DECISIONS.md` ADR-008; 1.0.0-rc1 dagi tuzatishlar — ADR-016.
+
+**Takrorlanuvchanlik:** har sessiya o'z `AnalysisConfig` nusxasini (`session.config_json`) va RF reja nusxasini
+(`session.plan_json`) saqlaydi. Yakuniy tahlil, hisobot, ZIP va `sv-replay analyze` shu nusxalar bilan ishlaydi — keyin
+sozlamalar o'zgarsa yoki reja qayta import qilinsa ham natija bir xil qayta hosil bo'ladi.
+
+| Preset | Farqi standartdan |
+|---|---|
+| `SUBURBAN` (standart) | — |
+| `URBAN` | `rMaxM = 600` |
+| `RURAL` | `n = 3.0` |
 
 ## 1. Tozalash (§6.1)
 1. `rsrp == null` → tashlanadi.
 2. Yosh `rxNanos − tNanos > 3000 ms` → tashlanadi.
-3. GNSS fix'lar: `accM > 15` yoki `speed > 8 m/s` bo'lganlari olib tashlanadi; qolganlari orasida vaqt bo'yicha chiziqli
-   interpolyatsiya; eng yaqin fix > 2000 ms bo'lsa namuna tashlanadi.
+3. GNSS fix'lar: `accM > 15` yoki `speed > 8 m/s` bo'lganlari olib tashlanadi. Namuna vaqti uchun joylashuv:
+   - eng yaqin fix > 2000 ms (`maxFixGapMs`) uzoqda bo'lsa — namuna tashlanadi;
+   - ikkala qo'shni fix ham ≤ 2000 ms ichida bo'lsa — ular orasida vaqt bo'yicha chiziqli interpolyatsiya;
+   - qo'shnilardan biri > 2000 ms (GNSS uzilishi chetida) yoki faqat bitta tomonda fix bor bo'lsa — **interpolyatsiya qilinmaydi**,
+     eng yaqin fix olinadi (uzilish ustidan "to'g'ri chiziq" chizilmaydi; jonli inkremental tozalash ham shu tufayli to'liq
+     qayta hisoblash bilan aynan teng qoladi — ADR-015, ADR-016).
 4. Saytdan masofa `d` (haversine) va yo'nalish `φ` (great-circle initial bearing).
 5. `100 m ≤ d ≤ 1500 m` (shahar: 600 m).
 6. LTE TA filtri: `|ta·78.12 − d| > 2·78.12` → boshqa sayt, tashlanadi.
@@ -33,7 +47,8 @@ Binlarni qaytarib tanlab 200 marta qayta moslash (Monte-Karlo testlarida 50). δ
   yetishmayotgan yo'nalishlar ko'rsatiladi. Almashgan sektor uchun oyna — u haqiqatda nurlanayotgan sektor rejasi atrofida.
 
 ## 7. Almashinuv (§6.7)
-Har ARFCN bo'yicha baholangan sektorlar uchun barcha permutatsiyalar (≤ 6 → ≤ 720, Heap algoritmi).
+Har **(RAT, ARFCN)** bo'yicha baholangan sektorlar uchun barcha permutatsiyalar (≤ 6 → ≤ 720, Heap algoritmi); LTE va NR
+bir xil raqamli ARFCN'ga ega bo'lsa ham aralashtirilmaydi. Almashinuv nishoni (haqiqiy sektor) ham shu (RAT, ARFCN) ichidan olinadi.
 `cost(π) = Σδ(α̂_k, α_plan[π(k)])²`. Almashinuv: `π* ≠ id`, π* ostida har `|δ| ≤ 30°`, `cost(id) ≥ 4·cost(π*) + 1`.
 Umumiy qamrov yetarli bo'lmasa qidirilmaydi. Topilma: `SWAP`, CRITICAL, `pci → haqiqiy sektor`.
 
@@ -65,5 +80,15 @@ Simulyator: 3–6 sektor, 1–3 ARFCN, halqa/to'rtburchak 150–400 m, soya σ 6
 To'liq jadval: `docs/reports/montecarlo-*.md`.
 
 ## 11. Kalibrlash
-`sv-replay calibrate` — ADR-014. Simulyatsiyadagi namoyish: `docs/reports/calibration-sim-demo.md`.
+`sv-replay calibrate <zip-papka> ground_truth.csv` — ADR-014, ADR-016.
+- **Grid:** `n` ∈ {3.0, 3.5, 4.0} × PASS chegarasi {15, 20, 25}° × WARN {40, 45, 50}° × swap xatosi {25, 30, 35}° ×
+  sektor qamrovi {0.5, 0.6} = 162 konfiguratsiya (`--quick` — kichikroq grid).
+- **Har sessiya o'z yozilgan config'i bilan** baholanadi: griddan faqat shu parametrlar (va bootstrap soni) almashtiriladi,
+  qolganlari (preset, `rMax`, …) sessiyaniki qoladi. Tavsiya eng ko'p ishlatilgan sessiya config'i ustiga quriladi.
+- **Moslash:** ground truth bilan `site_code` + (RAT, ARFCN, PCI) bo'yicha; SWAP topilmasi ham RAT bo'yicha tekshiriladi.
+- **Tanlash:** noto'g'ri FAIL ≤ 3% bo'lganlar orasida — AC-08 aniqlash eng yuqori, keyin noto'g'ri FAIL eng past, PASS ulushi
+  eng yuqori, asos config'dan eng kam farq. Hech biri ≤ 3% bo'lmasa — ogohlantirish (chiqish kodi 1).
+- Natija: `recommended-config.json` (ilovaga *Sozlamalar → Config JSON import*), `calibration-report.md`.
+
+Simulyatsiyadagi namoyish: `docs/reports/calibration-sim-demo.md`.
 **Pilot (H2) natijalari:** kutilmoqda — kelgach shu bo'limga va `docs/PILOT_REPORT.md` ga yoziladi; standart config faqat shundan keyin o'zgaradi.
