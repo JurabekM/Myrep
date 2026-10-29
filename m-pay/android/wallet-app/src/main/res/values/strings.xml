@@ -61,6 +61,8 @@
     <string name="state_active">Faol</string>
     <string name="state_suspended">To\'xtatilgan</string>
     <string name="state_suspended_bank">Bank to\'xtatgan</string>
+    <string name="state_pending">Tasdiqlanmagan</string>
+    <string name="banner_pending">Karta qo\'shish tugallanmagan (SMS-kod kiritilmagan). Uni o\'chirib, qaytadan qo\'shing.</string>
     <string name="state_not_on_device">Bu telefonda yo\'q</string>
     <string name="txn_approved">Tasdiqlandi</string>
     <string name="txn_reversed">Qaytarildi</string>
@@ -102,6 +104,7 @@
     <string name="pay_sent">To\'lov yuborildi — natija kutilmoqda</string>
     <string name="pay_approved">To\'lov tasdiqlandi</string>
     <string name="pay_declined">To\'lov rad etildi (%1$s)</string>
+    <string name="pay_unknown">Terminal javobi kelmadi. To\'lov o\'tganini tarixdan tekshiring — o\'tmagan bo\'lsa pul yechilmaydi.</string>
     <string name="pay_no_biometric">To\'lov uchun telefonda barmoq izi (yoki yuz) sozlangan bo\'lishi kerak</string>
     <string name="set_general">Umumiy</string>
     <string name="set_language">Til</string>
@@ -113,6 +116,8 @@
     <string name="set_default_app">Standart to\'lov ilovasi</string>
     <string name="set_default_app_sub">NFC to\'lovlari uchun M-Pay\'ni tanlang</string>
     <string name="set_virtual_nfc">Virtual NFC (faqat sinov)</string>
+    <string name="set_sync_now">Fon sinxronlash (faqat sinov)</string>
+    <string name="msg_sync_queued">Sinxronlash navbatga qo\'yildi</string>
     <string name="set_about">Ilova haqida</string>
     <string name="set_version">Versiya</string>
     <string name="set_server">Server</string>

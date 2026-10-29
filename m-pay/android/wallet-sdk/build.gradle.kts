@@ -27,4 +27,7 @@ dependencies {
     implementation(libs.bcprov)
     implementation(libs.androidx.core.ktx)
     api(libs.androidx.biometric)
+    // biometric 1.1.0 eski fragment'ni (1.2.5) olib keladi — uning FragmentActivity'si Activity Result API'ning
+    // so'rov kodini rad etadi ("lower 16 bits" crash, ruxsat so'rashda).
+    api(libs.androidx.fragment)
 }

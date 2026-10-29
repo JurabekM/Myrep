@@ -239,3 +239,52 @@ Ilovada "Ulanish" → **"Xato: server identifikatori bekor qilingan: <SFP>…"**
 "Bekor qilish ro'yxati yangilandi: versiya 5 (ilova)"; server logida faqat `/v1/pqlink/identity` va
 `/revocations` — handshake boshlanmaydi. Nazorat: boshqa barmoq izini bekor qiluvchi ro'yxat bilan
 build — handshake boshlanadi (2026-10-27, emulyator Medium_Phone_API_36.0).
+
+## 11. M-Pay mijoz hamyoni (`wallet-app`, ADR-0030)
+
+Product ilova: onboarding, PIN/biometriya qulfi, ko'p karta, to'lov, tarix, karta boshqaruvi,
+bildirishnomalar, uz/ru/en. Sandbox tayyorlash:
+
+1. `mpay-server init --dir emu-sb --listen 127.0.0.1:8080`; `mpay.toml` da §2 dagi emulyator sozlamalari,
+   §6 dagi `[otp] channel = "webhook"` va `[integrity] package_name = "uz.mpay.wallet"`.
+2. `mpay-smsgw` va `mpay-server serve` (§6).
+3. `./gradlew :wallet-app:assembleDebug` (yoki `assembleRelease`; server `-Pmpay.server=…`, pinlar `-Pmpay.serverFingerprints=…`).
+4. Terminal: `terminal-app` qo'lda rejim (`http://10.0.2.2:8080` + terminal kaliti), hamyonda
+   Sozlamalar → "Virtual NFC (faqat sinov)" (faqat debug).
+
+Natija (2026-10-29, Medium Phone API 36, debug va release):
+
+| Ekran / holat | Natija |
+|---|---|
+| Tanishuv → til (ru) → PIN | ekran rus tilida; `123456` — "juda oddiy", takrorlash mos kelmasa — qaytadan |
+| Biometriya, bildirishnoma ruxsati | tizim oynasi, so'ng bosh ekran; server: identity → enroll → hello/finish → `/v1/wallet/tokens` 200 |
+| Karta qo'shish | Luhn xatosi qizil; `MM/YY`; Integrity mock 200; YELLOW → "Kod SMS orqali +998*******01" |
+| OTP | noto'g'ri kod → "Kod noto'g'ri" (422); shlyuzdagi kod → karta, 5 ta kalit, bank kartasi maskasi |
+| OTP'siz tashlab ketilgan karta | "Tasdiqlanmagan" — o'chirish mumkin |
+| Yangi qurilmada boshqa qurilmaning kartasi / ko'p karta urinishi | "Bank kartani qo'shishni rad etdi" (Shield RED) |
+| To'lov: biometriya → virtual tap | terminal `00`; hamyonda "To'lov tasdiqlandi 25 000,00 so'm" (emitent tarixidan) |
+| Ikkinchi karta tanlab 25 000 (qoldiq 10 000) | terminal va hamyonda `51` |
+| Asosiy karta to'xtatilgan | to'lov ekrani faol kartani ko'rsatadi va tap aynan shu karta bilan |
+| Tarix | kartalar bo'yicha, kun sarlavhasi, Toshkent vaqti, rad etilgani chizilgan |
+| O'zim to'xtatish / yoqish | banner, "To'xtatilgan" belgisi, yoqish tugmasi |
+| Bank to'xtatdi (operator API) | "Bank to'xtatgan" banneri, yoqish tugmasi yo'q |
+| Bank yoqdi, fon sinxronlash | bildirishnoma "Karta holati o'zgardi — Karta yana faol" |
+| Qulf | fonda 30 s → biometrik oyna; noto'g'ri PIN — "yana 4 urinish"; PIN almashtirish → eski PIN rad |
+| Til almashtirish (sozlamalar) | butun ilova rus tilida, qulf qayta so'ralmaydi |
+| Hamyonni tozalash | onboarding (til saqlanadi) |
+| Release (R8, 4,4 MB) | ishga tushadi, karta qo'shiladi; sinov vositalari yo'q; `screencap` qora (FLAG_SECURE) |
+| Loglar (server, SMS shlyuzi, logcat) | ochiq PAN, OTP, terminal kaliti — 0; faqat maskalangan PAN va token ID |
+
+Emulyatorda topilib tuzatilgan xatolar:
+
+* ildizda `Surface` yo'q edi — rang berilmagan matnlar qora;
+* biometric 1.1.0 eski `fragment` ni olib keladi — bildirishnoma ruxsatida crash ("lower 16 bits");
+* to'lov ekrani: oldingi tap holati qolardi, tanlangan karta tapga qo'llanmasdi;
+* tapdan keyin karta tanlovi ekranda qolib, SDK'da tozalanardi;
+* terminal javobi kelmasa — abadiy "kutilmoqda";
+* karta qo'shilgach bank kartasi maskasi chiqmasdi;
+* tasdiqlanmagan karta "bu telefonda yo'q" deb ko'rinardi;
+* release dex'ida virtual NFC sinf nomi satri qolardi (`DebugTools` build turiga ajratildi).
+
+WorkManager davriy ishi emulyator soati sakraganda keyingi ishni kunlarga surdi — debug'da
+"Fon sinxronlash (faqat sinov)" bir martalik ish beradi (xuddi shu `SyncWorker`).

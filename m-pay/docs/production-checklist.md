@@ -84,6 +84,7 @@ Qolgan ishning asosiy qismi kodda emas — **tashqi tomonlarning qarori va infra
 | MB-2 | Haqiqiy qurilmalar matritsasi: Android versiyalari, ishlab chiqaruvchilar, HCE ustuvorligi, biometriya | ☐ | F, J | P | — |
 | MB-3 | Release imzo kaliti (repoga tushmaydi), Play Store yopiq sinov treki | ☐ | F, B | P | `android/README.md` |
 | MB-4 | Haqiqiy Play Integrity Android'da (`StandardIntegrityManager`) — BK-11 dan keyin | ☐ | J | P | `android/wallet-sdk`, `docs/android-testing.md` §7 |
+| MB-5 | **Mijoz hamyoni ilovasi** (`wallet-app`, ADR-0030): barcha ekranlar emulyatorda va release (R8) ✅; qoldi — haqiqiy telefonlar (MB-1, MB-2), Play Integrity (MB-4), imzo va Play treki (MB-3), dizayn/UX sharhi va matnlar tahriri (bank) | ◐ | J, B | P | `docs/android-testing.md` §11 |
 
 ## 5. Xavfsizlik va audit
 

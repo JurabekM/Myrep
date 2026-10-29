@@ -61,6 +61,8 @@
     <string name="state_active">Active</string>
     <string name="state_suspended">Frozen</string>
     <string name="state_suspended_bank">Blocked by bank</string>
+    <string name="state_pending">Not verified</string>
+    <string name="banner_pending">Adding this card wasn\'t finished (no SMS code). Remove it and add it again.</string>
     <string name="state_not_on_device">Not on this phone</string>
     <string name="txn_approved">Approved</string>
     <string name="txn_reversed">Reversed</string>
@@ -102,6 +104,7 @@
     <string name="pay_sent">Payment sent — waiting for the result</string>
     <string name="pay_approved">Payment approved</string>
     <string name="pay_declined">Payment declined (%1$s)</string>
+    <string name="pay_unknown">No answer from the terminal. Check your history — if the payment didn\'t go through, you weren\'t charged.</string>
     <string name="pay_no_biometric">Set up a fingerprint (or face) on your phone to pay</string>
     <string name="set_general">General</string>
     <string name="set_language">Language</string>
@@ -113,6 +116,8 @@
     <string name="set_default_app">Default payment app</string>
     <string name="set_default_app_sub">Choose M-Pay for NFC payments</string>
     <string name="set_virtual_nfc">Virtual NFC (test only)</string>
+    <string name="set_sync_now">Background sync (test only)</string>
+    <string name="msg_sync_queued">Sync queued</string>
     <string name="set_about">About</string>
     <string name="set_version">Version</string>
     <string name="set_server">Server</string>

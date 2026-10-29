@@ -61,6 +61,8 @@
     <string name="state_active">Активна</string>
     <string name="state_suspended">Приостановлена</string>
     <string name="state_suspended_bank">Заблокирована банком</string>
+    <string name="state_pending">Не подтверждена</string>
+    <string name="banner_pending">Добавление карты не завершено (SMS-код не введён). Удалите и добавьте её заново.</string>
     <string name="state_not_on_device">Нет на этом телефоне</string>
     <string name="txn_approved">Одобрено</string>
     <string name="txn_reversed">Возврат</string>
@@ -102,6 +104,7 @@
     <string name="pay_sent">Платёж отправлен — ждём ответа</string>
     <string name="pay_approved">Оплата прошла</string>
     <string name="pay_declined">Оплата отклонена (%1$s)</string>
+    <string name="pay_unknown">Ответ терминала не получен. Проверьте оплату в истории — если она не прошла, деньги не списаны.</string>
     <string name="pay_no_biometric">Для оплаты на телефоне должна быть настроена биометрия</string>
     <string name="set_general">Общие</string>
     <string name="set_language">Язык</string>
@@ -113,6 +116,8 @@
     <string name="set_default_app">Приложение для оплаты по умолчанию</string>
     <string name="set_default_app_sub">Выберите M-Pay для NFC-оплат</string>
     <string name="set_virtual_nfc">Виртуальный NFC (только тест)</string>
+    <string name="set_sync_now">Фоновая синхронизация (только тест)</string>
+    <string name="msg_sync_queued">Синхронизация поставлена в очередь</string>
     <string name="set_about">О приложении</string>
     <string name="set_version">Версия</string>
     <string name="set_server">Сервер</string>

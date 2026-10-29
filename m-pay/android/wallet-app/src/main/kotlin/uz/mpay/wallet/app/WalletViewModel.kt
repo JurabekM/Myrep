@@ -65,6 +65,9 @@ class WalletViewModel(app: Application) : AndroidViewModel(app) {
     /** Tap'dan keyin oxirgi tranzaksiya (to'lov ekranida natija). */
     var lastPayment by mutableStateOf<Txn?>(null)
         private set
+    /** Tap bo'ldi, lekin emitentda yozuv chiqmadi (terminal yubormadi yoki aloqa uzildi). */
+    var paymentUnknown by mutableStateOf(false)
+        private set
 
     val history = mutableStateMapOf<String, HistoryState>()
 
@@ -140,10 +143,16 @@ class WalletViewModel(app: Application) : AndroidViewModel(app) {
 
     // ------------------------------------------------------------ karta qo'shish
 
+    /** Yangi karta: bank kartasi maskasi va holat serverdan (xato qo'shishni buzmaydi). */
+    private fun syncQuietly() {
+        runCatching { WalletSetup.call(ctx) { it.syncCards() } }
+    }
+
     fun addCard(pan: String, mmyy: String, onDone: () -> Unit) {
         val yymm = Format.mmyyToYymm(mmyy) ?: run { message = R.string.err_expiry to null; return }
         work {
             val r = WalletSetup.call(ctx) { it.provision(pan, yymm) }
+            if (r is ProvisionResult.Active) syncQuietly()
             withContext(Dispatchers.Main) {
                 when (r) {
                     is ProvisionResult.Active -> {
@@ -163,6 +172,7 @@ class WalletViewModel(app: Application) : AndroidViewModel(app) {
 
     fun verifyOtp(s: Screen.Otp, code: String) = work {
         val p = WalletSetup.call(ctx) { it.verifyOtp(s.tokenId, s.challengeId, code) }
+        syncQuietly()
         withContext(Dispatchers.Main) {
             replaceTop(Screen.Card(p.tokenId))
             message = R.string.msg_card_added to null
@@ -227,6 +237,7 @@ class WalletViewModel(app: Application) : AndroidViewModel(app) {
     /** Tap bo'ldi (SDK hodisasi): bir necha soniyadan keyin tarixdan natijani oladi. */
     fun onTapped(tokenId: String) {
         lastPayment = null
+        paymentUnknown = false
         viewModelScope.launch {
             repeat(5) {
                 delay(2_000)
@@ -239,11 +250,13 @@ class WalletViewModel(app: Application) : AndroidViewModel(app) {
                     return@launch
                 }
             }
+            paymentUnknown = true
         }
     }
 
     fun clearPayment() {
         lastPayment = null
+        paymentUnknown = false
     }
 
     /** Hamyonni butunlay tozalash (qurilmadagi kartalar, kalit, PIN). Serverdagi tokenlar — bank. */

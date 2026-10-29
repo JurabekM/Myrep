@@ -58,6 +58,8 @@ class PolicyTest {
         assertTrue(main.none { it.readText().contains("class VirtualNfcService") })
         assertTrue(File(src, "debug/kotlin/uz/mpay/wallet/app/VirtualNfcService.kt").isFile)
         assertTrue(!File(src, "main/AndroidManifest.xml").readText().contains("VirtualNfcService"))
+        // Sinf nomi ham main kodda yo'q (release dex'ida satr qolmasin — scripts/check-release-apk.sh).
+        assertTrue(main.none { it.readText().contains("VirtualNfcService") })
     }
 
     @Test

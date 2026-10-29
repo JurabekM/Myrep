@@ -1111,3 +1111,25 @@ Kotlin `ServerPinPolicyTest`, interop (TLS + mTLS bilan).
   server bilan: kartalar ro'yxati, tarix 2+1 sahifa (tasdiq, CDCVM'dan keyingi tasdiq, `Q1` replay),
   o'zim to'xtatish → `SUSPENDED/DEVICE`, yoqish → `ACTIVE`; wallet-sdk va wallet-demo kompilyatsiya.
 * Keyingi: 3-bosqich — `wallet-app` (Compose, product ilova).
+
+## Mijoz hamyoni — 3-bosqich: `wallet-app` product ilovasi (2026-10-29, checklist MB-5 ◐)
+
+* Yangi modul `android/wallet-app` (applicationId `uz.mpay.wallet`, "M-Pay"), Compose, qorong'i mavzu,
+  o'z ikonkasi (M + kontaktsiz to'lqinlar; monoxrom qatlam, bildirishnoma belgisi):
+  * onboarding (tanishuv, til, 6 raqamli PIN, biometriya, bildirishnoma ruxsati);
+  * qulf: PIN tekshirgichi — Keystore HMAC (fayl o'g'irlansa ham qurilmasiz terib bo'lmaydi), oddiy PIN rad,
+    5 xatodan keyin 30 s → 1 → 5 → 15 daqiqa; biometrik ochish; fonda 30 s → qayta qulf; FLAG_SECURE;
+  * bosh ekran (kartalar karuseli, To'lash, so'nggi to'lovlar), karta qo'shish (Luhn, MM/YY, OTP, qayta
+    yuborish), karta sahifasi (asosiy qilish, to'xtatish/yoqish — bank blokida yo'q, kalitlarni yangilash,
+    o'chirish), to'lov (karta tanlash, CDCVM, natija emitent tarixidan, javob kelmasa ogohlantirish),
+    tarix (karta bo'yicha, kunlar, cheksiz sahifalash), sozlamalar;
+  * WorkManager (15 daq): holat, kam LUK, yangi tranzaksiyalar → bildirishnomalar (qulf ekranida yashirin);
+  * 3 til (170 kalit, bitta jadvaldan), sinov vositalari faqat debug (`DebugTools`).
+* Testlar: `wallet-app` unit 13 (Format, PinPolicy, TxnWatcher, PolicyTest — islomiy ikonka siyosati,
+  3 til kalitlari va formatlari, debug ko'prik, loglarda sir); CI'da `testDebugUnitTest` + `assembleDebug`;
+  `check-release-apk.sh` ikkala hamyon uchun.
+* Emulyatorda har ekran sinaldi (`docs/android-testing.md` §11): to'liq to'lov `00`, `51`, Shield `59`,
+  bank bloki, bildirishnoma, til, PIN, tozalash; release R8 (4,4 MB) ishga tushadi. Sakkizta xato topildi va
+  tuzatildi (ro'yxat §11 da). Loglarda ochiq PAN/OTP/kalit 0.
+* Emulyator `/data` to'lgan edi — foydalanuvchi roziligi bilan 4 ta eski loyiha ilovasi AVD'dan o'chirildi.
+* Ochiq: haqiqiy telefonlar (MB-1/2), Play Integrity (MB-4), imzo/Play (MB-3).

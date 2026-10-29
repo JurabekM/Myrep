@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -84,6 +85,8 @@ class MainActivity : FragmentActivity() {
                 val card = vm.cards.firstOrNull { it.dpanMasked == masked }
                 if (card != null && vm.screen == Screen.Pay) {
                     tapped = card.tokenId
+                    // SDK bir martalik tanlovni tapdan keyin tozalaydi — ekran ham asosiy kartaga qaytsin.
+                    payCard = null
                     vm.onTapped(card.tokenId)
                 }
                 vm.reloadLocal()
@@ -182,10 +185,7 @@ class MainActivity : FragmentActivity() {
 
     /** Faqat debug: emulyator uchun virtual NFC ko'prigi (`src/debug`; release'da sinf yo'q). */
     private fun startVirtualNfc() {
-        val i = Intent().setClassName(packageName, "uz.mpay.wallet.app.VirtualNfcService")
-        runCatching { startForegroundService(i) }
-            .onSuccess { vm.message = R.string.msg_virtual_nfc to null }
-            .onFailure { vm.message = R.string.err_generic to null }
+        vm.message = (if (DebugTools.startVirtualNfc(this)) R.string.msg_virtual_nfc else R.string.err_generic) to null
     }
 
     @Composable
@@ -205,9 +205,11 @@ class MainActivity : FragmentActivity() {
                     after()
                 }
             }
-            Box(
-                Modifier.fillMaxSize().background(MpayColors.Background).windowInsetsPadding(WindowInsets.safeDrawing)
-                    .semantics { testTagsAsResourceId = true },
+            // Surface — rang berilmagan matnlar uchun to'g'ri kontent rangi (aks holda qora).
+            Surface(
+                Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).semantics { testTagsAsResourceId = true },
+                color = MpayColors.Background,
+                contentColor = MpayColors.TextPrimary,
             ) {
                 when {
                     !onboarded -> Onboarding(
@@ -268,6 +270,9 @@ class MainActivity : FragmentActivity() {
             }
         }
         BackHandler { if (vm.screen == Screen.Pay) leavePay(); if (!vm.back()) finish() }
+        // To'lov ekraniga har kirish — toza holat (oldingi tap natijasi qolmasin).
+        val onPay = vm.screen == Screen.Pay
+        LaunchedEffect(onPay) { if (onPay) leavePay() }
         val lang = prefs.lang
         Scaffold(snackbarHost = { SnackbarHost(snack, Modifier.testTag("snackbar")) }, containerColor = MpayColors.Background) { pad ->
             Box(Modifier.padding(pad)) {
@@ -280,9 +285,16 @@ class MainActivity : FragmentActivity() {
                         vm, lang, biometricAvailable,
                         secondsLeft = { WalletSetup.wallet(this@MainActivity).cdcvm.secondsLeft() },
                         selected = payCard,
-                        onSelect = { payCard = it },
+                        onSelect = { id ->
+                            payCard = id
+                            // Tanlov darhol: CDCVM chegarasidan kichik summa biometriyasiz ham o'tadi.
+                            WalletSetup.wallet(this@MainActivity).nextTapCard = id
+                        },
                         onAuthenticate = ::authenticatePayment,
                         tappedToken = tapped,
+                        onLeave = { leavePay(); vm.back() },
+                        onDone = { leavePay() },
+                        onShown = { WalletSetup.wallet(this@MainActivity).nextTapCard = it },
                     )
                     is Screen.History -> HistoryScreen(vm, lang, s.tokenId)
                     Screen.Settings -> {
@@ -298,7 +310,7 @@ class MainActivity : FragmentActivity() {
                                 server = BuildConfig.SERVER,
                                 serverPinned = pins.isNotEmpty(),
                                 version = BuildConfig.VERSION_NAME + if (BuildConfig.SANDBOX) " · sandbox" else "",
-                                debugTools = BuildConfig.DEBUG,
+                                debugTools = DebugTools.ENABLED,
                                 onLang = ::setLang,
                                 onBiometric = { bio = it; prefs.biometricUnlock = it },
                                 onNotifications = { on ->
@@ -307,6 +319,8 @@ class MainActivity : FragmentActivity() {
                                 onChangePin = { vm.go(Screen.ChangePin) },
                                 onDefaultPayment = ::makeDefaultPaymentApp,
                                 onVirtualNfc = ::startVirtualNfc,
+                                // Faqat debug: fon sinxronlashi darhol (bildirishnomalar bilan), 15 daqiqa kutmasdan.
+                                onSyncNow = { Sync.now(this@MainActivity); vm.message = R.string.msg_sync_queued to null },
                                 onReset = {
                                     vm.resetWallet {
                                         onboarded = false

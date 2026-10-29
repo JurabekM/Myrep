@@ -106,6 +106,7 @@ fun CardVisual(card: WalletCard, modifier: Modifier = Modifier) {
             }
         }
         val badge = when {
+            card.state == "PENDING_IDV" -> stringResource(R.string.state_pending)
             !card.onDevice -> stringResource(R.string.state_not_on_device)
             card.state == "SUSPENDED" && card.suspendedBy == "BANK" -> stringResource(R.string.state_suspended_bank)
             card.state == "SUSPENDED" -> stringResource(R.string.state_suspended)

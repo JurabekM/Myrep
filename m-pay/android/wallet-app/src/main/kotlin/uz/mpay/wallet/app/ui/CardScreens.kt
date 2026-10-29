@@ -81,6 +81,8 @@ fun CardScreen(vm: WalletViewModel, tokenId: String) {
                     if (card.suspendedBy == "BANK") stringResource(R.string.banner_suspended_bank) else stringResource(R.string.banner_suspended_self),
                     MpayColors.Warning,
                 )
+            } else if (card.state == "PENDING_IDV") {
+                Banner(Icons.Filled.Info, stringResource(R.string.banner_pending), MpayColors.Warning)
             } else if (!card.onDevice) {
                 Banner(Icons.Filled.Info, stringResource(R.string.banner_not_on_device), MpayColors.Warning)
             } else if (card.luksLeft == 0) {
@@ -132,6 +134,7 @@ fun CardScreen(vm: WalletViewModel, tokenId: String) {
 
 @Composable
 private fun stateText(card: WalletCard): String = when {
+    card.state == "PENDING_IDV" -> stringResource(R.string.state_pending)
     !card.onDevice -> stringResource(R.string.state_not_on_device)
     card.state == "ACTIVE" -> stringResource(R.string.state_active)
     card.state == "SUSPENDED" && card.suspendedBy == "BANK" -> stringResource(R.string.state_suspended_bank)
@@ -181,13 +184,20 @@ fun PayScreen(
     onSelect: (String) -> Unit,
     onAuthenticate: () -> Unit,
     tappedToken: String?,
+    /** To'lov holatini tozalab chiqish (← va tizim "orqaga"). */
+    onLeave: () -> Unit,
+    /** Natija ko'rildi — yangi to'lovga tayyor. */
+    onDone: () -> Unit,
+    /** Ekrandagi karta — keyingi tap aynan shu karta bilan (asosiy to'xtatilgan bo'lsa ham). */
+    onShown: (String) -> Unit,
 ) {
     val payable = vm.cards.filter { it.payable }
     val card = payable.firstOrNull { it.tokenId == selected } ?: payable.firstOrNull { it.isDefault } ?: payable.firstOrNull()
     var seconds by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) { while (true) { seconds = secondsLeft(); delay(300) } }
+    LaunchedEffect(card?.tokenId, tappedToken) { if (card != null && tappedToken == null) onShown(card.tokenId) }
     Column(Modifier.fillMaxSize()) {
-        MpayTopBar(stringResource(R.string.pay), onBack = { vm.clearPayment(); vm.back() })
+        MpayTopBar(stringResource(R.string.pay), onBack = onLeave)
         if (card == null) {
             EmptyState(MpayIcons.Card, stringResource(R.string.no_payable_title), stringResource(R.string.no_payable_body))
             return
@@ -211,7 +221,11 @@ fun PayScreen(
             Spacer(Modifier.height(28.dp))
             val result = vm.lastPayment
             when {
-                result != null -> PayResult(result, lang) { vm.clearPayment() }
+                result != null -> PayResult(result, lang, onDone)
+                tappedToken != null && vm.paymentUnknown -> {
+                    Banner(Icons.Filled.Info, stringResource(R.string.pay_unknown), MpayColors.Warning)
+                    OutlinedButton(onDone, Modifier.testTag("pay_done")) { Text(stringResource(R.string.done)) }
+                }
                 tappedToken != null -> {
                     CircularProgressIndicator(Modifier.size(48.dp))
                     Spacer(Modifier.height(12.dp))

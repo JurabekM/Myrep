@@ -56,6 +56,7 @@ class SettingsModel(
     val onChangePin: () -> Unit,
     val onDefaultPayment: () -> Unit,
     val onVirtualNfc: () -> Unit,
+    val onSyncNow: () -> Unit,
     val onReset: () -> Unit,
     val onBack: () -> Unit,
 )
@@ -84,6 +85,7 @@ fun SettingsScreen(m: SettingsModel) {
             Group {
                 Item(MpayIcons.Contactless, stringResource(R.string.set_default_app), stringResource(R.string.set_default_app_sub), "set_default_app", onClick = m.onDefaultPayment)
                 if (m.debugTools) Item(MpayIcons.Contactless, stringResource(R.string.set_virtual_nfc), "127.0.0.1:47661", "set_vnfc", onClick = m.onVirtualNfc)
+                if (m.debugTools) Item(MpayIcons.History, stringResource(R.string.set_sync_now), null, "set_sync", onClick = m.onSyncNow)
             }
             SectionTitle(stringResource(R.string.set_about))
             Group {
