@@ -7,12 +7,13 @@
 
 ## 1. Ilova nima qiladi
 ZANJIR — elektrolaboratoriyalar uchun ish vositasi: obyekt sxemasi, o'lchovlar, normaga solishtirish, protokol va ajratish
-rejasi. Ilova oflayn ishlaydi; laboratoriya serveriga ulanganda ma'lumotlar sinxronlanadi.
+rejasi. Ilova **to'liq oflayn**: server yo'q, internetga ulanmaydi (internet ruxsati yo'q). Ma'lumot faqat laboratoriya
+xodimlarining telefonlarida va ular o'zlari yaratgan shifrlangan fayllarda (zaxira, almashish) bo'ladi.
 
 ## 2. Qanday ma'lumot qayta ishlanadi
-- **Xodim:** F.I.Sh., telefon raqami, rol, elektr xavfsizligi guruhi; parol — serverda faqat argon2id hash ko'rinishida.
+- **Xodim:** F.I.Sh., telefon raqami (faqat o'z telefonida; almashish fayliga kirmaydi), rol, elektr xavfsizligi guruhi.
 - **Qurilma:** ilova yaratgan qurilma identifikatori va ochiq kalit (imzolarni tekshirish uchun). Maxfiy kalit faqat qurilmada,
-  Android Keystore bilan shifrlangan xotirada saqlanadi va serverga yuborilmaydi.
+  Android Keystore bilan shifrlangan xotirada saqlanadi va hech qayerga (zaxiraga ham) chiqmaydi.
 - **Ish ma'lumotlari:** obyektlar (nomi, manzili, buyurtmachi), sxema, o'lchovlar, asboblar, protokollar, ajratish rejalari,
   audit jurnali (kim, qachon, qaysi qurilmadan).
 - Yig'ilmaydi: joylashuv, kontaktlar, rasmlar, mikrofon, reklama identifikatori, analitika.
@@ -22,19 +23,22 @@ Laboratoriya ishini bajarish va hujjatlashtirish (protokol, uning haqiqiyligini 
 o'zgartirishlarni aniqlash). Asos — laboratoriya (operator) bilan mehnat/xizmat munosabatlari va qonun talablari.
 
 ## 4. Saqlash joyi va muddati
-- Server — O'zbekiston hududida (`<hosting>`), zaxira nusxalar shifrlangan holda O'zbekiston hududida.
+- Xodimlarning telefonlarida; zaxira va almashish fayllari — parol yoki laboratoriya kaliti bilan shifrlangan holda
+  laboratoriya tanlagan joyda (kompyuter, flesh, messenjer). Fayllarni qayerda saqlash va qachon o'chirish — laboratoriya
+  ichki tartibi (`RUNBOOK.md`).
 - Imzolangan protokollar va audit jurnali o'zgartirilmaydi va `<qonuniy muddat>` saqlanadi.
 - Boshqa ma'lumotlar laboratoriya xizmatdan foydalanayotgan davrda va undan keyin `<muddat>` saqlanadi.
 
 ## 5. Kimga ochiladi
-- Faqat shu laboratoriya xodimlariga, ularning roliga ko'ra (tashkilotlar bir-biridan ajratilgan).
-- Protokol QR havolasi orqali: havolani olgan shaxs imzolovchining F.I.Sh., laboratoriya nomi va protokol holatini ko'radi;
-  PDF — protokolning o'zi (buyurtmachiga beriladigan hujjat).
+- Faqat shu laboratoriya xodimlariga (taklif orqali qo'shilgan telefonlar), ularning roliga ko'ra.
+- Protokol PDF — buyurtmachiga beriladigan hujjat; QR havola (`zanjir://`) faqat ZANJIR o'rnatilgan telefonda ochiladi.
+- Ilova ishlab chiqaruvchisi ma'lumotni olmaydi: tashqi analitika, xato xizmatlari va serverlar yo'q.
 - Uchinchi tomonga sotilmaydi va reklama uchun berilmaydi. Davlat organlariga — faqat qonunda belgilangan hollarda.
 
 ## 6. Himoya
-HTTPS (shifrlangan aloqa), parollar hash ko'rinishida, qurilma kaliti bilan imzo, tashkilotlar ajratilishi (bazada qatorlar
-darajasida), shifrlangan zaxira, kirish urinishlarini cheklash.
+Qurilma kaliti bilan imzo va audit hash-zanjiri (o'zgartirishni aniqlash), shifrlangan zaxira (Argon2id +
+ChaCha20-Poly1305), almashish fayllari laboratoriya kaliti bilan shifrlangan va imzolangan, taklif — bir martalik parol
+bilan, yo'qolgan telefonni bekor qilish, Android zaxirasi (`allowBackup`) o'chirilgan.
 
 ## 7. Huquqlaringiz
 Ma'lumotlaringiz haqida ma'lumot olish, tuzatish, o'chirishni so'rash (imzolangan protokollar va audit jurnali bundan

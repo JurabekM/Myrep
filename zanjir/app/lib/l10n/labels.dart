@@ -173,9 +173,28 @@ extension Labels on AppLocalizations {
     final DataRuleException d when d.code == 'restore_target_not_empty' => errorRestoreNotEmpty,
     final DataRuleException d when d.code == 'backup_audit_broken' => errorBackupAuditBroken,
     final DataRuleException d when d.code == 'backup_password_too_short' => passwordTooShort,
+    final DataRuleException d when d.code == 'exchange_invalid' => errorExchangeInvalid,
+    final DataRuleException d when d.code == 'exchange_wrong_key' || d.code == 'exchange_wrong_org' =>
+      errorExchangeWrongKey,
+    final DataRuleException d when d.code == 'exchange_is_invite' => errorExchangeIsInvite,
+    final DataRuleException d when d.code == 'exchange_not_invite' => errorExchangeNotInvite,
+    final DataRuleException d when d.code == 'exchange_newer_version' => errorExchangeNewer,
+    final DataRuleException d when d.code == 'invite_wrong_password' => errorInviteWrongPassword,
+    final DataRuleException d when d.code == 'invite_used' => errorInviteUsed,
+    final DataRuleException d when d.code == 'invite_expired' => errorInviteExpired,
+    final DataRuleException d when d.code == 'invite_invalid' => errorInviteInvalid,
+    final DataRuleException d when d.code == 'device_revoked' => errorDeviceRevoked,
+    final DataRuleException d when d.code == 'device_not_approved' => errorDeviceNotApproved,
     final DataRuleException d => actionError(d.code),
     _ => actionError('$e'),
   };
+
+  /// Import xatosi: tanish sabablar — tushunarli matn; qolgan tekshiruv xatolari (zanjir, imzo, soxtalashtirish) —
+  /// "rad etildi" va sabab kodi (LEAD tekshirishi uchun).
+  String importErrorText(Object e) {
+    final text = errorText(e);
+    return e is DataRuleException && text == actionError(e.code) ? errorImportRejected(e.code) : text;
+  }
 }
 
 /// Tugun turiga mos standart o'lchov turi.

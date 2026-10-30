@@ -7,14 +7,17 @@
 ## 1. O'rnatish
 1. Laboratoriya rahbaridan (LEAD) Play internal testing havolasini oling va shu Google hisobi bilan oching.
 2. Android 7.0 yoki yangiroq. "ZANJIR" ni Play'dan o'rnating.
-3. Birinchi ochilishda profil yaratiladi (F.I.Sh., telefon, xavfsizlik guruhi). Internet shart emas — ilova oflayn ishlaydi.
+3. Ilova **to'liq oflayn** (internet ruxsati yo'q). Birinchi ochilishda: LEAD — "Oflayn profil yaratish" (yangi
+   laboratoriya); xodim — "Taklif fayli bilan qo'shilish"; telefon almashtirilganda — "Zaxiradan tiklash".
 
 ## 2. Laboratoriya va xodimlar
-- **LEAD (rahbar):** Sozlamalar → Laboratoriya: nomi, litsenziya raqami va muddati. Sozlamalar → Server → "Laboratoriyani
-  serverda ro'yxatdan o'tkazish" (pilot operatori ro'yxatdan o'tishni vaqtincha ochadi). Keyin "Taklif kodi yaratish" —
-  har xodimga alohida kod (rol: ENGINEER yoki VIEWER), kod 72 soat amal qiladi.
-- **Muhandis:** ilovada "Taklif kodi bilan qo'shilish" → kod, F.I.Sh., telefon, parol. Yangi telefonda — "Kirish".
-- Telefon yo'qolsa — darhol LEAD'ga ayting: u pilot operatori orqali qurilmani bekor qildiradi (ilovada bu ekran hali yo'q).
+- **LEAD (rahbar):** Sozlamalar → Laboratoriya: nomi, litsenziya raqami va muddati. Sozlamalar → "Xodimlar va almashish"
+  → xodim qo'shish (rol: ENGINEER, VIEWER, LEAD yoki ADMIN) → **taklif fayli**. Faylni xodimga yuboring (messenjer, USB),
+  ekrandagi **parolni faqat yuzma-yuz** ayting. Taklif 7 kun va bitta telefon uchun amal qiladi.
+- **Muhandis:** boshlang'ich ekranda "Taklif fayli bilan qo'shilish" → fayl → parol.
+- Laboratoriyada kamida **ikkita** LEAD/ADMIN telefoni bo'lsin: zaxiradan tiklangan telefonni boshqa LEAD/ADMIN tasdiqlaydi.
+- Telefon yo'qolsa — darhol LEAD'ga ayting: u "Xodimlar va almashish" → Qurilmalar → bekor qilish; keyin almashish faylini
+  boshqa telefonlarga yuboradi (`RUNBOOK.md`).
 
 ## 3. Ish tartibi
 1. **Obyekt** → sxema: shchit, avtomat, UZO, kabel, rozetka guruhlari, yerga ulagich. Har tugunda QR yorliq (`zanjir://app/n/...`).
@@ -27,9 +30,11 @@
 5. **Ajratish rejasi** (5 ta texnik tadbir): obyekt → reja → ishlanadigan tugunlar → reja (tavsiya) → LEAD tasdiqlaydi →
    joyda qadamlar ketma-ket belgilanadi. "Kuchlanish yo'qligini tekshirish" — indikatorni ishlaydigan manbada sinash va
    kuchlanish yo'qligini tasdiqlash, ikkalasi ham qo'lda. Sxema o'zgarsa reja eskiradi (STALE) — yangisini tuzing.
-6. **Sinxronlash:** internet bo'lganda avtomatik (5 daqiqada bir va ilova ochilganda) yoki Sozlamalar → Server →
-   "Sinxronlash". Oflayn kiritilgan ma'lumot yo'qolmaydi. Server yozuvni rad etsa, ekranda jadval va sabab
-   ko'rsatiladi — LEAD'ga ayting.
+6. **Almashish:** server yo'q. Ish kuni oxirida har xodim "Xodimlar va almashish" → "Almashish fayli" ni LEAD'ga
+   yuboradi; LEAD qabul qiladi va o'z faylini hammaga qaytaradi (LEAD tasdiqlari, rejalar, bekor qilishlar tarqaladi).
+   Fayl laboratoriya kaliti bilan shifrlangan va telefon imzolagan; qabul qilishda hamma narsa tekshiriladi — biror
+   tekshiruv o'tmasa, **hech narsa** yozilmaydi va sabab ko'rsatiladi (LEAD'ga ayting).
+7. **Zaxira:** har kuni Sozlamalar → "Zaxira nusxa" → faylni telefondan tashqarida saqlang (`RUNBOOK.md`).
 
 ## 4. Pilotdagi cheklovlar
 - ⚠️ **Normalar hali litsenziyali muhandis tomonidan tasdiqlanmagan** (1-darvoza). Shu sababli protokol imzolash
@@ -37,7 +42,10 @@
   tartibda (qog'oz/eski dastur).
 - QR yorliqni kamera bilan skanerlash hali yo'q (havola orqali ochiladi).
 - Ilovaga kirishda PIN yo'q — telefon ekran qulfini yoqing.
-- Telefon soati avtomatik (tarmoq vaqti) bo'lsin: soati noto'g'ri telefonning ma'lumotini server rad etadi.
+- Telefon soati avtomatik (tarmoq vaqti) bo'lsin: 10 daqiqadan ko'proq oldinda bo'lgan telefonning tahrirlari qabul
+  qilinmaydi (`clock_skew`).
+- Xodim rolini pasaytirishdan oldin uning telefonidagi barcha o'zgarishlar almashilgan bo'lsin (rol hozirgi holat bo'yicha
+  tekshiriladi).
 
 ## 5. Fikr-mulohaza
 Har hafta: nima qulay emas, qaysi o'lchov/norma noto'g'ri baholandi (tugun, qiymat, kutilgan natija), xatolar (vaqt,

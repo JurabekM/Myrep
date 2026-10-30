@@ -109,7 +109,10 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
   zanjirlari tekshiriladi, qurilma kaliti zaxirada yo'q — ADR-0017 7-band). Formatni o'zgartirsangiz — versiyani oshiring va
   eski fayllarni o'qish testini qoldiring. Parol hech qayerda saqlanmaydi va logga yozilmaydi.
 - Fayl tanlash/saqlash — faqat `FileActions` (`file_picker`, SAF, ruxsatsiz); testlarda `FakeFileActions`.
-- Telefonlar o'rtasida fayl almashish — 13-faza 3-bosqich (ADR-0017).
+- Telefonlar o'rtasida fayl almashish: `zanjir_data/lib/src/exchange/` (fayl, import, qoidalar, taklif). Import —
+  hammasi yoki hech narsa; har bir yangi qoida/jadval uchun import tekshiruvi va insayder soxtalashtirish testi
+  (`test/exchange*_test.dart`) qo'shiladi. Yangi audit hodisasi payload'i qatorlardan qayta tiklanadigan bo'lsin (bazada
+  faqat hash). Muharrir hodisalari — `editorEvents`.
 
 ## Ilova (`app/`) xaritasi
 - `lib/core/` — provayderlar (Riverpod), profil (oflayn), qurilma kaliti, son formatlash, `platform.dart` (FLAG_SECURE,

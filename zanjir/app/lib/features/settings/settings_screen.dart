@@ -100,6 +100,13 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const Divider(),
+          ListTile(
+            key: const Key('settings.staff'),
+            leading: const Icon(Icons.groups),
+            title: Text(l10n.staffTitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/staff'),
+          ),
           const _BackupSection(),
           const Divider(),
           ListTile(title: Text(l10n.evalSettings, style: Theme.of(context).textTheme.titleMedium)),

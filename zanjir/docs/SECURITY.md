@@ -106,15 +106,20 @@ obyektlar sxemasi va ajratish rejalari (xavfsizlikka ta'sir qiladi), normalar to
 ## To'liq oflayn ilova (13-faza, ADR-0017)
 
 Server yo'q: yuqoridagi T1, T4 (server qismi), T6 (RLS), T7, T9, T10 va "Deploy" bo'limi tarixiy; ishonch chegaralari —
-qurilma ↔ qurilma egasi va **fayllar** (zaxira, almashish). Tahdid modeli fayl almashish bosqichidan keyin to'liq qayta
-yoziladi.
+qurilma ↔ qurilma egasi va **fayllar** (zaxira, almashish, taklif). Almashish faylidagi har bir qator importda serverdagi
+push tekshiruvlari bilan tekshiriladi; hujumchi modeli — **laboratoriya kalitiga ega insayder** (o'z qurilma kaliti bilan
+faylni qayta imzolay oladi), testlar shu model bo'yicha (`zanjir_data/test/exchange*_test.dart`).
 
 | # | Tahdid | Himoya | Qoldiq xavf |
 |---|---|---|---|
 | T13 | I — zaxira fayli begona qo'lga tushdi | Argon2id (64 MiB, t=3) + ChaCha20-Poly1305; parol ≥ 10 belgi, hech qayerda saqlanmaydi; sarlavhada shaxsiy ma'lumot yo'q | kuchsiz parolni oflayn tanlash (Argon2id sekinlashtiradi); parol siyosati — tashkilotda |
 | T14 | T — zaxirani o'zgartirib tiklatish (soxta o'lchov/protokol) | AEAD (sarlavha ham AAD da); tiklashda yaxlitlik va **barcha** audit zanjirlari tekshiriladi; tiklash faqat bo'sh ilovaga | parol egasi o'z bazasini o'zgartirib, zanjirni qayta imzolay olmaydi (eski qurilma kaliti zaxirada yo'q) |
 | T15 | D — zararli fayl telefon xotirasini to'ldiradi | KDF parametrlari chegaralangan (≤ 256 MiB, t ≤ 10, p ≤ 4); sarlavha ≤ 4 KiB; parolsiz faqat sarlavha o'qiladi | katta (lekin to'g'ri) zaxira — telefon xotirasiga sig'ishi kerak |
-| T16 | S — tiklangan telefon eski qurilma nomidan yozadi | qurilma maxfiy kaliti zaxirada **yo'q**; tiklash — yangi qurilma + `BACKUP_RESTORED` | yo'qolgan telefon kaliti amalda qoladi — qurilmani bekor qilish almashish bosqichida |
+| T16 | S — tiklangan telefon eski qurilma nomidan yozadi | qurilma maxfiy kaliti zaxirada **yo'q**; tiklash — yangi qurilma + `BACKUP_RESTORED`; boshqa telefonlar uni faqat LEAD/ADMIN `DEVICE_APPROVED` bilan qabul qiladi | — |
+| T17 | S/E — insayder boshqa xodim (masalan, LEAD) nomidan qurilma qo'shadi yoki o'z rolini oshiradi | yangi qurilma — faqat LEAD/ADMIN taklifi (`INVITE_CREATED` → `DEVICE_REGISTERED`, bir martalik, 7 kun) yoki `DEVICE_APPROVED`; foydalanuvchi o'zgarishi — LEAD/ADMIN `USER_SAVED` bilan; muharrir hodisalari faqat LEAD/ADMIN dan | taklif fayli va parol birga sizsa — begona qurilma qo'shiladi (parol yuzma-yuz, fayl alohida) |
+| T18 | T — almashish faylida o'lchov/protokol/rejani o'zgartirish | imzolangan audit hodisasi payload'i bilan bog'lash, append-only (bor qator aynan bir xil), zanjir, protokol hujjati/imzo/QR/o'lchovlar, reja holat o'tishlari va tasdiq; hammasi yoki hech narsa | — |
+| T19 | S — yo'qolgan/o'g'irlangan telefon yozishda davom etadi | `DEVICE_REVOKED` (LEAD/ADMIN, `last_seq`) — undan keyingi hodisalar hech bir telefonda qabul qilinmaydi; bekor qilish fayl bilan tarqaladi | bekor qilish yetib kelguncha boshqa telefon o'sha fayllarni qabul qilishi mumkin; bekor qilingan telefonda laboratoriya kaliti qoladi (R-12) |
+| T20 | D — katta yoki buzilgan almashish fayli | AEAD, sarlavha ≤ 4 KiB, qat'iy sim formati (ustunlar, turlar), soat siljishi ≤ 10 daq | to'liq surat — fayl hajmi laboratoriya bilan o'sadi (R-13) |
 
 ## Topilmalar reestri (10-faza xavfsizlik ko'rigi)
 
@@ -170,6 +175,11 @@ taklif kodlari, refresh rotatsiyasi, JWT, ochiq sahifa, loglar, ilova xotirasi, 
   birga (11-faza); hozircha administrator yangi raqam bilan qo'shadi.
 - R-10 (P) Protokol raqamidagi qurilma belgisi 6 hex — shu tashkilotdagi ENGINEER ~16 mln qurilma ro'yxatdan o'tkazib
   boshqa qurilma raqamini band qilishi nazariy jihatdan mumkin (rate limiting bilan amalda yo'q).
+- R-12 (O) Bekor qilingan telefonda laboratoriya kaliti qoladi — u keyingi almashish fayllarini o'qiy oladi (yoza olmaydi).
+  Kalitni almashtirish (yangi kalitni taklif kabi tarqatish) — keyingi bosqich; hozircha yo'qolgan telefonda Android qulfi.
+- R-13 (P) Almashish fayli — to'liq surat (PDF'lar bilan): katta laboratoriyada fayl o'sadi; "faqat yangilari" rejimi keyin.
+- R-14 (P) Muharrir roli importda **hozirgi** rol bo'yicha tekshiriladi — rol pasaytirilgandan keyin yetib kelgan eski
+  muharrir hodisalari rad etiladi (yo'riqnoma: avval almashish, keyin rolni o'zgartirish).
 - R-11 (O) Asbob guvohnomasi muddati (`verified_until`) — oddiy LWW metadata: ENGINEER uni audit hodisasisiz o'zgartira
   oladi. O'lchov paytidagi muddat qayd etiladi (F-20), lekin noto'g'ri muddat kiritishni texnik yo'l bilan to'xtatib
   bo'lmaydi — guvohnoma raqami protokolda ko'rinadi; `INSTRUMENT_VERIFIED` audit hodisasi — keyingi bosqichda.

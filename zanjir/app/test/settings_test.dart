@@ -30,6 +30,7 @@ void main() {
     expect(find.text('Normalar hali litsenziyali muhandis tomonidan tekshirilmagan'), findsOneWidget);
     expect(find.text('Normalar versiyasi: 0.2.0'), findsOneWidget);
 
+    await reveal(tester, find.byKey(const Key('settings.saveEval')));
     await tester.enterText(find.byKey(const Key('settings.kCorr')), '1,2');
     await tester.tap(find.byKey(const Key('settings.saveEval')));
     await settle(tester);

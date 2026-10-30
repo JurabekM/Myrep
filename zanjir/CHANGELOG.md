@@ -10,6 +10,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
   tekshiriladi, telefon yangi qurilma sifatida `BACKUP_RESTORED` bilan ro'yxatdan o'tadi. Ilovada Sozlamalar → "Zaxira nusxa"
   (oxirgi zaxira sanasi, ogohlantirish) va boshlang'ich ekranda "Zaxiradan tiklash"; fayllar tizim oynasi orqali
   (`file_picker`, ruxsatsiz). `docs/RUNBOOK.md` oflayn ish uchun qayta yozildi.
+- 13-faza — **telefonlar o'rtasida fayl almashish** (ADR-0017 8-band): imzolangan, laboratoriya kaliti bilan shifrlangan
+  to'liq surat; import serverdagi barcha push tekshiruvlarini telefonda bajaradi (audit zanjirlari, qurilmaga ishonch,
+  append-only, LWW, o'lchov/protokol/reja/normalar/sozlama qoidalari) — hammasi yoki hech narsa. Xodim qo'shish va bir
+  martalik parolli **taklif fayli**, taklif bilan qo'shilish, zaxiradan tiklangan telefonni tasdiqlash, **qurilmani bekor
+  qilish** (LEAD ham — F-25). Ilovada "Xodimlar va almashish" ekrani, boshlang'ich ekranda "Taklif fayli bilan qo'shilish".
 - 12-faza — release (ADR-0016): `app/tool/build_release.sh` (foydalanuvchi upload kaliti, normalar release darvozasi,
   testlar, R8 + Dart obfuskatsiyasi, simbollar alohida), `build_check.sh` (texnik release build, bir martalik kalit),
   `verify_aab.sh` (imzo, manifest, SDK, ruxsatlar, obfuskatsiya); ilova ikonkasi (`gen_icons.py`, adaptive + Play 512 px);

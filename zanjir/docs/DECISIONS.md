@@ -491,7 +491,7 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
      Ilova: Sozlamalar → "Zaxira nusxa" (oxirgi zaxira sanasi; hali bo'lmasa ogohlantirish), boshlang'ich ekranda
      "Zaxiradan tiklash". Fayl tizim oynasi orqali saqlanadi/tanlanadi (`file_picker`, Storage Access Framework —
      xotira ruxsati kerak emas; AAB tekshiruvi ruxsat qo'shilmaganini tasdiqlaydi).
-  8. **Fayl almashish (3-bosqich, reja).** Server push tekshiruvlari (o'chirilgan `sync/service.py`, ~50 rad etish kodi)
+  8. **Fayl almashish (3-bosqich).** Server push tekshiruvlari (o'chirilgan `sync/service.py`, ~50 rad etish kodi)
      telefonda import qilinadi. Fayl — umumiy shifrlangan qobiq (`crypto/sealed_file.dart`, zaxira bilan bir xil), magic
      `ZNJX`, format `zanjir.exchange/1`:
      - **Ma'lumot fayli:** tashkilotning to'liq surati (jadvallar `wire.dart` formatida) — qurilmalar o'rtasida "kim nimani
@@ -511,6 +511,19 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
        `ProtocolRepository` bloklovchi shartlari), reja (muzlatilgan maydonlar, holat o'tishlari, `PLAN_APPROVED`, qadamlar),
        sessiyani qayta ochib bo'lmaydi, normalar to'plami (hash, o'zgarmas), tashkilot/sozlama — imzolangan hodisa bilan,
        LWW `(updated_at, rev)`, soat siljishi > 10 daqiqa — rad, foydalanuvchilar — `USER_SAVED` hodisasi bilan.
+     - **Amalga oshirildi** (`zanjir_data/lib/src/exchange/`, `StaffRepository`): hodisa payload'lari qatorlardan qayta
+       tiklanadi (bazada faqat hash) — `INVITE_CREATED` (entity = taklif), `DEVICE_REGISTERED` (entity = taklif, yangi
+       qurilmaning seq 1), `DEVICE_APPROVED` (entity = qurilma), `DEVICE_REVOKED` (entity = `<qurilma>#<last_seq>`),
+       `USER_SAVED`. Taklif 7 kun, bitta qurilma; taklif paroli 12 belgi (~60 bit, Argon2id). `revoked_at` qurilma
+       qatoridan emas, LEAD/ADMIN ning `DEVICE_REVOKED` hodisalaridan tiklanadi. LWW tengligida mazmun bo'yicha deterministik
+       tanlov (barcha telefonlar bir xil natijaga keladi); rejaning yakuniy holati (EXECUTED/CANCELLED/STALE) vaqtdan
+       qat'i nazar yutadi. `org_setting` va `norm_set` telefonlarda turli ID bilan bo'lishi mumkin — mos ravishda tashkilot va
+       versiya bo'yicha birlashtiriladi. Zaxiradan tiklangan telefon boshqa telefonlarga LEAD/ADMIN tasdig'i
+       (`DEVICE_APPROVED`, import paytida so'raladi) bilan qabul qilinadi.
+     - **Cheklovlar (qabul qilingan):** fayl — to'liq surat (protokol PDF'lari bilan; katta laboratoriyada fayl o'sadi,
+       keyinroq "faqat yangilari" rejimi); muharrir rolini tekshirish **hozirgi** rol bo'yicha (rolni pasaytirishdan oldin
+       almashish kerak); bekor qilingan telefonda laboratoriya kaliti qoladi — keyingi fayllarni o'qiy oladi (kalitni
+       almashtirish keyingi bosqichda); yagona LEAD telefoni zaxirasiz yo'qolsa, xodimlar qayta taklif qilinadi.
 - **Oqibat:** Markaziy saqlash, tashkilot bo'yicha RLS, server tomonidagi ikkinchi tekshiruv qatlami (ADR-0011, ADR-0014
   server qismlari) endi yo'q — ularning o'rnini import tekshiruvlari va zaxira egallaydi; ADR-0011, ADR-0012, ADR-0015
   tarixiy. Ma'lumot laboratoriya telefonlarida qoladi (lokalizatsiya talabi soddalashadi). Tahdid modeli qayta ko'rib

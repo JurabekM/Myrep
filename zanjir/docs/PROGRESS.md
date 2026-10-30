@@ -1,7 +1,7 @@
 # ZANJIR — PROGRESS
 
-**Joriy holat:** 13-faza (to'liq oflayn, ADR-0017) — 1-bosqich (server va sinxronlash olib tashlandi) va 2-bosqich
-(shifrlangan zaxira) bajarildi; keyingi — telefonlar o'rtasida fayl almashish. 🛑 1-darvoza (normalar) ochiq.
+**Joriy holat:** 13-faza (to'liq oflayn, ADR-0017) tayyor: server olib tashlandi, shifrlangan zaxira, telefonlar o'rtasida
+fayl almashish. 🛑 1-darvoza (normalar) ochiq — release shunga bog'liq.
 **Oxirgi yangilanish:** 2026-10-30
 
 ## Fazalar
@@ -22,7 +22,7 @@
 | 10 | Mustahkamlash: xavfsizlik, audit, accessibility | ✅ Tayyor (SECURITY.md: STRIDE, MASVS, F-01…F-19 — "yuqori"lar yopilgan; OSV auditi 0; unumdorlik byudjetlari; a11y testlari) | 2026-10-27 | 7040f69, e418b79 |
 | 11 | Deploy (staging + prod) | ✅ Tayyor (staging bitta buyruq; E2E 7/7 TLS orqali; zaxira → tiklash: 20 jadval + sxema bir xil; prod tayyor, 2-darvozani kutadi) | 2026-10-27 | 519f1d2 |
 | 12 | Release (AAB, Play internal) | ✅ Tayyor (`flutter build appbundle --release` — texnik kalit bilan; AAB tekshiruvi 20/20; checklist, pilot yo'riqnomasi, Play qoralamalari) | 2026-10-27 | 68f4f10 |
-| 13 | To'liq oflayn: server o'chirildi, shifrlangan zaxira, fayl almashish (ADR-0017) | ⏳ 2/3 bosqich (server o'chirildi; zaxira) | 2026-10-30 | |
+| 13 | To'liq oflayn: server o'chirildi, shifrlangan zaxira, fayl almashish (ADR-0017) | ✅ Tayyor (server o'chirildi; zaxira; fayl almashish — import 40+ soxtalashtirish/qoida testi) | 2026-10-30 | |
 
 ## 🛑 Inson darvozalari
 

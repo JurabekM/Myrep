@@ -17,6 +17,7 @@ import 'features/session/start_session_screen.dart';
 import 'features/session/summary_screen.dart';
 import 'features/settings/instrument_form_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/staff/staff_screen.dart';
 import 'features/sites/site_form_screen.dart';
 import 'features/sites/sites_screen.dart';
 
@@ -42,6 +43,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/start', builder: (_, _) => const StartScreen()),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(path: '/staff', builder: (_, _) => const StaffScreen()),
       GoRoute(path: '/settings/instruments/new', builder: (_, _) => const InstrumentFormScreen()),
       GoRoute(path: '/sites/new', builder: (_, _) => const SiteFormScreen()),
       GoRoute(

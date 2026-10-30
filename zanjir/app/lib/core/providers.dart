@@ -59,11 +59,20 @@ class ProfileNotifier extends AsyncNotifier<Profile?> {
     state = AsyncData(p);
   }
 
+  /// Taklif fayli orqali (yangi telefon, ADR-0017 8-band).
+  Future<void> join(List<int> invite, String password) async {
+    // `repositoriesProvider` profilni kuzatadi — holat o'zgarishi uni qayta quradi.
+    state = AsyncData(await _service.join(invite, password));
+  }
+
+  /// Almashish faylidan keyin: rol yoki qurilma holati o'zgargan bo'lishi mumkin — profil qayta yuklanadi, unga bog'liq
+  /// barcha ma'lumot provayderlari yangilanadi.
+  Future<void> reload() async => state = AsyncData(await _service.load());
+
   /// Shifrlangan zaxira faylidan (yangi telefon, ADR-0017).
   Future<void> restore(List<int> backup, String password) async {
     state = AsyncData(await _service.restore(backup, password));
     ref
-      ..invalidate(repositoriesProvider)
       ..invalidate(localeProvider)
       ..invalidate(largeTextProvider)
       ..invalidate(lastBackupProvider);
@@ -160,6 +169,9 @@ final labSettingsProvider = FutureProvider(
   (ref) async => (await ref.watch(repositoriesProvider.future)).settings.current(),
 );
 
+final staffProvider = FutureProvider((ref) async => (await ref.watch(repositoriesProvider.future)).staff.users());
+final devicesProvider = FutureProvider((ref) async => (await ref.watch(repositoriesProvider.future)).staff.devices());
+
 final organizationProvider = FutureProvider(
   (ref) async => (await ref.watch(repositoriesProvider.future)).settings.organization(),
 );
@@ -229,4 +241,21 @@ void invalidateSite(WidgetRef ref, String siteId) {
   ref.invalidate(graphProvider(siteId));
   ref.invalidate(siteProvider(siteId));
   ref.invalidate(sitesProvider);
+}
+
+/// Boshqa telefondan kelgan almashish faylini qabul qilish (ADR-0017 8-band) va profilni yangilash.
+Future<ImportResult> importExchangeFile(WidgetRef ref, List<int> bytes, {Set<String> approve = const {}}) async {
+  final repos = await ref.read(repositoriesProvider.future);
+  final db = ref.read(databaseProvider);
+  final body = await openExchangeFile(bytes, labKey: await labKey(db));
+  final result = await importExchange(
+    db,
+    body,
+    orgId: repos.ctx.orgId,
+    clock: ref.read(clockProvider),
+    approveDevices: approve,
+    approver: repos.staff.approveDevice,
+  );
+  await ref.read(profileProvider.notifier).reload();
+  return result;
 }

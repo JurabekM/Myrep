@@ -58,6 +58,14 @@ class ProfileService {
     return (await load()) ?? (throw StateError('restore_profile'));
   }
 
+  /// Taklif fayli orqali laboratoriyaga qo'shilish (yangi telefon, [joinWithInvite]).
+  Future<Profile> join(List<int> invite, String password) async {
+    final seed = await keyStore.readSeed() ?? _newSeed();
+    await keyStore.writeSeed(seed);
+    await joinWithInvite(db, invite, password: password, signer: await Ed25519Signer.fromSeed(seed), clock: _clock);
+    return (await load()) ?? (throw StateError('join_profile'));
+  }
+
   static List<int> _newSeed() {
     final rnd = Random.secure();
     return List<int>.generate(32, (_) => rnd.nextInt(256));
@@ -89,6 +97,8 @@ class ProfileService {
       await prefs.set(LocalPrefRepository.orgId, orgId);
       await prefs.set(LocalPrefRepository.userId, user.id);
       await prefs.set(LocalPrefRepository.deviceId, device.id);
+      // Laboratoriya kaliti shu yerda — zaxiraga tushadi; xodimlar uni taklif orqali oladi.
+      await labKey(db);
       profile = Profile(orgId: orgId, userId: user.id, deviceId: device.id, fullName: fullName, role: role);
     });
     return profile;

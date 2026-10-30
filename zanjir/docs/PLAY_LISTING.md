@@ -25,20 +25,22 @@
 
 **uz:** ZANJIR — elektrolaboratoriyalar va elektriklar uchun oflayn ishlaydigan ilova. Obyektning elektr sxemasi (shchit,
 avtomat, UZO, kabel, yerga ulagich), dalada o'lchovlar (izolyatsiya qarshiligi, faza–nol sirtmog'i, UZO, yerga ulash),
-normaga avtomatik solishtirish, Ed25519 bilan imzolangan PDF protokol va QR orqali tekshirish sahifasi. Ajratish rejasi
+normaga avtomatik solishtirish, Ed25519 bilan imzolangan PDF protokol va QR orqali ilova ichida tekshirish. Ajratish rejasi
 5 ta texnik tadbir bo'yicha **tavsiya** qilinadi; ilova hech qachon ish xavfsiz deb aytmaydi — javobgarlik naryad beruvchi
-va ish rahbarida. Ma'lumotlar laboratoriya serveriga shifrlangan kanal orqali sinxronlanadi.
+va ish rahbarida. Ilova to'liq oflayn — internetsiz ishlaydi; xodimlar o'rtasida ma'lumot imzolangan va shifrlangan fayl
+orqali almashiladi, telefon yo'qolishidan — parolli zaxira.
 
 **ru:** ZANJIR — офлайн-приложение для электролабораторий и электриков. Схема объекта, замеры на месте, автоматическая
-сверка с нормами, подписанный (Ed25519) PDF-протокол и страница проверки по QR. План отключения по 5 техническим
-мероприятиям — только **рекомендация**; ответственность несут выдающий наряд и руководитель работ.
+сверка с нормами, подписанный (Ed25519) PDF-протокол и проверка по QR в приложении. План отключения по 5 техническим
+мероприятиям — только **рекомендация**; ответственность несут выдающий наряд и руководитель работ. Работает полностью
+без интернета; обмен между сотрудниками — подписанным зашифрованным файлом, резервная копия — с паролем.
 
 ## App content (javoblar)
 
 | Bo'lim | Javob |
 |---|---|
 | Reklama | Yo'q |
-| Kirish (App access) | Ilova kirishsiz (oflayn profil) ishlaydi; server funksiyalari uchun sinov hisobi Play'ga beriladi (operator yaratadi, parol faqat Play Console'da) |
+| Kirish (App access) | Hisob va kirish yo'q — barcha funksiyalar oflayn profil bilan ochiq (sinov hisobi kerak emas) |
 | Kontent reytingi | Utility/Productivity; zo'ravonlik, foydalanuvchi kontenti almashinuvi yo'q |
 | Maqsadli auditoriya | 18+ (mutaxassislar); bolalarga mo'ljallanmagan |
 | Yangiliklar ilovasi | Yo'q |
@@ -48,25 +50,24 @@ va ish rahbarida. Ma'lumotlar laboratoriya serveriga shifrlangan kanal orqali si
 
 ## Data safety
 
-| Ma'lumot turi | Yig'iladi | Ulashiladi (uchinchi tomon) | Maqsad | Majburiy |
-|---|---|---|---|---|
-| Ism (F.I.Sh.) | Ha | Yo'q | Ilova funksiyasi (protokol imzolovchisi), hisob | Ha |
-| Telefon raqami | Ha | Yo'q | Hisob (kirish) | Ha (server bilan ishlaganda) |
-| Ilovadagi boshqa kontent (obyektlar, o'lchovlar, protokollar) | Ha | Yo'q | Ilova funksiyasi | Ha |
-| Joylashuv, kontaktlar, rasmlar, fayllar, moliya, salomatlik, xabarlar | Yo'q | — | — | — |
-| Qurilma yoki boshqa ID | Ha (ilova yaratgan qurilma ID si va ochiq kalit — imzo tekshiruvi) | Yo'q | Xavfsizlik, firibgarlikka qarshi | Ha |
-| Diagnostika / analitika | Yo'q (tashqi xizmat yo'q) | — | — | — |
+Ilovada `INTERNET` ruxsati yo'q (release AAB tekshiruvi talab qiladi, ADR-0017): hech qanday ma'lumot qurilmadan
+dastur tomonidan uzatilmaydi. Google ta'rifi bo'yicha "yig'ish" — qurilmadan tashqariga uzatish; qurilmadagi qayta
+ishlash va foydalanuvchi o'zi tanlagan ilova orqali yuborgan fayl (zaxira, almashish fayli — tizim fayl oynasi) yig'ish
+hisoblanmaydi.
 
-- Uzatishda shifrlanadi: **ha** (faqat HTTPS, cleartext taqiqlangan).
-- O'chirish so'rovi: laboratoriya administratori xodimni o'chiradi; imzolangan protokollar qonun bo'yicha saqlanadi
-  (o'zgartirilmaydi) — siyosatda tushuntiriladi.
-- "Uchinchi tomonga ulashish" — yo'q: server laboratoriya operatorining o'zi (O'zbekistonda).
+| Savol | Javob |
+|---|---|
+| Ilova foydalanuvchi ma'lumotini yig'adimi yoki ulashadimi? | **Yo'q** |
+| Uzatishda shifrlanadimi? | Qo'llanmaydi (uzatish yo'q); foydalanuvchi yaratgan fayllar shifrlangan (ChaCha20-Poly1305) |
+| O'chirish so'rovi | Ma'lumot faqat telefonda: ilova ma'lumotini tozalash yoki o'chirish; imzolangan protokollar laboratoriya tartibi bo'yicha saqlanadi |
+
+⚠️ Javoblar huquqshunos bilan va Play'ning amaldagi yo'riqnomasi bo'yicha qayta tekshiriladi (release checklist).
 
 ## "What's new" (0.1.0, pilot)
 
-- uz: `Pilot versiya: obyekt sxemasi, o'lchovlar va normaga solishtirish, ajratish rejasi, sinxronlash. Protokol imzolash
+- uz: `Pilot versiya: obyekt sxemasi, o'lchovlar va normaga solishtirish, ajratish rejasi, fayl orqali almashish va shifrlangan zaxira (internetsiz). Protokol imzolash
   normalar muhandis tomonidan tasdiqlangandan keyin yoqiladi.`
-- ru: `Пилотная версия: схема объекта, замеры и сверка с нормами, план отключения, синхронизация. Подписание протоколов
+- ru: `Пилотная версия: схема объекта, замеры и сверка с нормами, план отключения, обмен файлами и зашифрованная копия (без интернета). Подписание протоколов
   включится после утверждения норм инженером.`
 
 ## Skrinshotlar (foydalanuvchi oladi)

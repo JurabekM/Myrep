@@ -638,5 +638,64 @@
   "errorBackupWrongPassword": "Parol noto'g'ri yoki fayl o'zgartirilgan",
   "errorBackupNewer": "Zaxira ilovaning yangiroq versiyasida yaratilgan — ilovani yangilang",
   "errorRestoreNotEmpty": "Bu telefonda allaqachon laboratoriya bor — tiklash faqat bo'sh ilovaga",
-  "errorBackupAuditBroken": "Zaxiradagi audit zanjiri buzilgan — tiklanmadi"
+  "errorBackupAuditBroken": "Zaxiradagi audit zanjiri buzilgan — tiklanmadi",
+  "staffTitle": "Xodimlar va almashish",
+  "exchangeSection": "Ma'lumot almashish",
+  "exchangeHint": "Server yo'q: telefonlar o'rtasida ma'lumot fayl orqali o'tadi. Fayl laboratoriya kaliti bilan shifrlangan va shu telefon imzolaydi. Uni messenjer, USB yoki Bluetooth orqali boshqa xodimga yuboring; qabul qilingan fayl to'liq tekshiriladi.",
+  "exchangeExport": "Almashish fayli",
+  "exchangeImport": "Faylni qabul qilish",
+  "exchangeWorking": "Fayl tayyorlanmoqda…",
+  "importWorking": "Fayl tekshirilmoqda…",
+  "exchangeSaved": "Almashish fayli saqlandi",
+  "importDone": "{count} ta yozuv qabul qilindi",
+  "@importDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importNothing": "Yangi ma'lumot yo'q",
+  "staffSection": "Xodimlar",
+  "staffAdd": "Xodim qo'shish",
+  "staffInvite": "Taklif fayli",
+  "inviteTitle": "Taklif paroli",
+  "inviteHint": "Faylni {name} ga yuboring, parolni esa faqat yuzma-yuz ayting (yozib yubormang). Taklif 7 kun amal qiladi va bitta telefon uchun.",
+  "@inviteHint": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesSection": "Qurilmalar",
+  "deviceRevoke": "Qurilmani bekor qilish",
+  "deviceRevokeConfirm": "Bu telefon (yo'qolgan yoki o'g'irlangan) endi yozuv qo'sha olmaydi: bekor qilish fayl orqali boshqa telefonlarga ham o'tadi, uning keyingi yozuvlari qabul qilinmaydi. Davom etasizmi?",
+  "deviceRevoked": "Bekor qilingan",
+  "deviceThis": "Shu telefon",
+  "deviceApproveTitle": "Tasdiqlanmagan qurilma",
+  "deviceApproveHint": "Faylda laboratoriyaga hali tasdiqlanmagan telefon bor (masalan, zaxiradan tiklangan). Uni faqat egasi bilan yuzma-yuz tekshirib tasdiqlang — tasdiqlangan telefon xodim nomidan yozuv qo'sha oladi.",
+  "approve": "Tasdiqlash",
+  "startJoin": "Taklif fayli bilan qo'shilish",
+  "joinWorking": "Taklif tekshirilmoqda…",
+  "joinPasswordHint": "LEAD yuzma-yuz aytgan taklif parolini kiriting.",
+  "errorExchangeInvalid": "Bu ZANJIR almashish fayli emas yoki u buzilgan",
+  "errorExchangeWrongKey": "Fayl boshqa laboratoriyaniki yoki o'zgartirilgan",
+  "errorExchangeIsInvite": "Bu taklif fayli — uni yangi telefonda boshlang'ich ekranda oching",
+  "errorExchangeNotInvite": "Bu taklif fayli emas",
+  "errorExchangeNewer": "Fayl ilovaning yangiroq versiyasida yaratilgan — ilovani yangilang",
+  "errorInviteWrongPassword": "Taklif paroli noto'g'ri yoki fayl o'zgartirilgan",
+  "errorInviteUsed": "Bu taklif allaqachon ishlatilgan — LEAD dan yangisini so'rang",
+  "errorInviteExpired": "Taklif muddati o'tgan (7 kun) — LEAD dan yangisini so'rang",
+  "errorInviteInvalid": "Taklif yaroqsiz",
+  "errorDeviceRevoked": "Bu telefon laboratoriyada bekor qilingan — yozuv qo'shib bo'lmaydi",
+  "errorDeviceNotApproved": "Faylda tasdiqlanmagan telefon bor — fayl LEAD/ADMIN telefonida qabul qilinadi",
+  "errorImportRejected": "Fayl rad etildi: tekshiruvdan o'tmadi ({code}). Hech narsa o'zgartirilmadi.",
+  "@errorImportRejected": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  }
 }
