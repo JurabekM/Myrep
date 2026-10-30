@@ -144,7 +144,6 @@ extension Labels on AppLocalizations {
     'already_signed' => blockerAlreadySigned,
     'instrument_expired' => blockerInstrumentExpired(b.ids.length),
     'mixed_norm_sets' => blockerMixedNormSets(b.ids.join(', ')),
-    'norms_not_reviewed' => blockerNormsNotReviewed(b.ids.join(', ')),
     'needs_review_requires_lead' => blockerNeedsReviewLead(b.ids.length),
     'lead_comment_required' => blockerLeadComment(b.ids.length),
     _ => blockerOther(b.code),

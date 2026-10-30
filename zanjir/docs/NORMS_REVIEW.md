@@ -1,16 +1,18 @@
-# ZANJIR — Normalarni tekshirish varag'i (🛑 1-inson darvozasi)
+# ZANJIR — Normalarni tekshirish varag'i (ixtiyoriy; 1-darvoza olib tashlangan, ADR-0019)
 
-> **Kim to'ldiradi:** faqat litsenziyali muhandis (elektr xavfsizligi bo'yicha guruhi V bo'lgan, elektrolaboratoriya
-> rahbari yoki shunga teng). Claude `reviewed_by` / `reviewed_at` ni **hech qachon** to'ldirmaydi (CLAUDE.md, 11-qoida).
+> **Holat (2026-10-30):** foydalanuvchi qarori bilan muhandis imzosi **majburiy emas** (ADR-0019) — imzolash va release
+> to'xtamaydi, protokol PDF'ida "muhandis tekshiruvidan o'tmagan" deb yoziladi. Varaq laboratoriya xohlasa tekshiruv uchun
+> qoladi. **Kim to'ldiradi:** faqat haqiqiy tekshiruvchi (litsenziyali muhandis); Claude `reviewed_by` / `reviewed_at` ni
+> **hech qachon** to'ldirmaydi (CLAUDE.md, 11-qoida).
 >
-> **Tekshiriladigan fayl:** `norms/v0.yaml`, versiya `0.2.0`. Quyidagi jadval shu fayldan generatsiya qilingan
+> **Tekshiriladigan fayl:** `norms/v0.yaml`, versiya `0.3.0`. Quyidagi jadval shu fayldan generatsiya qilingan
 > (2026-10-30). YAML o'zgarsa, jadval qayta generatsiya qilinadi va tekshiruv yangidan o'tkaziladi.
 
 ## 0.1.0 ko'rigi natijasi (mustaqil AI ko'rigi, 2026-10-30)
 
 `0.1.0` bo'yicha **mustaqil AI ko'rigi** hisoboti olindi (foydalanuvchi ma'lumoti: hisobotni litsenziyali muhandis emas,
 AI tayyorlagan; imzo bloki bo'sh). U faqat texnik kirish ma'lumoti — **litsenziyali muhandis tekshiruvi o'rnini bosmaydi**,
-1-darvoza **yopilmadi**: `reviewed_by`/`reviewed_at` bo'sh, normalar
+(keyinroq foydalanuvchi 1-darvozani butunlay olib tashladi — ADR-0019): `reviewed_by`/`reviewed_at` bo'sh, normalar
 holati (`status`) o'zgartirilmadi.
 
 AI ko'rigi xulosasi: **21 normaning va 3 `trip_multipliers` ning chegaraviy qiymatlari to'g'ri** — birorta qiymat
@@ -30,7 +32,7 @@ Diapazonlar orasidagi U0 (128–219, 231–379, 400 < U0 < 401 V) — normasi yo
 
 | # | Savol | Hozirgi xatti-harakat | Javob |
 |---|---|---|---|
-| K1 | 🛑 **INS-SWGR (shitlar).** AI ko'rigining o'zi: yangi ishga tushirishda (ПУЭ 1.8.34) **≥ 1,0 MΩ**, ekspluatatsiyada (ПТЭЭП) ≥ 0,5 MΩ. Ilova normani sessiya turiga bog'lamaydi — `qabul-topshirish` sessiyasida ham 0,5 MΩ qo'llanadi, ya'ni 0,5–1,0 MΩ shit qabulda **PASS** chiqadi. Bundan tashqari, ПТЭЭП jadval 37 da ham shitlar uchun 1 MΩ ko'rsatilgan bo'lishi mumkin — rasmiy matndan tekshiring. Qaysi variant: (a) hamma sessiyada ≥ 1,0 MΩ (konservativ); (b) qabul-topshirishda 1,0, davriy/navbatdan tashqarida 0,5 (dasturga sessiya turi sharti qo'shiladi); (c) 0,5 qoladi (asos bilan)? | 0,5 MΩ hamma sessiyada (o'zgartirilmadi) | |
+| K1 | **INS-SWGR (shitlar).** AI ko'rigining o'zi: yangi ishga tushirishda (ПУЭ 1.8.34) **≥ 1,0 MΩ**, ekspluatatsiyada (ПТЭЭП) ≥ 0,5 MΩ. Ilova normani sessiya turiga bog'lamaydi — `qabul-topshirish` sessiyasida ham 0,5 MΩ qo'llanadi, ya'ni 0,5–1,0 MΩ shit qabulda **PASS** chiqadi. Bundan tashqari, ПТЭЭП jadval 37 da ham shitlar uchun 1 MΩ ko'rsatilgan bo'lishi mumkin — rasmiy matndan tekshiring. Qaysi variant: (a) hamma sessiyada ≥ 1,0 MΩ (konservativ); (b) qabul-topshirishda 1,0, davriy/navbatdan tashqarida 0,5 (dasturga sessiya turi sharti qo'shiladi); (c) 0,5 qoladi (asos bilan)? | — | ✅ **1,0 MΩ** hamma sessiyada (foydalanuvchi qarori, 2026-10-30; normalar 0.3.0) |
 | K2 | **ПУЭ jadval raqami.** AI ko'rigi jadval 1.8.34 ni kuch transformatorlariga tegishli deydi va 1.8.38 ni taklif qiladi. Bizning manbamizda (ПУЭ 7-nashr, 1.8-bob) jadval 1.8.34 — "≤ 1 kV apparatlar, ikkilamchi zanjirlar va elektr simlari izolyatsiyasining eng kichik qarshiligi", 1.8.37 ham shu jadvalga havola qiladi. Rasmiy matndan tekshirib, to'g'ri raqamni yozing. | 1.8.34 qoldirildi (`INS-WIRING`, `INS-SWGR`, `INS-SECONDARY`) | |
 | K3 | **RCD-RAMP, UZO turi.** A turi UZO pulsatsiyalanuvchi tok bilan sinalganda chegaralar boshqacha (ГОСТ IEC 61008-1: 0,35–1,4·IΔn, tok burchagiga qarab). Ilova UZO turini (AC/A/B) va sinov to'lqin shaklini so'ramaydi — hamma o'lchov 0,5–1,0·IΔn bilan baholanadi (qat'iyroq: soz A turi FAIL chiqishi mumkin, xavfli PASS yo'q). Yetarlimi yoki tur/to'lqin shakli atributi qo'shilsinmi? | AC chegaralari hamma UZO uchun | |
 | K4 | **Huquqiy asos.** Protokolda ПТЭЭП (2003) va ГОСТ Р 50571.3-2009 (Rossiya milliy standarti) chiqadi. O'zbekistonda aynan qaysi tahrir amalda (ПУЭ/ПТЭ ning O'zbekiston tahriri, O'z DSt, ГОСТ 29322-2014 qabul qilinganmi)? Rossiyada ПТЭЭП 2003 yangi qoidalar bilan almashtirilgan bo'lishi mumkin. | hisobotdagi manbalar | |
@@ -45,17 +47,17 @@ Diapazonlar orasidagi U0 (128–219, 231–379, 400 < U0 < 401 V) — normasi yo
 4. Oxirida imzo bloki to'ldiriladi (F.I.Sh., guruh, guvohnoma, sana, imzo). Shundan keyin dasturchi:
    - tasdiqlangan normalarning `status` ini `source_seen` ga o'zgartiradi, tuzatishlarni kiritadi;
    - `reviewed_by` / `reviewed_at` ga **muhandis bergan** ma'lumotni yozadi;
-   - `version` ni oshiradi va CI'dagi release darvozasi (`check_norms.py --release`) o'tishini tekshiradi.
+   - `version` ni oshiradi; `check_norms.py --release` ogohlantirishlari yo'qolganini tekshiradi.
 
-Release darvozasi: `reviewed_by`/`reviewed_at` bo'sh bo'lsa **yoki** biror norma (`trip_multipliers` ham) `needs_verification`
-holatida qolsa — release build yiqiladi (ADR-0004).
+`reviewed_by`/`reviewed_at` bo'sh yoki `needs_verification` normalar bo'lsa — `check_norms.py --release` **ogohlantiradi**,
+release build to'xtamaydi (ADR-0019; avval ADR-0004 bo'yicha yiqilardi). Protokol PDF'ida tekshiruv holati ko'rinadi.
 
 ## Normalar
 
 | # | ID | Norma | Qiymat | Sinov kuchl. | Qo'llanish sharti | Manba | Holat | 0.1.0 ko'rigi | Muhandis xulosasi |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | `INS-WIRING` | Elektr simlari izolyatsiyasi, ≤1 kV | ≥ 0.5 MOhm | 1000 V | CABLE; U0 0–1000 V; `circuit_class` ∈ ['wiring'] | ПУЭ 1.8.37, jadval 1.8.34; ПТЭЭП 3-ilova, jadval 37 | `source_seen` | tuzatish: ПТЭЭП qo'shildi; ПУЭ jadval raqami — ❓ K2 | ☐ tasdiq ☐ tuzatish: |
-| 2 | `INS-SWGR` | Shitlar va taqsimlash qurilmalari (har seksiya) | ≥ 0.5 MOhm | 1000 V | PANEL, BUSBAR; U0 0–1000 V | ПУЭ jadval 1.8.34 — _Megaommetr 1000–2500 V; pastki chegara 1000 V olingan_ | `needs_verification` | ❓ K1 — o'zgartirilmadi | ☐ tasdiq ☐ tuzatish: |
+| 2 | `INS-SWGR` | Shitlar va taqsimlash qurilmalari (har seksiya) | ≥ 1.0 MOhm | 1000 V | PANEL, BUSBAR; U0 0–1000 V | ПУЭ jadval 1.8.34 — _Megaommetr 1000–2500 V; pastki chegara 1000 V olingan. 1,0 MOhm — qabul va ekspluatatsiya uchun bir xil (foydalanuvchi qarori K1, 2026-10-30, ADR-0019)_ | `needs_verification` | K1 → **1,0 MΩ** (foydalanuvchi qarori, 0.3.0) | ☐ tasdiq ☐ tuzatish: |
 | 3 | `INS-SECONDARY` | Ikkilamchi zanjirlar | ≥ 1.0 MOhm | 1000 V | CABLE; `circuit_class` ∈ ['secondary'] | ПУЭ 1.8.37, jadval 1.8.34; ПТЭЭП 3-ilova, jadval 37 | `needs_verification` | tuzatish: ПТЭЭП qo'shildi; ❓ K2 | ☐ tasdiq ☐ tuzatish: |
 | 4 | `INS-CABLE-LV` | Kuch kabellari, ≤1 kV | ≥ 0.5 MOhm | 2500 V | CABLE; U0 0–1000 V; `circuit_class` ∈ ['power'] | ПУЭ 1.8.40; ПТЭЭП 3-ilova, jadval 37 | `needs_verification` | tasdiq; ПТЭЭП qo'shildi | ☐ tasdiq ☐ tuzatish: |
 | 5 | `LOOP-TN-FINAL` | TN, oxirgi zanjirlar, U0 = 220–230 V: t ≤ 0,4 s | t ≤ 400 ms | — | CABLE, SOCKET_GROUP, LOAD, BREAKER, RCBO, FUSE; TN-C/TN-S/TN-C-S; U0 220–230 V; `circuit_role` ∈ ['final'] | ПУЭ 1.7.79, jadval 1.7.1; ГОСТ Р 50571.3-2009, jadval 41.1 | `source_seen` | tuzatish kiritildi: U0 220–230 V (M1) | ☐ tasdiq ☐ tuzatish: |
@@ -115,6 +117,6 @@ Ilova javob kelguncha **konservativ** ishlaydi (javob — NEEDS_REVIEW yoki qat'
 | Lavozimi, tashkilot | |
 | Elektr xavfsizligi guruhi, guvohnoma raqami | |
 | Laboratoriya akkreditatsiya/litsenziya raqami | |
-| Tekshirilgan fayl va versiya | `norms/v0.yaml`, `0.2.0` |
+| Tekshirilgan fayl va versiya | `norms/v0.yaml`, `0.3.0` |
 | Sana | |
 | Imzo | |

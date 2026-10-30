@@ -68,7 +68,10 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 8. Maxfiy ma'lumot (parol, token, kalit, shaxsiy ma'lumot) logga yozilmaydi.
 9. `zanjir_core` uchun avval test, keyin kod.
 10. Elektr xavfsizligi bo'yicha noaniqlik → to'xta va so'ra.
-11. `norms/*.yaml` dagi `reviewed_by` / `reviewed_at` ni Claude **hech qachon** to'ldirmaydi — faqat litsenziyali muhandis.
+11. `norms/*.yaml` dagi `reviewed_by` / `reviewed_at` ni Claude **hech qachon** to'ldirmaydi (soxta tasdiq bo'lardi) — faqat
+    haqiqiy tekshiruvchi. 1-darvoza foydalanuvchi qarori bilan olib tashlangan (ADR-0019): tekshirilmagan normalar imzolash va
+    release'ni to'xtatmaydi, lekin ilova va PDF buni ochiq ko'rsatadi ("muhandis tekshiruvidan o'tmagan") — bu belgi olib
+    tashlanmaydi.
 
 ## Til
 - Izohlar, commit xabarlari (ushbu loyiha uchun foydalanuvchi talabi), README, `docs/*`, hisobotlar — o'zbekcha (lotin).
@@ -92,7 +95,9 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
   `protocol_document` (PDF saqlanadi) + `PROTOCOL_SIGNED`; `verify`, `revoke` (LEAD/ADMIN, sabab bilan).
 - Bloklash kodlari (`ProtocolBlocker.code`) — barqaror inglizcha; UI matni `labels.dart` `blockerText`. Yangi shart qo'shilsa —
   ARB, `labels_test.dart` `blockerCodes`, ADR.
-- Testlarda tekshirilgan normalar faqat test nusxasi ("TEST FIXTURE", versiya `0.1.1`); `norms/v0.yaml` ga tegilmaydi.
+- Testlarda tekshirilgan normalar faqat test nusxasi ("TEST FIXTURE", versiya `0.3.1`); `norms/v0.yaml` ga tegilmaydi.
+- Normalar tekshirilmagan bo'lsa imzolash bloklanmaydi (ADR-0019): protokol ekranida ogohlantirish (`protocol.normsUnreviewed`),
+  PDF'da "muhandis tekshiruvidan o'tmagan".
 - QR token — qurilma imzosidan: `qr_sig = Ed25519("zanjir.qr/1\n<org_id>\n<raqam>")`, `qr_token = sha256(qr_sig)[:32]`
   (yadro `qrTokenMessage`/`qrTokenFromSignature`, vektor `protocol_signature.json`, ADR-0014). Tasodifiy token yaratilmaydi.
 

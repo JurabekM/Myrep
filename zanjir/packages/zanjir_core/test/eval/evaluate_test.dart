@@ -157,7 +157,7 @@ void main() {
       expect(r.verdict, Verdict.pass);
       expect(r.normId, 'LOOP-TN-FINAL');
       final d = r.detail;
-      expect(d['norm_set_version'], '0.2.0');
+      expect(d['norm_set_version'], '0.3.0');
       expect(d['margin_pct'], 0);
       expect(d['k_corr'], 1.0);
       expect(d['measurement_type'], 'LOOP_IMPEDANCE');

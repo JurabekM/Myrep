@@ -423,7 +423,6 @@ class _Rules {
         norms['reviewed_by'] != normRow.reviewedBy) {
       throw DataRuleException('payload_norm_set_mismatch', p.id);
     }
-    if ((normRow.reviewedBy ?? '').trim().isEmpty) throw DataRuleException('protocol_rule:norms_not_reviewed', p.id);
     final instruments = {
       for (final i in await (db.select(db.instruments)..where((i) => i.orgId.equals(ctx.orgId))).get()) i.id: i,
     };

@@ -44,7 +44,6 @@ const blockerCodes = [
   'already_signed',
   'instrument_expired',
   'mixed_norm_sets',
-  'norms_not_reviewed',
   'needs_review_requires_lead',
   'lead_comment_required',
 ];

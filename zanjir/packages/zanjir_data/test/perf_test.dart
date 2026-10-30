@@ -65,7 +65,7 @@ void main() {
         instrumentId: s.instrument.id,
         values: {'pair': 'L1-PE', 'zs_ohm': 0.5},
         enteredVia: EnteredVia.manual,
-        normSetVersion: '0.2.0',
+        normSetVersion: '0.3.0',
       );
     }
     rec.stop();

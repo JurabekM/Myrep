@@ -41,7 +41,7 @@ void main() {
         instrumentId: demo.instrument.id,
         values: {'pair': 'L1-PE', 'zs_ohm': 0.84},
         enteredVia: EnteredVia.manual,
-        normSetVersion: '0.2.0',
+        normSetVersion: '0.3.0',
       ),
     );
     for (final route in [

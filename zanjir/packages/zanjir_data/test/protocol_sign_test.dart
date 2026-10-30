@@ -220,13 +220,36 @@ void main() {
       expect(draft.blockers, isEmpty, reason: 'guvohnoma 2027-03-01 gacha, o\'lchov 2026-10-26 da');
     });
 
-    test('muhandis tekshirmagan normalar va aralash to\'plamlar', () async {
+    test('aralash normalar to\'plamlari', () async {
       final s = await SignableSession.create(org, close: false);
-      await recordLoop(org, s.session.id, s.site, zs: 0.5, normSetVersion: '0.2.0');
+      await recordLoop(org, s.session.id, s.site, zs: 0.5, normSetVersion: '0.3.0');
       await org.repos.sessions.close(s.session.id);
       final draft = await (await reposAs()).protocols.prepare(sessionId: s.session.id);
-      expect(codes(draft), ['mixed_norm_sets', 'norms_not_reviewed']);
-      expect(draft.blockers.first.ids, ['0.2.0', reviewedTestVersion]);
+      expect(codes(draft), ['mixed_norm_sets']);
+      expect(draft.blockers.first.ids, ['0.3.0', reviewedTestVersion]);
+    });
+
+    test('tekshirilmagan normalar imzolashni to\'xtatmaydi (ADR-0019); payload va PDF buni ko\'rsatadi', () async {
+      final site = await SmallSite.create(org);
+      await org.repos.settings.updateLab(
+        byUserId: org.user.id,
+        name: 'Lab',
+        licenseNo: 'EL-0042',
+        licenseValidUntil: DateTime.utc(2027, 12, 31),
+      );
+      final session = await org.repos.sessions.start(
+        siteId: site.site.id,
+        kind: SessionKind.davriy,
+        engineerId: org.user.id,
+        ambientTempC: 18,
+      );
+      await recordLoop(org, session.id, site, zs: 0.84, normSetVersion: '0.3.0');
+      await org.repos.sessions.close(session.id);
+      final draft = await org.repos.protocols.prepare(sessionId: session.id);
+      expect(draft.blockers, isEmpty);
+      expect((draft.payload['norm_set']! as Map)['reviewed_by'], isNull);
+      final signed = await org.repos.protocols.sign(draft, testFonts());
+      expect(await org.repos.protocols.verify(signed.protocol.id), isNull);
     });
 
     test('NEEDS_REVIEW: faqat LEAD va faqat izoh bilan', () async {

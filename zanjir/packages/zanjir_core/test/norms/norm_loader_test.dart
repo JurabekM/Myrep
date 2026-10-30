@@ -15,7 +15,7 @@ void main() {
     setUp(() => set = loadV0());
 
     test('asosiy maydonlar', () {
-      expect(set.version, '0.2.0');
+      expect(set.version, '0.3.0');
       expect(set.marginPct, 0);
       expect(set.isReviewed, isFalse, reason: 'Claude reviewed_by ni to\'ldirmaydi');
       expect(set.norms, hasLength(21));

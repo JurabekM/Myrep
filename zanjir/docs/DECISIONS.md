@@ -550,3 +550,23 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
 - **Oqibat:** U0 = 221–230 V obyektlar avtomatik baholanadi (avval `NEEDS_REVIEW`). Mavjud profillar o'z normalar to'plamini
   saqlaydi (yangi to'plam yangi profil yaratilganda import qilinadi).
 
+## ADR-0019: 1-darvoza (muhandis imzosi) olib tashlandi; normalar 0.3.0 (INS-SWGR ≥ 1,0 MΩ)
+
+- **Sana:** 2026-10-30 · **Holat:** qabul qilingan (foydalanuvchi qarori: "1-darvoza: litsenziyali inson muhandis
+  docs/NORMS_REVIEW.md ni imzolashi shart emas! Buni to'liq inkor qilaman"; K1 javobi: "1,0 M").
+- **Kontekst:** ADR-0004/ADR-0010 bo'yicha muhandis tekshirmagan normalar bilan protokol imzolanmas, release build
+  yiqilardi (`docs/PROMPT.md` 5.1). Foydalanuvchi bu talabni butunlay rad etdi. K1 (AI ko'rigi): shitlar izolyatsiyasi qabul
+  sinovida ПУЭ bo'yicha 1,0 MΩ, ilovada esa barcha sessiyalarda 0,5 MΩ edi.
+- **Qaror:**
+  1. `norms_not_reviewed` bloklovchi sharti (imzolash) va importdagi `protocol_rule:norms_not_reviewed` olib tashlandi;
+     `check_norms.py --release` tekshiruv holatini faqat **ogohlantiradi**; `build_release.sh` to'xtamaydi va
+     `release-info.txt` ga normalar versiyasi va holatini yozadi.
+  2. **Halollik saqlanadi:** `reviewed_by` / `reviewed_at` ni Claude to'ldirmaydi (soxta tasdiq bo'lardi); payload'da
+     `reviewed_by` bo'sh qoladi, PDF'da "muhandis tekshiruvidan o'tmagan", protokol ekranida ogohlantirish
+     (`protocol.normsUnreviewed`), sozlamalarda "tekshirilmagan" belgisi. Bu belgilar olib tashlanmaydi.
+  3. `norms/v0.yaml` → `0.3.0`: INS-SWGR ≥ **1,0 MΩ** hamma sessiyada (qabul va ekspluatatsiya uchun bir xil — eng qat'iy
+     variant; avvalgi 0,5–1,0 MΩ shitlar endi FAIL). `status` lar o'zgarmadi (manba muhandis tomonidan ko'rilmagan).
+- **Oqibat:** Ilova muhandis tasdiqlamagan normalar bilan rasmiy protokol imzolay oladi; normalar to'g'riligi va protokolning
+  qonuniy kuchi uchun javobgarlik laboratoriyada (1-qoida ruhida). Qoldiq xavf — `SECURITY.md` R-15. ADR-0004 dagi release
+  talabi va ADR-0018 dagi "1-darvoza ochiq" — tarixiy. `docs/PROMPT.md` o'zgartirilmadi (qaror shu ADR'da).
+

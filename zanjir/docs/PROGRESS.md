@@ -1,7 +1,7 @@
 # ZANJIR — PROGRESS
 
 **Joriy holat:** 13-faza (to'liq oflayn, ADR-0017) tayyor: server olib tashlandi, shifrlangan zaxira, telefonlar o'rtasida
-fayl almashish. 🛑 1-darvoza (normalar) ochiq — release shunga bog'liq.
+fayl almashish. 1-darvoza foydalanuvchi qarori bilan olib tashlandi (ADR-0019); release — Play Console yuklashi (3-darvoza).
 **Oxirgi yangilanish:** 2026-10-30
 
 ## Fazalar
@@ -29,7 +29,7 @@ fayl almashish. 🛑 1-darvoza (normalar) ochiq — release shunga bog'liq.
 | # | Qachon | Nima kerak | Holat |
 |---|---|---|---|
 | R | Boshlashdan oldin | Reja va `zanjir_core` tuzilmasini tasdiqlash; ochiq savollarga javob | ✅ 2026-10-26: barcha takliflar qabul qilindi |
-| 1 | 1-fazadan keyin | Litsenziyali muhandis `docs/NORMS_REVIEW.md` ni tekshirib imzolaydi (M1–M10 savollarga javob) | 🛑 Kutilmoqda — 0.1.0 mustaqil AI ko'rigi olindi (muhandis tekshiruvi emas), tuzatishlar 0.2.0 da (ADR-0018); K1–K5 javobi va 0.2.0 imzosi kerak |
+| 1 | — | ~~Litsenziyali muhandis `docs/NORMS_REVIEW.md` ni imzolaydi~~ | ❎ Olib tashlandi (2026-10-30, foydalanuvchi qarori, ADR-0019): imzolash va release to'xtamaydi; PDF "muhandis tekshiruvidan o'tmagan" deb ko'rsatadi. K1 → 1,0 MΩ (normalar 0.3.0) |
 | 2 | — | ~~Domen, server, SMTP/SMS~~ | ❎ Olib tashlandi (2026-10-30, ADR-0017): ilova to'liq oflayn |
 | 3 | 12-fazadan oldin | Release keystore, Play Console yuklash | ⏳ Upload kaliti yaratildi (foydalanuvchi so'rovi bilan, 2026-10-30) va topshirildi; Play Console — foydalanuvchi |
 | 4 | Pilotdan keyin | Fikr-mulohazalar asosida keyingi reja | ⏳ |

@@ -299,14 +299,12 @@ class ProtocolRepository {
     ];
     if (expired.isNotEmpty) blockers.add(ProtocolBlocker('instrument_expired', expired));
 
-    // Normalar: bitta to'plam, muhandis tekshirgan.
+    // Normalar: bitta to'plam. Muhandis tekshiruvi talab qilinmaydi (1-darvoza olib tashlangan, ADR-0019) — tekshiruv holati
+    // payload'da (`reviewed_by`) va PDF'da ochiq ko'rsatiladi ("muhandis tekshiruvidan o'tmagan").
     final versions = {for (final m in measurements) m.normSetVersion}.toList()..sort();
     if (versions.length > 1) blockers.add(ProtocolBlocker('mixed_norm_sets', versions));
     final normRow = versions.isEmpty ? null : await _normSets.row(versions.first);
     if (normRow != null) await _normSets.load(normRow.version); // hash tekshiruvi (`norm_set_tampered`)
-    if (normRow != null && (normRow.reviewedBy == null || normRow.reviewedBy!.trim().isEmpty)) {
-      blockers.add(ProtocolBlocker('norms_not_reviewed', [normRow.version]));
-    }
 
     // NEEDS_REVIEW — faqat LEAD, izoh bilan (CLAUDE.md, 6-qoida).
     final needsReview = [

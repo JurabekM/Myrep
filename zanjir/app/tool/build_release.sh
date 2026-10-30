@@ -6,7 +6,8 @@
 #
 # Tekshiruvlar (birortasi o'tmasa — to'xtaydi, chetlab o'tish parametri yo'q):
 #   1. git ishchi daraxti toza; HEAD da `zanjir-v*` teg bo'lsa — pubspec versiyasiga teng
-#   2. normalar release darvozasi (`check_norms.py --release`: reviewed_by/reviewed_at, needs_verification yo'q)
+#   2. normalar schema bo'yicha to'g'ri (`check_norms.py --release`; muhandis tekshiruvi holati — faqat ogohlantirish,
+#      1-darvoza olib tashlangan, ADR-0019)
 #   3. ilovadagi normalar nusxasi = `norms/` (asset testi), `flutter analyze`, `flutter test`
 #   4. AAB'da INTERNET ruxsati yo'q — ilova to'liq oflayn (ADR-0017, `verify_aab.sh`)
 # Natija: app/build/release/<versiya>/ — AAB, R8 mapping, Dart simbollari (maxfiy saqlanadi), SHA-256, hisobot.
@@ -29,8 +30,8 @@ cd "$ROOT"
 tag="$(git tag --points-at HEAD | grep -E '^zanjir-v' | head -1 || true)"
 [[ -z "$tag" || "$tag" == "zanjir-v$name" ]] || die "teg $tag ≠ pubspec $name"
 
-echo "== normalar release darvozasi"
-(cd "$ROOT/tools/norms" && uv run python -I check_norms.py --release ../../norms) || die "normalar tekshirilmagan (1-darvoza)"
+echo "== normalar (schema; muhandis tekshiruvi holati — ogohlantirish)"
+(cd "$ROOT/tools/norms" && uv run python -I check_norms.py --release ../../norms) || die "normalar fayli noto'g'ri (schema)"
 
 echo "== analyze va testlar"
 cd "$APP"
@@ -50,6 +51,10 @@ cp build/app/outputs/mapping/release/mapping.txt "$OUT/mapping.txt"
   echo "versiya: $name+$code"
   echo "git: $(git -C "$ROOT" rev-parse HEAD)"
   echo "flutter: $(flutter --version --machine 2>/dev/null | grep -o '"frameworkVersion": *"[^"]*"' | cut -d'"' -f4)"
+  # Normalar va ularning tekshiruv holati (ADR-0019: tekshirilmagan bo'lsa ham release, lekin shu yerda va PDF'da ochiq).
+  reviewer="$(sed -n 's/^reviewed_by: *"\(.*\)"$/\1/p' "$ROOT/norms/v0.yaml")"
+  [[ -n "$reviewer" ]] || reviewer="muhandis tekshiruvidan o'tmagan"
+  echo "normalar: $(sed -n 's/^version: *"\(.*\)"$/\1/p' "$ROOT/norms/v0.yaml") — $reviewer"
   (cd "$OUT" && sha256sum ./*.aab ./*.tar.gz mapping.txt)
 } | tee "$OUT/release-info.txt"
 echo

@@ -37,9 +37,9 @@
 7. **Zaxira:** har kuni Sozlamalar → "Zaxira nusxa" → faylni telefondan tashqarida saqlang (`RUNBOOK.md`).
 
 ## 4. Pilotdagi cheklovlar
-- ⚠️ **Normalar hali litsenziyali muhandis tomonidan tasdiqlanmagan** (1-darvoza). Shu sababli protokol imzolash
-  bloklangan bo'ladi ("normalar tekshirilmagan"): pilotda o'lchov, baholash va reja sinaladi; rasmiy protokol — amaldagi
-  tartibda (qog'oz/eski dastur).
+- ⚠️ **Normalar litsenziyali muhandis tomonidan tasdiqlanmagan** — imzolash bloklanmaydi (ADR-0019), lekin protokol
+  ekranida ogohlantirish chiqadi va PDF'da "muhandis tekshiruvidan o'tmagan" deb yoziladi. Protokolning qonuniy kuchi va
+  normalar to'g'riligi uchun javobgarlik — laboratoriyada.
 - QR yorliqni kamera bilan skanerlash hali yo'q (havola orqali ochiladi).
 - Ilovaga kirishda PIN yo'q — telefon ekran qulfini yoqing.
 - Telefon soati avtomatik (tarmoq vaqti) bo'lsin: 10 daqiqadan ko'proq oldinda bo'lgan telefonning tahrirlari qabul

@@ -697,5 +697,6 @@
         "type": "String"
       }
     }
-  }
+  },
+  "normsUnreviewedPdfHint": "Imzolash mumkin; PDF protokolda \"muhandis tekshiruvidan o'tmagan\" deb yoziladi."
 }

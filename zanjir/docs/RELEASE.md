@@ -38,7 +38,8 @@ app/tool/build_release.sh
 ```
 
 Skript to'xtaydi, agar: kalit yo'q; git daraxti toza emas; teg va versiya mos emas; **normalar release darvozasi**
-o'tmasa (`reviewed_by`/`reviewed_at` bo'sh yoki `needs_verification` normalar bor — 1-darvoza); analyze/testlar yiqilsa;
+fayli schema'dan o'tmasa (muhandis tekshiruvi holati — faqat ogohlantirish, 1-darvoza olib tashlangan, ADR-0019);
+analyze/testlar yiqilsa;
 AAB da INTERNET ruxsati bo'lsa (ADR-0017). Chetlab o'tish parametri yo'q.
 
 Natija `app/build/release/X.Y.Z+N/`:
@@ -69,14 +70,14 @@ bilan imzolangan AAB, **tarqatilmaydi**.
 
 Har release'dan oldin (natija `release-info.txt` bilan birga saqlanadi):
 
-- [ ] 🛑 1-darvoza: `docs/NORMS_REVIEW.md` — litsenziyali muhandis imzolagan; `norms/v0.yaml` da `reviewed_by`,
-      `reviewed_at`; `needs_verification` normalar yo'q (build skripti tekshiradi)
+- [ ] Normalar versiyasi va tekshiruv holati `release-info.txt` da qayd etildi (muhandis tekshiruvisiz bo'lsa — PDF'da
+      "muhandis tekshiruvidan o'tmagan" yozuvi bor; ADR-0019)
 - [ ] CI yashil: core (100% coverage), protocol, data, app, kripto vektorlari, normalar, OSV auditi, emulyator
 - [ ] `CHANGELOG.md` va `pubspec.yaml` versiyasi; `versionCode` oldingisidan katta
 - [ ] Eski versiyaning zaxira fayli yangi versiyada tiklanadi; almashish fayllari mos (`RUNBOOK.md`)
 - [ ] `build_release.sh` muvaffaqiyatli; `report.txt` da hamma band ✅; upload sertifikati barmoq izi Play bilan bir xil
 - [ ] Haqiqiy Android qurilmada (Android 7 va 14+): o'rnatish, oflayn profil, o'lchov, sessiya yopish, protokol
-      (1-darvozadan keyin), QR havola, zaxira → boshqa telefonda tiklash, fayl almashish, katta shrift, TalkBack, imzolash
+      (normalar holati PDF'da), QR havola, zaxira → boshqa telefonda tiklash, fayl almashish, katta shrift, TalkBack, imzolash
       ekranida ekranshot taqiqlangan; samolyot rejimida ham hammasi ishlaydi
 - [ ] Play Console: "App content" (maxfiylik siyosati, Data safety, kontent reytingi, maqsadli auditoriya) —
       `docs/PLAY_LISTING.md`

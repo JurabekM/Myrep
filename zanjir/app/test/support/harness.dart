@@ -229,9 +229,9 @@ class FakeFileActions implements FileActions {
 /// Tezkor Argon2id (testlar; ilovada — [KdfParams.standard]).
 const testKdf = KdfParams(memoryKib: 8 * 1024, iterations: 1, parallelism: 1);
 
-/// Faqat testlar uchun: v0 normalari `0.2.1` versiyasi va **soxta** tekshiruvchi bilan
+/// Faqat testlar uchun: v0 normalari `0.3.1` versiyasi va **soxta** tekshiruvchi bilan
 /// (`norms/v0.yaml` ga tegilmaydi — CLAUDE.md, 11-qoida).
 Future<String> reviewedTestNorms() async => (await loadNorms())
-    .replaceFirst('version: "0.2.0"', 'version: "0.2.1"')
+    .replaceFirst('version: "0.3.0"', 'version: "0.3.1"')
     .replaceFirst('reviewed_by: ""', 'reviewed_by: "TEST FIXTURE — haqiqiy tekshiruv emas"')
     .replaceFirst('reviewed_at: ""', 'reviewed_at: "2026-10-01"');

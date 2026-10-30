@@ -20,8 +20,8 @@ void main() {
 
   test('LEAD o\'zgartiradi — auditga yoziladi va baholashga ta\'sir qiladi', () async {
     final site = await SmallSite.create(org);
-    final updated = await org.repos.settings.update(byUserId: org.user.id, kCorr: 0.8, activeNormSetVersion: '0.2.0');
-    expect((updated.kCorr, updated.marginPct, updated.activeNormSetVersion), (0.8, 0.0, '0.2.0'));
+    final updated = await org.repos.settings.update(byUserId: org.user.id, kCorr: 0.8, activeNormSetVersion: '0.3.0');
+    expect((updated.kCorr, updated.marginPct, updated.activeNormSetVersion), (0.8, 0.0, '0.3.0'));
     final again = await org.repos.settings.update(byUserId: org.user.id, marginPct: 5);
     expect((again.kCorr, again.marginPct), (0.8, 5.0));
     expect((await org.repos.settings.current()).marginPct, 5);
@@ -40,7 +40,7 @@ void main() {
       instrumentId: site.instrument.id,
       values: {'pair': 'L1-PE', 'zs_ohm': 1.2},
       enteredVia: EnteredVia.manual,
-      normSetVersion: '0.2.0',
+      normSetVersion: '0.3.0',
     );
     // Zs_max = 0,8 · 220 / 160 · 0,95 = 1,045 Ω.
     expect(m.verdict, Verdict.fail);

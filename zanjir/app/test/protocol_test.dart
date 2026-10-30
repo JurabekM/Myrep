@@ -22,7 +22,7 @@ Future<(TestEnv, DemoSite, String)> signableSession(
   final repos = await env.repos(tester);
   final norms = reviewedNorms ? await env.io(tester, reviewedTestNorms) : null;
   await env.io(tester, () async {
-    final version = norms == null ? '0.2.0' : (await repos.normSets.import(norms)).version;
+    final version = norms == null ? '0.3.0' : (await repos.normSets.import(norms)).version;
     if (license) {
       final lead = role == 'LEAD' || role == 'ADMIN'
           ? env.profile!.userId
@@ -114,10 +114,13 @@ void main() {
   testWidgets('bloklovchi shartlar ko\'rsatiladi, tugma o\'chiq', (tester) async {
     final (env, _, sessionId) = await signableSession(tester, close: false, license: false, reviewedNorms: false);
     await goTo(tester, '/sessions/$sessionId/protocol');
-    for (final code in ['session_open', 'license_missing', 'norms_not_reviewed']) {
+    for (final code in ['session_open', 'license_missing']) {
       expect(find.byKey(Key('protocol.blocker.$code')), findsOneWidget, reason: code);
     }
-    expect(find.text('Normalar to\'plami 0.2.0 litsenziyali muhandis tomonidan tekshirilmagan'), findsOneWidget);
+    // Tekshirilmagan normalar imzolashni to'xtatmaydi (ADR-0019) — faqat ogohlantirish.
+    expect(find.byKey(const Key('protocol.blocker.norms_not_reviewed')), findsNothing);
+    expect(find.byKey(const Key('protocol.normsUnreviewed')), findsOneWidget);
+    expect(find.text('Normalar to\'plami 0.3.0 litsenziyali muhandis tomonidan tekshirilmagan'), findsOneWidget);
     expect(tester.widget<ButtonStyleButton>(find.byKey(const Key('protocol.sign'))).onPressed, isNull);
     await env.dispose(tester);
   });

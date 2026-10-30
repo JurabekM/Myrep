@@ -157,6 +157,10 @@ class _SignPanelState extends ConsumerState<_SignPanel> {
       builder: (draft) {
         final blockers = _effective(draft);
         final needsReview = ((draft.payload['summary'] as Map?)?['NEEDS_REVIEW'] as int? ?? 0) > 0;
+        // Normalar muhandis tekshiruvidan o'tmagan — imzolashni to'xtatmaydi (ADR-0019), lekin imzolovchi va PDF buni biladi.
+        final norms = draft.payload['norm_set'] as Map?;
+        final reviewer = norms?['reviewed_by'] as String?;
+        final normsUnreviewed = norms != null && (reviewer == null || reviewer.trim().isEmpty);
         return Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -193,6 +197,17 @@ class _SignPanelState extends ConsumerState<_SignPanel> {
                 ),
               ),
               const SizedBox(height: 16),
+              if (normsUnreviewed)
+                ListTile(
+                  key: const Key('protocol.normsUnreviewed'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.report, color: ZanjirColors.warn),
+                  title: Text(
+                    l10n.blockerNormsNotReviewed('${norms['version'] ?? ''}'),
+                    style: const TextStyle(color: ZanjirColors.warn),
+                  ),
+                  subtitle: Text(l10n.normsUnreviewedPdfHint),
+                ),
               if (blockers.isEmpty)
                 Text(l10n.readyToSign, style: const TextStyle(color: ZanjirColors.success))
               else ...[

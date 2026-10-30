@@ -136,18 +136,26 @@
   expect: PASS
   norm: INS-WIRING
 
-- name: INS-SWGR — shit 0,6 MΩ
+# INS-SWGR ≥ 1,0 MΩ — qabul va ekspluatatsiya uchun bir xil (K1, ADR-0019).
+- name: INS-SWGR — shit 1,2 MΩ
   node: SHR1
   type: INSULATION
-  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 0.6 }] }
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 1.2 }] }
   expect: PASS
   norm: INS-SWGR
 
-- name: INS-SWGR — aynan 0,5 MΩ
+- name: INS-SWGR — aynan 1,0 MΩ
   node: BUS1
   type: INSULATION
-  values: { test_voltage_v: 2500, pairs: [{ pair: L1-PE, mohm: 0.5 }] }
+  values: { test_voltage_v: 2500, pairs: [{ pair: L1-PE, mohm: 1.0 }] }
   expect: PASS
+  norm: INS-SWGR
+
+- name: INS-SWGR — 0,6 MΩ (avvalgi 0,5 chegaradan yuqori) → FAIL
+  node: SHR1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 0.6 }] }
+  expect: FAIL
   norm: INS-SWGR
 
 - name: INS-SWGR — 0,3 MΩ → FAIL

@@ -3,7 +3,7 @@
 # reviewed_by / reviewed_at — faqat litsenziyali muhandis to'ldiradi (docs/NORMS_REVIEW.md).
 # Bo'sh bo'lsa, CI release build'ni yiqitadi.
 schema_version: 1
-version: "0.2.0"
+version: "0.3.0"
 reviewed_by: ""
 reviewed_at: ""
 margin_pct: 0
@@ -38,9 +38,9 @@ norms:
       node_kinds: [PANEL, BUSBAR]
       u0_volts: { min: 0, max: 1000 }
     test_voltage_v: 1000
-    rule: { type: min, value: 0.5 }
+    rule: { type: min, value: 1.0 }
     unit: MOhm
-    source: { doc: "ПУЭ", clause: "jadval 1.8.34", note: "Megaommetr 1000–2500 V; pastki chegara 1000 V olingan" }
+    source: { doc: "ПУЭ", clause: "jadval 1.8.34", note: "Megaommetr 1000–2500 V; pastki chegara 1000 V olingan. 1,0 MOhm — qabul va ekspluatatsiya uchun bir xil (foydalanuvchi qarori K1, 2026-10-30, ADR-0019)" }
     status: needs_verification
 
   - id: INS-SECONDARY

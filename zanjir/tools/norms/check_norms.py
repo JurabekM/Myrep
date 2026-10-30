@@ -1,8 +1,9 @@
 """Normalar to'plamini tekshirish (ADR-0004).
 
 Oddiy rejim: har bir `norms/*.yaml` JSON Schema'ga mosligi va ID'lar takrorlanmasligi.
-`--release` rejimi: qo'shimcha ravishda `reviewed_by` / `reviewed_at` to'ldirilgan va
-`needs_verification` holatidagi norma qolmaganini talab qiladi.
+`--release` rejimi: qo'shimcha ravishda muhandis tekshiruvi holatini (`reviewed_by` / `reviewed_at`,
+`needs_verification`) **ogohlantirish** sifatida chiqaradi. Release'ni to'xtatmaydi — 1-darvoza foydalanuvchi
+qarori bilan olib tashlangan (ADR-0019); tekshiruv holati protokol PDF'ida ochiq ko'rsatiladi.
 
 Foydalanish: python -I check_norms.py [--release] <norms_dir>
 """
@@ -24,7 +25,7 @@ def _load_yaml(path: Path) -> Any:
         return yaml.safe_load(f)
 
 
-def check_norm_set(data: Any, validator: Draft202012Validator, *, release: bool) -> list[str]:
+def check_norm_set(data: Any, validator: Draft202012Validator) -> list[str]:
     """Bitta norm_set uchun xatolar ro'yxati (bo'sh — hammasi joyida)."""
     errors = [
         f"schema: {'/'.join(str(p) for p in e.absolute_path) or '<root>'}: {e.message}"
@@ -44,23 +45,28 @@ def check_norm_set(data: Any, validator: Draft202012Validator, *, release: bool)
         if norm["measurement_type"] == "INSULATION" and "test_voltage_v" not in norm:
             errors.append(f"{norm['id']}: izolyatsiya normasida test_voltage_v yo'q")
 
-    if release:
-        if not data["reviewed_by"].strip():
-            errors.append("release: reviewed_by bo'sh — normalar litsenziyali muhandis tomonidan tekshirilmagan")
-        if not data["reviewed_at"].strip():
-            errors.append("release: reviewed_at bo'sh")
-        unverified = [n["id"] for n in data["norms"] if n["status"] == "needs_verification"]
-        if data["trip_multipliers"]["status"] == "needs_verification":
-            unverified.append("trip_multipliers")
-        if unverified:
-            errors.append("release: needs_verification holatida: " + ", ".join(unverified))
     return errors
+
+
+def review_warnings(data: Any) -> list[str]:
+    """Muhandis tekshiruvi holati (release'ni to'xtatmaydi, ADR-0019)."""
+    warnings = []
+    if not data["reviewed_by"].strip():
+        warnings.append("reviewed_by bo'sh — normalar muhandis tomonidan tekshirilmagan (PDF'da ko'rsatiladi)")
+    if not data["reviewed_at"].strip():
+        warnings.append("reviewed_at bo'sh")
+    unverified = [n["id"] for n in data["norms"] if n["status"] == "needs_verification"]
+    if data["trip_multipliers"]["status"] == "needs_verification":
+        unverified.append("trip_multipliers")
+    if unverified:
+        warnings.append("needs_verification holatida: " + ", ".join(unverified))
+    return warnings
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("norms_dir", type=Path)
-    parser.add_argument("--release", action="store_true", help="release darvozasi")
+    parser.add_argument("--release", action="store_true", help="tekshiruv holati haqida ogohlantirishlar")
     args = parser.parse_args(argv)
 
     schema = json.loads((args.norms_dir / "schema.json").read_text(encoding="utf-8"))
@@ -76,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
     failed = False
     for path in files:
         data = _load_yaml(path)
-        errors = check_norm_set(data, validator, release=args.release)
+        errors = check_norm_set(data, validator)
         if isinstance(data, dict) and not errors:
             prev = versions.get(data["version"])
             if prev is not None:
@@ -87,6 +93,9 @@ def main(argv: list[str] | None = None) -> int:
         failed = failed or bool(errors)
         if not errors:
             print(f"{path.name}: OK")
+            if args.release:
+                for warning in review_warnings(data):
+                    print(f"{path.name}: ogohlantirish: {warning}", file=sys.stderr)
     return 1 if failed else 0
 
 

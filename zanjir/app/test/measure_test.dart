@@ -113,7 +113,7 @@ void main() {
         instrumentId: demo.instrument.id,
         values: {'pair': 'L1-PE', 'zs_ohm': 8.4},
         enteredVia: EnteredVia.manual,
-        normSetVersion: '0.2.0',
+        normSetVersion: '0.3.0',
       ),
     );
     await env.io(

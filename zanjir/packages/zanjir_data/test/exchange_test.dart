@@ -35,7 +35,7 @@ void main() {
       instrumentId: s.instrument.id,
       values: const {'pair': 'L1-PE', 'zs_ohm': 0.5},
       enteredVia: EnteredVia.manual,
-      normSetVersion: '0.2.0',
+      normSetVersion: '0.3.0',
     );
   }
 
@@ -49,7 +49,7 @@ void main() {
       final chains = await verifyOrgChains(engineer.ctx);
       expect(chains, hasLength(2));
       expect(chains.values.every((c) => c.ok), isTrue);
-      expect((await engineer.repos.settings.current()).activeNormSetVersion, '0.2.0');
+      expect((await engineer.repos.settings.current()).activeNormSetVersion, '0.3.0');
     });
 
     test('noto\'g\'ri parol; bo\'sh bo\'lmagan telefon; taklif ikkinchi qurilmaga ishlatilmaydi', () async {
@@ -163,7 +163,7 @@ void main() {
       await engineer.repos.audit.append(
         eventType: 'SETTINGS_CHANGED',
         entityId: engineer.orgId,
-        payload: {'k_corr': 0.5, 'margin_pct': 0.0, 'active_norm_set_version': '0.2.0'},
+        payload: {'k_corr': 0.5, 'margin_pct': 0.0, 'active_norm_set_version': '0.3.0'},
       );
       await expectLater(lead.import(await engineer.export()), rule('forbidden_role'));
     });

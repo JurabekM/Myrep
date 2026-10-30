@@ -11,7 +11,7 @@ import pytest
 import yaml
 from jsonschema import Draft202012Validator
 
-from check_norms import check_norm_set, main
+from check_norms import check_norm_set, main, review_warnings
 
 NORMS_DIR = Path(__file__).resolve().parents[2] / "norms"
 
@@ -32,13 +32,8 @@ def test_real_norms_dir_passes() -> None:
     assert main([str(NORMS_DIR)]) == 0
 
 
-def test_real_norms_fail_release_gate_until_reviewed() -> None:
-    # Muhandis imzosisiz release build yiqilishi shart (prompt 5.1).
-    assert main([str(NORMS_DIR), "--release"]) == 1
-
-
 def test_v0_is_valid(validator: Draft202012Validator, v0: Any) -> None:
-    assert check_norm_set(v0, validator, release=False) == []
+    assert check_norm_set(v0, validator) == []
 
 
 def test_v0_contains_all_prompt_norms(v0: Any) -> None:
@@ -63,61 +58,64 @@ def test_v0_is_not_reviewed(v0: Any) -> None:
 def test_duplicate_id_rejected(validator: Draft202012Validator, v0: Any) -> None:
     data = copy.deepcopy(v0)
     data["norms"].append(copy.deepcopy(data["norms"][0]))
-    errors = check_norm_set(data, validator, release=False)
+    errors = check_norm_set(data, validator)
     assert any("takrorlangan" in e for e in errors)
 
 
 def test_unknown_field_rejected(validator: Draft202012Validator, v0: Any) -> None:
     data = copy.deepcopy(v0)
     data["norms"][0]["magic"] = 1
-    assert check_norm_set(data, validator, release=False)
+    assert check_norm_set(data, validator)
 
 
 def test_unknown_node_kind_rejected(validator: Draft202012Validator, v0: Any) -> None:
     data = copy.deepcopy(v0)
     data["norms"][0]["applies_to"]["node_kinds"] = ["TOASTER"]
-    assert check_norm_set(data, validator, release=False)
+    assert check_norm_set(data, validator)
 
 
 def test_range_min_gt_max_rejected(validator: Draft202012Validator, v0: Any) -> None:
     data = copy.deepcopy(v0)
     rcd_s = next(n for n in data["norms"] if n["id"] == "RCD-1X-S")
     rcd_s["rule"]["min"], rcd_s["rule"]["max"] = 500, 130
-    errors = check_norm_set(data, validator, release=False)
+    errors = check_norm_set(data, validator)
     assert any("range min > max" in e for e in errors)
 
 
 def test_insulation_without_test_voltage_rejected(validator: Draft202012Validator, v0: Any) -> None:
     data = copy.deepcopy(v0)
     del data["norms"][0]["test_voltage_v"]
-    errors = check_norm_set(data, validator, release=False)
+    errors = check_norm_set(data, validator)
     assert any("test_voltage_v" in e for e in errors)
 
 
-def test_release_requires_review_and_verification(validator: Draft202012Validator, v0: Any) -> None:
-    data = copy.deepcopy(v0)
-    errors = check_norm_set(data, validator, release=True)
-    assert any("reviewed_by" in e for e in errors)
-    assert any("reviewed_at" in e for e in errors)
-    assert any("needs_verification" in e for e in errors)
+def test_review_status_is_warning_not_error(validator: Draft202012Validator, v0: Any) -> None:
+    # 1-darvoza olib tashlangan (ADR-0019): tekshirilmagan normalar release'ni to'xtatmaydi, lekin ogohlantiriladi.
+    assert check_norm_set(copy.deepcopy(v0), validator) == []
+    warnings = review_warnings(v0)
+    assert any("reviewed_by" in w for w in warnings)
+    assert any("needs_verification" in w for w in warnings)
 
 
-def test_release_passes_when_fully_reviewed(validator: Draft202012Validator, v0: Any) -> None:
+def test_no_warnings_when_fully_reviewed(v0: Any) -> None:
     data = copy.deepcopy(v0)
     data["reviewed_by"] = "Test Muhandis, guvohnoma 000"
     data["reviewed_at"] = "2026-01-01"
     data["trip_multipliers"]["status"] = "source_seen"
     for n in data["norms"]:
         n["status"] = "source_seen"
-    assert check_norm_set(data, validator, release=True) == []
+    assert review_warnings(data) == []
 
 
-def test_blank_reviewer_rejected_in_release(validator: Draft202012Validator, v0: Any) -> None:
+def test_blank_reviewer_warned(v0: Any) -> None:
     data = copy.deepcopy(v0)
     data["reviewed_by"] = "   "
     data["reviewed_at"] = "2026-01-01"
-    errors = check_norm_set(data, validator, release=True)
-    assert any("reviewed_by" in e for e in errors)
+    assert any("reviewed_by" in w for w in review_warnings(data))
+
+
+def test_release_mode_passes_with_warnings() -> None:
+    assert main(["--release", str(NORMS_DIR)]) == 0
 
 
 def test_empty_dir_fails(tmp_path: Path) -> None:

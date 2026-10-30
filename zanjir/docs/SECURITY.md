@@ -180,6 +180,10 @@ taklif kodlari, refresh rotatsiyasi, JWT, ochiq sahifa, loglar, ilova xotirasi, 
 - R-13 (P) Almashish fayli — to'liq surat (PDF'lar bilan): katta laboratoriyada fayl o'sadi; "faqat yangilari" rejimi keyin.
 - R-14 (P) Muharrir roli importda **hozirgi** rol bo'yicha tekshiriladi — rol pasaytirilgandan keyin yetib kelgan eski
   muharrir hodisalari rad etiladi (yo'riqnoma: avval almashish, keyin rolni o'zgartirish).
+- R-15 (Y) Normalar litsenziyali muhandis tomonidan tekshirilmagan holda protokol imzolanadi (ADR-0019, foydalanuvchi qarori):
+  normada xato bo'lsa, noto'g'ri PASS rasmiy hujjatga tushishi mumkin. Yumshatish: chegaralar AI ko'rigi va IEC/ПУЭ bilan
+  solishtirilgan, shubhali joylarda qat'iyroq qiymat (K1 → 1,0 MΩ), ma'lumot yetishmasa NEEDS_REVIEW; PDF va ilova
+  "muhandis tekshiruvidan o'tmagan" deb ochiq ko'rsatadi; `reviewed_by` soxta to'ldirilmaydi.
 - R-11 (O) Asbob guvohnomasi muddati (`verified_until`) — oddiy LWW metadata: ENGINEER uni audit hodisasisiz o'zgartira
   oladi. O'lchov paytidagi muddat qayd etiladi (F-20), lekin noto'g'ri muddat kiritishni texnik yo'l bilan to'xtatib
   bo'lmaydi — guvohnoma raqami protokolda ko'rinadi; `INSTRUMENT_VERIFIED` audit hodisasi — keyingi bosqichda.
