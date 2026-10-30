@@ -2,10 +2,13 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:zanjir_core/zanjir_core.dart';
+import 'package:zanjir_protocol/zanjir_protocol.dart';
 
 import '../db/database.dart';
 import '../repo/context.dart';
+import '../repo/isolation_plan_repository.dart';
 import '../repo/measurement_repository.dart';
+import '../repo/protocol_repository.dart';
 import '../repo/settings_repository.dart';
 import '../repo/staff_repository.dart';
 import 'importer.dart';
@@ -104,7 +107,11 @@ Future<void> checkMerged(
   }
   await r.measurements();
   await r.normSets();
+  await r.protocols();
+  await r.plans();
 }
+
+final _number = RegExp(r'^[0-9]{4}-([0-9A-F]{6})-[0-9]{3,9}$');
 
 class _Rules {
   _Rules(this.ctx, this.ch, {required this.trustAll});
@@ -273,6 +280,199 @@ class _Rules {
       String? blank(String s) => s.trim().isEmpty ? null : s;
       if (blank(set.reviewedBy) != n.reviewedBy || blank(set.reviewedAt) != n.reviewedAt) {
         throw DataRuleException('norm_set_review_mismatch', n.version);
+      }
+    }
+  }
+
+  /// Yangi protokol: imzolangan audit hodisasi, raqam, imzolovchi qurilma va roli, imzo, hujjat (payload/PDF hash,
+  /// `/ID`, QR), imzo vaqti, sessiya o'lchovlari va normalar — bazadagi ma'lumot bilan; protokol qoidalari
+  /// (serverdagi `_check_protocol`, `_check_document`, `protocol_payload_violation`).
+  Future<void> protocols() async {
+    final ids = ch.inserted['protocol'] ?? const <String>{};
+    final docIds = ch.inserted['protocol_document'] ?? const <String>{};
+    if (docIds.isNotEmpty) {
+      for (final d in await (db.select(db.protocolDocuments)..where((d) => d.id.isIn(docIds))).get()) {
+        if (!ids.contains(d.protocolId)) throw DataRuleException('append_only_conflict', 'protocol_document:${d.id}');
+      }
+    }
+    if (ids.isEmpty) return;
+    for (final p in await (db.select(db.protocols)..where((p) => p.id.isIn(ids))).get()) {
+      final signed = await _events(type: 'PROTOCOL_SIGNED', entityId: p.id);
+      final hash = payloadHash(protocolAuditPayload(p));
+      if (!signed.any((e) => e.payloadHash == hash && e.actorId == p.signedBy && e.deviceId == p.deviceId)) {
+        throw DataRuleException('missing_audit_event', 'protocol:${p.id}');
+      }
+      final m = _number.firstMatch(p.number);
+      if (m == null ||
+          m.group(1) !=
+              p.deviceId.replaceAll('-', '').substring(p.deviceId.replaceAll('-', '').length - 6).toUpperCase()) {
+        throw DataRuleException('protocol_number_invalid', p.number);
+      }
+      final device = devices[p.deviceId] ?? (throw DataRuleException('unknown_device', p.deviceId));
+      if (device.userId != p.signedBy) throw DataRuleException('signer_device_mismatch', p.id);
+      final signer = users_[p.signedBy];
+      if (signer == null || !ProtocolRepository.signerRoles.contains(signer.role)) {
+        throw DataRuleException('forbidden_signer_role', p.id);
+      }
+      final doc =
+          await (db.select(db.protocolDocuments)..where((d) => d.protocolId.equals(p.id))).getSingleOrNull() ??
+          (throw DataRuleException('protocol_document_required', p.id));
+      final Object? payload;
+      try {
+        payload = jsonDecode(doc.payloadJson);
+        canonicalJson(payload);
+      } on Object {
+        throw DataRuleException('invalid_payload', p.id);
+      }
+      if (payload is! Map<String, Object?>) throw DataRuleException('invalid_payload', p.id);
+      final bad = await verifyProtocol(
+        payload: payload,
+        pdfBytes: doc.pdf,
+        signature: ProtocolSignature(
+          payloadSha256: p.payloadSha256,
+          pdfSha256: p.pdfSha256,
+          signature: p.signature,
+          sigAlg: p.sigAlg,
+        ),
+        publicKeyHex: device.publicKeyEd25519,
+      );
+      if (bad == 'bad_signature') throw DataRuleException('bad_protocol_signature', p.id);
+      if (bad != null) throw DataRuleException(bad, p.id);
+      if (pdfDocumentId(doc.pdf) != p.payloadSha256) throw DataRuleException('pdf_id_mismatch', p.id);
+      await _payload(p, payload, device);
+    }
+  }
+
+  Future<void> _payload(ProtocolRow p, Map<String, Object?> payload, DeviceRow device) async {
+    Map<String, Object?> obj(String k) => payload[k] is Map ? (payload[k]! as Map).cast<String, Object?>() : const {};
+    final protocol = obj('protocol');
+    if (protocol['number'] != p.number ||
+        protocol['qr_token'] != p.qrToken ||
+        obj('signer')['id'] != p.signedBy ||
+        obj('session')['id'] != p.sessionId) {
+      throw DataRuleException('payload_protocol_mismatch', p.id);
+    }
+    final qrSig = protocol['qr_sig'];
+    if (qrSig is! String ||
+        qrTokenFromSignature(qrSig) != p.qrToken ||
+        !await verifySignature(
+          sigAlg: p.sigAlg,
+          publicKeyHex: device.publicKeyEd25519,
+          message: qrTokenMessage(ctx.orgId, p.number),
+          signatureHex: qrSig,
+        )) {
+      throw DataRuleException('qr_token_invalid', p.id);
+    }
+    final signedAtRaw = payload['signed_at'];
+    final signedAt = signedAtRaw is String ? DateTime.tryParse(signedAtRaw) : null;
+    final lag = signedAt == null ? null : p.createdAt.difference(signedAt);
+    if (lag == null || lag < const Duration(minutes: -1) || lag > const Duration(minutes: 16)) {
+      throw DataRuleException('protocol_rule:signed_at_mismatch', p.id);
+    }
+    if (payload['schema'] != protocolPayloadSchema) throw DataRuleException('protocol_rule:unknown_schema', p.id);
+
+    final session = await (db.select(db.measurementSessions)..where((s) => s.id.equals(p.sessionId))).getSingleOrNull();
+    if (session == null || session.closedAt == null) throw DataRuleException('protocol_rule:session_open', p.id);
+    final all = await (db.select(db.measurements)..where((m) => m.sessionId.equals(p.sessionId))).get();
+    final superseded = {for (final m in all) ?m.supersedesId};
+    final current = {
+      for (final m in all)
+        if (!superseded.contains(m.id)) m.id: m,
+    };
+    final listed = payload['measurements'];
+    if (listed is! List || listed.any((m) => m is! Map || m['id'] is! String)) {
+      throw DataRuleException('invalid_payload', p.id);
+    }
+    if (listed.isEmpty || current.isEmpty) throw DataRuleException('protocol_rule:no_measurements', p.id);
+    final byId = {for (final m in listed.cast<Map<Object?, Object?>>()) m['id']! as String: m};
+    if (byId.length != listed.length || !byId.keys.toSet().containsAll(current.keys) || byId.length != current.length) {
+      throw DataRuleException('payload_measurement_mismatch', p.id);
+    }
+    for (final m in current.values) {
+      final e = byId[m.id]!;
+      if (e['verdict'] != m.verdict.code ||
+          canonicalJson(e['values']) != canonicalJson(m.values) ||
+          e['instrument_id'] != m.instrumentId ||
+          e['created_at'] != isoUtcMillis(m.createdAt)) {
+        throw DataRuleException('payload_measurement_mismatch', '${p.id}:${m.id}');
+      }
+    }
+    final versions = {for (final m in current.values) m.normSetVersion};
+    final norms = obj('norm_set');
+    final normRow = versions.length != 1
+        ? null
+        : await (db.select(
+            db.normSets,
+          )..where((n) => n.orgId.equals(ctx.orgId) & n.version.equals(versions.single))).getSingleOrNull();
+    if (normRow == null ||
+        norms['version'] != normRow.version ||
+        norms['sha256'] != normRow.sha256 ||
+        norms['reviewed_by'] != normRow.reviewedBy) {
+      throw DataRuleException('payload_norm_set_mismatch', p.id);
+    }
+    if ((normRow.reviewedBy ?? '').trim().isEmpty) throw DataRuleException('protocol_rule:norms_not_reviewed', p.id);
+    final instruments = {
+      for (final i in await (db.select(db.instruments)..where((i) => i.orgId.equals(ctx.orgId))).get()) i.id: i,
+    };
+    if (current.values.any((m) => !instrumentValidFor(instruments[m.instrumentId], m))) {
+      throw DataRuleException('protocol_rule:instrument_expired', p.id);
+    }
+    if (current.values.any((m) => m.verdict == Verdict.needsReview)) {
+      if (users_[p.signedBy]?.role != 'LEAD') throw DataRuleException('protocol_rule:needs_review_requires_lead', p.id);
+      final comment = payload['lead_comment'];
+      if (comment is! String || comment.trim().isEmpty) {
+        throw DataRuleException('protocol_rule:lead_comment_required', p.id);
+      }
+    }
+    final org = await (db.select(db.organizations)..where((o) => o.id.equals(ctx.orgId))).getSingle();
+    final until = org.licenseValidUntil;
+    DateTime day(DateTime t) => DateTime.utc(t.toUtc().year, t.toUtc().month, t.toUtc().day);
+    if ((org.licenseNo ?? '').trim().isEmpty || until == null || day(signedAt!).isAfter(day(until))) {
+      throw DataRuleException('protocol_rule:license_invalid', p.id);
+    }
+  }
+
+  /// Ajratish rejalari: tasdiq — LEAD/ADMIN ning aynan shu qadamlarga `PLAN_APPROVED` hodisasi; bajarilgan reja — barcha
+  /// qadamlar `PLAN_STEP_DONE` va `PLAN_EXECUTED` bilan.
+  Future<void> plans() async {
+    final ids = ch.touched('isolation_plan').toSet();
+    if (ids.isEmpty) return;
+    for (final plan in await (db.select(db.isolationPlans)..where((p) => p.id.isIn(ids))).get()) {
+      final old = ch.updated['isolation_plan']?[plan.id];
+      final from = old?['status'] as String?;
+      final to = plan.status;
+      if ((to == 'APPROVED' || to == 'EXECUTED') && (from == null || from == 'DRAFT' || to == 'EXECUTED')) {
+        final approver = plan.approvedBy;
+        if (approver == null || !_editor(approver)) throw DataRuleException('approval_requires_lead', plan.id);
+        final hash = payloadHash(planApprovalPayload(plan));
+        final ok = (await _events(
+          type: 'PLAN_APPROVED',
+          entityId: plan.id,
+        )).any((e) => e.payloadHash == hash && e.actorId == approver);
+        if (!ok) throw DataRuleException('missing_audit_event', 'isolation_plan:${plan.id}');
+      }
+      if (to == 'EXECUTED' && from != 'EXECUTED') {
+        if ((await _events(type: 'PLAN_EXECUTED', entityId: plan.id)).isEmpty) {
+          throw DataRuleException('plan_steps_incomplete', plan.id);
+        }
+        final orders = <String>{};
+        for (final st in plan.steps) {
+          final o = st is Map ? st['order'] : null;
+          if (o is! int) throw DataRuleException('plan_steps_incomplete', plan.id);
+          orders.add('${plan.id}#$o');
+        }
+        final done =
+            await (db.select(db.auditEvents)..where(
+                  (e) =>
+                      e.orgId.equals(ctx.orgId) &
+                      e.eventType.equals('PLAN_STEP_DONE') &
+                      e.entityId.like('${plan.id}#%'),
+                ))
+                .get();
+        final doneSet = {for (final e in done) e.entityId!};
+        if (doneSet.length != orders.length || !doneSet.containsAll(orders)) {
+          throw DataRuleException('plan_steps_incomplete', plan.id);
+        }
       }
     }
   }

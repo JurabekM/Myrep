@@ -166,20 +166,7 @@ class ProtocolRepository {
               updatedAt: now,
             ),
           );
-      await _audit.append(
-        eventType: 'PROTOCOL_SIGNED',
-        entityId: row.id,
-        payload: {
-          'id': row.id,
-          'session_id': row.sessionId,
-          'number': row.number,
-          'payload_sha256': row.payloadSha256,
-          'pdf_sha256': row.pdfSha256,
-          'signature': row.signature,
-          'sig_alg': row.sigAlg,
-          'qr_token': row.qrToken,
-        },
-      );
+      await _audit.append(eventType: 'PROTOCOL_SIGNED', entityId: row.id, payload: protocolAuditPayload(row));
       return (protocol: row, document: document);
     });
   }
@@ -308,7 +295,7 @@ class ProtocolRepository {
     };
     final expired = [
       for (final m in measurements)
-        if (!_instrumentValid(instruments[m.instrumentId], m)) m.id,
+        if (!instrumentValidFor(instruments[m.instrumentId], m)) m.id,
     ];
     if (expired.isNotEmpty) blockers.add(ProtocolBlocker('instrument_expired', expired));
 
@@ -431,9 +418,21 @@ Map<String, Object?> _measurementPayload(MeasurementRow m, NodeRow? node) {
   };
 }
 
+/// `PROTOCOL_SIGNED` audit hodisasining payload'i (hash shu xaritadan; import ham shu bilan tekshiradi).
+Map<String, Object?> protocolAuditPayload(ProtocolRow row) => {
+  'id': row.id,
+  'session_id': row.sessionId,
+  'number': row.number,
+  'payload_sha256': row.payloadSha256,
+  'pdf_sha256': row.pdfSha256,
+  'signature': row.signature,
+  'sig_alg': row.sigAlg,
+  'qr_token': row.qrToken,
+};
+
 /// Asbob o'lchov kuni amal qilganmi: hozirgi guvohnoma VA o'lchov paytida yozib qo'yilgan muddat bo'yicha (ikkalasi ham
 /// amal qilishi shart — keyingi qayta qiyoslash eski o'lchovni "tozalamaydi", 6-qoida).
-bool _instrumentValid(InstrumentRow? i, MeasurementRow m) {
+bool instrumentValidFor(InstrumentRow? i, MeasurementRow m) {
   if (i == null || !instrumentVerificationValid(i, m.createdAt)) return false;
   if (!m.evalDetail.containsKey(instrumentVerifiedUntilKey)) return true; // eski yozuvlar (muddat saqlanmagan)
   final at = m.evalDetail[instrumentVerifiedUntilKey];
