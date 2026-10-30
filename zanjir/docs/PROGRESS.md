@@ -29,7 +29,7 @@
 | # | Qachon | Nima kerak | Holat |
 |---|---|---|---|
 | R | Boshlashdan oldin | Reja va `zanjir_core` tuzilmasini tasdiqlash; ochiq savollarga javob | ✅ 2026-10-26: barcha takliflar qabul qilindi |
-| 1 | 1-fazadan keyin | Litsenziyali muhandis `docs/NORMS_REVIEW.md` ni tekshirib imzolaydi (M1–M10 savollarga javob) | 🛑 Kutilmoqda — 0.1.0 hisoboti olindi (imzosiz), tuzatishlar 0.2.0 da (ADR-0018); K1–K5 javobi va 0.2.0 imzosi kerak |
+| 1 | 1-fazadan keyin | Litsenziyali muhandis `docs/NORMS_REVIEW.md` ni tekshirib imzolaydi (M1–M10 savollarga javob) | 🛑 Kutilmoqda — 0.1.0 mustaqil AI ko'rigi olindi (muhandis tekshiruvi emas), tuzatishlar 0.2.0 da (ADR-0018); K1–K5 javobi va 0.2.0 imzosi kerak |
 | 2 | — | ~~Domen, server, SMTP/SMS~~ | ❎ Olib tashlandi (2026-10-30, ADR-0017): ilova to'liq oflayn |
 | 3 | 12-fazadan oldin | Release keystore, Play Console yuklash | ⏳ Upload kaliti yaratildi (foydalanuvchi so'rovi bilan, 2026-10-30) va topshirildi; Play Console — foydalanuvchi |
 | 4 | Pilotdan keyin | Fikr-mulohazalar asosida keyingi reja | ⏳ |

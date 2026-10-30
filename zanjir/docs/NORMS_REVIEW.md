@@ -6,14 +6,15 @@
 > **Tekshiriladigan fayl:** `norms/v0.yaml`, versiya `0.2.0`. Quyidagi jadval shu fayldan generatsiya qilingan
 > (2026-10-30). YAML o'zgarsa, jadval qayta generatsiya qilinadi va tekshiruv yangidan o'tkaziladi.
 
-## 0.1.0 ko'rigi natijasi (hisobot, 2026-10-30)
+## 0.1.0 ko'rigi natijasi (mustaqil AI ko'rigi, 2026-10-30)
 
-`0.1.0` bo'yicha ekspertiza hisoboti olindi. **Imzo bloki bo'sh** (F.I.Sh., guruh, guvohnoma, sana, imzo yo'q) — shuning
-uchun u texnik kirish ma'lumoti sifatida ishlatildi, 1-darvoza **yopilmadi**: `reviewed_by`/`reviewed_at` bo'sh, normalar
+`0.1.0` bo'yicha **mustaqil AI ko'rigi** hisoboti olindi (foydalanuvchi ma'lumoti: hisobotni litsenziyali muhandis emas,
+AI tayyorlagan; imzo bloki bo'sh). U faqat texnik kirish ma'lumoti — **litsenziyali muhandis tekshiruvi o'rnini bosmaydi**,
+1-darvoza **yopilmadi**: `reviewed_by`/`reviewed_at` bo'sh, normalar
 holati (`status`) o'zgartirilmadi.
 
-Hisobot xulosasi: **21 normaning va 3 `trip_multipliers` ning chegaraviy qiymatlari to'g'ri** — birorta qiymat
-o'zgartirilmadi. Hisobot bo'yicha `0.2.0` ga kiritilgan tuzatishlar:
+AI ko'rigi xulosasi: **21 normaning va 3 `trip_multipliers` ning chegaraviy qiymatlari to'g'ri** — birorta qiymat
+o'zgartirilmadi. AI ko'rigi bo'yicha `0.2.0` ga kiritilgan tuzatishlar (muhandis alohida tasdiqlashi yoki rad etishi kerak):
 
 | O'zgarish | Normalar | Baholashga ta'siri |
 |---|---|---|
@@ -25,20 +26,20 @@ o'zgartirilmadi. Hisobot bo'yicha `0.2.0` ga kiritilgan tuzatishlar:
 
 Diapazonlar orasidagi U0 (128–219, 231–379, 400 < U0 < 401 V) — normasi yo'q → `NEEDS_REVIEW` (golden testlar).
 
-### Ochiq savollar (muhandis javobi kerak)
+### Ochiq savollar (litsenziyali muhandis javobi kerak)
 
 | # | Savol | Hozirgi xatti-harakat | Javob |
 |---|---|---|---|
-| K1 | 🛑 **INS-SWGR (shitlar).** Hisobotning o'zi: yangi ishga tushirishda (ПУЭ 1.8.34) **≥ 1,0 MΩ**, ekspluatatsiyada (ПТЭЭП) ≥ 0,5 MΩ. Ilova normani sessiya turiga bog'lamaydi — `qabul-topshirish` sessiyasida ham 0,5 MΩ qo'llanadi, ya'ni 0,5–1,0 MΩ shit qabulda **PASS** chiqadi. Bundan tashqari, ПТЭЭП jadval 37 da ham shitlar uchun 1 MΩ ko'rsatilgan bo'lishi mumkin — rasmiy matndan tekshiring. Qaysi variant: (a) hamma sessiyada ≥ 1,0 MΩ (konservativ); (b) qabul-topshirishda 1,0, davriy/navbatdan tashqarida 0,5 (dasturga sessiya turi sharti qo'shiladi); (c) 0,5 qoladi (asos bilan)? | 0,5 MΩ hamma sessiyada (o'zgartirilmadi) | |
-| K2 | **ПУЭ jadval raqami.** Hisobot jadval 1.8.34 ni kuch transformatorlariga tegishli deydi va 1.8.38 ni taklif qiladi. Bizning manbamizda (ПУЭ 7-nashr, 1.8-bob) jadval 1.8.34 — "≤ 1 kV apparatlar, ikkilamchi zanjirlar va elektr simlari izolyatsiyasining eng kichik qarshiligi", 1.8.37 ham shu jadvalga havola qiladi. Rasmiy matndan tekshirib, to'g'ri raqamni yozing. | 1.8.34 qoldirildi (`INS-WIRING`, `INS-SWGR`, `INS-SECONDARY`) | |
+| K1 | 🛑 **INS-SWGR (shitlar).** AI ko'rigining o'zi: yangi ishga tushirishda (ПУЭ 1.8.34) **≥ 1,0 MΩ**, ekspluatatsiyada (ПТЭЭП) ≥ 0,5 MΩ. Ilova normani sessiya turiga bog'lamaydi — `qabul-topshirish` sessiyasida ham 0,5 MΩ qo'llanadi, ya'ni 0,5–1,0 MΩ shit qabulda **PASS** chiqadi. Bundan tashqari, ПТЭЭП jadval 37 da ham shitlar uchun 1 MΩ ko'rsatilgan bo'lishi mumkin — rasmiy matndan tekshiring. Qaysi variant: (a) hamma sessiyada ≥ 1,0 MΩ (konservativ); (b) qabul-topshirishda 1,0, davriy/navbatdan tashqarida 0,5 (dasturga sessiya turi sharti qo'shiladi); (c) 0,5 qoladi (asos bilan)? | 0,5 MΩ hamma sessiyada (o'zgartirilmadi) | |
+| K2 | **ПУЭ jadval raqami.** AI ko'rigi jadval 1.8.34 ni kuch transformatorlariga tegishli deydi va 1.8.38 ni taklif qiladi. Bizning manbamizda (ПУЭ 7-nashr, 1.8-bob) jadval 1.8.34 — "≤ 1 kV apparatlar, ikkilamchi zanjirlar va elektr simlari izolyatsiyasining eng kichik qarshiligi", 1.8.37 ham shu jadvalga havola qiladi. Rasmiy matndan tekshirib, to'g'ri raqamni yozing. | 1.8.34 qoldirildi (`INS-WIRING`, `INS-SWGR`, `INS-SECONDARY`) | |
 | K3 | **RCD-RAMP, UZO turi.** A turi UZO pulsatsiyalanuvchi tok bilan sinalganda chegaralar boshqacha (ГОСТ IEC 61008-1: 0,35–1,4·IΔn, tok burchagiga qarab). Ilova UZO turini (AC/A/B) va sinov to'lqin shaklini so'ramaydi — hamma o'lchov 0,5–1,0·IΔn bilan baholanadi (qat'iyroq: soz A turi FAIL chiqishi mumkin, xavfli PASS yo'q). Yetarlimi yoki tur/to'lqin shakli atributi qo'shilsinmi? | AC chegaralari hamma UZO uchun | |
 | K4 | **Huquqiy asos.** Protokolda ПТЭЭП (2003) va ГОСТ Р 50571.3-2009 (Rossiya milliy standarti) chiqadi. O'zbekistonda aynan qaysi tahrir amalda (ПУЭ/ПТЭ ning O'zbekiston tahriri, O'z DSt, ГОСТ 29322-2014 qabul qilinganmi)? Rossiyada ПТЭЭП 2003 yangi qoidalar bilan almashtirilgan bo'lishi mumkin. | hisobotdagi manbalar | |
-| K5 | **M10 matni.** Hisobotdagi tavsiya izohi ("…ПУЭ 1.7.79 ga muvofiq me'yoriy o'chish vaqti yuqorida o'rnatilgan soz UZO orqali ta'minlanadi") LEAD izohi uchun tayyor shablon sifatida qo'shilsinmi? Shart: shu UZO ning o'zi sinovdan o'tgan bo'lishi. | izohni LEAD o'zi yozadi | |
+| K5 | **M10 matni.** AI ko'rigidagi tavsiya izohi ("…ПУЭ 1.7.79 ga muvofiq me'yoriy o'chish vaqti yuqorida o'rnatilgan soz UZO orqali ta'minlanadi") LEAD izohi uchun tayyor shablon sifatida qo'shilsinmi? Shart: shu UZO ning o'zi sinovdan o'tgan bo'lishi. | izohni LEAD o'zi yozadi | |
 
 ## Qanday tekshiriladi
 
 1. Har bir qatorda qiymat, sinov kuchlanishi, qo'llanish sharti va manba bandini hujjatning amaldagi tahriri bilan solishtiring.
-   "0.1.0 ko'rigi" ustuni — oldingi hisobotdan nima o'zgargani.
+   "0.1.0 ko'rigi" ustuni — AI ko'rigidan keyin nima o'zgargani.
 2. "Muhandis xulosasi" ustunida ☑ **tasdiq** yoki ☑ **tuzatish** belgilang (tuzatish bo'lsa — to'g'ri qiymat va band).
 3. Yuqoridagi **ochiq savollar** (K1–K5) va pastdagi M1–M10 javoblarini tasdiqlang yoki tuzating.
 4. Oxirida imzo bloki to'ldiriladi (F.I.Sh., guruh, guvohnoma, sana, imzo). Shundan keyin dasturchi:
@@ -90,10 +91,10 @@ Sirtmoq chegarasi: `Zs_max = k_corr · U0 / Ia`, `Ia = k · In` (ADR-0002, S2). 
 
 ## Muhandis uchun savollar (M1–M10)
 
-Ilova javob kelguncha **konservativ** ishlaydi (javob — NEEDS_REVIEW yoki qat'iyroq chegara). "Javob" — 0.1.0 hisobotidan
-(imzosiz); imzo bilan tasdiqlanadi.
+Ilova javob kelguncha **konservativ** ishlaydi (javob — NEEDS_REVIEW yoki qat'iyroq chegara). "Javob" — 0.1.0 AI ko'rigidan
+(muhandis javobi emas); litsenziyali muhandis tasdiqlaydi yoki tuzatadi.
 
-| # | Savol | Hozirgi xatti-harakat | Javob (hisobot, 2026-10-30) |
+| # | Savol | Hozirgi xatti-harakat | AI ko'rigi javobi (2026-10-30) — muhandis tasdiqlashi kerak |
 |---|---|---|---|
 | M1 | U0 = 230 V bo'lgan obyektlar (IEC 60038) uchun qaysi sirtmoq normasi qo'llanadi? | 220–230 V → `LOOP-TN-FINAL` (0.2.0 da kiritildi) | `LOOP-TN-FINAL` (0,4 s) va `EARTH-*-380`; `u0_volts` 220–230 V |
 | M2 | Grunt solishtirma qarshiligi ρ > 100 Ω·m bo'lganda (ПУЭ 1.7.101/1.7.103) yerga ulash normasini oshirishga ruxsat ilovada hisobga olinsinmi? | Hisobga olinmaydi (qat'iyroq) | Hisobga olinmasin: oshirish faqat ρ rasman o'lchanib hujjatlashtirilganda; `NEEDS_REVIEW` orqali bosh muhandis |

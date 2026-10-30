@@ -206,7 +206,7 @@
   expect: NEEDS_REVIEW
   reason: no_matching_norm
 
-# U0 = 220–230 V — muhandis javobi M1 (2026-10-30): IEC 60038 / ГОСТ Р 50571.3 jadval 41.1. C16: Zs_max = 230/160.
+# U0 = 220–230 V — AI ko'rigi M1 (2026-10-30, muhandis tasdiqlashi kerak): IEC 60038 / ГОСТ Р 50571.3 jadval 41.1. C16: Zs_max = 230/160.
 - name: U0 = 230 V — LOOP-TN-FINAL, aynan 1,4375 Ω
   node: SOCK1
   type: LOOP_IMPEDANCE
