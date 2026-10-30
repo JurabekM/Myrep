@@ -88,6 +88,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
   tekshiruvi uni taqiqlaydi). 2-darvoza (domen/server) yo'q. Kripto vektorlari — `tools/vectors/zanjir_refcrypto`.
 
 ### O'zgardi
+- Normalar `0.2.0` (ADR-0018, muhandis hisoboti 2026-10-30, imzosiz): U0 220–230 V va 380–400 V diapazonlari, ГОСТ IEC
+  61009-1 (RCBO), ПТЭЭП/ПУЭ/ГОСТ manbalari aniqlashtirildi; qiymatlar o'zgarmadi. `docs/NORMS_REVIEW.md` qayta generatsiya
+  qilindi, ochiq savollar K1–K5. 1-darvoza ochiq.
 - Xavfsizlik (10-faza): Android `allowBackup=false`, faqat HTTPS (`network_security_config`), release imzo faqat
   `key.properties` dan; server `/metrics` token bilan, hisob bo'yicha kirish cheklovi, xavfsizlik sarlavhalari, `clock_skew`
   (faqat LWW jadvallari). Ajratish rejasi: server holat o'tishlarini va mazmunni qulflaydi, tasdiq — LEAD/ADMIN ning qadamlar

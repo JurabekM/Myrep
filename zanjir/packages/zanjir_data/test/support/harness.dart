@@ -96,10 +96,10 @@ class SmallSite {
 /// Faqat testlar uchun: v0 normalari boshqa versiya nomi va **soxta** tekshiruvchi bilan.
 /// `norms/v0.yaml` dagi `reviewed_by` ga tegilmaydi (CLAUDE.md, 11-qoida).
 final String reviewedTestYaml = v0Yaml
-    .replaceFirst('version: "0.1.0"', 'version: "0.1.1"')
+    .replaceFirst('version: "0.2.0"', 'version: "0.2.1"')
     .replaceFirst('reviewed_by: ""', 'reviewed_by: "TEST FIXTURE — haqiqiy tekshiruv emas"')
     .replaceFirst('reviewed_at: ""', 'reviewed_at: "2026-10-01"');
-const reviewedTestVersion = '0.1.1';
+const reviewedTestVersion = '0.2.1';
 
 ProtocolFonts testFonts() {
   const dir = '../../app/assets/fonts';

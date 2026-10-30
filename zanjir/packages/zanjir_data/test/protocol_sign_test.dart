@@ -222,11 +222,11 @@ void main() {
 
     test('muhandis tekshirmagan normalar va aralash to\'plamlar', () async {
       final s = await SignableSession.create(org, close: false);
-      await recordLoop(org, s.session.id, s.site, zs: 0.5, normSetVersion: '0.1.0');
+      await recordLoop(org, s.session.id, s.site, zs: 0.5, normSetVersion: '0.2.0');
       await org.repos.sessions.close(s.session.id);
       final draft = await (await reposAs()).protocols.prepare(sessionId: s.session.id);
       expect(codes(draft), ['mixed_norm_sets', 'norms_not_reviewed']);
-      expect(draft.blockers.first.ids, ['0.1.0', reviewedTestVersion]);
+      expect(draft.blockers.first.ids, ['0.2.0', reviewedTestVersion]);
     });
 
     test('NEEDS_REVIEW: faqat LEAD va faqat izoh bilan', () async {

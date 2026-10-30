@@ -495,3 +495,23 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
   server qismlari) endi yo'q — ularning o'rnini import tekshiruvlari va zaxira egallaydi; ADR-0011, ADR-0012, ADR-0015
   tarixiy. Ma'lumot laboratoriya telefonlarida qoladi (lokalizatsiya talabi soddalashadi). Tahdid modeli qayta ko'rib
   chiqiladi (`docs/SECURITY.md`).
+
+## ADR-0018: Normalar 0.2.0 — 0.1.0 ekspertiza hisoboti bo'yicha tuzatishlar (1-darvoza ochiq)
+
+- **Sana:** 2026-10-30 · **Holat:** qabul qilingan (texnik); 1-darvoza **ochiq**.
+- **Kontekst:** Foydalanuvchi `0.1.0` bo'yicha muhandis hisobotini berdi. Hisobot qiymatlarni tasdiqlaydi, manbalar va U0
+  diapazonlarini tuzatishni so'raydi, M1–M10 ga javob beradi. Imzo bloki bo'sh.
+- **Qaror:**
+  1. Hisobotda aniq qaror berilgan tuzatishlar `norms/v0.yaml` `0.2.0` ga kiritildi (`docs/NORMS_REVIEW.md` jadvali): U0
+     220–230 V (sirtmoq va yerga ulash), 380–400 V / 401–1000 V, ГОСТ IEC 61009-1, ПТЭЭП/ПУЭ/ГОСТ manbalari, RCD-RAMP izohi.
+     Chegaraviy qiymatlar o'zgarmadi. Golden testlar yangi chegaralarni va diapazonlar orasidagi U0 → `NEEDS_REVIEW` ni
+     qamraydi.
+  2. Shubhali joylar o'zgartirilmadi va muhandisga qaytarildi (K1–K5): INS-SWGR 0,5/1,0 MΩ (qabul sinovida ПУЭ talabi
+     yumshoqroq qo'llanishi mumkin — 🛑 xavfsizlik savoli), ПУЭ jadval raqami, A turi UZO, huquqiy asos, M10 shabloni.
+  3. Imzosiz hisobot 1-darvozani yopmaydi: `reviewed_by`/`reviewed_at` bo'sh, `status` lar o'zgarmadi (CLAUDE.md, 11-qoida);
+     release darvozasi avvalgidek yiqiladi. Muhandis `0.2.0` ni (o'zgargan fayl) imzolaydi.
+  4. Versiya oshirildi: protokollar va o'lchovlar norma versiyasiga havola qiladi — bir xil versiya ostida turli mazmun
+     bo'lmasligi kerak.
+- **Oqibat:** U0 = 221–230 V obyektlar avtomatik baholanadi (avval `NEEDS_REVIEW`). Mavjud profillar o'z normalar to'plamini
+  saqlaydi (yangi to'plam yangi profil yaratilganda import qilinadi).
+

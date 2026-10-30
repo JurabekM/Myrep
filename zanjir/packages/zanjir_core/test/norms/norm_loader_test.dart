@@ -15,7 +15,7 @@ void main() {
     setUp(() => set = loadV0());
 
     test('asosiy maydonlar', () {
-      expect(set.version, '0.1.0');
+      expect(set.version, '0.2.0');
       expect(set.marginPct, 0);
       expect(set.isReviewed, isFalse, reason: 'Claude reviewed_by ni to\'ldirmaydi');
       expect(set.norms, hasLength(21));
@@ -47,7 +47,7 @@ void main() {
       final final220 = set.norms.firstWhere((n) => n.id == 'LOOP-TN-FINAL').appliesTo;
       expect(final220.nodeKinds, contains(NodeKind.socketGroup));
       expect(final220.earthingSystems, {EarthingSystem.tnC, EarthingSystem.tnS, EarthingSystem.tnCS});
-      expect((final220.u0Min, final220.u0Max), (220, 220));
+      expect((final220.u0Min, final220.u0Max), (220, 230));
       expect(final220.attrs, {
         'circuit_role': ['final'],
       });

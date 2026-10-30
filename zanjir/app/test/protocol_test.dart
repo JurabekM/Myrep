@@ -22,7 +22,7 @@ Future<(TestEnv, DemoSite, String)> signableSession(
   final repos = await env.repos(tester);
   final norms = reviewedNorms ? await env.io(tester, reviewedTestNorms) : null;
   await env.io(tester, () async {
-    final version = norms == null ? '0.1.0' : (await repos.normSets.import(norms)).version;
+    final version = norms == null ? '0.2.0' : (await repos.normSets.import(norms)).version;
     if (license) {
       final lead = role == 'LEAD' || role == 'ADMIN'
           ? env.profile!.userId
@@ -117,7 +117,7 @@ void main() {
     for (final code in ['session_open', 'license_missing', 'norms_not_reviewed']) {
       expect(find.byKey(Key('protocol.blocker.$code')), findsOneWidget, reason: code);
     }
-    expect(find.text('Normalar to\'plami 0.1.0 litsenziyali muhandis tomonidan tekshirilmagan'), findsOneWidget);
+    expect(find.text('Normalar to\'plami 0.2.0 litsenziyali muhandis tomonidan tekshirilmagan'), findsOneWidget);
     expect(tester.widget<ButtonStyleButton>(find.byKey(const Key('protocol.sign'))).onPressed, isNull);
     await env.dispose(tester);
   });

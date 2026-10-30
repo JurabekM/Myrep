@@ -3,7 +3,7 @@
 # reviewed_by / reviewed_at — faqat litsenziyali muhandis to'ldiradi (docs/NORMS_REVIEW.md).
 # Bo'sh bo'lsa, CI release build'ni yiqitadi.
 schema_version: 1
-version: "0.1.0"
+version: "0.2.0"
 reviewed_by: ""
 reviewed_at: ""
 margin_pct: 0
@@ -13,7 +13,7 @@ trip_multipliers:
   B: 5
   C: 10
   D: 20
-  source: { doc: "ПУЭ", clause: "1.7.79; ГОСТ IEC 60898-1 (B: 3–5·In, C: 5–10·In, D: 10–20·In, yuqori chegara)" }
+  source: { doc: "ПУЭ", clause: "1.7.79; ГОСТ IEC 60898-1, jadval 7 (B: 3–5·In, C: 5–10·In, D: 10–20·In, yuqori chegara)" }
   status: needs_verification
 
 norms:
@@ -28,7 +28,7 @@ norms:
     test_voltage_v: 1000
     rule: { type: min, value: 0.5 }
     unit: MOhm
-    source: { doc: "ПУЭ", clause: "1.8.37, jadval 1.8.34" }
+    source: { doc: "ПУЭ / ПТЭЭП", clause: "ПУЭ 1.8.37, jadval 1.8.34; ПТЭЭП 3-ilova, jadval 37" }
     status: source_seen
 
   - id: INS-SWGR
@@ -52,7 +52,7 @@ norms:
     test_voltage_v: 1000
     rule: { type: min, value: 1.0 }
     unit: MOhm
-    source: { doc: "ПУЭ", clause: "jadval 1.8.34" }
+    source: { doc: "ПУЭ / ПТЭЭП", clause: "ПУЭ 1.8.37, jadval 1.8.34; ПТЭЭП 3-ilova, jadval 37" }
     status: needs_verification
 
   - id: INS-CABLE-LV
@@ -65,21 +65,21 @@ norms:
     test_voltage_v: 2500
     rule: { type: min, value: 0.5 }
     unit: MOhm
-    source: { doc: "ПУЭ", clause: "1.8.40" }
+    source: { doc: "ПУЭ / ПТЭЭП", clause: "ПУЭ 1.8.40; ПТЭЭП 3-ilova, jadval 37" }
     status: needs_verification
 
   # --- "Faza-nol" sirtmog'i (TN). Zs_max = k_corr · U0 / Ia ---
   - id: LOOP-TN-FINAL
-    title: "TN, oxirgi zanjirlar, U0 = 220 V: t ≤ 0,4 s"
+    title: "TN, oxirgi zanjirlar, U0 = 220–230 V: t ≤ 0,4 s"
     measurement_type: LOOP_IMPEDANCE
     applies_to:
       node_kinds: [CABLE, SOCKET_GROUP, LOAD, BREAKER, RCBO, FUSE]
       earthing_systems: [TN-C, TN-S, TN-C-S]
-      u0_volts: { min: 220, max: 220 }
+      u0_volts: { min: 220, max: 230 }
       attrs: { circuit_role: [final] }
     rule: { type: max_time_ms, value: 400 }
     unit: ms
-    source: { doc: "ПУЭ", clause: "1.7.79, jadval 1.7.1" }
+    source: { doc: "ПУЭ / ГОСТ Р 50571.3-2009", clause: "ПУЭ 1.7.79, jadval 1.7.1; ГОСТ Р 50571.3-2009, jadval 41.1" }
     status: source_seen
 
   - id: LOOP-TN-DIST
@@ -109,12 +109,12 @@ norms:
     status: needs_verification
 
   - id: LOOP-TN-OTHER-U0-380
-    title: "TN, oxirgi zanjirlar, U0 = 380 V: t ≤ 0,2 s"
+    title: "TN, oxirgi zanjirlar, U0 = 380–400 V: t ≤ 0,2 s"
     measurement_type: LOOP_IMPEDANCE
     applies_to:
       node_kinds: [CABLE, SOCKET_GROUP, LOAD, BREAKER, RCBO, FUSE]
       earthing_systems: [TN-C, TN-S, TN-C-S]
-      u0_volts: { min: 380, max: 380 }
+      u0_volts: { min: 380, max: 400 }
       attrs: { circuit_role: [final] }
     rule: { type: max_time_ms, value: 200 }
     unit: ms
@@ -122,12 +122,12 @@ norms:
     status: needs_verification
 
   - id: LOOP-TN-OTHER-U0-GT380
-    title: "TN, oxirgi zanjirlar, U0 > 380 V: t ≤ 0,1 s"
+    title: "TN, oxirgi zanjirlar, U0 > 400 V: t ≤ 0,1 s"
     measurement_type: LOOP_IMPEDANCE
     applies_to:
       node_kinds: [CABLE, SOCKET_GROUP, LOAD, BREAKER, RCBO, FUSE]
       earthing_systems: [TN-C, TN-S, TN-C-S]
-      u0_volts: { min: 381, max: 1000 }
+      u0_volts: { min: 401, max: 1000 }
       attrs: { circuit_role: [final] }
     rule: { type: max_time_ms, value: 100 }
     unit: ms
@@ -144,7 +144,7 @@ norms:
       values: { multiplier: [1.0] }
     rule: { type: max_time_ms, value: 300 }
     unit: ms
-    source: { doc: "ГОСТ IEC 61008-1", clause: "o'chish vaqti jadvali" }
+    source: { doc: "ГОСТ IEC 61008-1; ГОСТ IEC 61009-1", clause: "jadval 1 (o'chish vaqti)" }
     status: needs_verification
 
   - id: RCD-1X-S
@@ -156,7 +156,7 @@ norms:
       values: { multiplier: [1.0] }
     rule: { type: range, min: 130, max: 500 }
     unit: ms
-    source: { doc: "ГОСТ IEC 61008-1", clause: "o'chish vaqti jadvali" }
+    source: { doc: "ГОСТ IEC 61008-1; ГОСТ IEC 61009-1", clause: "jadval 1 (o'chish vaqti)" }
     status: needs_verification
 
   - id: RCD-2X
@@ -168,7 +168,7 @@ norms:
       values: { multiplier: [2.0] }
     rule: { type: max_time_ms, value: 150 }
     unit: ms
-    source: { doc: "ГОСТ IEC 61008-1", clause: "o'chish vaqti jadvali", note: "ADR-0002 S5 bo'yicha qo'shilgan" }
+    source: { doc: "ГОСТ IEC 61008-1; ГОСТ IEC 61009-1", clause: "jadval 1 (o'chish vaqti)", note: "ADR-0002 S5 bo'yicha qo'shilgan" }
     status: needs_verification
 
   - id: RCD-2X-S
@@ -180,7 +180,7 @@ norms:
       values: { multiplier: [2.0] }
     rule: { type: range, min: 60, max: 200 }
     unit: ms
-    source: { doc: "ГОСТ IEC 61008-1", clause: "o'chish vaqti jadvali", note: "ADR-0002 S5 bo'yicha qo'shilgan" }
+    source: { doc: "ГОСТ IEC 61008-1; ГОСТ IEC 61009-1", clause: "jadval 1 (o'chish vaqti)", note: "ADR-0002 S5 bo'yicha qo'shilgan" }
     status: needs_verification
 
   - id: RCD-5X
@@ -192,7 +192,7 @@ norms:
       values: { multiplier: [5.0] }
     rule: { type: max_time_ms, value: 40 }
     unit: ms
-    source: { doc: "ГОСТ IEC 61008-1", clause: "o'chish vaqti jadvali" }
+    source: { doc: "ГОСТ IEC 61008-1; ГОСТ IEC 61009-1", clause: "jadval 1 (o'chish vaqti)" }
     status: needs_verification
 
   - id: RCD-5X-S
@@ -204,7 +204,7 @@ norms:
       values: { multiplier: [5.0] }
     rule: { type: range, min: 50, max: 150 }
     unit: ms
-    source: { doc: "ГОСТ IEC 61008-1", clause: "o'chish vaqti jadvali", note: "ADR-0002 S5 bo'yicha qo'shilgan" }
+    source: { doc: "ГОСТ IEC 61008-1; ГОСТ IEC 61009-1", clause: "jadval 1 (o'chish vaqti)", note: "ADR-0002 S5 bo'yicha qo'shilgan" }
     status: needs_verification
 
   - id: RCD-RAMP
@@ -215,16 +215,16 @@ norms:
       values: { multiplier: [1.0] }
     rule: { type: range, min: 0.5, max: 1.0, min_inclusive: false, max_inclusive: true, relative_to: idn_ma }
     unit: mA
-    source: { doc: "ГОСТ IEC 61008-1", clause: "differensial o'chish toki" }
+    source: { doc: "ГОСТ IEC 61008-1; ГОСТ IEC 61009-1", clause: "5.3.3-band (differensial o'chish toki)", note: "Sinusoidal (AC) sinov toki uchun" }
     status: needs_verification
 
   # --- Yerga ulash qurilmasi. r_ohm × season_coeff ---
   - id: EARTH-NEUTRAL-380
-    title: "Neytral yerga ulash qurilmasi, 380/220 V: ≤ 4 Ω"
+    title: "Neytral yerga ulash qurilmasi, 380/220 V (400/230 V): ≤ 4 Ω"
     measurement_type: EARTH_RESISTANCE
     applies_to:
       node_kinds: [EARTH_ELECTRODE]
-      u0_volts: { min: 220, max: 220 }
+      u0_volts: { min: 220, max: 230 }
       attrs: { role: [neutral] }
     rule: { type: max, value: 4.0 }
     unit: Ohm
@@ -232,11 +232,11 @@ norms:
     status: needs_verification
 
   - id: EARTH-REPEAT-380-TOTAL
-    title: "Takroriy yerga ulash, 380/220 V, jami: ≤ 10 Ω"
+    title: "Takroriy yerga ulash, 380/220 V (400/230 V), jami: ≤ 10 Ω"
     measurement_type: EARTH_RESISTANCE
     applies_to:
       node_kinds: [EARTH_ELECTRODE]
-      u0_volts: { min: 220, max: 220 }
+      u0_volts: { min: 220, max: 230 }
       attrs: { role: [repeat] }
       values: { scope: [total] }
     rule: { type: max, value: 10.0 }
@@ -245,11 +245,11 @@ norms:
     status: needs_verification
 
   - id: EARTH-REPEAT-380-SINGLE
-    title: "Takroriy yerga ulash, 380/220 V, har biri: ≤ 30 Ω"
+    title: "Takroriy yerga ulash, 380/220 V (400/230 V), har biri: ≤ 30 Ω"
     measurement_type: EARTH_RESISTANCE
     applies_to:
       node_kinds: [EARTH_ELECTRODE]
-      u0_volts: { min: 220, max: 220 }
+      u0_volts: { min: 220, max: 230 }
       attrs: { role: [repeat] }
       values: { scope: [single] }
     rule: { type: max, value: 30.0 }
@@ -277,5 +277,5 @@ norms:
       node_kinds: [PE_BAR, EARTH_ELECTRODE, PANEL, BUSBAR, CABLE, LOAD, SOCKET_GROUP]
     rule: { type: max, value: 0.05 }
     unit: Ohm
-    source: { doc: "ПТЭЭП", clause: "3-ilova, 26-band" }
+    source: { doc: "ПТЭЭП / ПУЭ", clause: "ПТЭЭП 3-ilova, 26-band; ПУЭ 1.8.39" }
     status: source_seen

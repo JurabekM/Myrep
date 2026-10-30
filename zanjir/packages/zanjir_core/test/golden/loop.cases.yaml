@@ -206,10 +206,27 @@
   expect: NEEDS_REVIEW
   reason: no_matching_norm
 
-- name: U0 = 230 V — jadvalda yo'q
+# U0 = 220–230 V — muhandis javobi M1 (2026-10-30): IEC 60038 / ГОСТ Р 50571.3 jadval 41.1. C16: Zs_max = 230/160.
+- name: U0 = 230 V — LOOP-TN-FINAL, aynan 1,4375 Ω
   node: SOCK1
   type: LOOP_IMPEDANCE
   site: { u0_volts: 230 }
+  values: { pair: L1-PE, zs_ohm: 1.4375 }
+  expect: PASS
+  norm: LOOP-TN-FINAL
+
+- name: U0 = 230 V — 1,45 Ω → FAIL
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 230 }
+  values: { pair: L1-PE, zs_ohm: 1.45 }
+  expect: FAIL
+  norm: LOOP-TN-FINAL
+
+- name: U0 = 231 V — hech bir diapazonda yo'q
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 231 }
   values: { pair: L1-PE, zs_ohm: 0.5 }
   expect: NEEDS_REVIEW
   reason: no_matching_norm
@@ -306,29 +323,53 @@
   expect: FAIL
   norm: LOOP-TN-OTHER-U0-380
 
-- name: LOOP-TN-OTHER-U0-GT380 — U0 400, 1,0 Ω
-  node: SOCK1
-  type: LOOP_IMPEDANCE
-  site: { u0_volts: 400 }
-  values: { pair: L1-PE, zs_ohm: 1.0 }
-  expect: PASS
-  norm: LOOP-TN-OTHER-U0-GT380
-
-- name: LOOP-TN-OTHER-U0-GT380 — aynan 2,5 Ω
+- name: LOOP-TN-OTHER-U0-380 — U0 400 (380–400 V), aynan 2,5 Ω
   node: SOCK1
   type: LOOP_IMPEDANCE
   site: { u0_volts: 400 }
   values: { pair: L1-PE, zs_ohm: 2.5 }
   expect: PASS
-  norm: LOOP-TN-OTHER-U0-GT380
+  norm: LOOP-TN-OTHER-U0-380
 
-- name: LOOP-TN-OTHER-U0-GT380 — 2,6 Ω → FAIL
+- name: LOOP-TN-OTHER-U0-380 — U0 400, 2,6 Ω → FAIL
   node: SOCK1
   type: LOOP_IMPEDANCE
   site: { u0_volts: 400 }
   values: { pair: L1-PE, zs_ohm: 2.6 }
   expect: FAIL
+  norm: LOOP-TN-OTHER-U0-380
+
+- name: LOOP-TN-OTHER-U0-GT380 — U0 415, 1,0 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 415 }
+  values: { pair: L1-PE, zs_ohm: 1.0 }
+  expect: PASS
   norm: LOOP-TN-OTHER-U0-GT380
+
+- name: LOOP-TN-OTHER-U0-GT380 — U0 415, aynan 2,59375 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 415 }
+  values: { pair: L1-PE, zs_ohm: 2.59375 }
+  expect: PASS
+  norm: LOOP-TN-OTHER-U0-GT380
+
+- name: LOOP-TN-OTHER-U0-GT380 — U0 415, 2,6 Ω → FAIL
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 415 }
+  values: { pair: L1-PE, zs_ohm: 2.6 }
+  expect: FAIL
+  norm: LOOP-TN-OTHER-U0-GT380
+
+- name: U0 = 400,5 V — diapazonlar orasida (oraliq) → NEEDS_REVIEW
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 400.5 }
+  values: { pair: L1-PE, zs_ohm: 1.0 }
+  expect: NEEDS_REVIEW
+  reason: no_matching_norm
 
 - name: juftlik satr emas → NEEDS_REVIEW
   node: SOCK1

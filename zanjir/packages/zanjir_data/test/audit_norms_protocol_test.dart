@@ -67,11 +67,11 @@ void main() {
     test('import: tekshiriladi, sha256 saqlanadi, takroriy import idempotent', () async {
       final r = org.repos.normSets;
       final row = await r.import(v0Yaml);
-      expect(row.version, '0.1.0');
+      expect(row.version, '0.2.0');
       expect(row.sha256, hasLength(64));
       expect(row.reviewedBy, isNull, reason: 'v0 tekshirilmagan');
       expect((await r.import(v0Yaml)).id, row.id);
-      final set = await r.load('0.1.0');
+      final set = await r.load('0.2.0');
       expect(set.norms, hasLength(21));
       await expectLater(r.load('9.9.9'), throwsA(isA<NotFoundException>()));
       await expectLater(r.import('schema_version: 1'), throwsA(isA<NormFormatException>()));
@@ -88,7 +88,7 @@ void main() {
         "update norm_set set yaml = replace(yaml, 'value: 0.5', 'value: 0.05') where id = '${row.id}'",
       );
       await expectLater(
-        org.repos.normSets.load('0.1.0'),
+        org.repos.normSets.load('0.2.0'),
         throwsA(isA<DataRuleException>().having((e) => e.code, 'code', 'norm_set_tampered')),
       );
     });

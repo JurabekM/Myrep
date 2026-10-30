@@ -28,7 +28,7 @@ void main() {
   testWidgets('LEAD: k_corr tekshiriladi va saqlanadi; normalar tekshirilmagani ko\'rsatiladi', (tester) async {
     final env = await openSettings(tester);
     expect(find.text('Normalar hali litsenziyali muhandis tomonidan tekshirilmagan'), findsOneWidget);
-    expect(find.text('Normalar versiyasi: 0.1.0'), findsOneWidget);
+    expect(find.text('Normalar versiyasi: 0.2.0'), findsOneWidget);
 
     await tester.enterText(find.byKey(const Key('settings.kCorr')), '1,2');
     await tester.tap(find.byKey(const Key('settings.saveEval')));

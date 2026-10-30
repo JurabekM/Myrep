@@ -22,6 +22,23 @@
   norm: EARTH-NEUTRAL-380
   reason: out_of_limit
 
+- name: EARTH-NEUTRAL-380 — U0 230 V (400/230 V), 3 · 1,5 = 4,5 Ω → FAIL
+  node: GZ1
+  type: EARTH_RESISTANCE
+  site: { u0_volts: 230 }
+  values: { r_ohm: 3.0, method: 3-wire, season_coeff: 1.5 }
+  expect: FAIL
+  norm: EARTH-NEUTRAL-380
+  reason: out_of_limit
+
+- name: U0 240 V — yerga ulash normasi yo'q → NEEDS_REVIEW
+  node: GZ1
+  type: EARTH_RESISTANCE
+  site: { u0_volts: 240 }
+  values: { r_ohm: 1.0, method: 3-wire, season_coeff: 1.0 }
+  expect: NEEDS_REVIEW
+  reason: no_matching_norm
+
 - name: mavsum koeffitsienti kiritilmagan → NEEDS_REVIEW
   node: GZ1
   type: EARTH_RESISTANCE

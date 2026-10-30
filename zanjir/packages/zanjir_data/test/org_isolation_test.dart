@@ -25,7 +25,7 @@ void main() {
       instrumentId: sb.instrument.id,
       values: {'pair': 'L1-PE', 'zs_ohm': 0.84},
       enteredVia: EnteredVia.manual,
-      normSetVersion: '0.1.0',
+      normSetVersion: '0.2.0',
     );
 
     final r = a.repos;
@@ -39,7 +39,7 @@ void main() {
     expect(await r.users.get(b.user.id), isNull);
     expect(await r.devices.get(b.device.id), isNull);
     expect(await r.audit.events(), isEmpty);
-    await expectLater(r.normSets.load('0.1.0'), throwsA(isA<NotFoundException>()));
+    await expectLater(r.normSets.load('0.2.0'), throwsA(isA<NotFoundException>()));
     await expectLater(r.graph.loadGraph(sb.site.id), throwsA(isA<NotFoundException>()));
     await expectLater(
       r.graph.addNode(siteId: sb.site.id, kind: NodeKind.load, label: 'X'),

@@ -37,7 +37,7 @@ void main() {
     instrumentId: s.instrument.id,
     values: values,
     enteredVia: EnteredVia.manual,
-    normSetVersion: '0.1.0',
+    normSetVersion: '0.2.0',
     supersedesId: supersedesId,
   );
 
@@ -45,7 +45,7 @@ void main() {
     final m = await record({'pair': 'L1-PE', 'zs_ohm': 0.84});
     expect(m.verdict, Verdict.pass);
     expect(m.normId, 'LOOP-TN-FINAL');
-    expect(m.normSetVersion, '0.1.0');
+    expect(m.normSetVersion, '0.2.0');
     expect(m.evalDetail['strictest_norm_id'], 'LOOP-TN-FINAL');
     expect(m.values, {'pair': 'L1-PE', 'zs_ohm': 0.84});
     final events = await org.repos.audit.events();
@@ -138,7 +138,7 @@ void main() {
         instrumentId: 'yoq',
         values: const {},
         enteredVia: EnteredVia.manual,
-        normSetVersion: '0.1.0',
+        normSetVersion: '0.2.0',
       ),
       throwsA(isA<NotFoundException>()),
     );
