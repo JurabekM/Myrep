@@ -5,7 +5,6 @@ import 'package:test/test.dart';
 import 'package:zanjir_core/zanjir_core.dart';
 import 'package:zanjir_data/zanjir_data.dart';
 
-import 'support/fake_server.dart';
 import 'support/harness.dart';
 
 /// Unumdorlik byudjetlari (10-faza, ADR-0014). Byudjetlar CI mashinasi uchun ~3× zaxira bilan; o'rta Android qurilma
@@ -88,64 +87,4 @@ void main() {
     expect(summary.elapsedMilliseconds, lessThan(500));
     expect(plan.elapsedMilliseconds, lessThan(1500));
   });
-
-  test('sinxron navbati: 3000 yozuv push + pull', () async {
-    final a = memoryDb();
-    addTearDown(a.close);
-    final org = await Org.create(a, 'Q');
-    final s = await SmallSite.create(org);
-    await a.transaction(() async {
-      for (var i = 0; i < 1500; i++) {
-        await org.repos.graph.addNode(siteId: s.site.id, kind: NodeKind.load, label: 'M$i');
-      }
-    });
-    final session = await org.repos.sessions.start(
-      siteId: s.site.id,
-      kind: SessionKind.davriy,
-      engineerId: org.user.id,
-    );
-    for (var i = 0; i < 700; i++) {
-      await org.repos.measurements.record(
-        sessionId: session.id,
-        nodeId: s.cab1.id,
-        type: MeasurementType.continuityBonding,
-        instrumentId: s.instrument.id,
-        values: {'r_ohm': 0.01 + i / 100000},
-        enteredVia: EnteredVia.manual,
-        normSetVersion: '0.1.0',
-      );
-    }
-    final server = FakeServer();
-    for (final t in ['organization', 'app_user', 'device']) {
-      for (final row in await a.customSelect('SELECT * FROM $t').get()) {
-        server.seed(t, rowToWire(wireColumns(a, t), row.data));
-      }
-    }
-    final engine = SyncEngine(a, server);
-    final pending = await engine.pendingCount();
-    expect(pending, greaterThan(2900));
-    final push = Stopwatch()..start();
-    await engine.run();
-    push.stop();
-    final b = memoryDb();
-    addTearDown(b.close);
-    final pull = Stopwatch()..start();
-    await SyncEngine(b, _BigPages(server)).pull();
-    pull.stop();
-    // ignore: avoid_print
-    print('push $pending yozuv: ${push.elapsedMilliseconds} ms; pull: ${pull.elapsedMilliseconds} ms');
-    expect(push.elapsedMilliseconds, lessThan(15000));
-    expect(pull.elapsedMilliseconds, lessThan(15000));
-  });
-}
-
-class _BigPages implements SyncTransport {
-  _BigPages(this.inner);
-  final FakeServer inner;
-
-  @override
-  Future<PullPage> pull(int since, {int? limit}) => inner.pull(since, limit: 500);
-
-  @override
-  Future<Map<String, String>> push(List<Map<String, Object?>> ops) => inner.push(ops);
 }

@@ -1,9 +1,8 @@
 # ZANJIR — PROGRESS
 
-**Joriy holat:** 12-faza tayyor — rejadagi barcha fazalar (0–12) bajarildi. Ochiq inson darvozalari: 🛑 1 (normalar —
-litsenziyali muhandis), 🛑 2 (prod server/domen), 🛑 3 (upload keystore, Play Console), keyin pilot va 4-darvoza.
-Birinchi haqiqiy release faqat 1 va 3-darvozadan keyin (`build_release.sh` normalar darvozasida to'xtaydi).
-**Oxirgi yangilanish:** 2026-10-27
+**Joriy holat:** 13-faza (to'liq oflayn, ADR-0017) — 1-bosqich (server va sinxronlash olib tashlandi) bajarildi; keyingi —
+shifrlangan zaxira fayli, keyin telefonlar o'rtasida fayl almashish. 🛑 1-darvoza (normalar) ochiq.
+**Oxirgi yangilanish:** 2026-10-30
 
 ## Fazalar
 
@@ -23,6 +22,7 @@ Birinchi haqiqiy release faqat 1 va 3-darvozadan keyin (`build_release.sh` norma
 | 10 | Mustahkamlash: xavfsizlik, audit, accessibility | ✅ Tayyor (SECURITY.md: STRIDE, MASVS, F-01…F-19 — "yuqori"lar yopilgan; OSV auditi 0; unumdorlik byudjetlari; a11y testlari) | 2026-10-27 | 7040f69, e418b79 |
 | 11 | Deploy (staging + prod) | ✅ Tayyor (staging bitta buyruq; E2E 7/7 TLS orqali; zaxira → tiklash: 20 jadval + sxema bir xil; prod tayyor, 2-darvozani kutadi) | 2026-10-27 | 519f1d2 |
 | 12 | Release (AAB, Play internal) | ✅ Tayyor (`flutter build appbundle --release` — texnik kalit bilan; AAB tekshiruvi 20/20; checklist, pilot yo'riqnomasi, Play qoralamalari) | 2026-10-27 | 68f4f10 |
+| 13 | To'liq oflayn: server o'chirildi, shifrlangan zaxira, fayl almashish (ADR-0017) | ⏳ 1/3 bosqich | 2026-10-30 | |
 
 ## 🛑 Inson darvozalari
 
@@ -30,8 +30,8 @@ Birinchi haqiqiy release faqat 1 va 3-darvozadan keyin (`build_release.sh` norma
 |---|---|---|---|
 | R | Boshlashdan oldin | Reja va `zanjir_core` tuzilmasini tasdiqlash; ochiq savollarga javob | ✅ 2026-10-26: barcha takliflar qabul qilindi |
 | 1 | 1-fazadan keyin | Litsenziyali muhandis `docs/NORMS_REVIEW.md` ni tekshirib imzolaydi (M1–M10 savollarga javob) | 🛑 Kutilmoqda |
-| 2 | 11-fazadan oldin | Domen, O'zbekistondagi server (IP, SSH user), SMTP/SMS — faqat `.env` orqali | 🛑 Kutilmoqda: staging tayyor; prod — `DEPLOY.md` "Prod" (operator `prod.env` ni serverda to'ldiradi) |
-| 3 | 12-fazadan oldin | Release keystore (foydalanuvchi yaratadi), Play Console yuklash | 🛑 Kutilmoqda: `docs/RELEASE.md` (upload kaliti, `build_release.sh`, Play internal testing) |
+| 2 | — | ~~Domen, server, SMTP/SMS~~ | ❎ Olib tashlandi (2026-10-30, ADR-0017): ilova to'liq oflayn |
+| 3 | 12-fazadan oldin | Release keystore, Play Console yuklash | ⏳ Upload kaliti yaratildi (foydalanuvchi so'rovi bilan, 2026-10-30) va topshirildi; Play Console — foydalanuvchi |
 | 4 | Pilotdan keyin | Fikr-mulohazalar asosida keyingi reja | ⏳ |
 
 ## Ochiq savollar

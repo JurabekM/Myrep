@@ -1,5 +1,5 @@
 import 'package:zanjir_core/zanjir_core.dart';
-import 'package:zanjir_data/zanjir_data.dart' show DataRuleException, ProtocolBlocker, ServerException, SyncRejected;
+import 'package:zanjir_data/zanjir_data.dart' show DataRuleException, ProtocolBlocker;
 
 import 'gen/app_localizations.dart';
 
@@ -150,23 +150,6 @@ extension Labels on AppLocalizations {
     _ => blockerOther(b.code),
   };
 
-  /// Server va sinxronlash xatolari (ADR-0012).
-  String serverErrorText(Object e) => switch (e) {
-    ServerException(unavailable: true) => serverUnavailable,
-    ServerException(code: 'invalid_credentials') => invalidCredentials,
-    ServerException(code: 'invalid_invite') => invalidInvite,
-    ServerException(code: 'conflict') => phoneTaken,
-    ServerException(code: 'invalid_phone') => invalidPhone,
-    ServerException(code: 'session_expired' || 'not_authenticated' || 'invalid_token') => sessionExpired,
-    ServerException(code: 'push_rejected', reason: 'clock_skew') => errorClockSkew,
-    ServerException(code: 'too_many_attempts') => tooManyAttempts,
-    SyncRejected(:final reason, :final table?, :final rowId?) => syncRejectedRow(table, _short(rowId), reason ?? '—'),
-    ServerException(code: 'push_rejected', :final reason) => syncRejected(reason ?? '—'),
-    ServerException(:final code) => serverError(code),
-    StateError(message: 'profile_mismatch' || 'profile_exists') => profileMismatch,
-    _ => errorText(e),
-  };
-
   /// Repozitoriy xatolari foydalanuvchiga.
   String errorText(Object e) => switch (e) {
     final DataRuleException d when d.code == 'forbidden_role' => errorForbidden,
@@ -197,6 +180,3 @@ MeasurementType defaultMeasurementType(NodeKind k) => switch (k) {
   NodeKind.socketGroup || NodeKind.load || NodeKind.breaker || NodeKind.fuse => MeasurementType.loopImpedance,
   _ => MeasurementType.insulation,
 };
-
-/// UUID ning boshi — xabarda qisqa ko'rsatish uchun (to'liq ID loglarda emas, faqat UI'da).
-String _short(String id) => id.length > 8 ? id.substring(0, 8) : id;

@@ -16,7 +16,6 @@ dependencies:
   flutter_riverpod: ^3.4.3
   flutter_secure_storage: ^11.2.0
   go_router: ^18.1.1
-  http: ^1.6.0
   intl: ^0.20.3
   printing: ^5.15.1
   qr_flutter: ^4.1.0

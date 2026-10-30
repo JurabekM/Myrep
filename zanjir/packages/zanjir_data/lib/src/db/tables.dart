@@ -260,20 +260,3 @@ class LocalPrefs extends Table {
   @override
   Set<Column> get primaryKey => {key};
 }
-
-/// Serverga yuborilishi kerak bo'lgan o'zgarishlar (ADR-0012). SQLite triggerlari to'ldiradi — repozitoriy unutolmaydi.
-/// Bir qatorning keyingi o'zgarishi oldingi yozuvni almashtiradi (yangi `op_id`, navbat oxiriga). Faqat qurilmada.
-@DataClassName('SyncOutboxRow')
-class SyncOutbox extends Table {
-  @override
-  String get tableName => 'sync_outbox';
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get tableName_ => text().named('table_name')();
-  TextColumn get rowId => text()();
-  TextColumn get opId => text()();
-
-  @override
-  List<Set<Column>> get uniqueKeys => [
-    {tableName_, rowId},
-  ];
-}

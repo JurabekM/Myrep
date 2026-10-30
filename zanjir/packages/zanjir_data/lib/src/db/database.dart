@@ -57,7 +57,33 @@ final OnUpgrade _steps = stepByStep(
       );
     }
   },
+  from4To5: (m, schema) async {
+    // 13-faza: ilova to'liq oflayn (ADR-0017) — sinxronlash navbati, uning triggerlari va kursorlari o'chiriladi.
+    // Ma'lumot jadvallariga (ayniqsa append-only) tegilmaydi.
+    for (final trigger in outboxTriggers) {
+      await m.database.customStatement('DROP TRIGGER IF EXISTS $trigger');
+    }
+    await m.database.customStatement('DROP TABLE IF EXISTS sync_outbox');
+    await m.database.customStatement("DELETE FROM local_pref WHERE \"key\" LIKE 'sync.%'");
+  },
 );
+
+/// v4 dagi sinxronlash navbati triggerlari (v5 da o'chiriladi).
+final outboxTriggers = [
+  for (final t in [
+    'organization',
+    'instrument',
+    'site',
+    'node',
+    'edge',
+    'measurement_session',
+    'isolation_plan',
+    'norm_set',
+    'org_setting',
+  ])
+    for (final op in ['ins', 'upd']) '${t}_outbox_$op',
+  for (final t in ['measurement', 'protocol', 'protocol_document', 'audit_event']) '${t}_outbox_ins',
+];
 
 /// Navbatga qo'yiladigan jadvallar (ota jadvallar birinchi) va ichki tartib.
 const outboxBackfillOrder = [
@@ -96,7 +122,6 @@ const outboxBackfillOrder = [
     NormSets,
     OrgSettings,
     LocalPrefs,
-    SyncOutbox,
   ],
   include: {'triggers.drift'},
 )
@@ -104,7 +129,7 @@ class ZanjirDatabase extends _$ZanjirDatabase {
   ZanjirDatabase(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(

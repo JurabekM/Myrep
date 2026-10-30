@@ -15,11 +15,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from zanjir_server.crypto.canonical import canonical_json, canonical_json_bytes
-from zanjir_server.crypto.hash_chain import GENESIS_HASH, AuditEvent, compute_event_hash, payload_hash, verify_chain
-from zanjir_server.crypto.hashing import sha256_hex
-from zanjir_server.crypto.protocol import protocol_message, qr_token_from_signature, qr_token_message
-from zanjir_server.crypto.signing import SIG_ALG_ED25519, Ed25519Signer, verify_signature
+from zanjir_refcrypto.canonical import canonical_json, canonical_json_bytes
+from zanjir_refcrypto.hash_chain import GENESIS_HASH, AuditEvent, compute_event_hash, payload_hash, verify_chain
+from zanjir_refcrypto.hashing import sha256_hex
+from zanjir_refcrypto.protocol import protocol_message, qr_token_from_signature, qr_token_message
+from zanjir_refcrypto.signing import SIG_ALG_ED25519, Ed25519Signer, verify_signature
 
 OUT = Path(__file__).resolve().parent
 

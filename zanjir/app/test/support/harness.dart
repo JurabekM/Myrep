@@ -14,8 +14,6 @@ import 'package:zanjir_app/router.dart';
 import 'package:zanjir_core/zanjir_core.dart';
 import 'package:zanjir_data/zanjir_data.dart';
 
-import 'fake_http_server.dart';
-
 /// Ilova bilan birga keladigan normalar (host testida ham, qurilmada ham asset orqali).
 Future<String> loadNorms() => rootBundle.loadString('assets/norms/v0.yaml');
 
@@ -25,7 +23,7 @@ Future<Uint8List> assetBytes(String path) async => (await rootBundle.load(path))
 final DateTime testNow = DateTime.utc(2026, 10, 26, 8);
 
 class TestEnv {
-  TestEnv({this.server}) : db = ZanjirDatabase(NativeDatabase.memory()) {
+  TestEnv() : db = ZanjirDatabase(NativeDatabase.memory()) {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
   }
 
@@ -33,10 +31,6 @@ class TestEnv {
   final keys = MemoryDeviceKeyStore();
   final secureScreen = FakeSecureScreen();
   final pdfActions = FakePdfActions();
-  final tokens = MemoryTokenStore();
-
-  /// Berilsa — ilova shu soxta serverga ulanadi (`https://zanjir.test/`); aks holda server sozlanmagan.
-  final FakeHttpServer? server;
   Profile? profile;
 
   Widget app() => ProviderScope(
@@ -47,9 +41,6 @@ class TestEnv {
       clockProvider.overrideWithValue(() => testNow),
       secureScreenProvider.overrideWithValue(secureScreen),
       pdfActionsProvider.overrideWithValue(pdfActions),
-      tokenStoreProvider.overrideWithValue(tokens),
-      serverUrlProvider.overrideWithValue(server == null ? '' : 'https://zanjir.test/'),
-      httpClientProvider.overrideWithValue(server?.client),
     ],
     child: const ZanjirApp(),
   );

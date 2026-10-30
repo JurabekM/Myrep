@@ -112,12 +112,12 @@ jobs:
       - run: flutter analyze --fatal-infos
       - run: flutter test
 
-  server:
-    name: server (python)
+  vectors:
+    name: kripto vektorlari (mustaqil Python implementatsiyasi, ADR-0007)
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: zanjir/server
+        working-directory: zanjir/tools/vectors
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -125,52 +125,16 @@ jobs:
           python-version: "3.12"
       - run: pipx install uv
       - run: uv sync --locked --python 3.12
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run mypy .
-      - name: Testlar (PostgreSQL 16 testcontainers, RLS, RBAC matritsasi, sync) + qamrov ≥ 95%
-        env:
-          TESTCONTAINERS_RYUK_DISABLED: "true"
-        run: uv run pytest --cov=zanjir_server --cov-branch --cov-report=term-missing --cov-fail-under=95
-      - name: Kripto vektorlari generatori va audit vositasi — lint va tiplar
+      - name: Lint va tiplar (vektorlar va audit vositasi)
         run: |
-          uv run ruff check ../tools/vectors ../tools/audit
-          uv run ruff format --check ../tools/vectors ../tools/audit
-          uv run mypy --strict ../tools/vectors/generate.py ../tools/audit/osv_audit.py
+          uv run ruff check . ../audit
+          uv run ruff format --check . ../audit
+          uv run mypy zanjir_refcrypto generate.py tests
+          uv run mypy --strict ../audit/osv_audit.py
+      - name: Python implementatsiyasi testlari (RFC 8785/8032 rasmiy vektorlari bilan)
+        run: uv run pytest -q
       - name: tools/vectors eskirmaganmi (Dart testlari ham shu fayllarni o'qiydi)
-        run: uv run python -I ../tools/vectors/generate.py --check
-
-  e2e:
-    name: E2E (ilova sinxronlash ↔ server, ADR-0012)
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: zanjir_owner
-          # Vaqtinchalik CI konteyneri paroli (maxfiy emas, tashqariga ochilmaydi).
-          POSTGRES_PASSWORD: e2e-ci-only
-          POSTGRES_DB: zanjir
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U zanjir_owner -d zanjir" --health-interval 2s --health-timeout 2s --health-retries 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pipx install uv
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-      - run: dart pub get
-        working-directory: zanjir/packages/zanjir_data
-      - name: Ikki qurilma, yo'qolgan javob, LWW, buzilgan zanjir, protokol (Dart → FastAPI + PostgreSQL)
-        env:
-          ZANJIR_E2E_OWNER_URL: postgresql+asyncpg://zanjir_owner:e2e-ci-only@localhost:5432/zanjir
-        run: zanjir/tools/e2e/run.sh
+        run: uv run python -I generate.py --check
 
   norms:
     name: norms (schema + release darvozasi)

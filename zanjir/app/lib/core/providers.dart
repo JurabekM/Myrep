@@ -1,35 +1,17 @@
-import 'dart:math';
-
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:zanjir_core/zanjir_core.dart';
 import 'package:zanjir_data/zanjir_data.dart';
 import 'package:zanjir_protocol/zanjir_protocol.dart';
 
-import 'config.dart';
 import 'key_store.dart';
 import 'platform.dart';
 import 'profile.dart';
-import 'sync_controller.dart';
 
 /// `main.dart` va testlarda override qilinadi.
 final databaseProvider = Provider<ZanjirDatabase>((ref) => throw UnimplementedError('databaseProvider'));
 final keyStoreProvider = Provider<DeviceKeyStore>((ref) => throw UnimplementedError('keyStoreProvider'));
 final clockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
-
-/// Server (ADR-0012). Manzil bo'sh bo'lsa — `serverApiProvider` null, ilova faqat oflayn.
-final serverUrlProvider = Provider<String>((ref) => serverUrl);
-final tokenStoreProvider = Provider<TokenStore>((ref) => SecureTokenStore());
-final httpClientProvider = Provider<http.Client?>((ref) => null);
-final serverApiProvider = Provider<ServerApi?>((ref) {
-  final url = ref.watch(serverUrlProvider);
-  if (url.isEmpty || !isAllowedServerUrl(url, debug: kDebugMode)) return null;
-  final api = ServerApi(url, tokens: ref.watch(tokenStoreProvider), client: ref.watch(httpClientProvider));
-  ref.onDispose(api.close);
-  return api;
-});
 
 /// Ilova bilan birga keladigan normalar to'plami (`assets/norms/v0.yaml` = `norms/v0.yaml`).
 final bundledNormsProvider = Provider<Future<String> Function()>(
@@ -71,36 +53,6 @@ class ProfileNotifier extends AsyncNotifier<Profile?> {
     final yaml = await ref.read(bundledNormsProvider)();
     final p = await _service.create(labName: labName, fullName: fullName, phone: phone, role: role, normsYaml: yaml);
     state = AsyncData(p);
-  }
-
-  /// Serverga kirish. Lokal profil bo'lmasa — yangi qurilma: kalit, ro'yxatdan o'tish, to'liq pull.
-  Future<void> login({required String phone, required String password}) =>
-      _withServer((account, pk) => account.login(phone: phone, password: password, publicKeyHex: pk));
-
-  /// Taklif kodi bilan qo'shilish (yangi qurilma).
-  Future<void> join({
-    required String code,
-    required String fullName,
-    required String phone,
-    required String password,
-  }) => _withServer(
-    (account, pk) => account.join(code: code, fullName: fullName, phone: phone, password: password, publicKeyHex: pk),
-  );
-
-  Future<void> _withServer(Future<ProfileIds> Function(ServerAccount account, String publicKeyHex) action) async {
-    final api = ref.read(serverApiProvider) ?? (throw StateError('server_not_configured'));
-    final keys = ref.read(keyStoreProvider);
-    var seed = await keys.readSeed();
-    if (seed == null) {
-      final rnd = Random.secure();
-      seed = List<int>.generate(32, (_) => rnd.nextInt(256));
-      await keys.writeSeed(seed);
-    }
-    final signer = await Ed25519Signer.fromSeed(seed);
-    await action(ServerAccount(ref.read(databaseProvider), api), signer.publicKeyHex);
-    state = AsyncData(await _service.load());
-    ref.invalidate(repositoriesProvider);
-    ref.invalidate(syncControllerProvider);
   }
 }
 

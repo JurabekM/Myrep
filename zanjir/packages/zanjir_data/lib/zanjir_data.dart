@@ -16,8 +16,4 @@ export 'src/repo/session_repository.dart';
 export 'src/repo/settings_repository.dart';
 export 'src/repo/site_repository.dart';
 export 'src/repo/user_repository.dart';
-export 'src/sync/account.dart';
-export 'src/sync/server_api.dart';
-export 'src/sync/sync_engine.dart';
-export 'src/sync/transport.dart';
 export 'src/sync/wire.dart' show apiOnlyTables, appendOnlyTables, rowToWire, syncTables, wireColumns, WireType;

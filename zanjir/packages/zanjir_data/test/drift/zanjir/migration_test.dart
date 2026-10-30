@@ -109,15 +109,49 @@ void main() {
     final db = ZanjirDatabase(schema.newConnection());
     addTearDown(db.close);
     await verifier.migrateAndValidate(db, 4);
-    final rows = await (db.select(db.syncOutbox)..orderBy([(o) => OrderingTerm(expression: o.id)])).get();
+    Future<List<(String, String, String)>> outbox() async => [
+      for (final r in await db.customSelect('SELECT table_name, row_id, op_id FROM sync_outbox ORDER BY id').get())
+        (r.read<String>('table_name'), r.read<String>('row_id'), r.read<String>('op_id')),
+    ];
+    final rows = await outbox();
     expect(
-      [for (final r in rows) (r.tableName_, r.rowId)],
+      [for (final r in rows) (r.$1, r.$2)],
       [('organization', 'org'), ('site', 's'), ('audit_event', 'a1'), ('audit_event', 'a2')],
     );
-    expect(rows.map((r) => r.opId).toSet(), hasLength(4));
+    expect(rows.map((r) => r.$3).toSet(), hasLength(4));
     // Yangi yozuvlar triggerlar orqali navbatga tushadi.
     await db.customStatement("update site set name = 'Y', rev = 2 where id = 's'");
-    final site = await (db.select(db.syncOutbox)..where((o) => o.rowId.equals('s'))).getSingle();
-    expect(site.opId, isNot(rows[1].opId));
+    final site = (await outbox()).firstWhere((r) => r.$2 == 's');
+    expect(site.$3, isNot(rows[1].$3));
+  });
+
+  test('v4 → v5: sinxronlash navbati va triggerlari o\'chadi, ma\'lumot va append-only himoyasi qoladi', () async {
+    final schema = await verifier.schemaAt(4);
+    const t = "'2026-10-26T07:00:00.000Z'";
+    for (final sql in [
+      "insert into organization (id, name, created_at, updated_at) values ('org', 'Lab', $t, $t)",
+      "insert into app_user (id, org_id, full_name, phone, role, created_at, updated_at) values ('u', 'org', 'M', '+998', 'LEAD', $t, $t)",
+      "insert into device (id, org_id, user_id, public_key_ed25519, sig_alg, registered_at, created_at, updated_at) values ('d', 'org', 'u', 'aa', 'Ed25519', $t, $t, $t)",
+      "insert into site (id, org_id, name, created_at, updated_at) values ('s', 'org', 'Obyekt', $t, $t)",
+      "insert into audit_event (id, org_id, device_id, seq, prev_hash, event_hash, actor_id, event_type, payload_hash, device_sig, sig_alg, event_at, created_at, updated_at) values ('a1', 'org', 'd', 1, 'p', 'e1', 'u', 'X', 'h', 's', 'Ed25519', $t, $t, $t)",
+      "insert into local_pref (\"key\", value) values ('sync.cursor', '42')",
+      "insert into local_pref (\"key\", value) values ('profile.org_id', 'org')",
+    ]) {
+      schema.rawDatabase.execute(sql);
+    }
+    final db = ZanjirDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 5);
+    final tables = await db.customSelect("SELECT name FROM sqlite_master WHERE name LIKE '%outbox%'").get();
+    expect(tables, isEmpty, reason: 'navbat jadvali va triggerlari qolmadi');
+    expect(
+      [for (final r in await db.select(db.localPrefs).get()) r.key],
+      ['profile.org_id'],
+      reason: 'faqat sinxronlash kalitlari o\'chadi',
+    );
+    // Oddiy yozish ishlaydi (navbatga yozadigan trigger yo'q), append-only himoya joyida.
+    await db.customStatement("update site set name = 'Y', rev = 2 where id = 's'");
+    expect((await db.select(db.sites).getSingle()).name, 'Y');
+    await expectLater(db.customUpdate("delete from audit_event where id = 'a1'"), throwsA(isA<SqliteException>()));
   });
 }

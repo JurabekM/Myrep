@@ -2,13 +2,13 @@
 # ZANJIR release AAB (12-faza, ADR-0016). Faqat foydalanuvchi kaliti bilan (`android/key.properties`, 3-darvoza) va
 # barcha darvozalardan o'tgandan keyin. Play Console'ga yuklashni foydalanuvchi bajaradi.
 #
-#   ZANJIR_SERVER_URL=https://<domen>/ app/tool/build_release.sh
+#   app/tool/build_release.sh
 #
 # Tekshiruvlar (birortasi o'tmasa — to'xtaydi, chetlab o'tish parametri yo'q):
 #   1. git ishchi daraxti toza; HEAD da `zanjir-v*` teg bo'lsa — pubspec versiyasiga teng
 #   2. normalar release darvozasi (`check_norms.py --release`: reviewed_by/reviewed_at, needs_verification yo'q)
 #   3. ilovadagi normalar nusxasi = `norms/` (asset testi), `flutter analyze`, `flutter test`
-#   4. server manzili faqat https
+#   4. AAB'da INTERNET ruxsati yo'q — ilova to'liq oflayn (ADR-0017, `verify_aab.sh`)
 # Natija: app/build/release/<versiya>/ — AAB, R8 mapping, Dart simbollari (maxfiy saqlanadi), SHA-256, hisobot.
 set -euo pipefail
 
@@ -19,9 +19,6 @@ die() { echo "RELEASE TO'XTATILDI: $*" >&2; exit 1; }
 [[ -f "$APP/android/key.properties" ]] || die "android/key.properties yo'q (3-darvoza, docs/RELEASE.md)"
 store="$(grep -E '^storeFile=' "$APP/android/key.properties" | cut -d= -f2-)"
 [[ -f "$store" ]] || die "keystore topilmadi: $store"
-server="${ZANJIR_SERVER_URL:?ZANJIR_SERVER_URL kerak (https://<domen>/)}"
-[[ "$server" == https://* && "$server" == */ ]] || die "ZANJIR_SERVER_URL https:// bilan boshlanib / bilan tugashi kerak"
-verify="${ZANJIR_VERIFY_BASE_URL:-${server}v/}"
 
 version="$(grep -E '^version: ' "$APP/pubspec.yaml" | cut -d' ' -f2)"
 name="${version%+*}"; code="${version#*+}"
@@ -43,8 +40,7 @@ flutter test
 echo "== AAB ($name+$code)"
 OUT="$APP/build/release/$name+$code"
 rm -rf "$OUT" && mkdir -p "$OUT"
-flutter build appbundle --release --obfuscate --split-debug-info="$OUT/symbols" \
-  --dart-define=ZANJIR_SERVER_URL="$server" --dart-define=ZANJIR_VERIFY_BASE_URL="$verify"
+flutter build appbundle --release --obfuscate --split-debug-info="$OUT/symbols"
 aab="$OUT/zanjir-$name+$code.aab"
 cp build/app/outputs/bundle/release/app-release.aab "$aab"
 cp build/app/outputs/mapping/release/mapping.txt "$OUT/mapping.txt"
@@ -54,7 +50,6 @@ cp build/app/outputs/mapping/release/mapping.txt "$OUT/mapping.txt"
   echo "versiya: $name+$code"
   echo "git: $(git -C "$ROOT" rev-parse HEAD)"
   echo "flutter: $(flutter --version --machine 2>/dev/null | grep -o '"frameworkVersion": *"[^"]*"' | cut -d'"' -f4)"
-  echo "server: $server"
   (cd "$OUT" && sha256sum ./*.aab ./*.tar.gz mapping.txt)
 } | tee "$OUT/release-info.txt"
 echo

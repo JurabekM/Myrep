@@ -1,8 +1,8 @@
 # CLAUDE.md — ZANJIR
 
-ZANJIR — elektrolaboratoriyalar va elektriklar uchun offline-first mobil ilova:
+ZANJIR — elektrolaboratoriyalar va elektriklar uchun **to'liq oflayn** mobil ilova (server va internet yo'q, ADR-0017):
 obyektning elektr grafi, dalada o'lchovlar, normaga avtomatik solishtirish,
-imzolangan PDF protokol + QR tekshiruv sahifasi, 5 ta texnik tadbir bo'yicha ajratish rejasi.
+imzolangan PDF protokol + QR tekshiruv (ilova ichida), 5 ta texnik tadbir bo'yicha ajratish rejasi.
 
 To'liq topshiriq: `docs/PROMPT.md` (o'zgartirilmaydi; qaror o'zgarsa — `docs/DECISIONS.md` ga ADR).
 Ildizdagi `../CLAUDE.md` (Myrep umumiy qoidalari) ham amal qiladi.
@@ -20,10 +20,8 @@ Ildizdagi `../CLAUDE.md` (Myrep umumiy qoidalari) ham amal qiladi.
 | Yadro | `packages/zanjir_core` — sof Dart, Flutter'ga bog'liq emas |
 | PDF / QR | `pdf`, `printing`, `qr_flutter` |
 | Kripto | `cryptography` (SHA-256, Ed25519), `flutter_secure_storage` |
-| Server | Python 3.12, FastAPI, SQLAlchemy 2 (async), Alembic, Pydantic v2 |
-| Server bazasi | PostgreSQL 16 + Row-Level Security |
-| Testlar | `dart test`, `flutter test`, `integration_test`, pytest, testcontainers |
-| Infra | Docker, docker compose, Caddy, GitHub Actions (`.github/workflows/zanjir.yml`) |
+| Testlar | `dart test`, `flutter test`, `integration_test`, pytest (`tools/`) |
+| Infra | GitHub Actions (`.github/workflows/zanjir*.yml`) — server/deploy yo'q (ADR-0017) |
 | Normalar | `norms/*.yaml` + `norms/schema.json` |
 
 ## Tuzilma
@@ -31,13 +29,11 @@ Ildizdagi `../CLAUDE.md` (Myrep umumiy qoidalari) ham amal qiladi.
 zanjir/
   app/                  # Flutter ilova
   packages/zanjir_core/ # graf, baholash, solver, kanonik JSON, hash-zanjir
-  packages/zanjir_data/ # lokal baza (Drift), repozitoriylar, migratsiyalar, protokol imzolash
+  packages/zanjir_data/ # lokal baza (Drift), repozitoriylar, migratsiyalar, protokol imzolash, zaxira, fayl almashish
   packages/zanjir_protocol/ # protokol payload'i → deterministik PDF (QR bilan)
-  server/               # FastAPI
   norms/                # normalar YAML + JSON Schema
-  tools/vectors/        # Dart va Python uchun umumiy kripto test vektorlari
-  deploy/               # Dockerfile, compose, Caddyfile, backup skriptlari
-  docs/                 # PROMPT, SPEC, PROGRESS, DECISIONS, DEPLOY, RUNBOOK, SECURITY, NORMS_REVIEW
+  tools/vectors/        # kripto test vektorlari + mustaqil Python implementatsiyasi (zanjir_refcrypto)
+  docs/                 # PROMPT, SPEC, PROGRESS, DECISIONS, RUNBOOK, SECURITY, NORMS_REVIEW, RELEASE, PILOT
 ```
 
 ## Buyruqlar
@@ -49,32 +45,24 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Protokol PDF: `cd packages/zanjir_protocol && python3 -I tool/gen_strings.py --check && dart analyze --fatal-infos && dart test`
   (PDF matnlari ARB'dan generatsiya qilinadi — ARB o'zgarsa `python3 -I tool/gen_strings.py`; mazmun testlari `pdftotext` talab qiladi)
 - Ilova: `cd app && flutter pub get && dart format --output=none --set-exit-if-changed lib test && flutter analyze --fatal-infos && flutter test`
-- Server: `cd server && uv sync && uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run pytest --cov=zanjir_server --cov-branch`
-  (Docker kerak — testcontainers PostgreSQL 16; Docker o'rniga `ZANJIR_TEST_DATABASE_URL`; konteynerda `dockerd &` va
-  `TESTCONTAINERS_RYUK_DISABLED=true`; Docker Hub cheklangan bo'lsa `ZANJIR_TEST_PG_IMAGE=public.ecr.aws/docker/library/postgres:16-alpine`).
-  Migratsiya: `uv run alembic upgrade head` (`ZANJIR_DATABASE_URL`).
 - Normalar: `cd tools/norms && uv sync && uv run pytest && uv run python -I check_norms.py ../../norms` (`--release` — release darvozasi)
-- E2E (ilova sync ↔ server): `tools/e2e/run.sh` (Docker'da PostgreSQL yoki `ZANJIR_E2E_OWNER_URL`; `dart test -P e2e-run test/e2e`).
-  Sinxronlash sxemasi shartnomasi: `ZANJIR_UPDATE_SYNC_SCHEMA=1 uv run pytest tests/test_sync_schema.py` → `tools/vectors/sync_schema.json`.
-- Kripto vektorlari: `cd server && uv run python -I ../tools/vectors/generate.py --check` (qo'lda tahrirlanmaydi, ADR-0007)
-- Deploy (ADR-0015): `deploy/zanjir up staging` (bitta buyruq), `deploy/check-staging.sh` (smoke + E2E TLS orqali + zaxira →
-  tiklash); bu konteynerda: `ZANJIR_REGISTRY=mirror.gcr.io/library` (Docker Hub/ECR cheklovi) va
-  `ZANJIR_BUILD_CA=./environments/build-ca.pem` (`/root/.ccr/ca-bundle.crt` nusxasi, commit qilinmaydi). Prod — `docs/DEPLOY.md`.
+- Kripto vektorlari (ADR-0007): `cd tools/vectors && uv sync && uv run pytest && uv run python -I generate.py --check`
+  (mustaqil Python implementatsiyasi `zanjir_refcrypto`; vektorlar qo'lda tahrirlanmaydi).
 - Android (ADR-0016): `app/tool/build_check.sh` (texnik release build, bir martalik kalit — tarqatilmaydi; AAB tekshiruvi),
   `app/tool/build_release.sh` (haqiqiy release — foydalanuvchi kaliti + barcha darvozalar), `python3 -I app/tool/gen_icons.py`.
   Bu konteynerda: `ANDROID_HOME=/opt/android-sdk` (qayta o'rnatiladi) va `~/.gradle/init.d/maven-mirror.gradle`
   (Maven Central 429 — Google ko'zgusi; repoda emas).
-- CI: `.github/workflows/zanjir.yml` (repo ildizida) — yuqoridagilarning hammasi; `zanjir-deploy.yml` — staging qabul sinovi;
-  `zanjir-release.yml` — PR'da texnik AAB, qo'lda — release.
+- CI: `.github/workflows/zanjir.yml` (repo ildizida) — yuqoridagilarning hammasi; `zanjir-release.yml` — PR'da texnik AAB
+  (INTERNET ruxsati yo'qligi tekshiriladi), qo'lda — release; `zanjir-emulator.yml`, `zanjir-audit.yml`.
 
 ## O'zgarmas qoidalar (hech qachon buzilmaydi)
 1. Ilova hech qachon "ishlash xavfsiz" demaydi — faqat **tavsiya**; javobgarlik naryad beruvchi va ish rahbarida. Bu matn UI'da va PDF'da ko'rinadi.
 2. "Kuchlanish yo'qligini tekshirish" qadamini o'tkazib yuborib, yashirib yoki avtomatik belgilab bo'lmaydi.
 3. Ma'lumot yetishmasa → NEEDS_REVIEW. PASS hech qachon standart qiymat emas.
 4. Norma qiymatlari faqat YAML'da; kodda "magic number" yo'q.
-5. `measurement`, `protocol`, `audit_event` — UPDATE/DELETE yo'q (serverda DB trigger, ilovada repozitoriy darajasida).
+5. `measurement`, `protocol`, `audit_event` — UPDATE/DELETE yo'q (repozitoriy darajasida + SQLite triggerlari; importda ham).
 6. Qiyoslash muddati o'tgan asbob bilan olingan o'lchov imzolanmaydi. NEEDS_REVIEW qolgan sessiyani faqat LEAD izoh bilan imzolaydi.
-7. Tashkilotlar ajratilgan: `org_id` filtri + Postgres RLS birga.
+7. Tashkilotlar ajratilgan: `org_id` filtri; fayl importi boshqa tashkilot ma'lumotini qabul qilmaydi (ADR-0017; avval — Postgres RLS).
 8. Maxfiy ma'lumot (parol, token, kalit, shaxsiy ma'lumot) logga yozilmaydi.
 9. `zanjir_core` uchun avval test, keyin kod.
 10. Elektr xavfsizligi bo'yicha noaniqlik → to'xta va so'ra.
@@ -91,7 +79,7 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - `lib/src/eval/` — `evaluate()`, `rule_check.dart` (umumiy qoida tekshiruvi), `evaluators/*` (o'lchov turlari bo'yicha).
 - `lib/src/solver/` — `planIsolation()`, Edmonds–Karp, qadamlar, ogohlantirishlar, `graph_snapshot_hash` (ADR-0006).
 - `lib/src/crypto/` — kanonik JSON (RFC 8785), SHA-256, Ed25519 `Signer`, hash-zanjir, protokol imzosi (ADR-0007).
-- Server kripto: `server/zanjir_server/crypto/` — Dart bilan bir xil; umumiy vektorlar `tools/vectors/`.
+- Mustaqil Python kripto: `tools/vectors/zanjir_refcrypto/` — Dart bilan bir xil; umumiy vektorlar `tools/vectors/`.
 - Benchmark: `dart run benchmark/solver_bench.dart` (2000 tugun < 500 ms Android talabi).
 - Golden testlar: `test/golden/*.cases.yaml` + `graphs.yaml`; har normaga ≥ 3 holat (meta-test tekshiradi).
 - Baholash semantikasi: ADR-0002, ADR-0005. Sabab kodlari (`reason`) — barqaror inglizcha kalitlar.
@@ -106,50 +94,31 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - QR token — qurilma imzosidan: `qr_sig = Ed25519("zanjir.qr/1\n<org_id>\n<raqam>")`, `qr_token = sha256(qr_sig)[:32]`
   (yadro `qrTokenMessage`/`qrTokenFromSignature`, vektor `protocol_signature.json`, ADR-0014). Tasodifiy token yaratilmaydi.
 
-## Server (`server/`, ADR-0011) xaritasi
-- `zanjir_server/db/` — modellar (ustunlar ilova bilan bir xil), `session.py` (`org_session` — RLS, `lookup_org`),
-  `migrations/` (Alembic; RLS, append-only va `server_rev` triggerlari, `zanjir_app` roli).
-- `api/` — `auth` (kirish, refresh rotatsiya, taklif, ro'yxatdan o'tish), `org` (takliflar, foydalanuvchilar, qurilmalar),
-  `sync`, `public` (`/v/{qr_token}`, health, metrics); `deps.py` — `Viewer/Engineer/Lead/Admin` rol talablari.
-- `sync/` — `wire.py` (sim formati), `service.py` (push qoidalari, pull), `protocol_rules.py` (6-qoida serverda).
-  Protokol qoidalari serverdagi yozuvlar bo'yicha (payload o'lchovlari = sessiyaning amaldagi o'lchovlari); reja holat
-  o'tishlari va mazmuni qulflangan; tashkilot/sozlama o'zgarishi — imzolangan hodisa bilan (ADR-0014). Yangi audit
-  payload'i ilova bilan bir xil yordamchi funksiyada (`*_audit_payload`, `plan_approval_payload`).
-- Yangi endpoint → `tests/test_rbac_matrix.py` `MATRIX` va `docs/SECURITY.md` jadvali (aks holda test yiqiladi).
-- Testlar: `tests/support/api.py` (tashkilot/rollar), `tests/support/field.py` (dala qurilmasi taqlidi: audit zanjiri, imzo).
-
 ## Ajratish rejasi (ADR-0006, ADR-0013)
 - Yadro: `solver/execution.dart` — qadamlar faqat ketma-ket, aniq tasdiq bilan; kuchlanish tekshiruvi — 2 tasdiq.
 - `IsolationPlanRepository`: `save` → `approve` (LEAD/ADMIN) → `completeStep` (audit `PLAN_STEP_DONE`, `<reja>#<tartib>`) →
-  `execute`; `refreshStale`. `PLAN_APPROVED` payload'i — `planApprovalPayload` (qadamlar hash'i bilan; server tasdiqni
+  `execute`; `refreshStale`. `PLAN_APPROVED` payload'i — `planApprovalPayload` (qadamlar hash'i bilan; import tasdiqni
   shunga bog'laydi). Ilova: `/sites/:id/plans`, `/plans/:id`, quruvchi `/sites/:id/isolation`; oqim testi
   `test/flow/isolation_flow.dart` (widget + `integration_test`).
 
-## Sinxronlash (ADR-0012)
-- `zanjir_data/lib/src/sync/`: `sync_engine.dart` (navbat → push, pull bitta tranzaksiyada, LWW), `wire.dart` (Drift ↔ sim
-  formati), `server_api.dart` (HTTP, refresh), `account.dart` (ro'yxatdan o'tish, taklif, kirish). Navbat — SQLite triggerlari
-  (`triggers.drift`); yangi sinxron jadval qo'shilsa: trigger, `syncTables`, server modeli, `sync_schema.json`.
-- Paket rad etilsa — `SyncRejected` (jadval, ID, sabab), pull baribir bajariladi; refresh bitta oqimda (ADR-0014).
-- Ilova: `core/sync_controller.dart` (fon va qo'lda), sozlamalar "Server" bo'limi, `/login`, `/join`; testlarda
-  `test/support/fake_http_server.dart`.
+## Oflayn rejim (ADR-0017)
+- Server, sinxronlash, kirish/taklif ekranlari va `INTERNET` ruxsati yo'q (release AAB tekshiruvi talab qiladi). Yangi tarmoq
+  kutubxonasi yoki ruxsat qo'shilmaydi.
+- `zanjir_data/lib/src/sync/wire.dart` — jadval ↔ JSON (fayl almashish formati uchun). Sxema v5: sinxronlash navbati o'chirilgan.
+- Zaxira (shifrlangan fayl) va telefonlar o'rtasida fayl almashish — 13-faza (ADR-0017).
 
 ## Ilova (`app/`) xaritasi
 - `lib/core/` — provayderlar (Riverpod), profil (oflayn), qurilma kaliti, son formatlash, `platform.dart` (FLAG_SECURE,
-  PDF ulashish — testlarda soxtasi), `config.dart` (`ZANJIR_VERIFY_BASE_URL`); `lib/router.dart` — go_router (`/n/:id`, `/v/:token`).
+  PDF ulashish — testlarda soxtasi), `config.dart` (QR havola `zanjir://app/v/`); `lib/router.dart` — go_router (`/start`, `/n/:id`, `/v/:token`).
 - `lib/features/*` — ekranlar; `lib/l10n/app_{uz,ru}.arb` + `labels.dart` (domen kodlari → matn).
 - Testlar: `test/support/harness.dart` (xotiradagi baza, `startWithSession`, `goTo`, `settle`, `reveal`); asosiy oqim —
   `test/flow/main_flow.dart` (widget testi — katta va kichik 360×640 ekran — va `integration_test/`). Lazy ro'yxatdagi
   elementlar uchun `reveal` (vertikal ro'yxat, ekran markaziga). `assets/norms/v0.yaml` = `norms/v0.yaml` (test nazoratida).
 
-## Deploy (ADR-0015)
-- `deploy/`: bitta `compose.yaml` (db, migrate, api, caddy, backup), muhit — `deploy/environments/<muhit>.env` (commit
-  qilinmaydi). Yangi `ZANJIR_*` sozlama → `compose.yaml` `api.environment`, ikkala `*.env.example`, `DEPLOY.md`.
-- Yangi migratsiya `zanjir_owner` (superuser emas) bilan ishlashi shart — `check-staging.sh` buni tekshiradi.
-- Prod amallari — `docs/RUNBOOK.md`; prod'ga chiqarish faqat 2-darvozadan keyin, operator bilan.
-
 ## Release (ADR-0016)
-- Release kalitini Claude yaratmaydi va ishlatmaydi (3-darvoza); `build_check.sh` dagi bir martalik kalit faqat texnik
-  tekshiruv uchun, AAB tarqatilmaydi. `build_release.sh` darvozalarini chetlab o'tadigan parametr qo'shilmaydi.
+- Upload kalitini foydalanuvchi so'rovi bilan Claude yaratdi (2026-10-30, ADR-0017) va foydalanuvchiga topshirdi; keystore va
+  parol repoga, logga, hujjatga yozilmaydi (`key.properties` — `.gitignore`). `build_check.sh` dagi bir martalik kalit faqat
+  texnik tekshiruv uchun. `build_release.sh` darvozalarini chetlab o'tadigan parametr qo'shilmaydi.
 - Yangi Android ruxsati yoki manifest o'zgarishi → `verify_aab.sh` ruxsatlar ro'yxati, `docs/PLAY_LISTING.md` (Data safety).
 - Hujjatlar: `docs/RELEASE.md` (checklist), `docs/PILOT.md`, `docs/PLAY_LISTING.md`, `docs/PRIVACY.md` (qoralama).
 

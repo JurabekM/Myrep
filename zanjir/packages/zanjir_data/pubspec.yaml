@@ -8,7 +8,6 @@ environment:
 
 dependencies:
   drift: ^2.35.3
-  http: ^1.6.0
   meta: ^1.19.0
   sqlite3: ^3.8.0
   zanjir_core:

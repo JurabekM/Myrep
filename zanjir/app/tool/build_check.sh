@@ -23,7 +23,6 @@ printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=check\nkeyPassword=%s\n' "$TMP/
 cd "$APP"
 OUT="$APP/build/check"
 rm -rf "$OUT" && mkdir -p "$OUT"
-flutter build appbundle --release --obfuscate --split-debug-info="$OUT/symbols" \
-  --dart-define=ZANJIR_SERVER_URL=https://staging.invalid/ --dart-define=ZANJIR_VERIFY_BASE_URL=https://staging.invalid/v/
+flutter build appbundle --release --obfuscate --split-debug-info="$OUT/symbols"
 cp build/app/outputs/bundle/release/app-release.aab "$OUT/zanjir-check.aab"
 "$APP/tool/verify_aab.sh" "$OUT/zanjir-check.aab" --expect-cn "ZANJIR build check - NOT FOR RELEASE" | tee "$OUT/report.txt"

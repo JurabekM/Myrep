@@ -3,9 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/providers.dart';
-import 'features/auth/join_screen.dart';
-import 'features/auth/login_screen.dart';
 import 'features/auth/onboarding_screen.dart';
+import 'features/auth/start_screen.dart';
 import 'features/graph/node_card_screen.dart';
 import 'features/graph/node_form_screen.dart';
 import 'features/graph/site_screen.dart';
@@ -21,7 +20,7 @@ import 'features/settings/settings_screen.dart';
 import 'features/sites/site_form_screen.dart';
 import 'features/sites/sites_screen.dart';
 
-const _public = {'/login', '/onboarding', '/join'};
+const _public = {'/start', '/onboarding'};
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier(0);
@@ -34,15 +33,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (profile.isLoading) return null;
       final loggedIn = profile.value != null;
       final public = _public.contains(state.matchedLocation);
-      if (!loggedIn && !public) return '/login';
+      if (!loggedIn && !public) return '/start';
       if (loggedIn && public) return '/';
       return null;
     },
     routes: [
       GoRoute(path: '/', builder: (_, _) => const SitesScreen()),
-      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+      GoRoute(path: '/start', builder: (_, _) => const StartScreen()),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
-      GoRoute(path: '/join', builder: (_, _) => const JoinScreen()),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       GoRoute(path: '/settings/instruments/new', builder: (_, _) => const InstrumentFormScreen()),
       GoRoute(path: '/sites/new', builder: (_, _) => const SiteFormScreen()),

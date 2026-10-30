@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:zanjir_app/l10n/gen/app_localizations.dart';
 import 'package:zanjir_app/l10n/labels.dart';
 import 'package:zanjir_core/zanjir_core.dart';
-import 'package:zanjir_data/zanjir_data.dart' show DataRuleException, ProtocolBlocker, ServerException, SyncRejected;
+import 'package:zanjir_data/zanjir_data.dart' show DataRuleException, ProtocolBlocker;
 
 /// Baholovchi qaytaradigan barcha sabab kodlari (ADR-0005) tarjimaga ega.
 const reasonCodes = [
@@ -77,16 +77,6 @@ void main() {
       expect(l.blockerText(const ProtocolBlocker('forbidden_role', ['VIEWER'])), contains(l.roleViewer));
       expect(l.blockerText(const ProtocolBlocker('yangi')), l.blockerOther('yangi'));
       expect(l.errorText(const DataRuleException('draft_stale', 'changed')), l.errorDraftStale);
-      expect(l.serverErrorText(const ServerException(422, 'push_rejected', reason: 'clock_skew')), l.errorClockSkew);
-      expect(l.serverErrorText(const ServerException(429, 'too_many_attempts')), l.tooManyAttempts);
-      // Qotgan yozuv ko'rsatiladi (M3, ADR-0014).
-      final stuck = SyncRejected(
-        const ServerException(422, 'push_rejected', reason: 'plan_immutable', opId: 'op'),
-        table: 'isolation_plan',
-        rowId: '0192aaaa-bbbb-7ccc-8ddd-eeeeffff0000',
-      );
-      expect(l.serverErrorText(stuck), l.syncRejectedRow('isolation_plan', '0192aaaa', 'plan_immutable'));
-      expect(l.serverErrorText(const ServerException(0, 'timeout')), l.serverUnavailable);
     });
   }
 }

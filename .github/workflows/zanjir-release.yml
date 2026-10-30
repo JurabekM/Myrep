@@ -75,8 +75,6 @@ jobs:
           printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
             "$RUNNER_TEMP/upload.jks" "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > zanjir/app/android/key.properties
       - name: Release AAB (darvozalar bilan)
-        env:
-          ZANJIR_SERVER_URL: ${{ vars.ZANJIR_SERVER_URL }}
         run: zanjir/app/tool/build_release.sh
       - name: Kalitni o'chirish
         if: always()

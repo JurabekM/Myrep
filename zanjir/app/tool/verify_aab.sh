@@ -57,10 +57,11 @@ perms="$(grep -A1 -E 'E: uses-permission' <<<"$m" | grep -oE 'android:name\(0x[0
 nperm="$(grep -cE 'E: uses-permission' <<<"$m" || true)"
 check "har bir ruxsat nomi o'qildi ($nperm)" test "$(grep -c . <<<"$perms")" -eq "$nperm"
 echo "   ruxsatlar: $(tr '\n' ' ' <<<"$perms")"
-# Ruxsat etilganlar: tarmoq va kutubxonalarning zararsiz ruxsatlari (AndroidX ilova ichidagi broadcast himoyasi).
-allowed='^(android\.permission\.(INTERNET|ACCESS_NETWORK_STATE)|uz\.zanjir\.app\.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION)$'
+# Ruxsat etilganlar: faqat AndroidX ilova ichidagi broadcast himoyasi. Ilova to'liq oflayn (ADR-0017) — INTERNET va
+# tarmoq ruxsatlari ham taqiqlangan (kutubxona manifest birlashtirishda qo'shsa — shu yerda ushlanadi).
+allowed='^uz\.zanjir\.app\.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION$'
 extra="$(grep -vE "$allowed" <<<"$perms" || true)"
-check "ruxsatlar faqat ruxsat etilgan ro'yxatdan${extra:+ (ortiqcha: $extra)}" test -z "$extra"
+check "ruxsatlar faqat ruxsat etilgan ro'yxatdan, INTERNET yo'q${extra:+ (ortiqcha: $extra)}" test -z "$extra"
 
 # --- obfuskatsiya ---
 unzip -l "$aab" > "$TMP/list"

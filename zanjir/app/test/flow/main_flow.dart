@@ -68,7 +68,7 @@ Future<void> runMainFlow(WidgetTester tester, TestEnv env) async {
   // 1. Profil.
   await tester.pumpWidget(env.app());
   await settle(tester);
-  await tapText('Oflayn profil yaratish');
+  await tapKey('start.create');
   await type('onboarding.lab', 'Elektrolab');
   await type('onboarding.name', 'Karimov A.');
   await type('onboarding.phone', '+998901234567');

@@ -451,3 +451,30 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
 - **Oqibat:** Birinchi haqiqiy release 1-darvoza (normalar tekshiruvi) va 3-darvoza (kalit) yopilgach mumkin — hozir
   `build_release.sh` normalar darvozasida ataylab to'xtaydi. Play listing va maxfiylik siyosati — qoralama (`docs/PLAY_LISTING.md`,
   `docs/PRIVACY.md`), huquqshunos tekshiradi. Haqiqiy qurilmada qo'lda sinov — checklist'da (emulyator testi CI'da).
+
+## ADR-0017: To'liq oflayn ilova (13-faza) — server, sinxronlash va 2-darvoza olib tashlandi
+
+- **Sana:** 2026-10-30 · **Holat:** qabul qilingan (foydalanuvchi qarori: "2-darvozani umuman olib tashlaymiz! Ilova to'liq
+  offlayn bo'lsin!").
+- **Kontekst:** 7–11-fazalarda server (FastAPI + PostgreSQL), sinxronlash va deploy qurilgan edi. Foydalanuvchi serverdan
+  butunlay voz kechdi. Variantlar so'raldi; tanlov: server va deploy kodini **butunlay o'chirish**, **shifrlangan zaxira
+  fayli**, xodimlar o'rtasida **fayl almashish**.
+- **Qaror:**
+  1. `server/`, `deploy/`, `tools/e2e/`, ilovadagi kirish/taklif/sinxronlash ekranlari, `ServerApi`, `SyncEngine`,
+     `ServerAccount` o'chirildi (git tarixida qoladi). `INTERNET` ruxsati release manifestida yo'q; `verify_aab.sh` uni
+     **taqiqlaydi** (kutubxona qo'shsa ham build tekshiruvdan o'tmaydi). debug/profile manifestlaridagi INTERNET — faqat
+     Flutter vositalari uchun.
+  2. Lokal baza v5: sinxronlash navbati (`sync_outbox`) va uning 22 trigger'i o'chiriladi; ma'lumot va append-only
+     triggerlariga tegilmaydi (migratsiya testi).
+  3. Kripto vektorlarining mustaqil Python implementatsiyasi serverdan `tools/vectors/zanjir_refcrypto` ga ko'chirildi
+     (o'z `uv` loyihasi, testlari va CI job'i) — Dart kriptosi avvalgidek ikkinchi implementatsiya bilan tekshiriladi.
+  4. QR havola — faqat ilova ichida (`zanjir://app/v/<token>`); ochiq tekshirish veb-sahifasi yo'q.
+  5. Telefon yo'qolsa ma'lumot yo'qolmasligi uchun — parol bilan shifrlangan zaxira fayli; xodimlar o'rtasida — imzolangan
+     ma'lumot almashish fayli (import serverdagi tekshiruvlarni telefonda bajaradi). Tafsilotlar — shu ADR ga 13-faza
+     davomida qo'shiladi.
+  6. 3-darvoza: upload kalitini foydalanuvchi so'rovi bilan Claude yaratdi (PKCS12, RSA 4096, alias `zanjir-upload`) va
+     foydalanuvchiga topshirdi; keystore va parol repoda yo'q. Play Console'ga yuklash — foydalanuvchi.
+- **Oqibat:** Markaziy saqlash, tashkilot bo'yicha RLS, server tomonidagi ikkinchi tekshiruv qatlami (ADR-0011, ADR-0014
+  server qismlari) endi yo'q — ularning o'rnini import tekshiruvlari va zaxira egallaydi; ADR-0011, ADR-0012, ADR-0015
+  tarixiy. Ma'lumot laboratoriya telefonlarida qoladi (lokalizatsiya talabi soddalashadi). Tahdid modeli qayta ko'rib
+  chiqiladi (`docs/SECURITY.md`).

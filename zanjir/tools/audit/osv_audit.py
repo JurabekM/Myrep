@@ -22,7 +22,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 OSV = "https://api.osv.dev/v1"
 PUB_LOCKS = ["app/pubspec.lock", *sorted(str(p.relative_to(ROOT)) for p in ROOT.glob("packages/*/pubspec.lock"))]
-UV_LOCKS = ["server/uv.lock", "tools/norms/uv.lock"]
+UV_LOCKS = ["tools/vectors/uv.lock", "tools/norms/uv.lock"]
 
 
 @dataclass(frozen=True)
