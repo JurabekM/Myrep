@@ -197,6 +197,16 @@ void main() {
       expect((await engineer.repos.users.get(engineer.userId))!.role, 'LEAD');
     });
 
+    test('VIEWER obyekt/asbobni o\'zgartirgan fayl — forbidden_role', () async {
+      final viewerUser = await lead.repos.staff.addUser(fullName: 'Kuzatuvchi', role: 'VIEWER');
+      final (bytes, password) = await lead.invite(viewerUser.id);
+      final viewer = await Phone.join(bytes, password, 8, clock);
+      // O'zgarishsiz fayli (faqat qurilmasi va DEVICE_REGISTERED) — qabul qilinadi.
+      expect((await lead.import(await viewer.export())).inserted['device'], 1);
+      await viewer.repos.sites.create(name: 'Soxta obyekt');
+      await expectLater(lead.import(await viewer.export()), rule('forbidden_role'));
+    });
+
     test('yopilgan sessiyani qayta ochib bo\'lmaydi', () async {
       final m = await measure(engineer);
       await engineer.repos.sessions.close(m.sessionId);

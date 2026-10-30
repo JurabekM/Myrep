@@ -100,6 +100,7 @@ Future<void> checkMerged(
   }
   await r.chains();
   await r.newEvents();
+  if (!trustAll) await r.senderMayEdit(senderDeviceId);
   if (!trustAll) {
     await r.users();
     await r.organization();
@@ -149,6 +150,18 @@ class _Rules {
       if (e.payloadHash == hash && (!editor || _editor(e.actorId))) return e;
     }
     return null;
+  }
+
+  /// Muallifi qayd etilmaydigan (imzolangan hodisaga bog'lanmagan) LWW qatorlari — obyekt, sxema, asbob, sessiya, reja —
+  /// faqat ENGINEER va undan yuqori, bekor qilinmagan qurilmadan (serverdagi `PUSH_ROLES`: VIEWER push qila olmasdi).
+  Future<void> senderMayEdit(String senderDeviceId) async {
+    const unbound = ['instrument', 'site', 'node', 'edge', 'measurement_session', 'isolation_plan'];
+    if (!unbound.any((t) => ch.touched(t).isNotEmpty)) return;
+    final role = users_[devices[senderDeviceId]!.userId]?.role;
+    final revoked = (await revocations(ctx)).containsKey(senderDeviceId);
+    if (revoked || !const {'ENGINEER', 'LEAD', 'ADMIN'}.contains(role)) {
+      throw DataRuleException('forbidden_role', 'sender:$senderDeviceId');
+    }
   }
 
   /// Yangi qurilma: taklif bilan ro'yxatdan o'tgan yoki LEAD/ADMIN tasdiqlagan bo'lishi shart.
