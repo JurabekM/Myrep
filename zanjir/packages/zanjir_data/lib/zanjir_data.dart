@@ -2,6 +2,7 @@
 library;
 
 export 'src/backup/backup.dart';
+export 'src/crypto/sealed_file.dart' show KdfParams;
 export 'src/db/database.dart';
 export 'src/repo/audit_repository.dart';
 export 'src/repo/context.dart';

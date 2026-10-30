@@ -491,6 +491,26 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
      Ilova: Sozlamalar → "Zaxira nusxa" (oxirgi zaxira sanasi; hali bo'lmasa ogohlantirish), boshlang'ich ekranda
      "Zaxiradan tiklash". Fayl tizim oynasi orqali saqlanadi/tanlanadi (`file_picker`, Storage Access Framework —
      xotira ruxsati kerak emas; AAB tekshiruvi ruxsat qo'shilmaganini tasdiqlaydi).
+  8. **Fayl almashish (3-bosqich, reja).** Server push tekshiruvlari (o'chirilgan `sync/service.py`, ~50 rad etish kodi)
+     telefonda import qilinadi. Fayl — umumiy shifrlangan qobiq (`crypto/sealed_file.dart`, zaxira bilan bir xil), magic
+     `ZNJX`, format `zanjir.exchange/1`:
+     - **Ma'lumot fayli:** tashkilotning to'liq surati (jadvallar `wire.dart` formatida) — qurilmalar o'rtasida "kim nimani
+       oldi" hisobi kerak emas, fayl boshqa qurilmalarning yozuvlarini ham tashiydi (zanjirlar o'z kalitlari bilan
+       tekshiriladi). Shifr kaliti — **laboratoriya kaliti** (32 bayt, taklif orqali tarqatiladi, `local_pref` da — zaxirada
+       ham bor); tanani yuboruvchi qurilma Ed25519 bilan imzolaydi.
+     - **Taklif fayli** (xodim qo'shish): LEAD/ADMIN foydalanuvchi va `INVITE_CREATED` hodisasini yozadi; fayl bir martalik
+       taklif paroli bilan (Argon2id) shifrlanadi — parol yuzma-yuz aytiladi. Ichida surat va laboratoriya kaliti. Yangi
+       telefon qurilmasini ro'yxatdan o'tkazadi; uning birinchi hodisasi `DEVICE_REGISTERED` (taklif ID si bilan).
+     - **Ishonch:** telefonda bor qurilmalar ishonchli (taklif paroli bilan kelgan). Yangi qurilma faqat (a) muddati o'tmagan,
+       ishlatilmagan, LEAD/ADMIN qurilmasi chiqargan taklif bilan yoki (b) birinchi hodisasi `BACKUP_RESTORED` bo'lib, shu
+       foydalanuvchining ma'lum qurilmasidan tiklangan bo'lsa qabul qilinadi. `DEVICE_REVOKED` (LEAD/ADMIN, `last_seq` bilan)
+       — keyingi hodisalar rad etiladi (F-25: oflaynda LEAD ham bekor qila oladi).
+     - **Import — hammasi yoki hech narsa** (bitta tranzaksiya): audit zanjirlari (seq, prev_hash, hash, imzo; mavjud seq
+       bir xil bo'lishi shart; aktor = qurilma egasi; muharrir hodisalari faqat LEAD/ADMIN), append-only jadvallar (bor bo'lsa
+       aynan bir xil), o'lchov ↔ `MEASUREMENT_ADDED`, protokol (imzo, hujjat, /ID, QR, o'lchovlar, normalar, qoidalar —
+       `ProtocolRepository` bloklovchi shartlari), reja (muzlatilgan maydonlar, holat o'tishlari, `PLAN_APPROVED`, qadamlar),
+       sessiyani qayta ochib bo'lmaydi, normalar to'plami (hash, o'zgarmas), tashkilot/sozlama — imzolangan hodisa bilan,
+       LWW `(updated_at, rev)`, soat siljishi > 10 daqiqa — rad, foydalanuvchilar — `USER_SAVED` hodisasi bilan.
 - **Oqibat:** Markaziy saqlash, tashkilot bo'yicha RLS, server tomonidagi ikkinchi tekshiruv qatlami (ADR-0011, ADR-0014
   server qismlari) endi yo'q — ularning o'rnini import tekshiruvlari va zaxira egallaydi; ADR-0011, ADR-0012, ADR-0015
   tarixiy. Ma'lumot laboratoriya telefonlarida qoladi (lokalizatsiya talabi soddalashadi). Tahdid modeli qayta ko'rib

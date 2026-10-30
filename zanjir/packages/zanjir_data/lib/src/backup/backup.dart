@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:cryptography/cryptography.dart';
 import 'package:drift/native.dart';
 import 'package:zanjir_core/zanjir_core.dart';
 
+import '../crypto/sealed_file.dart';
 import '../db/database.dart';
 import '../repo/audit_repository.dart';
 import '../repo/context.dart';
@@ -31,33 +30,6 @@ const _version = 1;
 
 /// Zaxira paroli kamida shuncha belgi.
 const backupPasswordMinLength = 10;
-
-/// Argon2id parametrlari (RFC 9106, 2-tavsiya ruhida: 64 MiB, t=3, p=1). Faylda saqlanadi; o'qishda chegaralar
-/// tekshiriladi (zararli fayl telefonni xotirasiz qoldirmasin).
-class KdfParams {
-  const KdfParams({required this.memoryKib, required this.iterations, required this.parallelism});
-  final int memoryKib;
-  final int iterations;
-  final int parallelism;
-
-  static const standard = KdfParams(memoryKib: 64 * 1024, iterations: 3, parallelism: 1);
-
-  Map<String, Object?> toJson() => {
-    'alg': 'argon2id',
-    'memory_kib': memoryKib,
-    'iterations': iterations,
-    'parallelism': parallelism,
-  };
-
-  static KdfParams fromJson(Object? j) {
-    if (j is! Map || j['alg'] != 'argon2id') throw const DataRuleException('backup_invalid', 'kdf');
-    final m = j['memory_kib'], t = j['iterations'], p = j['parallelism'];
-    if (m is! int || t is! int || p is! int || m < 8 * 1024 || m > 256 * 1024 || t < 1 || t > 10 || p < 1 || p > 4) {
-      throw const DataRuleException('backup_invalid', 'kdf');
-    }
-    return KdfParams(memoryKib: m, iterations: t, parallelism: p);
-  }
-}
 
 /// Sarlavha (shifrlanmagan): format, yaratilgan vaqt, sxema versiyasi, KDF, tuz va nonce. Shaxsiy ma'lumot yo'q.
 class BackupHeader {
@@ -125,9 +97,9 @@ Future<Uint8List> createBackup(
       salt: List.generate(16, (_) => rnd.nextInt(256)),
       nonce: List.generate(12, (_) => rnd.nextInt(256)),
     );
-    final headerBytes = utf8.encode(jsonEncode(header.toJson()));
-    final prefix = _prefix(headerBytes);
-    return Uint8List.fromList([...prefix, ...await _seal(plain, password, header, prefix)]);
+    final prefix = framePrefix(_magic, _version, header.toJson());
+    final key = await deriveKey(password, kdf, header.salt);
+    return Uint8List.fromList([...prefix, ...await sealBytes(plain, key: key, nonce: header.nonce, aad: prefix)]);
   } finally {
     await tmp.delete(recursive: true);
   }
@@ -154,7 +126,10 @@ Future<ProfileIds> restoreBackup(
   final orgs = await target.customSelect('SELECT count(*) AS n FROM organization').getSingle();
   if (orgs.read<int>('n') != 0) throw const DataRuleException('restore_target_not_empty');
 
-  final plain = await _open(parsed, password) ?? (throw const DataRuleException('backup_wrong_password'));
+  final key = await deriveKey(password, header.kdf, header.salt);
+  final plain =
+      await openFrame(parsed.frame, key: key, nonce: header.nonce) ??
+      (throw const DataRuleException('backup_wrong_password'));
 
   final String orgId, userId, oldDeviceId;
   final tmp = await Directory.systemTemp.createTemp('zanjir-restore-');
@@ -223,70 +198,9 @@ Future<T> _copyAll<T>(ZanjirDatabase target, String sourcePath, Future<T> Functi
   }
 }
 
-// Argon2id (64 MiB) va shifrlash sof Dart'da bir necha soniya oladi — alohida isolate'da (UI qotmaydi).
-Future<List<int>> _seal(List<int> plain, String password, BackupHeader h, List<int> aad) => Isolate.run(() async {
-  final box = await Chacha20.poly1305Aead().encrypt(
-    plain,
-    secretKey: await _key(password, h),
-    nonce: h.nonce,
-    aad: aad,
-  );
-  return [...box.cipherText, ...box.mac.bytes];
-});
-
-/// `null` — parol noto'g'ri yoki fayl o'zgartirilgan (MAC mos emas).
-Future<List<int>?> _open(_Parsed p, String password) => Isolate.run(() async {
-  try {
-    return await Chacha20.poly1305Aead().decrypt(
-      SecretBox(p.cipherText, nonce: p.header.nonce, mac: Mac(p.mac)),
-      secretKey: await _key(password, p.header),
-      aad: p.prefix,
-    );
-  } on SecretBoxAuthenticationError {
-    return null;
-  }
-});
-
-Future<SecretKey> _key(String password, BackupHeader h) => Argon2id(
-  parallelism: h.kdf.parallelism,
-  memory: h.kdf.memoryKib,
-  iterations: h.kdf.iterations,
-  hashLength: 32,
-).deriveKeyFromPassword(password: password, nonce: h.salt);
-
-List<int> _prefix(List<int> headerBytes) => [
-  ..._magic,
-  _version,
-  ...(ByteData(4)..setUint32(0, headerBytes.length)).buffer.asUint8List(),
-  ...headerBytes,
-];
-
-typedef _Parsed = ({BackupHeader header, List<int> prefix, List<int> cipherText, List<int> mac});
+typedef _Parsed = ({BackupHeader header, SealedFrame frame});
 
 _Parsed _parse(List<int> bytes) {
-  const fixed = 4 + 1 + 4;
-  bool startsWithMagic() {
-    for (var i = 0; i < _magic.length; i++) {
-      if (bytes[i] != _magic[i]) return false;
-    }
-    return true;
-  }
-
-  if (bytes.length < fixed + 16 || !startsWithMagic() || bytes[4] != _version) {
-    throw const DataRuleException('backup_invalid', 'magic');
-  }
-  final len = ByteData.sublistView(Uint8List.fromList(bytes.sublist(5, 9))).getUint32(0);
-  if (len > 4096 || fixed + len + 16 > bytes.length) throw const DataRuleException('backup_invalid', 'header');
-  final Object? json;
-  try {
-    json = jsonDecode(utf8.decode(bytes.sublist(fixed, fixed + len)));
-  } on FormatException {
-    throw const DataRuleException('backup_invalid', 'header');
-  }
-  return (
-    header: BackupHeader.fromJson(json),
-    prefix: bytes.sublist(0, fixed + len),
-    cipherText: bytes.sublist(fixed + len, bytes.length - 16),
-    mac: bytes.sublist(bytes.length - 16),
-  );
+  final frame = parseFrame(bytes, _magic, _version, 'backup_invalid');
+  return (header: BackupHeader.fromJson(frame.header), frame: frame);
 }
