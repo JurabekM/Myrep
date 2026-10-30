@@ -1,0 +1,12 @@
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          store_date_time_values_as_text: true
+          named_parameters: true
+          generate_manager: false
+          databases:
+            zanjir: lib/src/db/database.dart
+          schema_dir: drift_schemas/
+          test_dir: test/drift/

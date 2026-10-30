@@ -1,0 +1,3 @@
+tags:
+  perf:
+    timeout: 4x

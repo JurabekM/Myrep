@@ -1,0 +1,7 @@
+# Namuna. Haqiqiy fayl: android/key.properties — commit qilinmaydi (.gitignore).
+# Upload keystore'ni foydalanuvchi yaratadi va saqlaydi (3-inson darvozasi, docs/RELEASE.md); parollar faqat shu faylda
+# yoki CI maxfiy o'zgaruvchilarida (ZANJIR_UPLOAD_*).
+storeFile=/xavfsiz/joy/zanjir-upload.jks
+storePassword=<keystore paroli>
+keyAlias=zanjir-upload
+keyPassword=<kalit paroli>

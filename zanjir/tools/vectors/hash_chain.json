@@ -1,0 +1,219 @@
+{
+  "description": "Audit hash-zanjiri (prompt 5.4). event_hash = SHA256(canonical({seq, prev_hash, actor_id, event_type, entity_id, payload_hash, created_at})); device_sig = Ed25519(event_hash xom baytlari). payload — faqat payload_hash ni tekshirish uchun, zanjir maydoni emas.",
+  "genesis_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "device_seed": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+  "public_key": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+  "events": [
+    {
+      "device_id": "01920000-0000-7000-8000-00000000d001",
+      "seq": 1,
+      "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "event_hash": "bec23ecf40f8a64419ef847ccae2999723345ba1512d3cf1266c6ebe692b978c",
+      "actor_id": "01920000-0000-7000-8000-0000000000a1",
+      "event_type": "SESSION_STARTED",
+      "entity_id": "01920000-0000-7000-8000-0000000005e1",
+      "payload": {
+        "site_id": "s-1",
+        "kind": "DAVRIY",
+        "ambient_temp_c": 21.5
+      },
+      "payload_hash": "30e5f353063cd75f10a163961bac159e420403b619b5fdaba688c204db81bd75",
+      "created_at": "2026-10-26T07:00:00.000Z",
+      "device_sig": "a4f0e33283194ac6f04ebeefd49865f2a96e29f33ad7f18b556d8611b3509481c1b357e63233a0c14be624bb14145c91a14547e50e9b82671c9975a54ff46f0b",
+      "sig_alg": "Ed25519"
+    },
+    {
+      "device_id": "01920000-0000-7000-8000-00000000d001",
+      "seq": 2,
+      "prev_hash": "bec23ecf40f8a64419ef847ccae2999723345ba1512d3cf1266c6ebe692b978c",
+      "event_hash": "5e6cc73ec6e5b31895744536d56cfdcb5629cc644f0260e746c918c20b1b7aaa",
+      "actor_id": "01920000-0000-7000-8000-0000000000a1",
+      "event_type": "MEASUREMENT_ADDED",
+      "entity_id": "01920000-0000-7000-8000-00000000000e",
+      "payload": {
+        "type": "LOOP_IMPEDANCE",
+        "values": {
+          "pair": "L1-PE",
+          "zs_ohm": 0.84
+        },
+        "verdict": "PASS"
+      },
+      "payload_hash": "ae9d87e75ae16d4eba5bee48a428c4a41c92ffed8a7c530d06a0592e8a7a067d",
+      "created_at": "2026-10-26T07:05:03.120Z",
+      "device_sig": "59dca3cb54b9e1e3483b28f7969c3f5ae9c9b85b420c98d77746f5d7e36ff1e1c739eb9abf71a0b34457ef50b88fc9060a4b368be66c40d85769132569cc4006",
+      "sig_alg": "Ed25519"
+    },
+    {
+      "device_id": "01920000-0000-7000-8000-00000000d001",
+      "seq": 3,
+      "prev_hash": "5e6cc73ec6e5b31895744536d56cfdcb5629cc644f0260e746c918c20b1b7aaa",
+      "event_hash": "17b873e91af69d7611eaad0774fe3154bf2c037302db6a7da55562bdd700cad4",
+      "actor_id": "01920000-0000-7000-8000-0000000000a1",
+      "event_type": "MEASUREMENT_ADDED",
+      "entity_id": "01920000-0000-7000-8000-00000000000f",
+      "payload": {
+        "type": "INSULATION",
+        "values": {
+          "test_voltage_v": 1000,
+          "pairs": [
+            {
+              "pair": "L1-PE",
+              "mohm": 0.3
+            }
+          ]
+        },
+        "verdict": "FAIL",
+        "izoh": "Ўзбекча"
+      },
+      "payload_hash": "5a03da994a12526c60ff14f6ffcdc24e226a2de35a597478684c6582eb0109f8",
+      "created_at": "2026-10-26T07:06:10.000Z",
+      "device_sig": "cf08c82c8aee427c4b9425b51d2a3ac39fae89f01ed7a640b38b662d31efb64c76334e0818e9f38b556dafdf8312311029033d94cf3de26e638932e058a83101",
+      "sig_alg": "Ed25519"
+    },
+    {
+      "device_id": "01920000-0000-7000-8000-00000000d001",
+      "seq": 4,
+      "prev_hash": "17b873e91af69d7611eaad0774fe3154bf2c037302db6a7da55562bdd700cad4",
+      "event_hash": "7038fcda8662d56eb2060e97c7d83872e4027c9b56d56a02dabf1cba13f3fc61",
+      "actor_id": "01920000-0000-7000-8000-0000000000a1",
+      "event_type": "SETTINGS_CHANGED",
+      "entity_id": null,
+      "payload": {
+        "k_corr": 0.8
+      },
+      "payload_hash": "b3d1292a5657f177245f13dec113c88460fed0da1e25db19ce624e9f56ed745a",
+      "created_at": "2026-10-26T07:07:00.001Z",
+      "device_sig": "a1ec0f4db804d28644652c36647a2c724d17e15e1e6103ffe926ae596f954b6145173066c8e666becd9da7c1756a41ae72b7d2ac1d15568486ec22e1e82d9001",
+      "sig_alg": "Ed25519"
+    },
+    {
+      "device_id": "01920000-0000-7000-8000-00000000d001",
+      "seq": 5,
+      "prev_hash": "7038fcda8662d56eb2060e97c7d83872e4027c9b56d56a02dabf1cba13f3fc61",
+      "event_hash": "27ea58d948cc0ea73be75eec1ea3bb0262d359ecd524d707f996611bbee5a6e2",
+      "actor_id": "01920000-0000-7000-8000-0000000000a1",
+      "event_type": "PROTOCOL_REVOKED",
+      "entity_id": "01920000-0000-7000-8000-0000000000b0",
+      "payload": {
+        "reason": "Xato asbob"
+      },
+      "payload_hash": "7c20ec358c1c6d4f72dbe0a204bbbdd3871727f7d3d0e8328ca27a233cfd5092",
+      "created_at": "2026-10-26T08:00:00.000Z",
+      "device_sig": "894a688994a72ffb41c6a2b2b3440f3122d0993372e13c4dd29b3314ff8b32b772cc281de4d2ff865fea88d6ed69cb977b738e5f3a9fce9c1d4df2d63dead009",
+      "sig_alg": "Ed25519"
+    }
+  ],
+  "anchor_case": {
+    "anchor_index": 1,
+    "events_from": 2,
+    "ok": true
+  },
+  "tamper": [
+    {
+      "name": "payload_hash o'zgargan",
+      "op": "set",
+      "index": 1,
+      "field": "payload_hash",
+      "value": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "failed_index": 1,
+      "reason": "event_hash_mismatch"
+    },
+    {
+      "name": "event_hash boshqa",
+      "op": "set",
+      "index": 0,
+      "field": "event_hash",
+      "value": "a1fce4363854ff888cff4b8e7875d600c2682390412a8cf79b37d0b11148b0fa",
+      "failed_index": 0,
+      "reason": "event_hash_mismatch"
+    },
+    {
+      "name": "imzoning oxirgi bayti",
+      "op": "set",
+      "index": 2,
+      "field": "device_sig",
+      "value": "cf08c82c8aee427c4b9425b51d2a3ac39fae89f01ed7a640b38b662d31efb64c76334e0818e9f38b556dafdf8312311029033d94cf3de26e638932e058a83100",
+      "failed_index": 2,
+      "reason": "bad_signature"
+    },
+    {
+      "name": "seq sakrashi",
+      "op": "set",
+      "index": 3,
+      "field": "seq",
+      "value": 5,
+      "failed_index": 3,
+      "reason": "seq_gap"
+    },
+    {
+      "name": "prev_hash noto'g'ri",
+      "op": "set",
+      "index": 1,
+      "field": "prev_hash",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000",
+      "failed_index": 1,
+      "reason": "prev_hash_mismatch"
+    },
+    {
+      "name": "hodisa o'chirilgan",
+      "op": "drop",
+      "index": 1,
+      "failed_index": 1,
+      "reason": "seq_gap"
+    },
+    {
+      "name": "aktor o'zgargan",
+      "op": "set",
+      "index": 4,
+      "field": "actor_id",
+      "value": "01920000-0000-7000-8000-0000000000a2",
+      "failed_index": 4,
+      "reason": "event_hash_mismatch"
+    },
+    {
+      "name": "vaqt o'zgargan",
+      "op": "set",
+      "index": 0,
+      "field": "created_at",
+      "value": "2026-10-26T07:00:00.001Z",
+      "failed_index": 0,
+      "reason": "event_hash_mismatch"
+    },
+    {
+      "name": "vaqt formati",
+      "op": "set",
+      "index": 0,
+      "field": "created_at",
+      "value": "2026-10-26T07:00:00Z",
+      "failed_index": 0,
+      "reason": "invalid_format"
+    },
+    {
+      "name": "boshqa qurilma",
+      "op": "set",
+      "index": 2,
+      "field": "device_id",
+      "value": "01920000-0000-7000-8000-00000000d002",
+      "failed_index": 2,
+      "reason": "invalid_format"
+    },
+    {
+      "name": "noma'lum algoritm",
+      "op": "set",
+      "index": 0,
+      "field": "sig_alg",
+      "value": "ML-DSA-65",
+      "failed_index": 0,
+      "reason": "unsupported_sig_alg"
+    },
+    {
+      "name": "katta harfli hash",
+      "op": "set",
+      "index": 0,
+      "field": "prev_hash",
+      "value": "000000000000000000000000000000000000000000000000000000000000000A",
+      "failed_index": 0,
+      "reason": "invalid_format"
+    }
+  ]
+}

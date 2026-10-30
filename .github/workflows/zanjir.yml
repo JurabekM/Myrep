@@ -1,0 +1,160 @@
+# ZANJIR CI (zanjir/docs/DECISIONS.md, ADR-0001/0003/0004). Faqat zanjir/ o'zgarganda ishlaydi.
+name: zanjir
+
+on:
+  push:
+    paths: ["zanjir/**", ".github/workflows/zanjir.yml"]
+    # Release: `zanjir-v1.0.0` kabi teg — normalar darvozasi (--release) majburiy.
+    tags: ["zanjir-v*"]
+  pull_request:
+    paths: ["zanjir/**", ".github/workflows/zanjir.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: zanjir-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  FLUTTER_VERSION: "3.47.8"
+
+jobs:
+  core:
+    name: zanjir_core (dart)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/packages/zanjir_core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: dart pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - name: Testlar + branch coverage
+        run: dart run coverage:test_with_coverage --branch-coverage
+      - name: Evaluator, solver, crypto — 100% qator va branch coverage
+        run: dart run tool/check_coverage.dart
+
+  protocol:
+    name: zanjir_protocol (pdf)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/packages/zanjir_protocol
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: pdftotext (PDF mazmuni testlari uchun)
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: PDF matnlari ARB bilan mos (tool/gen_strings.py)
+        run: python3 -I tool/gen_strings.py --check
+      - run: dart pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - name: Testlar (deterministik PDF — ADR-0010)
+        run: dart test
+
+  data:
+    name: zanjir_data (drift)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/packages/zanjir_data
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: dart pub get
+      - name: Generatsiya qilingan kod eskirmaganmi (*.g.dart, drift_schemas)
+        run: |
+          dart run build_runner build
+          dart run drift_dev schema generate drift_schemas/zanjir/ test/drift/zanjir/generated/
+          dart format lib/src/db/database.g.dart test/drift > /dev/null
+          git diff --exit-code -- .
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - name: Testlar (migratsiya, repozitoriylar, append-only, tashkilotlar, imzolash shartlari)
+        run: dart test
+
+  app:
+    name: app (flutter)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test integration_test
+      - run: flutter analyze --fatal-infos
+      - run: flutter test
+
+  vectors:
+    name: kripto vektorlari (mustaqil Python implementatsiyasi, ADR-0007)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/tools/vectors
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pipx install uv
+      - run: uv sync --locked --python 3.12
+      - name: Lint va tiplar (vektorlar va audit vositasi)
+        run: |
+          uv run ruff check . ../audit
+          uv run ruff format --check . ../audit
+          uv run mypy zanjir_refcrypto generate.py tests
+          uv run mypy --strict ../audit/osv_audit.py
+      - name: Python implementatsiyasi testlari (RFC 8785/8032 rasmiy vektorlari bilan)
+        run: uv run pytest -q
+      - name: tools/vectors eskirmaganmi (Dart testlari ham shu fayllarni o'qiydi)
+        run: uv run python -I generate.py --check
+
+  norms:
+    name: norms (schema + release darvozasi)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zanjir/tools/norms
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pipx install uv
+      - run: uv sync --locked --python 3.12
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy .
+      - run: uv run pytest
+      - name: Normalarni schema bo'yicha tekshirish
+        run: uv run python -I check_norms.py ../../norms
+      - name: Release — muhandis tekshiruvi holati (ogohlantirish, ADR-0019)
+        if: startsWith(github.ref, 'refs/tags/zanjir-v')
+        run: uv run python -I check_norms.py --release ../../norms

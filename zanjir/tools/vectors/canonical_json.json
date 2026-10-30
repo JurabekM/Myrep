@@ -1,0 +1,135 @@
+{
+  "description": "Kanonik JSON (RFC 8785). input_json — xom JSON matni, har bir til o'z parseri bilan o'qiydi.",
+  "cases": [
+    {
+      "name": "RFC 8785 3.2.4 misoli",
+      "input_json": "{\"numbers\": [333333333.33333329, 1E30, 4.50, 2e-3, 0.000000000000000000000000001], \"string\": \"\\u20ac$\\u000F\\u000aA'\\u0042\\u0022\\u005c\\\\\\\"\\/\", \"literals\": [null, true, false]}",
+      "canonical": "{\"literals\":[null,true,false],\"numbers\":[333333333.3333333,1e+30,4.5,0.002,1e-27],\"string\":\"€$\\u000f\\nA'B\\\"\\\\\\\\\\\"/\"}",
+      "sha256": "2d5e01a318d0f0879ab568c4be289c8b1f64ef8921a53c6277d5e069978baacb"
+    },
+    {
+      "name": "RFC 8785 3.2.3 kalitlarni saralash",
+      "input_json": "{\"\\u20ac\": \"Euro Sign\", \"\\r\": \"Carriage Return\", \"\\ufb33\": \"Hebrew Letter Dalet With Dagesh\", \"1\": \"One\", \"\\ud83d\\ude00\": \"Emoji: Grinning Face\", \"\\u0080\": \"Control\", \"\\u00f6\": \"Latin Small Letter O With Diaeresis\"}",
+      "canonical": "{\"\\r\":\"Carriage Return\",\"1\":\"One\",\"\":\"Control\",\"ö\":\"Latin Small Letter O With Diaeresis\",\"€\":\"Euro Sign\",\"😀\":\"Emoji: Grinning Face\",\"דּ\":\"Hebrew Letter Dalet With Dagesh\"}",
+      "sha256": "5e321556d22018a9656991a9e94f77ec175fa193e52a2429d312f8419ec8b08c"
+    },
+    {
+      "name": "bo'sh obyekt",
+      "input_json": "{}",
+      "canonical": "{}",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "name": "bo'sh massiv",
+      "input_json": "[]",
+      "canonical": "[]",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "name": "ichma-ich",
+      "input_json": "{\"b\": {\"d\": [1, {\"f\": null, \"e\": true}], \"c\": \"\"}, \"a\": []}",
+      "canonical": "{\"a\":[],\"b\":{\"c\":\"\",\"d\":[1,{\"e\":true,\"f\":null}]}}",
+      "sha256": "e521d32f08a60c8a29cb9a22c8c92839f92ee5a2383a626e3e2c24e3d70e1d62"
+    },
+    {
+      "name": "sonlar",
+      "input_json": "[0, -0.0, 1, -1, 16.0, 2.5, 0.1, -0.000001, 0.0000001, 1e21, 1e20, 123e-20, 1.5e300, 5e-324, 1.7976931348623157e308, 9007199254740991, -9007199254740991, 4.000000000000001, 100.0, 0.001]",
+      "canonical": "[0,0,1,-1,16,2.5,0.1,-0.000001,1e-7,1e+21,100000000000000000000,1.23e-18,1.5e+300,5e-324,1.7976931348623157e+308,9007199254740991,-9007199254740991,4.000000000000001,100,0.001]",
+      "sha256": "8c23ea6dbb108ee9ba78a5ab2befaf3e94ea06a280c7e3123b777108398eb4ac"
+    },
+    {
+      "name": "o'zbek va rus matni",
+      "input_json": "{\"izoh\": \"Ўзбекча — ПУЭ 1.7.79, «UZO» €\", \"label\": \"QF1 → SHR-1\"}",
+      "canonical": "{\"izoh\":\"Ўзбекча — ПУЭ 1.7.79, «UZO» €\",\"label\":\"QF1 → SHR-1\"}",
+      "sha256": "cc194a9583700a4110d05c5f59632659c1b1e82924ccf45f911fcdc5492cf736"
+    },
+    {
+      "name": "boshqaruv belgilari",
+      "input_json": "\"\\u0000\\u0001\\u001f\\u007f\\b\\f\\n\\r\\t/\"",
+      "canonical": "\"\\u0000\\u0001\\u001f\\b\\f\\n\\r\\t/\"",
+      "sha256": "acc02f54335ea9febe6f1b81196a5cbf9cec5d0038d2e91051cedca6c0c207b1"
+    },
+    {
+      "name": "o'lchov qiymatlari",
+      "input_json": "{\"INSULATION\": {\"test_voltage_v\": 1000, \"pairs\": [{\"pair\": \"L1-PE\", \"mohm\": 120.0}, {\"pair\": \"L1-N\", \"mohm\": 0.5}]}, \"RCD_TRIP\": {\"multiplier\": 1.0, \"trip_time_ms\": 24, \"trip_current_ma\": 21, \"tripped\": true}}",
+      "canonical": "{\"INSULATION\":{\"pairs\":[{\"mohm\":120,\"pair\":\"L1-PE\"},{\"mohm\":0.5,\"pair\":\"L1-N\"}],\"test_voltage_v\":1000},\"RCD_TRIP\":{\"multiplier\":1,\"trip_current_ma\":21,\"trip_time_ms\":24,\"tripped\":true}}",
+      "sha256": "128b6324046a215363b43231592d6807367fdaaad63ae125c7b6892ba67894a3"
+    }
+  ],
+  "errors": [
+    {
+      "name": "yolg'iz surrogat",
+      "input_json": "\"\\ud800\"",
+      "error": "lone_surrogate"
+    },
+    {
+      "name": "yolg'iz past surrogat",
+      "input_json": "{\"a\": \"x\\udc00\"}",
+      "error": "lone_surrogate"
+    },
+    {
+      "name": "2^53",
+      "input_json": "9007199254740992",
+      "error": "unsafe_integer"
+    },
+    {
+      "name": "cheksiz son",
+      "input_json": "1e400",
+      "error": "non_finite"
+    }
+  ],
+  "datetimes": [
+    {
+      "utc": [
+        2026,
+        10,
+        26,
+        7,
+        5,
+        3,
+        120999
+      ],
+      "canonical": "\"2026-10-26T07:05:03.120Z\"",
+      "comment": "[yil, oy, kun, soat, daqiqa, soniya, mikrosekund]"
+    },
+    {
+      "utc": [
+        2026,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "canonical": "\"2026-01-01T00:00:00.000Z\"",
+      "comment": "[yil, oy, kun, soat, daqiqa, soniya, mikrosekund]"
+    },
+    {
+      "utc": [
+        1999,
+        12,
+        31,
+        23,
+        59,
+        59,
+        999999
+      ],
+      "canonical": "\"1999-12-31T23:59:59.999Z\"",
+      "comment": "[yil, oy, kun, soat, daqiqa, soniya, mikrosekund]"
+    },
+    {
+      "utc": [
+        5,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1000
+      ],
+      "canonical": "\"0005-01-01T00:00:00.001Z\"",
+      "comment": "[yil, oy, kun, soat, daqiqa, soniya, mikrosekund]"
+    }
+  ]
+}
