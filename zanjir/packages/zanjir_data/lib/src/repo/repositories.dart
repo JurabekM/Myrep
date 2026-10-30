@@ -11,6 +11,7 @@ import 'protocol_repository.dart';
 import 'session_repository.dart';
 import 'settings_repository.dart';
 import 'site_repository.dart';
+import 'staff_repository.dart';
 import 'user_repository.dart';
 
 /// Bitta tashkilot + qurilma + foydalanuvchi uchun barcha repozitoriylar.
@@ -27,6 +28,7 @@ class Repositories {
     isolationPlans = IsolationPlanRepository(ctx, audit: audit);
     measurements = MeasurementRepository(ctx, audit: audit, normSets: normSets);
     settings = SettingsRepository(ctx, audit: audit);
+    staff = StaffRepository(ctx, audit: audit);
     protocols = ProtocolRepository(ctx, audit: audit, signer: signer, normSets: normSets, measurements: measurements);
   }
 
@@ -43,4 +45,5 @@ class Repositories {
   late final MeasurementRepository measurements;
   late final ProtocolRepository protocols;
   late final SettingsRepository settings;
+  late final StaffRepository staff;
 }
