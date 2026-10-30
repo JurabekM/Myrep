@@ -8,7 +8,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: SemVer (ta
 ## [1.0.0] — chiqarilmagan
 <!-- Reliz kuni (docs/H3_RELEASE_SIGNING.md, 4-bo'lim): "chiqarilmagan" o'rniga sanani yozing (YYYY-MM-DD);
      H2 kalibrlashi standart AnalysisConfig'ni o'zgartirgan bo'lsa — "O'zgardi" ga qo'shing va "Ma'lum cheklovlar"ni yangilang;
-     H1 natijasi bilan "Talablar"ni aniqlashtiring. Keyin sector-verify/v1.0.0 tag'i. Bu izoh Release matnida ko'rinmaydi. -->
+     H1 natijasi bilan "Talablar"ni aniqlashtiring. rc2 dan keyingi o'zgarishlarni shu bo'limga yozing. Keyin sector-verify/v1.0.0 tag'i. Bu izoh Release matnida ko'rinmaydi. -->
+
+## [1.0.0-rc2] — 2026-10-30
+Oldindan reliz — dala sinovi (H1, H2) uchun: Google Play **Internal testing** treki yoki to'g'ridan-to'g'ri APK.
+Haqiqiy telefonlarda hali sinalmagan; yakuniy `1.0.0` H1/H2 natijalaridan keyin chiqadi.
 
 ### O'zgardi
 - **Android 16 (API 36):** targetSdk va compileSdk 36 — Google Play 2026-08-31 dan talab qiladi; AGP 8.10.1.
@@ -20,6 +24,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: SemVer (ta
   versiya, targetSdk — `scripts/verify-release.sh`) va draft GitHub Release; kalit himoyalangan environment'da (ADR-019).
 - **Dala ko'rsatmalari:** qurilma sinovi — `docs/H1_DEVICE_TEST.md`, 20 saytlik pilot — `docs/H2_PILOT_GUIDE.md`,
   release imzolash va tarqatish — `docs/H3_RELEASE_SIGNING.md`.
+- **Hujjatlar** joriy holatga yangilandi: README, ARCHITECTURE, ALGORITHM, DEVICES, BATTERY_TEST, foydalanuvchi qo'llanmalari (uz/ru).
 
 ### Tuzatildi
 - Build: lint KSP tugashini kutmagani uchun Gradle keshi bilan parallel build'da tasodifan yiqilardi (ADR-018).
@@ -55,6 +60,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: SemVer (ta
 - `sv-replay calibrate` har sessiyani o'z config'i bilan baholaydi; qolgan chegaralar (`binDeg`, GPS aniqligi,
   qurilma chastotasi) `AnalysisConfig` ga ko'chirildi.
 
-[Unreleased]: https://github.com/JurabekM/Myrep/compare/sector-verify/v1.0.0...master
-[1.0.0]: https://github.com/JurabekM/Myrep/compare/sector-verify/v1.0.0-rc1...sector-verify/v1.0.0
+[Unreleased]: https://github.com/JurabekM/Myrep/compare/sector-verify/v1.0.0-rc2...master
+[1.0.0]: https://github.com/JurabekM/Myrep/compare/sector-verify/v1.0.0-rc2...sector-verify/v1.0.0
+[1.0.0-rc2]: https://github.com/JurabekM/Myrep/compare/sector-verify/v1.0.0-rc1...sector-verify/v1.0.0-rc2
 [1.0.0-rc1]: https://github.com/JurabekM/Myrep/releases/tag/sector-verify/v1.0.0-rc1
