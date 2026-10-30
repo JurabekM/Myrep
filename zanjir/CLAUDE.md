@@ -41,7 +41,9 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Yadro: `cd packages/zanjir_core && dart format --output=none --set-exit-if-changed . && dart analyze --fatal-infos && dart test`
 - Coverage: `cd packages/zanjir_core && dart run coverage:test_with_coverage --branch-coverage && dart run tool/check_coverage.dart` (eval/solver/crypto — 100% qator va branch)
 - Ma'lumot qatlami: `cd packages/zanjir_data && dart run build_runner build && dart analyze --fatal-infos && dart test`
-  (sxema o'zgarsa: `schemaVersion` + `dart run drift_dev make-migrations`, ADR-0008)
+  (sxema o'zgarsa: `schemaVersion` + `dart run drift_dev make-migrations`, ADR-0008; so'ng test sxemalarini CI buyrug'i bilan
+  qayta generatsiya qiling — `dart run drift_dev schema generate drift_schemas/zanjir/ test/drift/zanjir/generated/` va
+  `dart format lib/src/db/database.g.dart test/drift`, aks holda CI'dagi "generatsiya qilingan kod" qadami yiqiladi)
 - Protokol PDF: `cd packages/zanjir_protocol && python3 -I tool/gen_strings.py --check && dart analyze --fatal-infos && dart test`
   (PDF matnlari ARB'dan generatsiya qilinadi — ARB o'zgarsa `python3 -I tool/gen_strings.py`; mazmun testlari `pdftotext` talab qiladi)
 - Ilova: `cd app && flutter pub get && dart format --output=none --set-exit-if-changed lib test && flutter analyze --fatal-infos && flutter test`
