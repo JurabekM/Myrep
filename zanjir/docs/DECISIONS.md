@@ -474,6 +474,23 @@ Format: kontekst → qaror → oqibat. Qabul qilingan ADR o'zgartirilmaydi; o'rn
      davomida qo'shiladi.
   6. 3-darvoza: upload kalitini foydalanuvchi so'rovi bilan Claude yaratdi (PKCS12, RSA 4096, alias `zanjir-upload`) va
      foydalanuvchiga topshirdi; keystore va parol repoda yo'q. Play Console'ga yuklash — foydalanuvchi.
+  7. **Shifrlangan zaxira** (`zanjir_data/lib/src/backup/backup.dart`, format `zanjir.backup/1`):
+     `"ZNJB" | 0x01 | uint32 BE sarlavha uzunligi | sarlavha JSON | shifrmatn | MAC`. To'lov — butun lokal baza
+     (`VACUUM INTO` nusxasi, gzip). Kalit — paroldan Argon2id (64 MiB, t=3, p=1; o'qishda chegaralar 8–256 MiB, t 1–10,
+     p 1–4 — zararli fayl telefon xotirasini to'ldirmasin), shifr — ChaCha20-Poly1305, AAD = sarlavha bilan prefiks
+     (sarlavhani o'zgartirsa ochilmaydi). Parol kamida 10 belgi, hech qayerda saqlanmaydi; yo'qolsa zaxira ham yo'qoladi.
+     Kalit hosil qilish va shifrlash alohida isolate'da (UI qotmaydi). Sarlavhada shaxsiy ma'lumot yo'q (sana, sxema
+     versiyasi, KDF, tuz, nonce).
+     Tiklash faqat **bo'sh** ilovaga: yaxlitlik (`PRAGMA integrity_check`), eski sxema joriy versiyagacha migratsiya qilinadi,
+     tashkilotning **barcha** qurilma audit zanjirlari tekshiriladi (buzilgan bo'lsa — rad), so'ng barcha jadvallar ustun
+     nomlari bo'yicha nusxalanadi. Qurilma maxfiy kaliti zaxirada **yo'q**: tiklangan telefon yangi qurilma sifatida
+     ro'yxatdan o'tadi va `BACKUP_RESTORED` hodisasini (zaxira sanasi, SHA-256, oldingi qurilma) yozadi — nusxa, yangi
+     qurilma va hodisa bitta tranzaksiyada. Eski qurilmaning imzolari tekshiriladigan holda qoladi; uning kaliti endi
+     ishlatilmaydi (telefon yo'qolgan bo'lsa ham undagi kalit bilan yangi yozuvlar boshqa telefonlarga faqat almashish
+     fayli orqali tushishi mumkin — almashishda bekor qilish, 13-faza 3-bosqich).
+     Ilova: Sozlamalar → "Zaxira nusxa" (oxirgi zaxira sanasi; hali bo'lmasa ogohlantirish), boshlang'ich ekranda
+     "Zaxiradan tiklash". Fayl tizim oynasi orqali saqlanadi/tanlanadi (`file_picker`, Storage Access Framework —
+     xotira ruxsati kerak emas; AAB tekshiruvi ruxsat qo'shilmaganini tasdiqlaydi).
 - **Oqibat:** Markaziy saqlash, tashkilot bo'yicha RLS, server tomonidagi ikkinchi tekshiruv qatlami (ADR-0011, ADR-0014
   server qismlari) endi yo'q — ularning o'rnini import tekshiruvlari va zaxira egallaydi; ADR-0011, ADR-0012, ADR-0015
   tarixiy. Ma'lumot laboratoriya telefonlarida qoladi (lokalizatsiya talabi soddalashadi). Tahdid modeli qayta ko'rib

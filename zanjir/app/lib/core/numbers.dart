@@ -20,3 +20,10 @@ String formatIsoDate(DateTime d) {
   final u = d.toUtc();
   return '${u.year.toString().padLeft(4, '0')}-${u.month.toString().padLeft(2, '0')}-${u.day.toString().padLeft(2, '0')}';
 }
+
+/// Mahalliy vaqt: `2026-10-30 08:15` (qurilma soat mintaqasida).
+String formatLocalDateTime(DateTime d) {
+  final t = d.toLocal();
+  String two(int v) => v.toString().padLeft(2, '0');
+  return '${t.year.toString().padLeft(4, '0')}-${two(t.month)}-${two(t.day)} ${two(t.hour)}:${two(t.minute)}';
+}

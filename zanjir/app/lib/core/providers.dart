@@ -31,6 +31,10 @@ final protocolFontsProvider = FutureProvider<ProtocolFonts>((ref) async {
 
 final secureScreenProvider = Provider<SecureScreen>((ref) => const MethodChannelSecureScreen());
 final pdfActionsProvider = Provider<PdfActions>((ref) => const PrintingPdfActions());
+final fileActionsProvider = Provider<FileActions>((ref) => const PickerFileActions());
+
+/// Zaxira kaliti parametrlari; testlarda tezkor qiymat bilan almashtiriladi.
+final backupKdfProvider = Provider<KdfParams>((ref) => KdfParams.standard);
 
 final prefsProvider = Provider((ref) => LocalPrefRepository(ref.watch(databaseProvider)));
 
@@ -53,6 +57,16 @@ class ProfileNotifier extends AsyncNotifier<Profile?> {
     final yaml = await ref.read(bundledNormsProvider)();
     final p = await _service.create(labName: labName, fullName: fullName, phone: phone, role: role, normsYaml: yaml);
     state = AsyncData(p);
+  }
+
+  /// Shifrlangan zaxira faylidan (yangi telefon, ADR-0017).
+  Future<void> restore(List<int> backup, String password) async {
+    state = AsyncData(await _service.restore(backup, password));
+    ref
+      ..invalidate(repositoriesProvider)
+      ..invalidate(localeProvider)
+      ..invalidate(largeTextProvider)
+      ..invalidate(lastBackupProvider);
   }
 }
 
@@ -77,6 +91,12 @@ class LocaleNotifier extends AsyncNotifier<String> {
     state = AsyncData(code);
   }
 }
+
+/// Oxirgi saqlangan zaxira vaqti (`null` — hali yo'q).
+final lastBackupProvider = FutureProvider<DateTime?>((ref) async {
+  final v = await ref.read(prefsProvider).get(LocalPrefRepository.lastBackupAt);
+  return v == null ? null : DateTime.tryParse(v);
+});
 
 final localeProvider = AsyncNotifierProvider<LocaleNotifier, String>(LocaleNotifier.new);
 

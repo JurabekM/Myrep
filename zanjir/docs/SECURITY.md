@@ -103,6 +103,19 @@ obyektlar sxemasi va ajratish rejalari (xavfsizlikka ta'sir qiladi), normalar to
 - Maxfiy qiymatlar — `deploy/environments/<muhit>.env` (0600, `.gitignore`); zaxira — `age` bilan shifrlangan, ochish
   kaliti serverda yo'q. Kirish logi Caddy'da o'chiq (QR token URL'da).
 
+## To'liq oflayn ilova (13-faza, ADR-0017)
+
+Server yo'q: yuqoridagi T1, T4 (server qismi), T6 (RLS), T7, T9, T10 va "Deploy" bo'limi tarixiy; ishonch chegaralari —
+qurilma ↔ qurilma egasi va **fayllar** (zaxira, almashish). Tahdid modeli fayl almashish bosqichidan keyin to'liq qayta
+yoziladi.
+
+| # | Tahdid | Himoya | Qoldiq xavf |
+|---|---|---|---|
+| T13 | I — zaxira fayli begona qo'lga tushdi | Argon2id (64 MiB, t=3) + ChaCha20-Poly1305; parol ≥ 10 belgi, hech qayerda saqlanmaydi; sarlavhada shaxsiy ma'lumot yo'q | kuchsiz parolni oflayn tanlash (Argon2id sekinlashtiradi); parol siyosati — tashkilotda |
+| T14 | T — zaxirani o'zgartirib tiklatish (soxta o'lchov/protokol) | AEAD (sarlavha ham AAD da); tiklashda yaxlitlik va **barcha** audit zanjirlari tekshiriladi; tiklash faqat bo'sh ilovaga | parol egasi o'z bazasini o'zgartirib, zanjirni qayta imzolay olmaydi (eski qurilma kaliti zaxirada yo'q) |
+| T15 | D — zararli fayl telefon xotirasini to'ldiradi | KDF parametrlari chegaralangan (≤ 256 MiB, t ≤ 10, p ≤ 4); sarlavha ≤ 4 KiB; parolsiz faqat sarlavha o'qiladi | katta (lekin to'g'ri) zaxira — telefon xotirasiga sig'ishi kerak |
+| T16 | S — tiklangan telefon eski qurilma nomidan yozadi | qurilma maxfiy kaliti zaxirada **yo'q**; tiklash — yangi qurilma + `BACKUP_RESTORED` | yo'qolgan telefon kaliti amalda qoladi — qurilmani bekor qilish almashish bosqichida |
+
 ## Topilmalar reestri (10-faza xavfsizlik ko'rigi)
 
 Daraja: **Y** — yuqori, **O** — o'rta, **P** — past. Mezon: barcha "yuqori" topilmalar yopilgan.

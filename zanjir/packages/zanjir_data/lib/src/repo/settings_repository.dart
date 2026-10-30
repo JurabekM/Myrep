@@ -142,6 +142,9 @@ class LocalPrefRepository {
   static const locale = 'ui.locale';
   static const largeText = 'ui.large_text';
 
+  /// Oxirgi muvaffaqiyatli saqlangan zaxira vaqti (ISO, UTC) — eslatma uchun.
+  static const lastBackupAt = 'backup.last_at';
+
   Future<String?> get(String key) async =>
       (await (_db.select(_db.localPrefs)..where((p) => p.key.equals(key))).getSingleOrNull())?.value;
 

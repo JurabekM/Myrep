@@ -1,86 +1,86 @@
-# ZANJIR — Runbook
+# ZANJIR — Runbook (to'liq oflayn ilova)
 
-> 11-faza (ADR-0015). Barcha buyruqlar repo ildizidan, serverda: `deploy/zanjir <buyruq> prod`.
-> O'rnatish — `DEPLOY.md`. Maxfiy qiymatlar faqat `deploy/environments/prod.env` da; logga, chatga, tiketga yozilmaydi.
+> 13-faza (ADR-0017). Server yo'q: barcha ma'lumot laboratoriya telefonlarida. Yo'qolishdan yagona himoya — **shifrlangan
+> zaxira fayli**. Parollar, upload kaliti va zaxira fayllari chatga, e-pochtaga, repoga **qo'yilmaydi**; logga yozilmaydi.
+> 11-fazadagi server runbook'i git tarixida (`519f1d2`).
 
-## Kundalik holat
+## Kundalik / haftalik
 
-| Nima | Buyruq / belgi |
-|---|---|
-| Xizmatlar | `deploy/zanjir ps prod` — `db`, `api`, `caddy` — `healthy`; `migrate` — `exited (0)`; `backup` — `running` |
-| Tirikligi | `curl -s https://<domen>/healthz` → `{"status":"ok"}`; baza bilan — `/readyz` → `ready` |
-| Loglar | `deploy/zanjir logs prod api` — JSON (`zanjir.access`, `zanjir.sync`); sir va token yozilmaydi |
-| Zaxira | `ls -l <ZANJIR_BACKUP_DIR>` — har kuni yangi `zanjir-*.dump.age` (+ `.sha256`); `deploy/zanjir logs prod backup` |
-| Disk | `df -h` (baza volume'i, zaxiralar); Docker loglari aylanadi (5 × 10 MB) |
-| Soat | `timedatectl` — `System clock synchronized: yes` (aks holda qurilmalar `clock_skew` bilan rad etiladi) |
+| Nima | Qayerda | Kim |
+|---|---|---|
+| Zaxira yaratish — **har ish kuni oxirida** (va har imzolangan protokoldan keyin) | Sozlamalar → "Zaxira nusxa" → saqlash belgisi | har telefon egasi |
+| Zaxira faylini telefondan tashqariga ko'chirish (kompyuter, flesh, tashkilot diski) | tizim fayl oynasi; `.zanjir` fayl | telefon egasi |
+| "Zaxira hali yaratilmagan" / eski sana ogohlantirishi yo'qligi | Sozlamalar → "Zaxira nusxa" | LEAD (haftalik ko'rik) |
+| Asbob qiyoslash muddatlari | Sozlamalar → Asboblar (muddati o'tgani belgilanadi) | LEAD |
 
-Ogohlantiruvchi belgilar (metrikalar, `/metrics` token bilan): `zanjir_sync_push_rejected_total` keskin o'ssa — qurilmada
-qotgan yozuv yoki soxtalashtirish urinishi (`reason` bo'yicha: `audit_chain:*`, `missing_audit_event`, `plan_immutable`,
-`protocol_rule:*`); 5xx ulushi; `/readyz` 503.
+Zaxira parol bilan shifrlangan (Argon2id + ChaCha20-Poly1305): fayl ichini parolsiz o'qib bo'lmaydi, o'zgartirilgan fayl
+ochilmaydi. **Parol yo'qolsa — zaxira ham yo'qoladi**; parol tashkilot parol menejerida, fayldan alohida saqlanadi.
+Bir nechta oxirgi zaxirani saqlang (masalan, 7 kunlik + har oy bittadan): eski fayl ham to'liq tiklanadi.
 
-## Yangilash
+## Yangi telefonga ko'chish / telefon almashtirildi
 
-1. `deploy/zanjir backup prod` — yangilashdan oldingi zaxira (fayl nomini yozib qo'ying).
-2. `git fetch && git checkout <yangi teg>` (faqat ko'rib chiqilgan teg; `main` ga to'g'ridan-to'g'ri emas).
-3. `deploy/zanjir up prod` — image'lar qayta build, `migrate` (Alembic) avval, keyin `api` (eski konteyner sog'lom
-   yangisi kelguncha ishlaydi; qisqa uzilish ≤ 30 s — ilova oflayn ishlaydi, navbat keyin yuboriladi).
-4. Tekshiruv: `ps`, `/readyz`, bitta qurilmada qo'lda sinxronlash.
+1. Eski telefonda (ishlasa): Sozlamalar → zaxira yaratish → faylni yangi telefonga o'tkazish.
+2. Yangi telefonda ilovani o'rnatish → boshlang'ich ekran → **"Zaxiradan tiklash"** → fayl → zaxira sanasini tekshirish →
+   parol.
+3. Ilova faylni tekshiradi: ZANJIR zaxirasimi, parol, yaxlitlik, barcha audit zanjirlari. Biror tekshiruv o'tmasa — hech
+   narsa yozilmaydi (xabar: "parol noto'g'ri yoki fayl o'zgartirilgan", "audit zanjiri buzilgan" va h.k.).
+4. Tiklangan telefon **yangi qurilma** sifatida ro'yxatdan o'tadi (yangi imzo kaliti; `BACKUP_RESTORED` audit hodisasi).
+   Eski qurilmaning imzolari va protokollari tekshiriladigan holda qoladi. Eski telefondagi ilovani o'chiring.
 
-**Orqaga qaytish:** migratsiyalar faqat oldinga. Sxema o'zgarmagan bo'lsa — `git checkout <eski teg> && deploy/zanjir up prod`.
-O'zgargan bo'lsa — eski teg + 1-qadamdagi zaxiradan tiklash (quyida); yangilashdan keyingi sinxronlangan o'zgarishlar
-qurilmalar navbatidan qayta yuboriladi (idempotent), serverdan olinganlari qurilmalarda qoladi.
+Tiklash faqat **bo'sh** ilovaga (telefonda allaqachon laboratoriya bo'lsa — rad etiladi: ma'lumotni ustidan yozib
+yubormaslik uchun). Bunday holatda avval Android sozlamalari → Ilovalar → ZANJIR → "Ma'lumotni tozalash" — **faqat** shu
+telefondagi ma'lumot zaxirada borligiga ishonch hosil qilgandan keyin.
 
-## Zaxiradan tiklash
+Zaxira yaratilgandan keyin kiritilgan yozuvlar (o'lchov, protokol) tiklangan telefonda **yo'q** — shuning uchun har kuni
+zaxira. Imzolangan protokolning PDF nusxasi buyurtmachida va ulashilgan joyda qoladi (QR havola tekshiruvi — ilova ichida).
 
-> Bazani **o'chiradi**. Avval sabab va tiklanadigan fayl LEAD/rahbar bilan kelishiladi; hodisa yozib boriladi.
+## Telefon yo'qoldi / o'g'irlandi
 
-1. Maxfiy kalitni (operator nusxasi) serverga vaqtincha olib keling: `/root/zanjir-backup.key` (0600).
-2. Fayl butunligi: `cd <ZANJIR_BACKUP_DIR> && sha256sum -c zanjir-<UTC>.dump.age.sha256`.
-3. `deploy/zanjir restore prod <ZANJIR_BACKUP_DIR>/zanjir-<UTC>.dump.age /root/zanjir-backup.key --confirm prod` —
-   `caddy`, `api`, `backup` to'xtaydi, `zanjir` bazasi qayta yaratiladi, zaxira bitta tranzaksiyada tiklanadi, xizmatlar
-   qaytadi.
-4. `shred -u /root/zanjir-backup.key`.
-5. Tekshiruv: `/readyz`; `deploy/zanjir psql prod` → `SELECT count(*) FROM protocol;`; bitta qurilmada sinxronlash.
-   Zaxiradan keyin yaratilgan yozuvlar qurilmalar navbatidan qayta keladi (push idempotent; audit zanjiri davom etadi).
+1. Darhol: oxirgi zaxiradan boshqa telefonda tiklash (yuqoridagi tartib). Zaxiradan keyingi ma'lumot yo'qolgan — qog'oz
+   qaydlar bo'yicha qayta kiritiladi (o'lchovlar qayta o'tkazilishi mumkin).
+2. Yo'qolgan telefondagi ma'lumot: Android qulfi va disk shifrlash (FBE) himoya qiladi; ilovada lokal PIN yo'q (R-05).
+   Telefon qulfsiz bo'lgan bo'lsa — shaxsiy ma'lumot sizishi ehtimoli: tashkilot rahbari va huquqshunos xabardor qilinadi.
+3. Yo'qolgan qurilmaning imzo kaliti boshqa telefonlarga faqat almashish fayli orqali ta'sir qilishi mumkin; qurilmani
+   bekor qilish almashish bosqichida (13-faza 3-bosqich) qo'shiladi — ungacha begona manbadan kelgan fayllar qabul
+   qilinmaydi.
+4. Hodisa sanasi, qurilma va oxirgi zaxira sanasi laboratoriya jurnaliga yoziladi.
 
-**Mashq** (birinchi hafta va har chorak): zaxira faylini sinov serveriga (yoki lokal staging'ga) ko'chirib
-`deploy/check-staging.sh` dagi 5a-qadam kabi bo'sh bazaga tiklash, jadval sonlarini prod bilan solishtirish. Natija sanasi
-shu faylning oxiriga yoziladi.
+## Ilovani yangilash
 
-## Yangi laboratoriya (prod'da ro'yxatdan o'tish yopiq)
+- Play internal testing orqali (`RELEASE.md`). Yangilash lokal bazani o'chirmaydi (migratsiyalar faqat oldinga, testlar
+  bilan).
+- Yangilashdan **oldin** zaxira yarating: yangi versiyada muammo chiqsa, oldingi versiyani o'rnatib (Play'da eski release)
+  shu zaxiradan tiklash mumkin. Yangi versiyada yaratilgan zaxira eski versiyada tiklanmaydi ("yangiroq versiya" xabari) —
+  bu ataylab.
+- Turli versiyadagi telefonlar o'rtasida almashish — 13-faza 3-bosqichda shu yerga qo'shiladi.
 
-1. `prod.env`: `ZANJIR_REGISTRATION_OPEN=true` → `deploy/zanjir up prod`.
-2. Laboratoriya LEAD'i ilovada "Laboratoriyani serverda ro'yxatdan o'tkazish" ni bajaradi (operator telefonda kuzatadi).
-3. Darhol `ZANJIR_REGISTRATION_OPEN=false` → `deploy/zanjir up prod`. Qolgan xodimlar — taklif kodi orqali.
+## Kalitlar va parollar
 
-## Kalitlar va kirish
+| Nima | Qayerda | Yo'qolsa |
+|---|---|---|
+| Qurilma imzo kaliti (Ed25519) | Android Keystore (telefondan chiqmaydi, zaxirada ham yo'q) | zaxiradan tiklash — yangi kalit; eski imzolar amalda |
+| Zaxira paroli | tashkilot parol menejeri | o'sha parol bilan yaratilgan zaxiralar ochilmaydi — darhol yangi parol bilan yangi zaxira |
+| Upload kaliti (`zanjir-upload.jks`) va paroli | foydalanuvchida: parol menejeri + shifrlangan nusxa, ikki joyda (`RELEASE.md`) | Play Console orqali upload kalitini almashtirish (Play App Signing) |
+| Dart simbollari, `mapping.txt` | maxfiy arxiv (`RELEASE.md`) | xato izlarini o'qib bo'lmaydi — keyingi release'dan yangisi |
 
-| Holat | Amal |
-|---|---|
-| Telefon yo'qoldi / o'g'irlandi | ADMIN `POST /devices/{id}/revoke` bilan qurilmani bekor qiladi (ilovada bu ekran hali yo'q, F-25); tashkilotda ADMIN bo'lmasa — operator: `deploy/zanjir psql prod` → `UPDATE device SET revoked_at = now(), updated_at = now(), rev = rev + 1 WHERE id = '<id>';`. Bekor qilingan qurilmaning keyingi push'lari rad etiladi; foydalanuvchi parolini almashtiradi |
-| Xodim ketdi | `DELETE /users/{id}` (ADMIN) — refresh tokenlar va qurilmalar bekor qilinadi; imzolagan protokollari amalda qoladi |
-| JWT kaliti sizib chiqdi yoki rejali almashtirish (yiliga) | `prod.env` da `ZANJIR_JWT_SECRET` ni yangilash (`od -An -tx1 -N32 /dev/urandom \| tr -d ' \n'`) → `deploy/zanjir up prod`. Access tokenlar (15 daq) bekor bo'ladi, ilovalar refresh orqali avtomatik yangilaydi |
-| Baza parollari | `deploy/zanjir psql prod` → `ALTER ROLE zanjir_api PASSWORD '...'` (yoki `zanjir_owner`) → `prod.env` ni yangilash → `up` |
-| Metrika tokeni | `ZANJIR_METRICS_TOKEN` ni yangilash → `up`; Prometheus konfiguratsiyasida ham |
-| Zaxira kaliti | Yangi juftlik (`keygen`) → `ZANJIR_BACKUP_AGE_RECIPIENT` → `up`. Eski maxfiy kalit eski zaxiralar muddati tugaguncha saqlanadi |
+Parol almashtirilsa: yangi parol bilan zaxira yarating; eski parolni eski zaxiralar saqlanadigan muddat tugaguncha
+saqlang (aks holda ular ochilmaydi).
 
 ## Hodisalar
 
-- **`api` unhealthy / 5xx:** `logs prod api` (so'nggi xato), `/readyz` (baza). Baza ishlamasa — `logs prod db`, disk.
-  Qayta ishga tushirish: `deploy/zanjir up prod`. Ilovalar oflayn ishlashda davom etadi — ma'lumot yo'qolmaydi.
-- **Disk to'ldi:** eski zaxiralar (`KEEP_DAYS`), `docker system prune` (volume'larsiz!). Baza volume'iga tegilmaydi.
-- **Sertifikat yangilanmadi:** `logs prod caddy` (ACME xatosi: DNS A yozuvi, 80-port ochiqligi). Caddy o'zi qayta urinadi.
-- **Ko'p `push_rejected`:** `reason` bo'yicha. `clock_skew` — qurilma (yoki server) soati; `audit_chain:*`,
-  `missing_audit_event`, `plan_immutable`, `qr_token_invalid` — mumkin bo'lgan soxtalashtirish: qurilma egasi bilan
-  bog'lanish, kerak bo'lsa qurilmani bekor qilish; dalil sifatida loglarni saqlash.
-- **Buzib kirish gumoni:** tarmoqni cheklash (faqat SSH), barcha kalitlarni almashtirish (yuqoridagi jadval), barcha
-  refresh tokenlarni bekor qilish (`deploy/zanjir psql prod` → `UPDATE refresh_token SET revoked_at = now() WHERE revoked_at IS NULL;`),
-  `audit_event` jadvalini dalil sifatida saqlash (zanjir har push'da serverda tekshiriladi), toza serverga zaxiradan tiklash. Shaxsga doir ma'lumotlar sizgan bo'lsa —
-  qonun bo'yicha xabardor qilish tartibi (huquqshunos).
-- **Protokol shubhali:** `/v/<token>` sahifasi imzo va hash'larni tekshiradi; bekor qilish — LEAD/ADMIN ilovada (sabab bilan).
+- **Tiklashda "audit zanjiri buzilgan":** fayl yoki manba telefondagi baza o'zgartirilgan bo'lishi mumkin. Faylni dalil
+  sifatida saqlang, oldingi zaxirani sinab ko'ring; manba telefonni ishlatishni to'xtatib LEAD ga xabar bering.
+- **"Bu ZANJIR zaxira fayli emas yoki buzilgan":** fayl to'liq ko'chirilmagan (hajmini solishtiring) yoki boshqa fayl.
+- **Protokol shubhali:** ilovada QR havola (`zanjir://app/v/<token>`) imzo va hash'larni tekshiradi; bekor qilish —
+  LEAD/ADMIN ilovada (sabab bilan, audit hodisasi).
+- **Ilova ishga tushmaydi:** ma'lumotni tozalamang — avval yangi versiyani o'rnating; baza fayli telefonda qoladi.
+  Tozalash faqat zaxira borligida.
 
 ## Mashqlar jurnali
 
+Zaxira → boshqa (bo'sh) telefonda tiklash mashqi: pilotning birinchi haftasida va har chorakda. Tekshiriladi: obyektlar,
+sessiyalar, protokollar soni bir xil; protokol QR havolasi tiklangan telefonda "imzo to'g'ri".
+
 | Sana | Nima | Natija |
 |---|---|---|
-| 2026-10-27 | Staging: zaxira → yangi PostgreSQL ga tiklash va `zanjir restore staging` (`check-staging.sh`) | ✅ 20 jadval + sxema nazorat yig'indilari bir xil |
+| 2026-10-30 | Avtomatik test: zaxira yaratish (UI) → bo'sh ilovada tiklash, noto'g'ri parol, buzilgan/begona fayl, audit buzilgan, eski sxema | ✅ `app/test/backup_test.dart`, `packages/zanjir_data/test/backup_test.dart` |

@@ -1,7 +1,7 @@
 # ZANJIR — PROGRESS
 
-**Joriy holat:** 13-faza (to'liq oflayn, ADR-0017) — 1-bosqich (server va sinxronlash olib tashlandi) bajarildi; keyingi —
-shifrlangan zaxira fayli, keyin telefonlar o'rtasida fayl almashish. 🛑 1-darvoza (normalar) ochiq.
+**Joriy holat:** 13-faza (to'liq oflayn, ADR-0017) — 1-bosqich (server va sinxronlash olib tashlandi) va 2-bosqich
+(shifrlangan zaxira) bajarildi; keyingi — telefonlar o'rtasida fayl almashish. 🛑 1-darvoza (normalar) ochiq.
 **Oxirgi yangilanish:** 2026-10-30
 
 ## Fazalar
@@ -22,7 +22,7 @@ shifrlangan zaxira fayli, keyin telefonlar o'rtasida fayl almashish. 🛑 1-darv
 | 10 | Mustahkamlash: xavfsizlik, audit, accessibility | ✅ Tayyor (SECURITY.md: STRIDE, MASVS, F-01…F-19 — "yuqori"lar yopilgan; OSV auditi 0; unumdorlik byudjetlari; a11y testlari) | 2026-10-27 | 7040f69, e418b79 |
 | 11 | Deploy (staging + prod) | ✅ Tayyor (staging bitta buyruq; E2E 7/7 TLS orqali; zaxira → tiklash: 20 jadval + sxema bir xil; prod tayyor, 2-darvozani kutadi) | 2026-10-27 | 519f1d2 |
 | 12 | Release (AAB, Play internal) | ✅ Tayyor (`flutter build appbundle --release` — texnik kalit bilan; AAB tekshiruvi 20/20; checklist, pilot yo'riqnomasi, Play qoralamalari) | 2026-10-27 | 68f4f10 |
-| 13 | To'liq oflayn: server o'chirildi, shifrlangan zaxira, fayl almashish (ADR-0017) | ⏳ 1/3 bosqich | 2026-10-30 | |
+| 13 | To'liq oflayn: server o'chirildi, shifrlangan zaxira, fayl almashish (ADR-0017) | ⏳ 2/3 bosqich (server o'chirildi; zaxira) | 2026-10-30 | |
 
 ## 🛑 Inson darvozalari
 
@@ -53,11 +53,7 @@ Muhandis uchun: M1–M10 (`docs/NORMS_REVIEW.md`). Ular hal bo'lguncha baholash 
 - Android SDK bu konteynerga 12-fazada o'rnatildi (`/opt/android-sdk`, yangi konteynerda qayta); AAB build tekshirildi. Emulyator
   integration testi — CI (`zanjir-emulator`); haqiqiy qurilmada qo'lda sinov — release checklist.
 - QR kodni kamera bilan skanerlash hali yo'q (kod qo'lda kiritiladi, deep link ishlaydi) — keyingi fazalarda.
-- Protokol QR havolasi hozircha `zanjir://app/v/<token>` (faqat ilova o'rnatilgan telefonda ochiladi); ochiq tekshirish sahifasi
-  `https://<domen>/v/<token>` — 7-faza (server) va 2-darvoza (domen), build'da `--dart-define=ZANJIR_VERIFY_BASE_URL`.
+- Protokol QR havolasi — `zanjir://app/v/<token>` (faqat ilova o'rnatilgan telefonda ochiladi); ochiq tekshirish sahifasi
+  yo'q (ilova to'liq oflayn, ADR-0017).
 - `printing` (ulashish/chop etish) va FLAG_SECURE Android'da tekshirilmagan (SDK yo'q).
-- Ilova serverga `--dart-define=ZANJIR_SERVER_URL=...` bilan ulanadi (domen — 2-darvoza); usiz faqat oflayn.
-- Deploy image'lari bu konteynerda `mirror.gcr.io` orqali (Docker Hub 429, ECR "data limit"); CI'da Docker Hub.
-- Server testlari Docker talab qiladi: bu konteynerda `dockerd` qo'lda ishga tushirildi, image ECR ko'zgusidan
-  (Docker Hub 429). Ilova ↔ server haqiqiy sinxronlash — 8-faza.
 - Release darvozasi `needs_verification` holatidagi normalarni ham yiqitadi (ADR-0004) — muhandis tekshiruvidan keyin holat `source_seen` ga o'zgartiriladi.

@@ -1,6 +1,7 @@
 /// ZANJIR lokal ma'lumot qatlami: Drift (SQLite), repozitoriylar, migratsiyalar (ADR-0008).
 library;
 
+export 'src/backup/backup.dart';
 export 'src/db/database.dart';
 export 'src/repo/audit_repository.dart';
 export 'src/repo/context.dart';

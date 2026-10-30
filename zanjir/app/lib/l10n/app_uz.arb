@@ -609,5 +609,34 @@
   "errorPlanStale": "Graf o'zgargan — reja eskirdi",
   "errorStepOrder": "Qadamlar faqat ketma-ket bajariladi",
   "errorStepConfirmation": "Barcha tasdiqlarni belgilang",
-  "errorStepsIncomplete": "Hali barcha qadamlar bajarilmagan"
+  "errorStepsIncomplete": "Hali barcha qadamlar bajarilmagan",
+  "backupSection": "Zaxira nusxa",
+  "backupCreate": "Zaxira yaratish",
+  "backupLast": "Oxirgi zaxira: {date}",
+  "@backupLast": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "backupNever": "Zaxira hali yaratilmagan — telefon yo'qolsa, ma'lumot ham yo'qoladi",
+  "backupPasswordHint": "Parol zaxirani shifrlaydi. Uni yo'qotsangiz, zaxirani tiklab bo'lmaydi. Faylni boshqa joyda (kompyuter, flesh) saqlang.",
+  "backupWorking": "Zaxira shifrlanmoqda…",
+  "backupSaved": "Zaxira saqlandi",
+  "backupRestore": "Zaxiradan tiklash",
+  "backupCreatedAt": "Zaxira sanasi: {date}. Zaxira parolini kiriting.",
+  "@backupCreatedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreWorking": "Zaxira tekshirilmoqda va tiklanmoqda…",
+  "errorBackupInvalid": "Bu ZANJIR zaxira fayli emas yoki u buzilgan",
+  "errorBackupWrongPassword": "Parol noto'g'ri yoki fayl o'zgartirilgan",
+  "errorBackupNewer": "Zaxira ilovaning yangiroq versiyasida yaratilgan — ilovani yangilang",
+  "errorRestoreNotEmpty": "Bu telefonda allaqachon laboratoriya bor — tiklash faqat bo'sh ilovaga",
+  "errorBackupAuditBroken": "Zaxiradagi audit zanjiri buzilgan — tiklanmadi"
 }

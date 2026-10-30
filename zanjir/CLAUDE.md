@@ -105,7 +105,11 @@ Muhit: Flutter 3.47.8 / Dart 3.13.7 (`/opt/flutter/bin` — yangi konteynerda qa
 - Server, sinxronlash, kirish/taklif ekranlari va `INTERNET` ruxsati yo'q (release AAB tekshiruvi talab qiladi). Yangi tarmoq
   kutubxonasi yoki ruxsat qo'shilmaydi.
 - `zanjir_data/lib/src/sync/wire.dart` — jadval ↔ JSON (fayl almashish formati uchun). Sxema v5: sinxronlash navbati o'chirilgan.
-- Zaxira (shifrlangan fayl) va telefonlar o'rtasida fayl almashish — 13-faza (ADR-0017).
+- Zaxira: `zanjir_data/lib/src/backup/backup.dart` (Argon2id + ChaCha20-Poly1305, faqat bo'sh ilovaga tiklash, audit
+  zanjirlari tekshiriladi, qurilma kaliti zaxirada yo'q — ADR-0017 7-band). Formatni o'zgartirsangiz — versiyani oshiring va
+  eski fayllarni o'qish testini qoldiring. Parol hech qayerda saqlanmaydi va logga yozilmaydi.
+- Fayl tanlash/saqlash — faqat `FileActions` (`file_picker`, SAF, ruxsatsiz); testlarda `FakeFileActions`.
+- Telefonlar o'rtasida fayl almashish — 13-faza 3-bosqich (ADR-0017).
 
 ## Ilova (`app/`) xaritasi
 - `lib/core/` — provayderlar (Riverpod), profil (oflayn), qurilma kaliti, son formatlash, `platform.dart` (FLAG_SECURE,

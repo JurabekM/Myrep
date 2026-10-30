@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
 ## [Unreleased]
 
 ### Qo'shildi
+- 13-faza — to'liq oflayn (ADR-0017): **shifrlangan zaxira fayli** `zanjir.backup/1` (butun lokal baza, Argon2id +
+  ChaCha20-Poly1305, alohida isolate'da); tiklash faqat bo'sh ilovaga — yaxlitlik, migratsiya, barcha audit zanjirlari
+  tekshiriladi, telefon yangi qurilma sifatida `BACKUP_RESTORED` bilan ro'yxatdan o'tadi. Ilovada Sozlamalar → "Zaxira nusxa"
+  (oxirgi zaxira sanasi, ogohlantirish) va boshlang'ich ekranda "Zaxiradan tiklash"; fayllar tizim oynasi orqali
+  (`file_picker`, ruxsatsiz). `docs/RUNBOOK.md` oflayn ish uchun qayta yozildi.
 - 12-faza — release (ADR-0016): `app/tool/build_release.sh` (foydalanuvchi upload kaliti, normalar release darvozasi,
   testlar, R8 + Dart obfuskatsiyasi, simbollar alohida), `build_check.sh` (texnik release build, bir martalik kalit),
   `verify_aab.sh` (imzo, manifest, SDK, ruxsatlar, obfuskatsiya); ilova ikonkasi (`gen_icons.py`, adaptive + Play 512 px);
@@ -76,6 +81,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versiyalash: [SemVer](h
   keyingi qayta qiyoslash eski o'lchovni "tozalamaydi"); laboratoriyani ro'yxatdan o'tkazish o'rtada uzilsa qayta urinish va
   kirish tiklaydi; LWW'da yutqazgan qurilma server versiyasini qayta oladi; cheklovlar tozalashi O(n) emas; serverda
   litsenziya raqami tekshiriladi.
+
+### Olib tashlandi
+- 13-faza (ADR-0017): server (`server/`), deploy (`deploy/`), E2E testlari, sinxronlash (`SyncEngine`, `ServerApi`,
+  `ServerAccount`, `sync_outbox` — sxema v5), kirish/taklif ekranlari, `http` bog'liqligi va `INTERNET` ruxsati (release AAB
+  tekshiruvi uni taqiqlaydi). 2-darvoza (domen/server) yo'q. Kripto vektorlari — `tools/vectors/zanjir_refcrypto`.
 
 ### O'zgardi
 - Xavfsizlik (10-faza): Android `allowBackup=false`, faqat HTTPS (`network_security_config`), release imzo faqat

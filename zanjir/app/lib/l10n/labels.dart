@@ -167,6 +167,12 @@ extension Labels on AppLocalizations {
           'no_voltage_confirmation_required',
         }.contains(d.code) =>
       errorStepConfirmation,
+    final DataRuleException d when d.code == 'backup_invalid' => errorBackupInvalid,
+    final DataRuleException d when d.code == 'backup_wrong_password' => errorBackupWrongPassword,
+    final DataRuleException d when d.code == 'backup_newer_version' => errorBackupNewer,
+    final DataRuleException d when d.code == 'restore_target_not_empty' => errorRestoreNotEmpty,
+    final DataRuleException d when d.code == 'backup_audit_broken' => errorBackupAuditBroken,
+    final DataRuleException d when d.code == 'backup_password_too_short' => passwordTooShort,
     final DataRuleException d => actionError(d.code),
     _ => actionError('$e'),
   };

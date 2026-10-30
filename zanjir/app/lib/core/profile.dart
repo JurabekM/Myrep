@@ -23,8 +23,8 @@ class Profile {
   bool get canEditSettings => SettingsRepository.editorRoles.contains(role);
 }
 
-/// Oflayn laboratoriya profili: tashkilot, foydalanuvchi (LEAD/ADMIN), qurilma kaliti, normalar to'plami.
-/// Server ulangach (7–8-fazalar) profil serverda ro'yxatdan o'tkaziladi.
+/// Oflayn laboratoriya profili: tashkilot, foydalanuvchi (LEAD/ADMIN), qurilma kaliti, normalar to'plami. Ilova to'liq
+/// oflayn (ADR-0017): yangi telefonga — shifrlangan zaxiradan yoki almashish fayli orqali.
 class ProfileService {
   ProfileService({required this.db, required this.keyStore, DateTime Function()? clock})
     : _clock = clock ?? DateTime.now;
@@ -46,6 +46,23 @@ class ProfileService {
     return Profile(orgId: orgId, userId: userId, deviceId: deviceId, fullName: user.fullName, role: user.role);
   }
 
+  /// Zaxiradan tiklash: telefon yangi qurilma kalitini oladi (eski kalit zaxirada yo'q), ma'lumot bo'sh bazaga
+  /// nusxalanadi ([restoreBackup]).
+  Future<Profile> restore(List<int> backup, String password) async {
+    final seed = await keyStore.readSeed() ?? _newSeed();
+    await keyStore.writeSeed(seed);
+    await restoreBackup(db, backup, password: password, signer: await Ed25519Signer.fromSeed(seed), clock: _clock);
+    // Tiklangan zaxira — eng so'nggi zaxira (bazadagi qiymat undan oldingisi).
+    await LocalPrefRepository(db)
+        .set(LocalPrefRepository.lastBackupAt, isoUtcMillis(readBackupHeader(backup).createdAt));
+    return (await load()) ?? (throw StateError('restore_profile'));
+  }
+
+  static List<int> _newSeed() {
+    final rnd = Random.secure();
+    return List<int>.generate(32, (_) => rnd.nextInt(256));
+  }
+
   Future<Profile> create({
     required String labName,
     required String fullName,
@@ -54,8 +71,7 @@ class ProfileService {
     required String normsYaml,
   }) async {
     if (!creatorRoles.contains(role)) throw ArgumentError.value(role, 'role');
-    final rnd = Random.secure();
-    final seed = List<int>.generate(32, (_) => rnd.nextInt(256));
+    final seed = _newSeed();
     // Avval kalit: tranzaksiya muvaffaqiyatsiz bo'lsa, ortiqcha seed keyingi urinishda qayta yoziladi.
     await keyStore.writeSeed(seed);
     late Profile profile;

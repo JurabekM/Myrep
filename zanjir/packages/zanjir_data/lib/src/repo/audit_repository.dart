@@ -102,3 +102,35 @@ class AuditRepository {
           .getSingleOrNull() ??
       (throw NotFoundException('device', deviceId));
 }
+
+/// Tashkilotdagi har bir qurilmaning audit zanjiri (o'z ochiq kaliti bilan) — zaxira tiklash va fayl importida.
+/// Qurilma ID → natija; birinchi buzilgan zanjir `ok == false`.
+Future<Map<String, ChainVerification>> verifyOrgChains(DataContext ctx) async {
+  final db = ctx.db;
+  final devices = await (db.select(db.devices)..where((d) => d.orgId.equals(ctx.orgId))).get();
+  final out = <String, ChainVerification>{};
+  for (final d in devices) {
+    final events =
+        await (db.select(db.auditEvents)
+              ..where((e) => e.deviceId.equals(d.id) & e.orgId.equals(ctx.orgId))
+              ..orderBy([(e) => OrderingTerm(expression: e.seq)]))
+            .get();
+    out[d.id] = await verifyChain([
+      for (final e in events)
+        AuditEvent(
+          deviceId: e.deviceId,
+          seq: e.seq,
+          prevHash: e.prevHash,
+          eventHash: e.eventHash,
+          actorId: e.actorId,
+          eventType: e.eventType,
+          entityId: e.entityId,
+          payloadHash: e.payloadHash,
+          createdAt: e.eventAt,
+          deviceSig: e.deviceSig,
+          sigAlg: e.sigAlg,
+        ),
+    ], publicKeyHex: d.publicKeyEd25519);
+  }
+  return out;
+}

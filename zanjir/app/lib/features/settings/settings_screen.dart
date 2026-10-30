@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zanjir_core/zanjir_core.dart' show isoUtcMillis;
 import 'package:zanjir_data/zanjir_data.dart';
 
 import '../../core/numbers.dart';
@@ -9,6 +10,7 @@ import '../../l10n/gen/app_localizations.dart';
 import '../../l10n/labels.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/async_view.dart';
+import '../../widgets/password_prompt.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -98,6 +100,8 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const Divider(),
+          const _BackupSection(),
+          const Divider(),
           ListTile(title: Text(l10n.evalSettings, style: Theme.of(context).textTheme.titleMedium)),
           AsyncView(
             value: ref.watch(labSettingsProvider),
@@ -141,6 +145,64 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 }
+
+/// Shifrlangan zaxira (ADR-0017): server yo'q — telefon yo'qolsa, ma'lumot faqat zaxira faylidan tiklanadi.
+class _BackupSection extends ConsumerWidget {
+  const _BackupSection();
+
+  Future<void> _create(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final password = await promptPassword(
+      context,
+      title: l10n.backupCreate,
+      confirm: l10n.backupCreate,
+      message: l10n.backupPasswordHint,
+      confirmRepeat: true,
+    );
+    if (password == null || !context.mounted) return;
+    try {
+      final now = ref.read(clockProvider)();
+      final bytes = await withProgress(
+        context,
+        l10n.backupWorking,
+        () => createBackup(ref.read(databaseProvider), password: password, now: now, kdf: ref.read(backupKdfProvider)),
+      );
+      final saved = await ref.read(fileActionsProvider).save(bytes, backupFileName(now));
+      if (!saved) return;
+      await ref.read(prefsProvider).set(LocalPrefRepository.lastBackupAt, isoUtcMillis(now));
+      ref.invalidate(lastBackupProvider);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.backupSaved)));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.errorText(e))));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final last = ref.watch(lastBackupProvider).value;
+    return ListTile(
+      key: const Key('settings.backup'),
+      leading: Icon(last == null ? Icons.warning_amber : Icons.backup, color: last == null ? ZanjirColors.warn : null),
+      title: Text(l10n.backupSection),
+      subtitle: Text(
+        last == null ? l10n.backupNever : l10n.backupLast(formatLocalDateTime(last)),
+        style: TextStyle(color: last == null ? ZanjirColors.warn : null),
+      ),
+      trailing: IconButton(
+        key: const Key('backup.create'),
+        tooltip: l10n.backupCreate,
+        icon: const Icon(Icons.save_alt),
+        onPressed: () => _create(context, ref),
+      ),
+    );
+  }
+}
+
+/// `zanjir-2026-10-30-0815.zanjir` (mahalliy vaqt) — bir kunda bir nechta zaxira bir-birini bosmaydi.
+String backupFileName(DateTime now) =>
+    'zanjir-${formatLocalDateTime(now).replaceAll(':', '').replaceAll(' ', '-')}.$backupFileExtension';
 
 class _EvalSettingsForm extends ConsumerStatefulWidget {
   const _EvalSettingsForm({required this.settings, required this.enabled});

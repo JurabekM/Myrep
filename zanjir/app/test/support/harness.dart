@@ -31,6 +31,7 @@ class TestEnv {
   final keys = MemoryDeviceKeyStore();
   final secureScreen = FakeSecureScreen();
   final pdfActions = FakePdfActions();
+  final fileActions = FakeFileActions();
   Profile? profile;
 
   Widget app() => ProviderScope(
@@ -41,6 +42,8 @@ class TestEnv {
       clockProvider.overrideWithValue(() => testNow),
       secureScreenProvider.overrideWithValue(secureScreen),
       pdfActionsProvider.overrideWithValue(pdfActions),
+      fileActionsProvider.overrideWithValue(fileActions),
+      backupKdfProvider.overrideWithValue(testKdf),
     ],
     child: const ZanjirApp(),
   );
@@ -205,6 +208,26 @@ class FakePdfActions implements PdfActions {
   @override
   Future<void> print(Uint8List pdf, String name) async => printed.add(name);
 }
+
+/// Tizim fayl oynasi o'rniga: saqlanganlar ro'yxati va keyingi tanlanadigan fayl (`null` — bekor qilindi).
+class FakeFileActions implements FileActions {
+  final saved = <(String, Uint8List)>[];
+  Uint8List? toPick;
+  bool cancelSave = false;
+
+  @override
+  Future<bool> save(Uint8List bytes, String fileName) async {
+    if (cancelSave) return false;
+    saved.add((fileName, bytes));
+    return true;
+  }
+
+  @override
+  Future<Uint8List?> pick() async => toPick;
+}
+
+/// Tezkor Argon2id (testlar; ilovada — [KdfParams.standard]).
+const testKdf = KdfParams(memoryKib: 8 * 1024, iterations: 1, parallelism: 1);
 
 /// Faqat testlar uchun: v0 normalari `0.1.1` versiyasi va **soxta** tekshiruvchi bilan
 /// (`norms/v0.yaml` ga tegilmaydi — CLAUDE.md, 11-qoida).
