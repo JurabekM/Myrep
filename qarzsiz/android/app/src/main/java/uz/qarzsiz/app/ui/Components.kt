@@ -82,9 +82,13 @@ fun Text(
     M3Text(if (raw) text else t(text), modifier = modifier, color = color, style = style, fontWeight = fontWeight)
 }
 
-/** Qisqa xabar tanlangan yozuvda. */
-fun Context.toast(message: String, script: Script) =
-    Toast.makeText(this, Translit.apply(message, script), Toast.LENGTH_SHORT).show()
+/** Qisqa xabar tanlangan yozuvda. Har qanday oqimdan chaqirsa bo'ladi — asosiy oqimda ko'rsatiladi. */
+fun Context.toast(message: String, script: Script) {
+    val text = Translit.apply(message, script)
+    androidx.core.content.ContextCompat.getMainExecutor(this).execute {
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

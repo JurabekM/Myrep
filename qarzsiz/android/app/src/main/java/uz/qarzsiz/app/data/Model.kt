@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import uz.qarzsiz.core.Debt
 import uz.qarzsiz.core.Habit
 import uz.qarzsiz.core.Habits
+import uz.qarzsiz.core.PinLock
 import uz.qarzsiz.core.PlanSettings
 import uz.qarzsiz.core.Reminders
 import uz.qarzsiz.core.Script
@@ -43,6 +44,8 @@ data class AppState(
     /** Bajarilgan odatlar: «2026-10-31|early». */
     val habitDone: Set<String> = emptySet(),
     val reminders: ReminderSettings = ReminderSettings(),
+    /** PIN-kod qulfi (faqat xesh) yoki `null` — qulf yo'q. Zaxira nusxaga yozilmaydi. */
+    val pin: PinLock? = null,
     /** Interfeys yozuvi: lotin yoki kirill. */
     val script: Script = Script.LATIN,
     /** «Yo'l xaritasi» o'qildi (2-qadam belgisi uchun). */

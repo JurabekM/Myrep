@@ -234,3 +234,58 @@ class RemindersTest {
         assertEquals("A: bugun — 500 000 so'm\nB: 2 kundan keyin", b2)
     }
 }
+
+class PinTest {
+    private fun hex(b: ByteArray) = b.joinToString("") { "%02x".format(it) }
+
+    @Test
+    fun pbkdf2MatchesPythonHashlib() {
+        // python3: hashlib.pbkdf2_hmac('sha256', b'password', b'salt', 1, 32) — RFC 7914 vektori.
+        assertEquals(
+            "120fb6cffcf8b32c43e7225256c4f837a86548c92ccc35480805987cb70be17b",
+            hex(Pin.pbkdf2("password", "salt".toByteArray(), 1)),
+        )
+        assertEquals(
+            "85da899b998b59b08ed14c3f8e9556d1025002064b6d360e8e44ecebb287436d",
+            hex(Pin.pbkdf2("2580", ByteArray(16) { it.toByte() }, 1000)),
+        )
+    }
+
+    @Test
+    fun formatAndWeak() {
+        assertTrue(Pin.isValidFormat("2580") && Pin.isValidFormat("258046"))
+        assertFalse(Pin.isValidFormat("123") || Pin.isValidFormat("1234567") || Pin.isValidFormat("12a4"))
+        assertTrue(Pin.isWeak("0000") && Pin.isWeak("1234") && Pin.isWeak("987654"))
+        assertFalse(Pin.isWeak("2580") || Pin.isWeak("1243"))
+    }
+
+    @Test
+    fun createAndMatch() {
+        val lock = Pin.create("2580", iterations = 1000)
+        assertEquals(4, lock.length)
+        assertTrue(Pin.matches(lock, "2580"))
+        assertFalse(Pin.matches(lock, "2581"))
+        assertFalse(Pin.matches(lock, "25800"))
+        // Har safar yangi tuz — bir xil PIN boshqa xesh beradi.
+        assertTrue(lock.hash != Pin.create("2580", iterations = 1000).hash)
+    }
+
+    @Test
+    fun lockoutGrowsAndResets() {
+        var lock = Pin.create("2580", iterations = 1000)
+        val now = 1_000_000L
+        repeat(4) { lock = Pin.afterFailure(lock, now) }
+        assertEquals(0, Pin.remainingLockMs(lock, now))
+        lock = Pin.afterFailure(lock, now)
+        assertEquals(30_000, Pin.remainingLockMs(lock, now))
+        lock = Pin.afterFailure(lock, now)
+        assertEquals(60_000, Pin.remainingLockMs(lock, now))
+        repeat(5) { lock = Pin.afterFailure(lock, now) }
+        assertEquals(Pin.MAX_LOCKOUT_MS, Pin.remainingLockMs(lock, now))
+        // Soat orqaga surilsa ham 15 daqiqadan oshmaydi.
+        assertEquals(Pin.MAX_LOCKOUT_MS, Pin.remainingLockMs(lock, now - 3_600_000))
+        lock = Pin.afterSuccess(lock)
+        assertEquals(0, lock.failures)
+        assertEquals(0, Pin.remainingLockMs(lock, now))
+    }
+}

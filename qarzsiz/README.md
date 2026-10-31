@@ -47,6 +47,16 @@ iboralari va brendi ishlatilmaydi; hech qanday bank, kurs yoki xizmat reklama qi
   ikkita: `POST_NOTIFICATIONS` (eslatmalar, yoqilganda so'raladi) va `RECEIVE_BOOT_COMPLETED` (signalni tiklash).
 - Holat AES-256-GCM bilan shifrlanadi, kalit Android Keystore'da. Yozish atomar.
 - `FLAG_SECURE` (sozlamada o'chirsa bo'ladi), `allowBackup=false`, bulutli zaxira o'chiq.
+- **PIN-kod qulfi** (ixtiyoriy, «Yana → PIN-kod»): 4–6 raqam, faqat PBKDF2-HMAC-SHA256 xeshi saqlanadi
+  (tasodifiy tuz, 120 000 takrorlash; Python `hashlib` bilan solishtirilgan). Ilova ishga tushganda va fonda
+  tanlangan muddatdan (darhol / 30 s / 1 / 5 daqiqa) uzoq tursa so'raladi. 5-xatodan boshlab kutish
+  (30 s → 1 → 5 → 15 daqiqa), hisoblagich qayta ochishda ham saqlanadi. Oson PIN (1234, 0000) rad etiladi.
+  PIN yoqilganda bildirishnomada qarz nomlari ko'rinmaydi; zaxira nusxaga PIN yozilmaydi. Unutilsa — tiklab
+  bo'lmaydi: ma'lumotni o'chirib, zaxiradan tiklash.
+
+| Qulf ekrani |
+|---|
+| ![](docs/screenshots/40_lock.png) |
 
 ## Arxitektura
 ```
@@ -83,5 +93,4 @@ Yangi pul funksiyasi qo'shish tartibi: `spec/test-vectors/` ga kirish → `oracl
 Kotlin kod → `:core:test`.
 
 ## Keyingi qadamlar
-- PIN-kod bilan qulf.
 - Sotiladigan buyumlar va «kesilgan xarajatlar»ni qo'shimcha to'lovga ulash.

@@ -52,6 +52,10 @@ fun MoreScreen(vm: AppViewModel, nav: Nav) {
         }
 
         SectionTitle("Maxfiylik")
+        MenuItem(
+            "PIN-kod",
+            state.pin?.let { "Yoqilgan" } ?: "O'chiq — ilovani begona ko'zdan himoya qilish",
+        ) { nav.go(Route.PinSettings) }
         Panel {
             SwitchRow("Ekran suratini taqiqlash", state.secureScreen) { vm.setSecureScreen(it) }
             Muted("Yoqilganda ekran suratga olinmaydi va «so'nggi ilovalar»da qarzlaringiz ko'rinmaydi.")

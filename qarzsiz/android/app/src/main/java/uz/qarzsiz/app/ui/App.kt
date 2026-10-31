@@ -54,13 +54,14 @@ sealed interface Route {
     data object Backup : Route { override val key = "backup" }
     data object About : Route { override val key = "about" }
     data object Reminders : Route { override val key = "reminders" }
+    data object PinSettings : Route { override val key = "pin" }
 
     companion object {
         val tabs = listOf(Home, Debts, Plan, Calc, More)
         fun parse(key: String): Route = when {
             key.startsWith("detail:") -> DebtDetail(key.removePrefix("detail:"))
             key.startsWith("edit:") -> DebtEdit(key.removePrefix("edit:").ifEmpty { null })
-            else -> listOf(Home, Debts, Plan, Calc, More, Guide, Habits, Help, Rates, Backup, About, Reminders)
+            else -> listOf(Home, Debts, Plan, Calc, More, Guide, Habits, Help, Rates, Backup, About, Reminders, PinSettings)
                 .firstOrNull { it.key == key } ?: Home
         }
     }
@@ -87,6 +88,7 @@ class Nav(initial: List<Route>) {
 fun QarzsizApp(vm: AppViewModel) {
     val status by vm.status.collectAsStateWithLifecycle()
     val state by vm.state.collectAsStateWithLifecycle()
+    val locked by vm.locked.collectAsStateWithLifecycle()
     CompositionLocalProvider(LocalScript provides state.script) {
     Box(Modifier.fillMaxSize().background(Tok.paper).safeDrawingPadding()) {
         when (val s = status) {
@@ -94,8 +96,11 @@ fun QarzsizApp(vm: AppViewModel) {
                 CircularProgressIndicator(color = Tok.accent)
             }
             is AppViewModel.Status.Broken -> BrokenScreen(s.reason, onWipe = vm::wipeAll)
-            AppViewModel.Status.Ready ->
-                if (!state.onboardingDone) OnboardingScreen(vm) else MainShell(vm)
+            AppViewModel.Status.Ready -> when {
+                locked -> LockScreen(vm)
+                !state.onboardingDone -> OnboardingScreen(vm)
+                else -> MainShell(vm)
+            }
         }
     }
     }
@@ -132,6 +137,7 @@ private fun MainShell(vm: AppViewModel) {
                 Route.Backup -> BackupScreen(vm, nav)
                 Route.About -> AboutScreen(nav)
                 Route.Reminders -> RemindersScreen(vm, nav)
+                Route.PinSettings -> PinSettingsScreen(vm, nav)
             }
         }
         val rootTab = nav.stack.first()

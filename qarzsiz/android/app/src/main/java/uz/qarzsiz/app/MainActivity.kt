@@ -2,6 +2,7 @@ package uz.qarzsiz.app
 
 import android.graphics.Color
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -16,6 +17,17 @@ import uz.qarzsiz.app.ui.QarzsizTheme
 
 class MainActivity : ComponentActivity() {
     private val vm: AppViewModel by viewModels()
+
+    override fun onStart() {
+        super.onStart()
+        vm.onForeground(SystemClock.elapsedRealtime())
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Ekran burilishi — fonga o'tish emas («Darhol» rejimida qulf solmasin).
+        if (!isChangingConfigurations) vm.onBackground(SystemClock.elapsedRealtime())
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Holat yuklanguncha ham ekran himoyalangan (standart — yoqilgan).

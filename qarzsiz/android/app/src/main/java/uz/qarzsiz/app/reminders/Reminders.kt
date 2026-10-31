@@ -97,6 +97,9 @@ object ReminderNotifier {
         }
         val items = Reminders.due(state.debts, payments, today, state.reminders.daysBefore)
         val (title, body) = when {
+            // PIN qo'yilgan bo'lsa, bildirishnomada ham qarz nomlari va summalar ko'rinmaydi.
+            items.isNotEmpty() && state.pin != null ->
+                "To'lov eslatmasi" to "${items.size} ta to'lov yaqin. Ko'rish uchun ilovani oching."
             items.isNotEmpty() -> Reminders.message(items)
             force -> "Eslatmalar ishlayapti" to "Hozircha yaqin kunlarda to'lov yo'q."
             else -> return 0

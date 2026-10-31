@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import uz.qarzsiz.app.data.AppState
 import uz.qarzsiz.app.data.LoadResult
 import uz.qarzsiz.app.data.StateStore
@@ -30,6 +31,7 @@ import uz.qarzsiz.core.Habits
 import uz.qarzsiz.core.Ledger
 import uz.qarzsiz.core.Overview
 import uz.qarzsiz.core.OverviewCalc
+import uz.qarzsiz.core.Pin
 import uz.qarzsiz.core.PlanSettings
 import uz.qarzsiz.core.Script
 import uz.qarzsiz.core.TalkStatus
@@ -58,6 +60,13 @@ class AppViewModel(app: Application, private val store: StateStore) : AndroidVie
     private val _state = MutableStateFlow(AppState())
     val state: StateFlow<AppState> = _state.asStateFlow()
 
+    /** PIN o'rnatilgan va hali kiritilmagan — UI faqat qulf ekranini ko'rsatadi. */
+    private val _locked = MutableStateFlow(false)
+    val locked: StateFlow<Boolean> = _locked.asStateFlow()
+
+    /** Ilova fonga o'tgan payt (`SystemClock.elapsedRealtime`, monoton). */
+    private var backgroundSince: Long? = null
+
     /** Pul hisoblari faqat yadroda (`OverviewCalc`); UI tayyor raqamni ko'rsatadi. */
     val overview: StateFlow<Overview> = _state
         .map { it.debts to it.settings }
@@ -72,6 +81,8 @@ class AppViewModel(app: Application, private val store: StateStore) : AndroidVie
             when (val r = store.load()) {
                 is LoadResult.Ok -> {
                     _state.value = r.state
+                    // Qulf «Ready»dan oldin qo'yiladi: ma'lumot bir lahza ham ko'rinmaydi.
+                    _locked.value = r.state.pin != null
                     _status.value = Status.Ready
                 }
                 LoadResult.Empty -> _status.value = Status.Ready
@@ -158,8 +169,59 @@ class AppViewModel(app: Application, private val store: StateStore) : AndroidVie
         s.copy(habits = s.habits.filterNot { it.id == id }, habitDone = s.habitDone.filterNot { it.endsWith("|$id") }.toSet())
     }
 
+    // --- PIN-kod ---
+    sealed interface PinCheck {
+        data object Ok : PinCheck
+        /** Noto'g'ri; `attemptsLeft` — kutishsiz qolgan urinishlar. */
+        data class Wrong(val attemptsLeft: Int) : PinCheck
+        /** Juda ko'p xato: `ms` kutish kerak. */
+        data class Wait(val ms: Long) : PinCheck
+    }
+
+    /** PIN'ni tekshiradi (og'ir PBKDF2 — fon oqimida); xatolar soni va kutish holatda saqlanadi. */
+    suspend fun checkPin(pin: String, nowMs: Long = System.currentTimeMillis()): PinCheck {
+        val lock = _state.value.pin ?: return PinCheck.Ok
+        Pin.remainingLockMs(lock, nowMs).let { if (it > 0) return PinCheck.Wait(it) }
+        val ok = withContext(Dispatchers.Default) { Pin.matches(lock, pin) }
+        if (ok) {
+            if (lock.failures != 0) mutate { s -> s.copy(pin = s.pin?.let(Pin::afterSuccess)) }
+            return PinCheck.Ok
+        }
+        val updated = Pin.afterFailure(lock, nowMs)
+        mutate { it.copy(pin = updated) }
+        val wait = Pin.remainingLockMs(updated, nowMs)
+        return if (wait > 0) PinCheck.Wait(wait) else PinCheck.Wrong(Pin.FREE_ATTEMPTS + 1 - updated.failures)
+    }
+
+    suspend fun unlock(pin: String): PinCheck = checkPin(pin).also { if (it == PinCheck.Ok) _locked.value = false }
+
+    /** Yangi PIN (eskisini almashtiradi). Kutish sozlamasi saqlanib qoladi. */
+    suspend fun setPin(pin: String) {
+        val grace = _state.value.pin?.graceSeconds ?: Pin.DEFAULT_GRACE_SECONDS
+        val lock = withContext(Dispatchers.Default) { Pin.create(pin, grace) }
+        mutate { it.copy(pin = lock) }
+    }
+
+    fun removePin() = mutate { it.copy(pin = null) }
+
+    fun setPinGrace(seconds: Int) = mutate { s -> s.copy(pin = s.pin?.copy(graceSeconds = seconds)) }
+
+    /** Activity.onStop: fonga o'tish vaqti. */
+    fun onBackground(elapsedMs: Long) {
+        if (_state.value.pin != null && !_locked.value) backgroundSince = elapsedMs
+    }
+
+    /** Activity.onStart: fonda kutish muddatidan uzoq tursa — qulf. */
+    fun onForeground(elapsedMs: Long) {
+        val since = backgroundSince ?: return
+        backgroundSince = null
+        val lock = _state.value.pin ?: return
+        if (elapsedMs - since >= lock.graceSeconds * 1000L) _locked.value = true
+    }
+
     // --- zaxira ---
-    fun exportText(): String = Store.exportText(_state.value)
+    /** Zaxirada PIN xeshi yo'q: tiklangan qurilmada eski (unutilgan bo'lishi mumkin) PIN qulf solmaydi. */
+    fun exportText(): String = Store.exportText(_state.value.copy(pin = null))
 
     /** Import: tekshiradi va almashtiradi. Xato bo'lsa — sababini qaytaradi. */
     fun importText(text: String): String? {
@@ -173,7 +235,8 @@ class AppViewModel(app: Application, private val store: StateStore) : AndroidVie
             return "Faylda noto'g'ri summa bor."
         }
         if (imported.debts.map { it.id }.toSet().size != imported.debts.size) return "Faylda takroriy qarz bor."
-        mutate { imported.copy(onboardingDone = true) }
+        // Joriy qurilmaning PIN'i saqlanadi (fayldagi PIN e'tiborga olinmaydi).
+        mutate { imported.copy(onboardingDone = true, pin = _state.value.pin) }
         ReminderScheduler.apply(getApplication(), imported.reminders)
         return null
     }
@@ -187,6 +250,7 @@ class AppViewModel(app: Application, private val store: StateStore) : AndroidVie
                 runCatching { store.wipe() }
                 _state.value = AppState()
             }
+            _locked.value = false
             _status.value = Status.Ready
         }
     }
