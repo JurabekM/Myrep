@@ -85,12 +85,17 @@ cd android
 ./gradlew :app:testDebugUnitTest     # ekran testlari → app/build/outputs/roborazzi/*.png
 ./gradlew :app:assembleRelease       # app/build/outputs/apk/release/app-release.apk (~1.8 MB)
 ```
-JDK 17+, Android SDK 35. Reliz kaliti: `android/keystore.properties` (`storeFile`, `storePassword`,
+JDK 17+, Android SDK 36 (`targetSdk 36`, `minSdk 26`). Reliz kaliti: `android/keystore.properties` (`storeFile`, `storePassword`,
 `keyAlias`, `keyPassword`; commit qilinmaydi). Bo'lmasa reliz APK debug kaliti bilan imzolanadi —
 sinov uchun o'rnatsa bo'ladi, do'konga emas.
 
 Yangi pul funksiyasi qo'shish tartibi: `spec/test-vectors/` ga kirish → `oracle.py --generate` →
 Kotlin kod → `:core:test`.
+
+## Google Play
+Hamma material va qadam-baqadam yo'riqnoma: [play/RELEASE.md](play/RELEASE.md) — do'kon matnlari (uz, ru, en),
+ikona, feature graphic, 8 ta skrinshot, maxfiylik siyosati, Play Console so'rovnomalari uchun javoblar.
+Imzolangan AAB: `qarzsiz-v1.0.0` tegi → `.github/workflows/qarzsiz-release.yml` (upload kaliti GitHub Secrets'da).
 
 ## Keyingi qadamlar
 - Sotiladigan buyumlar va «kesilgan xarajatlar»ni qo'shimcha to'lovga ulash.

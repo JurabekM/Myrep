@@ -7,34 +7,60 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
-// Reliz kaliti (ixtiyoriy): android/keystore.properties — commit qilinmaydi.
-// Bo'lmasa reliz APK debug kaliti bilan imzolanadi (sinov uchun o'rnatsa bo'ladi).
+// Reliz (upload) kaliti — hech qachon commit qilinmaydi. Manbalar (birinchisi topilgani):
+//  1) muhit o'zgaruvchilari: QARZSIZ_KEYSTORE (fayl yo'li), QARZSIZ_STORE_PASSWORD, QARZSIZ_KEY_ALIAS,
+//     QARZSIZ_KEY_PASSWORD — CI'da GitHub Secrets'dan;
+//  2) android/keystore.properties (storeFile, storePassword, keyAlias, keyPassword) — mahalliy kompyuterda.
+// Kalit bo'lmasa: APK debug kaliti bilan imzolanadi (faqat sinov uchun), AAB esa umuman yig'ilmaydi —
+// Play Console debug kalitli faylni qabul qilmaydi.
 val keystoreProps = Properties().apply {
     val f = rootProject.file("keystore.properties")
     if (f.exists()) f.inputStream().use { load(it) }
 }
 
+data class UploadKey(val file: File, val storePassword: String, val alias: String, val keyPassword: String)
+
+val uploadKey: UploadKey? = run {
+    val env = System.getenv()
+    val path = env["QARZSIZ_KEYSTORE"] ?: keystoreProps.getProperty("storeFile")
+    val storePass = env["QARZSIZ_STORE_PASSWORD"] ?: keystoreProps.getProperty("storePassword")
+    val alias = env["QARZSIZ_KEY_ALIAS"] ?: keystoreProps.getProperty("keyAlias")
+    val keyPass = env["QARZSIZ_KEY_PASSWORD"] ?: keystoreProps.getProperty("keyPassword")
+    if (path.isNullOrBlank() || storePass.isNullOrBlank() || alias.isNullOrBlank() || keyPass.isNullOrBlank()) {
+        null
+    } else {
+        UploadKey(rootProject.file(path), storePass, alias, keyPass)
+    }
+}
+
+// Play har yangi yuklashda kattaroq versionCode talab qiladi: -Pqarzsiz.versionCode=N (CI tegdan oladi).
+val releaseVersionCode = providers.gradleProperty("qarzsiz.versionCode").orNull?.toInt() ?: 1
+val releaseVersionName = providers.gradleProperty("qarzsiz.versionName").orNull ?: "1.0.0"
+
 android {
     namespace = "uz.qarzsiz.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "uz.qarzsiz.app"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
-        // Faqat kerakli tillar resurslari (APK hajmi uchun).
-        resourceConfigurations += listOf("uz", "ru", "en")
+        targetSdk = 36
+        versionCode = releaseVersionCode
+        versionName = releaseVersionName
+    }
+
+    // Faqat kerakli tillar resurslari (hajm uchun).
+    androidResources {
+        localeFilters += listOf("uz", "ru", "en")
     }
 
     signingConfigs {
-        if (keystoreProps.isNotEmpty()) {
-            create("release") {
-                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
-                storePassword = keystoreProps.getProperty("storePassword")
-                keyAlias = keystoreProps.getProperty("keyAlias")
-                keyPassword = keystoreProps.getProperty("keyPassword")
+        if (uploadKey != null) {
+            create("upload") {
+                storeFile = uploadKey.file
+                storePassword = uploadKey.storePassword
+                keyAlias = uploadKey.alias
+                keyPassword = uploadKey.keyPassword
             }
         }
     }
@@ -44,11 +70,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = if (keystoreProps.isNotEmpty()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.findByName("upload") ?: signingConfigs.getByName("debug")
         }
     }
 
@@ -104,4 +126,16 @@ dependencies {
     testImplementation(composeBom)
     testImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+}
+
+// AAB faqat haqiqiy upload kaliti bilan: debug kalitli bundle Play'da rad etiladi.
+tasks.matching { it.name == "bundleRelease" }.configureEach {
+    doFirst {
+        if (uploadKey == null) {
+            throw GradleException(
+                "bundleRelease uchun upload kaliti kerak: QARZSIZ_KEYSTORE / QARZSIZ_STORE_PASSWORD / " +
+                    "QARZSIZ_KEY_ALIAS / QARZSIZ_KEY_PASSWORD yoki android/keystore.properties (qarzsiz/play/RELEASE.md).",
+            )
+        }
+    }
 }

@@ -9,7 +9,6 @@ import androidx.test.core.app.ApplicationProvider
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -63,7 +62,7 @@ class RemindersTest {
         // Qulflangan ekranda tafsilot yo'q.
         assertEquals(NotificationCompat.VISIBILITY_PRIVATE, n.visibility)
         assertNotNull(n.publicVersion)
-        assertNotNull(shadowOf(am).nextScheduledAlarm)
+        assertTrue(shadowOf(am).scheduledAlarms.isNotEmpty())
     }
 
     @Test
@@ -80,7 +79,7 @@ class RemindersTest {
         ReminderScheduler.schedule(app, 9)
         run(stateDueToday(enabled = false))
         assertEquals(0, shadowOf(nm).allNotifications.size)
-        assertNull(shadowOf(am).nextScheduledAlarm)
+        assertTrue(shadowOf(am).scheduledAlarms.isEmpty())
     }
 
     @Test
@@ -88,7 +87,7 @@ class RemindersTest {
         shadowOf(app).denyPermissions(Manifest.permission.POST_NOTIFICATIONS)
         run(stateDueToday(enabled = true))
         assertEquals(0, shadowOf(nm).allNotifications.size)
-        assertNotNull(shadowOf(am).nextScheduledAlarm)
+        assertTrue(shadowOf(am).scheduledAlarms.isNotEmpty())
     }
 
     @Test
@@ -97,7 +96,7 @@ class RemindersTest {
         Stores.factory = { MemoryStore(stateDueToday(enabled = true)) }
         ReminderReceiver.handle(app, "android.intent.action.BOOT_COMPLETED")
         assertEquals(0, shadowOf(nm).allNotifications.size)
-        assertNotNull(shadowOf(am).nextScheduledAlarm)
+        assertTrue(shadowOf(am).scheduledAlarms.isNotEmpty())
     }
 
     @Test

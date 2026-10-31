@@ -27,6 +27,11 @@ Birinchi versiya.
   (o'rnatish, o'zgartirish, o'chirish, fonda kutish muddati), fondan qaytganda qulf (ekran burilishi hisobga
   olinmaydi), PIN yoqilganda bildirishnomada tafsilot yo'q, zaxira nusxada PIN yo'q. Robolectric: 7 test.
   `toast` endi istalgan oqimdan xavfsiz.
+- Google Play'ga tayyorgarlik: `targetSdk`/`compileSdk` 36 (AGP 8.11.1), upload kaliti muhit
+  o'zgaruvchilari yoki `keystore.properties` dan (kalitsiz `bundleRelease` to'xtaydi), `versionCode`/`versionName`
+  Gradle xususiyatlaridan; `qarzsiz-release.yml` (teg → testlar → imzolangan AAB + APK + mapping, imzo va
+  ruxsatlar tekshiruvi); `play/`: do'kon matnlari uz/ru/en va chegara tekshiruvi, ikona, feature graphic,
+  1080×1920 skrinshotlar (`StoreScreenshotsTest`), maxfiylik siyosati, `RELEASE.md`.
 - PR self-review tuzatishlari: umumiy progress yopilgan qarzlarni ham hisoblaydi; `Budget.suggestedShareBp`
   (yadro + oracle + 3 yangi vektor) onboarding va rejada yagona taklif; nasiya kalkulyatori va umumiy hisob
   UI oqimidan tashqarida; to'lovi bor qarzda valyuta qulflangan; kurs maydonida 0 — kursni o'chiradi;
