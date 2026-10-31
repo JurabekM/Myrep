@@ -28,6 +28,9 @@ class RiskWidgetProvider : AppWidgetProvider() {
             try {
                 val snapshot = (context.applicationContext as EpiRadarApp).repository.current()
                 render(context, manager, ids, snapshot)
+            } catch (_: Exception) {
+                // Vidjet xatosi butun ilova jarayonini to'xtatmasligi kerak (masalan, holat fayli o'qilmadi).
+                render(context, manager, ids, null)
             } finally {
                 pending.finish()
             }

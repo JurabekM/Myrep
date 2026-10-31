@@ -104,7 +104,8 @@ class TrendAnalyzer(
             val unusual = status == TrendStatus.UNUSUAL
             signals +=
                 Signal(
-                    id = "flunet:flu:$iso3:$lastDate",
+                    // Mamlakat bo'yicha barqaror id: har hafta yangi hodisa (va qayta bildirishnoma) bo'lmasligi uchun.
+                    id = "flunet:flu:$iso3",
                     source = SourceId.WHO_FLUNET,
                     title = if (unusual) "Gripp faolligi mavsum me'yoridan yuqori — $name" else "Gripp faolligi o'smoqda — $name",
                     summary = note,

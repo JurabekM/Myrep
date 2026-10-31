@@ -44,9 +44,13 @@ abstract class EngineApi {
 class ChannelEngine implements EngineApi {
   ChannelEngine() {
     _channel.setMethodCallHandler((call) async {
-      if (call.method == 'openEvent' && call.arguments is String) {
-        _onOpenEvent?.call(call.arguments as String);
+      final handler = _onOpenEvent;
+      if (call.method == 'openEvent' && call.arguments is String && handler != null) {
+        handler(call.arguments as String);
+        return true;
       }
+      // Ishlov beruvchi hali o'rnatilmagan — Kotlin id'ni saqlab qoladi (consumeLaunchEventId).
+      return false;
     });
   }
 

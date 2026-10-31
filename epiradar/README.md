@@ -82,7 +82,7 @@ epiradar/
 │   │   ├── alert/     # bildirishnoma siyosati
 │   │   └── json/      # Snapshot ↔ JSON (disk va Flutter uchun yagona format)
 │   ├── src/main/resources/epiradar/  # diseases.json (tibbiy ma'lumotnoma), countries.tsv
-│   └── src/test/      # 28 test; fixtures/ — haqiqiy manbalardan olingan javoblar
+│   └── src/test/      # 30 test; fixtures/ — haqiqiy manbalardan olingan javoblar
 ├── android/           # Kotlin: MainActivity (MethodChannel), SyncWorker (WorkManager),
 │                      # Notifier, RiskWidgetProvider, Repository. includeBuild("../engine")
 ├── lib/               # Flutter UI (Dart): faqat ko'rsatadi, hech narsa hisoblamaydi

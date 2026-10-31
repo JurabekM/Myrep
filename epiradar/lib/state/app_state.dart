@@ -22,29 +22,40 @@ class AppState extends ChangeNotifier {
   /// Bildirishnoma orqali ochilishi kerak bo'lgan hodisa (UI bir marta iste'mol qiladi).
   String? pendingEventId;
 
+  /// Sozlamalarni o'qib bo'lmadi — onboarding ko'rsatilmaydi (aks holda saqlangan sozlamalar ustiga yoziladi).
+  String? fatalError;
+  bool _refreshAgain = false;
+
   Future<void> init() async {
+    // Bildirishnoma bosilishi ishga tushish paytida ham yo'qolmasligi uchun eng avval.
+    engine.onOpenEvent = (id) {
+      pendingEventId = id;
+      notifyListeners();
+    };
+    fatalError = null;
     try {
-      final results = await Future.wait<Object?>([
-        engine.settings(),
-        engine.catalog(),
-        engine.snapshot(),
-        engine.lastSync(),
-        engine.notificationStatus(),
-        engine.consumeLaunchEventId(),
-      ]);
-      settings = results[0]! as Settings;
-      catalog = results[1]! as Catalog;
-      snapshot = results[2] as Snapshot?;
-      lastSync = results[3] as DateTime?;
-      notificationStatus = results[4]! as String;
-      pendingEventId = results[5] as String?;
-      engine.onOpenEvent = (id) {
-        pendingEventId = id;
-        notifyListeners();
-      };
+      settings = await engine.settings();
     } catch (e) {
-      error = 'Yadro ishga tushmadi: $e';
+      fatalError = 'Ilova yadrosi ishga tushmadi: $e';
+      ready = true;
+      notifyListeners();
+      return;
     }
+    // Qolganlari mustaqil: bittasining xatosi boshqasini to'xtatmaydi.
+    Future<T?> safe<T>(Future<T?> Function() f) async {
+      try {
+        return await f();
+      } catch (e) {
+        error ??= "Ma'lumotni o'qishda xato: $e";
+        return null;
+      }
+    }
+
+    catalog = await safe(engine.catalog) ?? catalog;
+    snapshot = await safe(engine.snapshot);
+    lastSync = await safe(engine.lastSync);
+    notificationStatus = await safe(engine.notificationStatus) ?? notificationStatus;
+    pendingEventId = await safe(engine.consumeLaunchEventId) ?? pendingEventId;
     ready = true;
     notifyListeners();
     // Birinchi ishga tushish yoki eski ma'lumot — darhol yangilaymiz.
@@ -55,12 +66,23 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
-    if (refreshing) return;
+    if (refreshing) {
+      // Masalan, mamlakat almashtirilganda eski sozlamalar bilan sinxronlash ketayotgan bo'lsa —
+      // tugagach yangi sozlamalar bilan yana bir marta.
+      _refreshAgain = true;
+      return;
+    }
     refreshing = true;
     error = null;
     notifyListeners();
     try {
-      snapshot = await engine.refresh();
+      Snapshot result;
+      do {
+        _refreshAgain = false;
+        result = await engine.refresh();
+        // Eski sozlamalar bilan olingan natija ekranga chiqmaydi — navbatdagi sinxronlash kutiladi.
+      } while (_refreshAgain);
+      snapshot = result;
       lastSync = DateTime.now();
       if (snapshot!.sources.every((s) => !s.ok)) {
         error = "Manbalarga ulanib bo'lmadi. Internet aloqasini tekshiring — oxirgi saqlangan ma'lumot ko'rsatilmoqda.";
@@ -69,6 +91,7 @@ class AppState extends ChangeNotifier {
       error = "Yangilab bo'lmadi: $e";
     } finally {
       refreshing = false;
+      _refreshAgain = false;
       notifyListeners();
     }
   }

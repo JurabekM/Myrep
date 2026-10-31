@@ -116,6 +116,19 @@ class ParsingTest {
     }
 
     @Test
+    fun `routine programme phrases are not threat flags`() {
+        val f =
+            classifier.flags(
+                "Response includes novel oral polio vaccine (nOPV2) campaigns by the Expanded Programme on Immunization; " +
+                    "surgery services continue.",
+            )
+        assertFalse(SignalFlag.NOVEL_PATHOGEN in f, f.toString())
+        assertFalse(SignalFlag.ESCALATING in f, f.toString())
+        assertTrue(SignalFlag.NOVEL_PATHOGEN in classifier.flags("A novel coronavirus was identified"))
+        assertTrue(SignalFlag.ESCALATING in classifier.flags("Escalation of the outbreak; cases surging"))
+    }
+
+    @Test
     fun `dates tolerate bad input`() {
         assertNull(uz.epiradar.engine.parse.Dates.rfc1123("yesterday"))
         assertNull(uz.epiradar.engine.parse.Dates.iso(""))

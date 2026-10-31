@@ -30,7 +30,9 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        launchEventId = intent?.getStringExtra(Notifier.EXTRA_EVENT_ID)
+        // "So'nggi ilovalar"dan qayta ochilganda eski bildirishnoma intent'i qayta keladi — uni e'tiborsiz qoldiramiz.
+        val fromHistory = ((intent?.flags ?: 0) and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0
+        launchEventId = if (fromHistory) null else intent?.getStringExtra(Notifier.EXTRA_EVENT_ID)
         channel =
             MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).also {
                 it.setMethodCallHandler(::handle)
@@ -40,7 +42,28 @@ class MainActivity : FlutterActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        intent.getStringExtra(Notifier.EXTRA_EVENT_ID)?.let { id -> channel?.invokeMethod("openEvent", id) }
+        intent.getStringExtra(Notifier.EXTRA_EVENT_ID)?.let { id ->
+            // Dart hali tayyor bo'lmasa ham yo'qolmasin: consumeLaunchEventId orqali ham olinadi.
+            launchEventId = id
+            channel?.invokeMethod(
+                "openEvent",
+                id,
+                object : MethodChannel.Result {
+                    override fun success(result: Any?) {
+                        // Dart `true` qaytarsa — hodisa ochildi; aks holda ishga tushishda consumeLaunchEventId oladi.
+                        if (result == true && launchEventId == id) launchEventId = null
+                    }
+
+                    override fun error(
+                        code: String,
+                        message: String?,
+                        details: Any?,
+                    ) = Unit
+
+                    override fun notImplemented() = Unit
+                },
+            )
+        }
     }
 
     private fun handle(

@@ -55,7 +55,8 @@ class Repository(
         return new
     }
 
-    private fun loadState(): StoredState? = stateFile.takeIf { it.exists() }?.let { engine.codec.decodeState(it.readText()) }
+    private fun loadState(): StoredState? =
+        runCatching { stateFile.takeIf { it.exists() }?.let { engine.codec.decodeState(it.readText()) } }.getOrNull()
 
     /** Saqlangan holatdan joriy sozlamalar bo'yicha baholangan snapshot (tarmoqsiz). */
     suspend fun current(): Snapshot? =

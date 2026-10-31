@@ -10,6 +10,9 @@ kotlin {
     // Android ilova JVM 17 bilan yig'iladi — yadro ham shu nishonda.
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        // JDK 21 bilan yig'ilganda ham faqat Java 17 API'ga bog'lanish: Android'da yo'q metodlar
+        // (masalan, List.removeFirst — API 35) kompilyatsiyada ushlanadi.
+        freeCompilerArgs.add("-Xjdk-release=17")
         allWarningsAsErrors.set(true)
     }
 }

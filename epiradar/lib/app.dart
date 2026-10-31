@@ -32,7 +32,9 @@ class EpiRadarApp extends StatelessWidget {
             themeMode: state.settings.lightTheme ? ThemeMode.light : ThemeMode.dark,
             home: !state.ready
                 ? const _Splash()
-                : state.settings.onboardingDone
+                : state.fatalError != null
+                    ? _FatalError(state: state)
+                    : state.settings.onboardingDone
                     ? const Shell()
                     : const OnboardingScreen(),
           ),
@@ -47,6 +49,36 @@ class _Splash extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         body: Center(child: Icon(Icons.radar, size: 72, color: context.tokens.accent)),
       );
+}
+
+class _FatalError extends StatelessWidget {
+  const _FatalError({required this.state});
+
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.error_outline, size: 56, color: t.danger),
+                const SizedBox(height: 12),
+                Text(state.fatalError!, textAlign: TextAlign.center, style: TextStyle(color: t.ink)),
+                const SizedBox(height: 16),
+                FilledButton(onPressed: state.init, child: const Text('Qayta urinish')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Asosiy navigatsiya: 5 bo'lim.

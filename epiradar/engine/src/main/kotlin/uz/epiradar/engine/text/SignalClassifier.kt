@@ -52,12 +52,25 @@ class SignalClassifier(
             SignalFlag.HEALTHCARE_WORKERS to
                 listOf("health worker", "healthcare worker", "health-care worker", "health care worker", "medical staff"),
             SignalFlag.ESCALATING to
-                listOf("expanded", "expanding", "spreading", "surge", "rapid increase", "rising", "escalat", "increasing number", "increase in cases", "spread to"),
+                listOf(
+                    "expanded", "expanding", "spreading", "surge", "surges", "surging", "rapid increase", "rising",
+                    "escalating", "escalation", "escalated", "increasing number", "increase in cases", "spread to",
+                ),
             SignalFlag.FIRST_DETECTION to
                 listOf("first case", "first confirmed", "first reported", "first time", "first detection", "first-ever"),
             SignalFlag.CLUSTER to listOf("cluster"),
             SignalFlag.DEATHS to listOf("death", "deaths", "died", "fatal", "fatalities"),
-        ).mapValues { (_, words) -> words.map { prefixBoundary(it) } }
+        ).mapValues { (_, words) -> words.map { boundary(it, ignoreCase = true) } }
+
+    /**
+     * Belgi qidirishdan oldin olib tashlanadigan muntazam iboralar — ular xavf belgisi emas:
+     * "novel oral polio vaccine (nOPV2)" (deyarli har bir cVDPV2 xabarida), "Expanded Programme on Immunization".
+     */
+    private val benignPhrases =
+        listOf(
+            "novel oral polio vaccine", "novel oral poliovirus vaccine", "expanded programme on immunization",
+            "expanded programme on immunisation", "expanded program on immunization",
+        ).map { boundary(it, ignoreCase = true) }
 
     private val negations = Regex("\\b(no|not|without|absence of|no evidence of|none)\\b[^.;]{0,30}$", RegexOption.IGNORE_CASE)
 
@@ -93,7 +106,8 @@ class SignalClassifier(
         return found.sortedBy { it.first }.map { it.second }.distinct()
     }
 
-    fun flags(text: String): Set<SignalFlag> {
+    fun flags(raw: String): Set<SignalFlag> {
+        val text = benignPhrases.fold(raw) { acc, r -> r.replace(acc, " ") }
         val result = mutableSetOf<SignalFlag>()
         for ((flag, patterns) in flagPatterns) {
             val hit =
@@ -117,10 +131,6 @@ class SignalClassifier(
             val opts = if (ignoreCase) setOf(RegexOption.IGNORE_CASE) else emptySet()
             return Regex("(?<![\\p{L}\\p{N}])" + Regex.escape(phrase) + "(?![\\p{L}\\p{N}])", opts)
         }
-
-        /** Faqat boshidan chegaralangan: "escalat" → "escalating", "escalation". */
-        private fun prefixBoundary(phrase: String): Regex =
-            Regex("(?<![\\p{L}\\p{N}])" + Regex.escape(phrase), RegexOption.IGNORE_CASE)
 
         /** Turli apostrof va tirelarni bir xil ko'rinishga keltirish. */
         fun normalize(text: String): String =

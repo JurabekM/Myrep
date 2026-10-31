@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -20,6 +21,10 @@ class FakeEngine implements EngineApi {
   final saved = <Settings>[];
   String permission = 'denied';
 
+  /// Berilsa, refresh() shu Completer tugaguncha kutadi (parallel holatlarni sinash uchun).
+  Completer<void>? refreshGate;
+  bool failSettings = false;
+
   @override
   set onOpenEvent(void Function(String eventId)? handler) {}
 
@@ -28,12 +33,16 @@ class FakeEngine implements EngineApi {
 
   @override
   Future<Snapshot> refresh() async {
-    calls.add('refresh');
+    calls.add('refresh:${_settings.country}');
+    await refreshGate?.future;
     return Snapshot.fromJson(fixture('snapshot.json'));
   }
 
   @override
-  Future<Settings> settings() async => _settings;
+  Future<Settings> settings() async {
+    if (failSettings) throw StateError('prefs');
+    return _settings;
+  }
 
   @override
   Future<Settings> saveSettings(Settings settings) async {

@@ -85,7 +85,12 @@ class Engine(
             for ((id, result) in fetched.awaitAll()) {
                 val fresh = result.getOrNull()
                 if (fresh != null) {
+                    // Lenta faqat oxirgi N ta xabarni beradi: lentadan tushib qolgan eski xabarlar tarixda saqlanadi
+                    // (KEEP_DAYS gacha). Aks holda hodisaning eng birinchi xabari yo'qolib, hodisa id'si o'zgaradi va
+                    // bir xil avj olish haqida qayta-qayta bildirishnoma ketadi.
+                    val freshIds = fresh.mapTo(HashSet()) { it.id }
                     signals += fresh
+                    signals += previous?.signals?.filter { it.source == id && it.id !in freshIds }.orEmpty()
                     statuses += SourceStatus(id, true, fresh.size, now, null, stale = false)
                 } else {
                     val old = previous?.signals?.filter { it.source == id }.orEmpty()

@@ -65,6 +65,35 @@ class EngineTest {
         }
 
     @Test
+    fun `event ids stay stable when the earliest item drops off the feed`() =
+        runTest {
+            val first = engine().sync(Settings(), null)
+            val ebolaId = first.events.first { it.diseaseId == "ebola" }.id
+            val prev = StoredState(first.generatedAt, first.signals, first.trends, first.trendsFetchedAt, first.sources)
+            // Keyingi sinxronlashda WHO lentasida eng eski xabarlar yo'q (lenta oxirgi N tani beradi).
+            val oldest = first.signals.filter { it.source == SourceId.WHO_DON }.minBy { it.publishedAt }.id.removePrefix("who:")
+            val trimmed =
+                object : uz.epiradar.engine.net.HttpFetcher {
+                    val base = Fixtures.FakeHttp()
+
+                    override suspend fun get(url: String): String {
+                        val body = base.get(url)
+                        if (!url.contains("diseaseoutbreaknews")) return body
+                        val o = kotlinx.serialization.json.Json.parseToJsonElement(body) as kotlinx.serialization.json.JsonObject
+                        val kept =
+                            (o["value"] as kotlinx.serialization.json.JsonArray).filterNot {
+                                (it as kotlinx.serialization.json.JsonObject)["DonId"].toString().contains(oldest)
+                            }
+                        return kotlinx.serialization.json.JsonObject(mapOf("value" to kotlinx.serialization.json.JsonArray(kept))).toString()
+                    }
+                }
+            val second = Engine(trimmed, Fixtures.catalog, Fixtures.countries) { NOW }.sync(Settings(), prev)
+            assertTrue(second.signals.any { it.id == "who:$oldest" }, "lentadan tushgan xabar tarixda qoladi")
+            assertEquals(ebolaId, second.events.first { it.diseaseId == "ebola" }.id)
+            assertEquals(first.events.map { it.id }.toSet(), second.events.map { it.id }.toSet())
+        }
+
+    @Test
     fun `codec round trip and reassessment for another country`() =
         runTest {
             val e = engine()

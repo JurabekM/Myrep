@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:epiradar/app.dart';
 import 'package:epiradar/data/models.dart';
 import 'package:epiradar/state/app_state.dart';
@@ -80,7 +82,7 @@ void main() {
     expect(find.text("O'zbekiston"), findsOneWidget);
     await tester.tap(find.text('Boshlash'));
     await tester.pumpAndSettle();
-    expect(engine.calls, containsAllInOrder(['permission', 'refresh']));
+    expect(engine.calls, containsAllInOrder(['permission', 'refresh:UZB']));
     expect(engine.saved.last.onboardingDone, isTrue);
     expect(find.text('Radar'), findsOneWidget);
     expect(find.text("O'zbekiston uchun xavf darajasi"), findsOneWidget);
@@ -186,5 +188,33 @@ void main() {
     expect(engine.saved.last.lightTheme, isTrue);
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     expect(app.themeMode, ThemeMode.light);
+  });
+
+  test('mamlakat sinxronlash paytida almashtirilsa, yangi sozlama bilan yana yangilanadi', () async {
+    final engine = FakeEngine();
+    final state = AppState(engine);
+    await state.init();
+    engine.calls.clear();
+    engine.refreshGate = Completer<void>();
+    final first = state.refresh();
+    await Future<void>.delayed(Duration.zero);
+    expect(state.refreshing, isTrue);
+    final change = state.updateSettings(state.settings.copyWith(country: 'KAZ'));
+    engine.refreshGate!.complete();
+    await Future.wait([first, change]);
+    expect(engine.calls.where((c) => c.startsWith('refresh')), ['refresh:UZB', 'refresh:KAZ']);
+    expect(state.refreshing, isFalse);
+  });
+
+  testWidgets('sozlamalar o\'qilmasa onboarding emas, xato ekrani ko\'rsatiladi', (tester) async {
+    final engine = FakeEngine()..failSettings = true;
+    await pumpApp(tester, engine);
+    expect(find.text('Boshlash'), findsNothing);
+    expect(find.text('Qayta urinish'), findsOneWidget);
+    engine.failSettings = false;
+    await tester.tap(find.text('Qayta urinish'));
+    await tester.pumpAndSettle();
+    expect(find.text('Radar'), findsOneWidget);
+    expect(engine.saved, isEmpty, reason: 'saqlangan sozlamalar ustiga yozilmadi');
   });
 }
