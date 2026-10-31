@@ -1,7 +1,6 @@
 package uz.qarzsiz.app.ui
 
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +40,12 @@ fun MoreScreen(vm: AppViewModel, nav: Nav) {
         MenuItem("Valyuta kurslari", "Dollar, rubl, tenge qarzlar uchun") { nav.go(Route.Rates) }
         MenuItem("Zaxira nusxa", "Telefon almashtirganda ma'lumotni ko'chirish") { nav.go(Route.Backup) }
         MenuItem("Ilova haqida", "Maxfiylik, litsenziya") { nav.go(Route.About) }
+
+        SectionTitle("Yozuv")
+        Panel {
+            ScriptChoice(state.script) { vm.setScript(it) }
+            Muted("Interfeys matnlari tanlangan yozuvda. Siz kiritgan izohlar o'zgarmaydi.")
+        }
 
         SectionTitle("Maxfiylik")
         Panel {
@@ -167,11 +171,12 @@ fun HabitsScreen(vm: AppViewModel, nav: Nav) {
                         colors = CheckboxDefaults.colors(checkedColor = Tok.calm, checkmarkColor = Tok.accentInk, uncheckedColor = Tok.fieldLine),
                     )
                     androidx.compose.foundation.layout.Column(Modifier.weight(1f)) {
-                        Text(h.title, style = MaterialTheme.typography.bodyMedium, color = Tok.ink)
+                        // O'z odati — foydalanuvchi yozganidek; standart odatlar tanlangan yozuvda.
+                        Text(h.title, style = MaterialTheme.typography.bodyMedium, color = Tok.ink, raw = h.id.startsWith("u-"))
                         if (streak > 0) Muted("$streak kun ketma-ket")
                     }
                     IconButton(onClick = { vm.removeHabit(h.id) }) {
-                        Icon(Icons.Filled.Delete, contentDescription = "«${h.title}» odatini o'chirish", tint = Tok.inkMuted)
+                        Icon(Icons.Filled.Delete, contentDescription = t("Odatni o'chirish") + ": " + h.title, tint = Tok.inkMuted)
                     }
                 }
             }
@@ -263,6 +268,7 @@ fun RatesScreen(vm: AppViewModel, nav: Nav) {
 @Composable
 fun BackupScreen(vm: AppViewModel, nav: Nav) {
     val ctx = LocalContext.current
+    val script = LocalScript.current
     var pending by remember { mutableStateOf<String?>(null) }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -271,7 +277,7 @@ fun BackupScreen(vm: AppViewModel, nav: Nav) {
             val ok = runCatching {
                 ctx.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(vm.exportText().encodeToByteArray()) }
             }.isSuccess
-            Toast.makeText(ctx, if (ok) "Saqlandi" else "Saqlab bo'lmadi", Toast.LENGTH_SHORT).show()
+            ctx.toast(if (ok) "Saqlandi" else "Saqlab bo'lmadi", script)
         }
     }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
@@ -301,7 +307,7 @@ fun BackupScreen(vm: AppViewModel, nav: Nav) {
             PrimaryButton("Ha, tiklash") {
                 val err = vm.importText(pending!!)
                 pending = null
-                if (err != null) error = err else Toast.makeText(ctx, "Tiklandi", Toast.LENGTH_SHORT).show()
+                if (err != null) error = err else ctx.toast("Tiklandi", script)
             }
             SecondaryButton("Bekor qilish") { pending = null }
         }

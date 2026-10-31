@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -35,6 +34,10 @@ fun OnboardingScreen(vm: AppViewModel) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text("${page + 1} / 3", style = MaterialTheme.typography.labelMedium, color = Tok.inkMuted)
+        if (page == 0) {
+            // Yozuvni birinchi ekrandayoq tanlash: kirillda o'qiydiganlar uchun.
+            ScriptChoice(vm.state.value.script) { vm.setScript(it) }
+        }
         when (page) {
             0 -> {
                 Text("Qarzdan chiqish mumkin", style = MaterialTheme.typography.headlineMedium, color = Tok.ink)

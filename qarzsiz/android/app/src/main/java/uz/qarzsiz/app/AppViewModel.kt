@@ -26,6 +26,7 @@ import uz.qarzsiz.core.Ledger
 import uz.qarzsiz.core.Overview
 import uz.qarzsiz.core.OverviewCalc
 import uz.qarzsiz.core.PlanSettings
+import uz.qarzsiz.core.Script
 import uz.qarzsiz.core.TalkStatus
 import java.time.LocalDate
 import java.util.UUID
@@ -86,6 +87,7 @@ class AppViewModel(app: Application, private val store: StateStore) : AndroidVie
     fun finishOnboarding() = mutate { it.copy(onboardingDone = true) }
     fun updateSettings(s: PlanSettings) = mutate { it.copy(settings = s) }
     fun setSecureScreen(on: Boolean) = mutate { it.copy(secureScreen = on) }
+    fun setScript(script: Script) = mutate { it.copy(script = script) }
     fun markAnalysisSeen() {
         if (!_state.value.analysisSeen) mutate { it.copy(analysisSeen = true) }
     }

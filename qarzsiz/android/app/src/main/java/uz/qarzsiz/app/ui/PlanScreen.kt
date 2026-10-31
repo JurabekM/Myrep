@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,6 +56,7 @@ fun PlanScreen(vm: AppViewModel, nav: Nav) {
                 Text("Qarzga ulush", style = MaterialTheme.typography.bodyMedium, color = Tok.ink, modifier = Modifier.weight(1f))
                 Text(MoneyFormat.percent(s.debtShareBp), style = MaterialTheme.typography.titleMedium, color = Tok.accentText)
             }
+            val sliderLabel = t("Qarzga ulush, foizda")
             Slider(
                 value = s.debtShareBp / 100f,
                 onValueChange = { v ->
@@ -66,7 +66,7 @@ fun PlanScreen(vm: AppViewModel, nav: Nav) {
                 valueRange = (Budget.MIN_SHARE_BP / 100f)..(Budget.MAX_SHARE_BP / 100f),
                 steps = (Budget.MAX_SHARE_BP - Budget.MIN_SHARE_BP) / 500 - 1,
                 colors = SliderDefaults.colors(thumbColor = Tok.accent, activeTrackColor = Tok.accent, inactiveTrackColor = Tok.line),
-                modifier = Modifier.semantics { contentDescription = "Qarzga ulush, foizda" },
+                modifier = Modifier.semantics { contentDescription = sliderLabel },
             )
             Muted("Standart — 70%. 100% emas: ovqat, yo'l va daromad manbasi uchun pul qolishi shart.")
             if (s.monthlyIncome > 0) {

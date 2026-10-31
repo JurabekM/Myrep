@@ -5,6 +5,7 @@ import uz.qarzsiz.core.Debt
 import uz.qarzsiz.core.Habit
 import uz.qarzsiz.core.Habits
 import uz.qarzsiz.core.PlanSettings
+import uz.qarzsiz.core.Script
 
 /** To'lov yozuvi (qarz valyutasida). */
 @Serializable
@@ -30,6 +31,8 @@ data class AppState(
     val habits: List<Habit> = Habits.defaults,
     /** Bajarilgan odatlar: «2026-10-31|early». */
     val habitDone: Set<String> = emptySet(),
+    /** Interfeys yozuvi: lotin yoki kirill. */
+    val script: Script = Script.LATIN,
     /** «Yo'l xaritasi» o'qildi (2-qadam belgisi uchun). */
     val analysisSeen: Boolean = false,
 ) {

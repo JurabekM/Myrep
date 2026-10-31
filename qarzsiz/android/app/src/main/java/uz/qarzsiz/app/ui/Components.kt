@@ -34,21 +34,57 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.Text as M3Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import android.content.Context
+import android.widget.Toast
 import uz.qarzsiz.core.MoneyFormat
+import uz.qarzsiz.core.Script
+import uz.qarzsiz.core.Translit
+
+/** Tanlangan interfeys yozuvi. Hamma matn shu yerdan o'tadi: [Text] va [t]. */
+val LocalScript = staticCompositionLocalOf { Script.LATIN }
+
+/** Ilova matni tanlangan yozuvda (lotin → kirill). */
+@Composable
+@ReadOnlyComposable
+fun t(text: String): String = Translit.apply(text, LocalScript.current)
+
+/**
+ * Ilovadagi yagona `Text`: matnni tanlangan yozuvga o'giradi. `raw = true` — foydalanuvchining
+ * erkin matni (izoh, o'z odati) o'zgarishsiz chiqadi.
+ */
+@Composable
+fun Text(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified,
+    style: TextStyle = LocalTextStyle.current,
+    fontWeight: FontWeight? = null,
+    raw: Boolean = false,
+) {
+    M3Text(if (raw) text else t(text), modifier = modifier, color = color, style = style, fontWeight = fontWeight)
+}
+
+/** Qisqa xabar tanlangan yozuvda. */
+fun Context.toast(message: String, script: Script) =
+    Toast.makeText(this, Translit.apply(message, script), Toast.LENGTH_SHORT).show()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +100,7 @@ fun ScreenScaffold(
             navigationIcon = {
                 if (onBack != null) {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("Orqaga"))
                     }
                 }
             },
@@ -127,9 +163,10 @@ fun KeyValue(key: String, value: String, valueColor: Color = Tok.ink) {
 @Composable
 fun ProgressLine(bp: Int, color: Color = Tok.accent, label: String = "Yopilgan qismi") {
     val fraction = (bp.coerceIn(0, 10_000)) / 10_000f
+    val description = t("$label: ${MoneyFormat.percent(bp)}")
     Box(
         Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Tok.line)
-            .semantics { contentDescription = "$label: ${MoneyFormat.percent(bp)}" },
+            .semantics { contentDescription = description },
     ) {
         Box(Modifier.fillMaxWidth(fraction).fillMaxHeight().background(color))
     }
@@ -259,6 +296,33 @@ fun <T> ChoiceRow(options: List<T>, selected: T, label: (T) -> String, onSelect:
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = o == selected,
+                    borderColor = Tok.fieldLine,
+                    selectedBorderColor = Tok.accent,
+                ),
+            )
+        }
+    }
+}
+
+/** Yozuv tanlovi: har variant o'z yozuvida ko'rsatiladi («Lotin», «Кирилл»). */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+fun ScriptChoice(selected: Script, onSelect: (Script) -> Unit) {
+    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Script.entries.forEach { s ->
+            FilterChip(
+                selected = s == selected,
+                onClick = { onSelect(s) },
+                label = { Text(s.label, raw = true) },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Tok.surface,
+                    labelColor = Tok.ink,
+                    selectedContainerColor = Tok.accent,
+                    selectedLabelColor = Tok.accentInk,
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = s == selected,
                     borderColor = Tok.fieldLine,
                     selectedBorderColor = Tok.accent,
                 ),

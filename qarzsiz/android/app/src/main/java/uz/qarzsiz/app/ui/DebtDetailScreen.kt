@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +12,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,7 +52,7 @@ fun DebtDetailScreen(vm: AppViewModel, nav: Nav, id: String) {
         onBack = { nav.back() },
         actions = {
             IconButton(onClick = { nav.go(Route.DebtEdit(d.id)) }) {
-                Icon(Icons.Filled.Edit, contentDescription = "Tahrirlash")
+                Icon(Icons.Filled.Edit, contentDescription = t("Tahrirlash"))
             }
         },
     ) {
@@ -101,7 +99,7 @@ fun DebtDetailScreen(vm: AppViewModel, nav: Nav, id: String) {
             }
             if (d.note.isNotBlank()) {
                 Muted("Izoh")
-                Text(d.note, style = MaterialTheme.typography.bodyMedium, color = Tok.ink)
+                Text(d.note, style = MaterialTheme.typography.bodyMedium, color = Tok.ink, raw = true)
             }
         }
 
@@ -154,7 +152,7 @@ private fun PaymentForm(vm: AppViewModel, d: Debt) {
         Muted("«To'xtatmang, kam bo'lsa ham bering» — har bir to'lov hisobga olinadi.")
         MoneyInput(amount, { amount = it }, "Summa", suffix = d.currency.symbol)
         val parsedDate = try { LocalDate.parse(date.trim()) } catch (e: DateTimeParseException) { null }
-        TextInput(date, { date = it }, "Sana (yyyy-oo-kk)", error = if (parsedDate == null) "Masalan: ${vm.today()}" else null)
+        TextInput(date, { date = it }, "Sana (yil-oy-kun)", error = if (parsedDate == null) "Masalan: ${vm.today()}" else null)
         TextInput(note, { note = it }, "Izoh (ixtiyoriy)")
         val minor = MoneyFormat.parse(amount)
         if (minor != null && minor > d.balance) {
@@ -175,6 +173,7 @@ private fun PaymentForm(vm: AppViewModel, d: Debt) {
 @Composable
 private fun TalkSection(vm: AppViewModel, d: Debt) {
     val ctx = LocalContext.current
+    val script = LocalScript.current
     var status by rememberSaveable(d.id + "s") { mutableStateOf(d.talkStatus) }
     var agreement by rememberSaveable(d.id + "n") { mutableStateOf(d.note) }
     var monthly by rememberSaveable(d.id + "m") {
@@ -214,7 +213,7 @@ private fun TalkSection(vm: AppViewModel, d: Debt) {
             hint = "Masalan: dekabrdan har oy 10-sanada 300 \$")
         PrimaryButton("Saqlash") {
             vm.setTalkStatus(d.id, status, agreement.trim())
-            Toast.makeText(ctx, "Saqlandi", Toast.LENGTH_SHORT).show()
+            ctx.toast("Saqlandi", script)
         }
         if (status == TalkStatus.AGREED && (MoneyFormat.parse(monthly) ?: 0) > 0 && d.monthlyPayment == 0L) {
             Muted("Kelishilgan oylik summani qarzning «Oylik to'lov» maydoniga ham yozing — reja shunga tayanadi.")
@@ -260,19 +259,22 @@ private fun RestructureSection(d: Debt) {
 }
 
 @Composable
-fun ShareButtons(ctx: Context, text: String) {
+fun ShareButtons(ctx: Context, source: String) {
+    val script = LocalScript.current
+    val text = t(source)
+    val chooserTitle = t("Yuborish")
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         SecondaryButton("Nusxa olish", Modifier.weight(1f)) {
             val cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             cm.setPrimaryClip(ClipData.newPlainText("Qarzsiz", text))
-            Toast.makeText(ctx, "Nusxa olindi", Toast.LENGTH_SHORT).show()
+            ctx.toast("Nusxa olindi", script)
         }
         SecondaryButton("Yuborish", Modifier.weight(1f)) {
             val send = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, text)
             }
-            ctx.startActivity(Intent.createChooser(send, "Yuborish"))
+            ctx.startActivity(Intent.createChooser(send, chooserTitle))
         }
     }
 }

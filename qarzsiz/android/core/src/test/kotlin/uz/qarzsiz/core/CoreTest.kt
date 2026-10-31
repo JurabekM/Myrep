@@ -135,3 +135,48 @@ class HelpersTest {
         assertEquals("a", o.lines.first().debt.id)
     }
 }
+
+class TranslitTest {
+    private fun c(s: String) = Translit.toCyrillic(s)
+
+    @Test
+    fun letters() {
+        assertEquals("Қарздан чиқиш мумкин", c("Qarzdan chiqish mumkin"))
+        assertEquals("сўм", c("so'm"))
+        assertEquals("йўқ", c("yo'q"))
+        assertEquals("Ўзбекистон", c("O'zbekiston"))
+        assertEquals("ғалла", c("g'alla"))
+        assertEquals("маълумот", c("ma'lumot"))
+        assertEquals("Эҳтиёт бўлинг", c("Ehtiyot bo'ling"))
+        assertEquals("Евро", c("Yevro"))
+        assertEquals("ишлаяпти", c("ishlayapti"))
+        assertEquals("Кўчки", c("Koʻchki"))
+        assertEquals("юк", c("yuk"))
+        assertEquals("Шу ой", c("Shu oy"))
+        assertEquals("реструктуризация", c("restrukturizatsiya"))
+        assertEquals("поэзия", c("poeziya"))
+    }
+
+    @Test
+    fun wordsCaseAndKeep() {
+        assertEquals("2029-йил декабрь", c("2029-yil dekabr"))
+        assertEquals("декабрдан", c("dekabrdan"))
+        assertEquals("АҚШ доллари", c("AQSh dollari"))
+        assertEquals("АРИЗА", c("ARIZA"))
+        assertEquals("ЙЎҚ", c("YO'Q"))
+        assertEquals("1 USD = 12 650 сўм", c("1 USD = 12 650 so'm"))
+        assertEquals("Android Keystore", c("Android Keystore"))
+        assertEquals("Б — фоизсиз", c("B — foizsiz"))
+        assertEquals("12,5 млн", c("12,5 mln"))
+        assertEquals("Наси калькулятори", c("Nasi kalkulyatori"))
+    }
+
+    @Test
+    fun idempotentAndSafe() {
+        val once = c("Hammasini o'chirish: «Ha», 45% — $ 100!")
+        assertEquals(once, c(once))
+        assertEquals("«Ҳа»", c("«Ha»"))
+        assertEquals("ўйин'", c("o'yin'"))
+        assertEquals("Lotin", Translit.apply("Lotin", Script.LATIN))
+    }
+}

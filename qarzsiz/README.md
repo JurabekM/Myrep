@@ -3,7 +3,7 @@
 **© 2026 Joʻrabek Mashgʻulatov. Barcha huquqlar himoyalangan** ([LICENSE](LICENSE)).
 
 Kredit, nasiya va tanishlardan olingan qarzlardan **reja bilan chiqish** uchun to'liq
-**offlayn** Android ilova. O'zbekiston aholisi uchun, o'zbek tilida.
+**offlayn** Android ilova. O'zbekiston aholisi uchun, o'zbek tilida — **lotin va kirill** yozuvida.
 
 G'oya «Qarzi borlar buni ko'rishi shart» video matnining ma'nosidan olingan va tanqidiy
 qayta ishlangan: to'g'ri g'oyalar olingan, xato yoki xavfli joylari tuzatilgan.
@@ -32,6 +32,12 @@ iboralari va brendi ishlatilmaydi; hech qanday bank, kurs yoki xizmat reklama qi
 7. **Kun tartibi** — erta turish, harakat, o'qish, daromad uchun bir ish; o'z odatini qo'shish.
 8. **Yordam va huquqlar** — stress, bosim va tahdid, to'lay olmaslik, firibgarlik belgilari.
 9. **Zaxira nusxa** — foydalanuvchi tanlagan faylga eksport/import (SAF, ruxsatsiz).
+10. **Lotin / Кирилл** — yozuv birinchi ekrandayoq va «Yana» bo'limida tanlanadi. Barcha interfeys
+    matni (ulashiladigan muzokara matni va ariza ham) tanlangan yozuvda; foydalanuvchi izohlari o'zgarmaydi.
+
+| Кирилл: бош саҳифа | Кирилл: қарз карточкаси |
+|---|---|
+| ![](docs/screenshots/30_cyr_home.png) | ![](docs/screenshots/32_cyr_debt_b.png) |
 
 ## Maxfiylik
 - `AndroidManifest.xml` da **`INTERNET` ruxsati yo'q** — CI har relizda buni tekshiradi.
@@ -52,6 +58,9 @@ qarzsiz/
 - Pul — `Long`, kichik birlikda (tiyin/sent); foiz — bazis punkt. `Double` pul uchun yo'q.
 - Pul hisoblari faqat `core/` da (`OverviewCalc`, `Planner`, `Installment`); UI tayyor raqam ko'rsatadi.
 - Dizayn — Myrep qoidasi: Claude Code dark theme tokenlari, Noto Sans, WCAG AA.
+- Kirill yozuvi — `core/Translit.kt` (1995-yilgi alifbo mosligi, oylar va o'zlashgan so'zlar lug'ati,
+  valyuta kodlari va brendlar o'zgarmaydi). UI'dagi yagona `Text` (`ui/Components.kt`) matnni
+  tanlangan yozuvga o'giradi, shuning uchun matnlar bitta manbada — lotinda — yoziladi.
 
 ## Tekshirish va yig'ish
 ```bash
@@ -71,6 +80,5 @@ Kotlin kod → `:core:test`.
 
 ## Keyingi qadamlar
 - To'lov kuni eslatmalari (bildirishnoma, internetsiz `AlarmManager`).
-- Kirill yozuvi (uz-Cyrl) — matn manbasi kirillda, keksa foydalanuvchilar uchun muhim.
 - PIN-kod bilan qulf.
 - Sotiladigan buyumlar va «kesilgan xarajatlar»ni qo'shimcha to'lovga ulash.

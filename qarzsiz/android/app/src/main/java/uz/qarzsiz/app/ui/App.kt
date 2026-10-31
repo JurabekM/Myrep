@@ -21,8 +21,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
@@ -86,6 +86,7 @@ class Nav(initial: List<Route>) {
 fun QarzsizApp(vm: AppViewModel) {
     val status by vm.status.collectAsStateWithLifecycle()
     val state by vm.state.collectAsStateWithLifecycle()
+    CompositionLocalProvider(LocalScript provides state.script) {
     Box(Modifier.fillMaxSize().background(Tok.paper).safeDrawingPadding()) {
         when (val s = status) {
             AppViewModel.Status.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -95,6 +96,7 @@ fun QarzsizApp(vm: AppViewModel) {
             AppViewModel.Status.Ready ->
                 if (!state.onboardingDone) OnboardingScreen(vm) else MainShell(vm)
         }
+    }
     }
 }
 

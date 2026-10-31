@@ -12,5 +12,8 @@ Birinchi versiya.
   reja 70/30 va usullarni taqqoslash, nasiya kalkulyatori, yo'l xaritasi, kun tartibi, yordam, valyuta kurslari,
   zaxira nusxa, maxfiylik sozlamasi.
 - Maxfiylik: `INTERNET` ruxsati yo'q, AES-256-GCM + Android Keystore, `FLAG_SECURE`, bulutli zaxira o'chiq.
-- Testlar: yadro 17 ta (vektorlar bilan), Robolectric + Roborazzi ekran testlari 5 ta (17 skrinshot).
+- Testlar: yadro 20 ta (vektorlar bilan), Robolectric + Roborazzi ekran testlari 7 ta (21 skrinshot).
+- Kirill yozuvi: `Translit` (yadro, 3 ta test), yozuv tanlovi onboarding va «Yana»da, barcha UI matni,
+  toast va ulashiladigan matnlar tanlangan yozuvda; foydalanuvchi izohlari va o'z odatlari o'zgarmaydi.
+  Kirillda 2 ta ekran testi.
 - CI: `.github/workflows/qarzsiz.yml` — oracle, testlar, release APK, `INTERNET` yo'qligini tekshirish.

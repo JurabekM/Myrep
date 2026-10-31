@@ -30,6 +30,7 @@ import uz.qarzsiz.core.Debt
 import uz.qarzsiz.core.DebtKind
 import uz.qarzsiz.core.FxRates
 import uz.qarzsiz.core.PlanSettings
+import uz.qarzsiz.core.Script
 import uz.qarzsiz.core.TalkStatus
 
 /** Xotiradagi saqlash joyi: Robolectric'da Android Keystore yo'q. */
@@ -155,6 +156,36 @@ class ScreensTest {
         shot("21_debt_form")
         rule.onNodeWithText("Saqlash").performScrollTo().performClick()
         rule.onNodeWithText("Nomini yozing").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun cyrillicScript() {
+        val (vm, _) = start(sampleState().copy(script = Script.CYRILLIC))
+        rule.onNodeWithText("Жами қарз (сўмда)").assertIsDisplayed()
+        shot("30_cyr_home")
+        tab("plan")
+        rule.onNodeWithText("Шу ой кимга қанча").performScrollTo().assertIsDisplayed()
+        shot("31_cyr_plan")
+        tab("debts")
+        rule.onNodeWithText("Ahmadjon".let { uz.qarzsiz.core.Translit.toCyrillic(it) }).performScrollTo().performClick()
+        rule.onNodeWithText("3-қадам: келишиш").performScrollTo().assertIsDisplayed()
+        shot("32_cyr_debt_b")
+        // Yozuvni almashtirish: «Yana» → «Lotin».
+        tab("more")
+        rule.onNodeWithText("Lotin").performScrollTo().performClick()
+        rule.waitForIdle()
+        assertEquals(Script.LATIN, vm.state.value.script)
+        rule.onNodeWithText("Yo'l xaritasi").assertIsDisplayed()
+    }
+
+    @Test
+    fun onboardingScriptChoice() {
+        val (vm, _) = start(null)
+        rule.onNodeWithText("Кирилл").performClick()
+        rule.waitForIdle()
+        assertEquals(Script.CYRILLIC, vm.state.value.script)
+        rule.onNodeWithText("Қарздан чиқиш мумкин").assertIsDisplayed()
+        shot("33_cyr_onboarding")
     }
 
     @Test

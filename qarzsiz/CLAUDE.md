@@ -11,6 +11,9 @@ Qat'iy qoidalar:
 - Hissiy bosim, bajarib bo'lmaydigan va'da va «qonun himoya qiladi» kabi yuridik da'volar matnga kirmaydi.
 - Diniy matn chiqarilmaydi (foydalanuvchi o'z odatini o'zi qo'shadi).
 - Kod, identifikatorlar, commit — inglizcha; izohlar, hujjatlar, UI — o'zbekcha (lotin).
+- UI matni faqat lotinda yoziladi va `ui.Text` / `t()` orqali chiqadi (kirill — avtomatik). `material3.Text` ni
+  to'g'ridan-to'g'ri import qilmang. Foydalanuvchining erkin matni — `raw = true`. Yangi so'z noto'g'ri
+  o'girilsa — `Translit.words` lug'atiga va `TranslitTest` ga qo'shing.
 - Har vazifa oxirida `docs/CHANGELOG.md` yangilanadi.
 
 Tekshiruv:
