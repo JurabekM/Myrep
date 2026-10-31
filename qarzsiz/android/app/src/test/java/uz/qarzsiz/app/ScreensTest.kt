@@ -191,6 +191,21 @@ class ScreensTest {
     }
 
     @Test
+    fun remindersScreen() {
+        org.robolectric.Shadows.shadowOf(ApplicationProvider.getApplicationContext<Application>())
+            .grantPermissions(android.Manifest.permission.POST_NOTIFICATIONS)
+        val (vm, _) = start(sampleState())
+        rule.onNodeWithText("To'lov kunini eslatib turaymi?").performScrollTo().performClick()
+        rule.onNodeWithText("Eslatmalarni yoqish").performClick()
+        rule.waitForIdle()
+        assertEquals(true, vm.state.value.reminders.enabled)
+        rule.onNodeWithText("3 kun").performClick()
+        rule.waitForIdle()
+        assertEquals(3, vm.state.value.reminders.daysBefore)
+        shot("24_reminders")
+    }
+
+    @Test
     fun habitsAndHelp() {
         val (vm, _) = start(sampleState())
         tab("more")

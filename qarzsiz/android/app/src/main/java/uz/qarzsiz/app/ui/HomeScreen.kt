@@ -123,6 +123,13 @@ fun HomeScreen(vm: AppViewModel, nav: Nav) {
                 }
             }
 
+            if (!state.reminders.enabled && o.lines.any { it.debt.dueDay != null }) {
+                Panel(border = Tok.accent, onClick = { nav.go(Route.Reminders) }) {
+                    Text("To'lov kunini eslatib turaymi?", style = MaterialTheme.typography.titleSmall, color = Tok.accentText)
+                    Muted("To'lovdan bir necha kun oldin va o'sha kuni bildirishnoma. Internetsiz ishlaydi.")
+                }
+            }
+
             val upcoming = o.lines.mapNotNull { l ->
                 l.debt.dueDay?.let { day -> l to DueDates.next(day, today) }
             }.sortedBy { it.second }.take(3)

@@ -12,10 +12,15 @@ Birinchi versiya.
   reja 70/30 va usullarni taqqoslash, nasiya kalkulyatori, yo'l xaritasi, kun tartibi, yordam, valyuta kurslari,
   zaxira nusxa, maxfiylik sozlamasi.
 - Maxfiylik: `INTERNET` ruxsati yo'q, AES-256-GCM + Android Keystore, `FLAG_SECURE`, bulutli zaxira o'chiq.
-- Testlar: yadro 21 ta (vektorlar bilan), Robolectric + Roborazzi ekran testlari 7 ta (21 skrinshot).
+- Testlar: yadro 25 ta (vektorlar bilan), Robolectric: 8 ekran testi (22 skrinshot) + 6 eslatma testi.
 - Kirill yozuvi: `Translit` (yadro, 3 ta test), yozuv tanlovi onboarding va «Yana»da, barcha UI matni,
   toast va ulashiladigan matnlar tanlangan yozuvda; foydalanuvchi izohlari va o'z odatlari o'zgarmaydi.
   Kirillda 2 ta ekran testi.
+- To'lov kuni eslatmalari: `core/Reminders` (qaysi qarz, qachon; to'langan muddat o'tkaziladi; 4 test),
+  `AlarmManager` signali + `ReminderReceiver` (kunlik, qayta yuklanish / vaqt / mintaqa o'zgarishida tiklanadi),
+  qulflangan ekranda yashirin bildirishnoma, lotin/kirill; sozlamalar ekrani (Android 13+ ruxsat so'rash,
+  necha kun oldin, soat, «Sinab ko'rish»), bosh sahifada taklif. Robolectric: 6 receiver testi + ekran testi.
+  Kalit qatorlari endi to'liq bosiladi (`SwitchRow`).
 - PR self-review tuzatishlari: umumiy progress yopilgan qarzlarni ham hisoblaydi; `Budget.suggestedShareBp`
   (yadro + oracle + 3 yangi vektor) onboarding va rejada yagona taklif; nasiya kalkulyatori va umumiy hisob
   UI oqimidan tashqarida; to'lovi bor qarzda valyuta qulflangan; kurs maydonida 0 — kursni o'chiradi;

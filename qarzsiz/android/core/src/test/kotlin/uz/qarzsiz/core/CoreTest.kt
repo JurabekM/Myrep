@@ -187,3 +187,50 @@ class TranslitTest {
         assertEquals("Lotin", Translit.apply("Lotin", Script.LATIN))
     }
 }
+
+class RemindersTest {
+    private val today = LocalDate.of(2026, 10, 31)
+    private fun debt(id: String, day: Int?, closed: Boolean = false, pay: Long = 500_000_00) = Debt(
+        id = id, creditor = id.uppercase(), kind = DebtKind.BANK_CREDIT, balance = if (closed) 0 else 1_000_000_00,
+        monthlyPayment = pay, dueDay = day, createdOn = "2026-10-01",
+    )
+
+    @Test
+    fun onDayAndDaysBefore() {
+        // 31-okt: bugun 31-kun, 2 kundan keyin — 2-noyabr.
+        val items = Reminders.due(
+            listOf(debt("a", 31), debt("b", 2), debt("c", 1), debt("d", null), debt("e", 2, closed = true)),
+            emptyList(), today, 2,
+        )
+        assertEquals(listOf("a" to 0, "b" to 2), items.map { it.debtId to it.daysLeft })
+        assertEquals(LocalDate.of(2026, 11, 2), items[1].dueDate)
+    }
+
+    @Test
+    fun paidThisPeriodIsSkipped() {
+        val items = Reminders.due(
+            listOf(debt("a", 31), debt("b", 2)),
+            listOf("a" to today.minusDays(3), "b" to today.minusDays(40)),
+            today, 2,
+        )
+        assertEquals(listOf("b"), items.map { it.debtId })
+    }
+
+    @Test
+    fun shortMonthUsesLastDay() {
+        val feb = LocalDate.of(2026, 2, 28)
+        assertEquals(listOf(0), Reminders.due(listOf(debt("a", 31)), emptyList(), feb, 2).map { it.daysLeft })
+    }
+
+    @Test
+    fun messages() {
+        val one = Reminders.due(listOf(debt("a", 31)), emptyList(), today, 2)
+        val (t1, b1) = Reminders.message(one)
+        assertEquals("A: bugun to'lov kuni", t1)
+        assertTrue("500 000 so'm" in b1)
+        val two = Reminders.due(listOf(debt("a", 31), debt("b", 2, pay = 0)), emptyList(), today, 2)
+        val (t2, b2) = Reminders.message(two)
+        assertEquals("2 ta to'lov yaqin", t2)
+        assertEquals("A: bugun — 500 000 so'm\nB: 2 kundan keyin", b2)
+    }
+}

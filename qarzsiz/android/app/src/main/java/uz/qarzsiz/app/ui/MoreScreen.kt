@@ -35,6 +35,10 @@ fun MoreScreen(vm: AppViewModel, nav: Nav) {
     var confirmWipe by rememberSaveable { mutableStateOf(false) }
     ScreenScaffold("Yana") {
         MenuItem("Yo'l xaritasi", "Metod: 3 qadam, 70/30 va to'g'ri tartib") { nav.go(Route.Guide) }
+        MenuItem(
+            "To'lov eslatmalari",
+            if (state.reminders.enabled) "Yoqilgan · ${state.reminders.daysBefore} kun oldin, ${state.reminders.hour}:00" else "O'chiq",
+        ) { nav.go(Route.Reminders) }
         MenuItem("Kun tartibi", "Erta turish, harakat, o'qish — kichik odatlar") { nav.go(Route.Habits) }
         MenuItem("Yordam va huquqlar", "Stress, kollektor bosimi, firibgarlik, yangi qarzdan saqlanish") { nav.go(Route.Help) }
         MenuItem("Valyuta kurslari", "Dollar, rubl, tenge qarzlar uchun") { nav.go(Route.Rates) }

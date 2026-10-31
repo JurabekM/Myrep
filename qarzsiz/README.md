@@ -29,10 +29,13 @@ iboralari va brendi ishlatilmaydi; hech qanday bank, kurs yoki xizmat reklama qi
 5. **To'lovlar** — to'lov yozish, tarix, xato to'lovni bekor qilish, yopilgan qarzni nishonlash.
 6. **Nasiya kalkulyatori** — naqd narx va oylik to'lovdan ortiqcha to'lov va **yashirin yillik
    foiz** («1000$ lik telefon 2000$» holati), «to'xta va o'yla» savollari.
-7. **Kun tartibi** — erta turish, harakat, o'qish, daromad uchun bir ish; o'z odatini qo'shish.
-8. **Yordam va huquqlar** — stress, bosim va tahdid, to'lay olmaslik, firibgarlik belgilari.
-9. **Zaxira nusxa** — foydalanuvchi tanlagan faylga eksport/import (SAF, ruxsatsiz).
-10. **Lotin / Кирилл** — yozuv birinchi ekrandayoq va «Yana» bo'limida tanlanadi. Barcha interfeys
+7. **To'lov kuni eslatmalari** — to'lovdan 1–5 kun oldin va o'sha kuni bildirishnoma (soatni tanlash,
+   «Sinab ko'rish»). Internetsiz: `AlarmManager`, qayta yuklanishdan keyin tiklanadi. Shu muddatga to'lov
+   yozilgan bo'lsa — eslatma chiqmaydi; qulflangan ekranda tafsilot ko'rinmaydi.
+8. **Kun tartibi** — erta turish, harakat, o'qish, daromad uchun bir ish; o'z odatini qo'shish.
+9. **Yordam va huquqlar** — stress, bosim va tahdid, to'lay olmaslik, firibgarlik belgilari.
+10. **Zaxira nusxa** — foydalanuvchi tanlagan faylga eksport/import (SAF, ruxsatsiz).
+11. **Lotin / Кирилл** — yozuv birinchi ekrandayoq va «Yana» bo'limida tanlanadi. Barcha interfeys
     matni (ulashiladigan muzokara matni va ariza ham) tanlangan yozuvda; foydalanuvchi izohlari o'zgarmaydi.
 
 | Кирилл: бош саҳифа | Кирилл: қарз карточкаси |
@@ -40,7 +43,8 @@ iboralari va brendi ishlatilmaydi; hech qanday bank, kurs yoki xizmat reklama qi
 | ![](docs/screenshots/30_cyr_home.png) | ![](docs/screenshots/32_cyr_debt_b.png) |
 
 ## Maxfiylik
-- `AndroidManifest.xml` da **`INTERNET` ruxsati yo'q** — CI har relizda buni tekshiradi.
+- `AndroidManifest.xml` da **`INTERNET` ruxsati yo'q** — CI har relizda buni tekshiradi. Ruxsatlar faqat
+  ikkita: `POST_NOTIFICATIONS` (eslatmalar, yoqilganda so'raladi) va `RECEIVE_BOOT_COMPLETED` (signalni tiklash).
 - Holat AES-256-GCM bilan shifrlanadi, kalit Android Keystore'da. Yozish atomar.
 - `FLAG_SECURE` (sozlamada o'chirsa bo'ladi), `allowBackup=false`, bulutli zaxira o'chiq.
 
@@ -79,6 +83,5 @@ Yangi pul funksiyasi qo'shish tartibi: `spec/test-vectors/` ga kirish → `oracl
 Kotlin kod → `:core:test`.
 
 ## Keyingi qadamlar
-- To'lov kuni eslatmalari (bildirishnoma, internetsiz `AlarmManager`).
 - PIN-kod bilan qulf.
 - Sotiladigan buyumlar va «kesilgan xarajatlar»ni qo'shimcha to'lovga ulash.

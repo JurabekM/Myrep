@@ -53,13 +53,14 @@ sealed interface Route {
     data object Rates : Route { override val key = "rates" }
     data object Backup : Route { override val key = "backup" }
     data object About : Route { override val key = "about" }
+    data object Reminders : Route { override val key = "reminders" }
 
     companion object {
         val tabs = listOf(Home, Debts, Plan, Calc, More)
         fun parse(key: String): Route = when {
             key.startsWith("detail:") -> DebtDetail(key.removePrefix("detail:"))
             key.startsWith("edit:") -> DebtEdit(key.removePrefix("edit:").ifEmpty { null })
-            else -> listOf(Home, Debts, Plan, Calc, More, Guide, Habits, Help, Rates, Backup, About)
+            else -> listOf(Home, Debts, Plan, Calc, More, Guide, Habits, Help, Rates, Backup, About, Reminders)
                 .firstOrNull { it.key == key } ?: Home
         }
     }
@@ -130,6 +131,7 @@ private fun MainShell(vm: AppViewModel) {
                 Route.Rates -> RatesScreen(vm, nav)
                 Route.Backup -> BackupScreen(vm, nav)
                 Route.About -> AboutScreen(nav)
+                Route.Reminders -> RemindersScreen(vm, nav)
             }
         }
         val rootTab = nav.stack.first()

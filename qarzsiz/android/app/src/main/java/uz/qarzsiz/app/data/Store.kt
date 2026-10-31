@@ -12,6 +12,12 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
+/** Saqlash joyini yaratish (testlarda almashtiriladi: Robolectric'da Android Keystore yo'q). */
+object Stores {
+    @Volatile
+    var factory: (Context) -> StateStore = { Store(it.applicationContext) }
+}
+
 /** Holatni saqlash joyi. Ilovada — [Store] (shifrlangan fayl), testlarda — xotiradagi nusxa. */
 interface StateStore {
     fun load(): LoadResult

@@ -20,7 +20,10 @@ import uz.qarzsiz.app.data.AppState
 import uz.qarzsiz.app.data.LoadResult
 import uz.qarzsiz.app.data.StateStore
 import uz.qarzsiz.app.data.Payment
+import uz.qarzsiz.app.data.ReminderSettings
 import uz.qarzsiz.app.data.Store
+import uz.qarzsiz.app.data.Stores
+import uz.qarzsiz.app.reminders.ReminderScheduler
 import uz.qarzsiz.core.Debt
 import uz.qarzsiz.core.Habit
 import uz.qarzsiz.core.Habits
@@ -36,7 +39,7 @@ import java.util.UUID
 /** Ilova holati: yuklash, o'zgartirish va har o'zgarishdan keyin shifrlangan faylga saqlash. */
 class AppViewModel(app: Application, private val store: StateStore) : AndroidViewModel(app) {
     /** `viewModels()` uchun: haqiqiy shifrlangan fayl. */
-    constructor(app: Application) : this(app, Store(app))
+    constructor(app: Application) : this(app, Stores.factory(app))
     private val saveLock = Mutex()
 
     sealed interface Status {
@@ -94,6 +97,12 @@ class AppViewModel(app: Application, private val store: StateStore) : AndroidVie
     fun updateSettings(s: PlanSettings) = mutate { it.copy(settings = s) }
     fun setSecureScreen(on: Boolean) = mutate { it.copy(secureScreen = on) }
     fun setScript(script: Script) = mutate { it.copy(script = script) }
+
+    /** Eslatma sozlamalari: saqlanadi va signal darhol qayta rejalashtiriladi (yoki bekor qilinadi). */
+    fun setReminders(r: ReminderSettings) {
+        mutate { it.copy(reminders = r) }
+        ReminderScheduler.apply(getApplication(), r)
+    }
     fun markAnalysisSeen() {
         if (!_state.value.analysisSeen) mutate { it.copy(analysisSeen = true) }
     }
@@ -165,6 +174,7 @@ class AppViewModel(app: Application, private val store: StateStore) : AndroidVie
         }
         if (imported.debts.map { it.id }.toSet().size != imported.debts.size) return "Faylda takroriy qarz bor."
         mutate { imported.copy(onboardingDone = true) }
+        ReminderScheduler.apply(getApplication(), imported.reminders)
         return null
     }
 
@@ -172,6 +182,7 @@ class AppViewModel(app: Application, private val store: StateStore) : AndroidVie
     fun wipeAll() {
         viewModelScope.launch(Dispatchers.IO) {
             // Holat qulf ichida tozalanadi: navbatdagi saqlash eski ma'lumotni qayta yozib qo'ymaydi.
+            ReminderScheduler.cancel(getApplication())
             saveLock.withLock {
                 runCatching { store.wipe() }
                 _state.value = AppState()
