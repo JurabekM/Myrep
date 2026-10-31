@@ -143,6 +143,8 @@ class ScreensTest {
         fields.forEach { (label, value) ->
             rule.onNodeWithText(label).performScrollTo().performTextInput(value)
         }
+        // Hisob fon oqimida (Dispatchers.Default) — natijani kutamiz.
+        rule.waitUntil(10_000) { rule.onAllNodes(hasText("yiliga ~51,44%")).fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText("yiliga ~51,44%").performScrollTo().assertIsDisplayed()
         shot("20_calculator_result")
     }

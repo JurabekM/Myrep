@@ -63,6 +63,22 @@ def safe_share_bp(income: int, living: int) -> int:
     return mul_div_floor(free, BP, income)
 
 
+MIN_SHARE_BP = 1000
+
+
+def suggested_share_bp(income: int, living: int, current: int) -> int:
+    """Yashash minimumini buzmaydigan taklif: joriy ulush xavfsiz bo'lsa — o'zi; aks holda
+    xavfsiz ulush 5% ga pastga yaxlitlanadi (kamida 10%); xavfsiz ulush 10% dan past bo'lsa — aynan o'zi."""
+    if income <= 0 or living <= 0:
+        return current
+    safe = safe_share_bp(income, living)
+    if current <= safe:
+        return current
+    if safe < MIN_SHARE_BP:
+        return safe
+    return max(MIN_SHARE_BP, safe - safe % 500)
+
+
 def to_uzs(amount: int, rate_minor_per_unit: int) -> int:
     return mul_div_half_up(amount, rate_minor_per_unit, MINOR)
 
@@ -241,6 +257,7 @@ def compute(suite: str, inp: dict):
         return {
             "debtBudget": debt_budget(inp["income"], inp["shareBp"]),
             "safeShareBp": safe_share_bp(inp["income"], inp["livingMinimum"]),
+            "suggestedShareBp": suggested_share_bp(inp["income"], inp["livingMinimum"], inp["shareBp"]),
         }
     if suite == "fx":
         return to_uzs(inp["amount"], inp["rate"])

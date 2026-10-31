@@ -26,6 +26,11 @@ object Translit {
         "overdraft" to "овердрафт", "penya" to "пеня",
     )
 
+    /** Qo'shimcha oladigan o'zaklar (oylar, «rubl», «kalkulyator»): boshqa so'zlar tasodifan o'zak bilan boshlanmasin. */
+    private val suffixStems = listOf(
+        "sentabr", "oktabr", "noyabr", "dekabr", "yanvar", "fevral", "aprel", "iyun", "iyul", "rubl", "kalkulyator",
+    )
+
     /** O'zgarmaydigan atamalar (aynan shu ko'rinishda). */
     private val keep = setOf(
         "USD", "UZS", "EUR", "RUB", "KZT", "Android", "Keystore", "AES", "GCM", "Noto", "Sans",
@@ -81,8 +86,7 @@ object Translit {
 
     /** Lug'atdagi o'zak + qo'shimcha: «dekabrdan» → «декабрдан» (qo'shimcha oldidan «ь» tushadi). */
     private fun withSuffix(lower: String): String? {
-        val stem = words.keys.filter { lower.startsWith(it) && lower.length > it.length }.maxByOrNull { it.length }
-            ?: return null
+        val stem = suffixStems.firstOrNull { lower.startsWith(it) && lower.length > it.length } ?: return null
         val stemCyr = words.getValue(stem)
         if (stemCyr.any { it.isUpperCase() }) return null
         return stemCyr.removeSuffix("ь") + letters(lower.substring(stem.length))

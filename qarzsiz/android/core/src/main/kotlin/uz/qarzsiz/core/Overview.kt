@@ -50,6 +50,10 @@ data class Overview(
     val missingRates: Set<Currency>,
     val budgetUzs: Long,
     val safeShareBp: Int,
+    /** Yashash minimumini buzmaydigan taklif ([Budget.suggestedShareBp]). */
+    val suggestedShareBp: Int,
+    /** Qarzdan keyin yashash va ishga qoladigan pul, so'm. */
+    val livingLeftUzs: Long,
     /** Tanlangan ulush yashash minimumini buzadi. */
     val livingAtRisk: Boolean,
     val lines: List<PlanLine>,
@@ -87,7 +91,10 @@ object OverviewCalc {
         val a = lines.filter { it.debt.category == DebtCategory.A }
         val b = lines.filter { it.debt.category == DebtCategory.B }
         val minimum = lines.sumOf { it.minPaymentUzs }
-        val startTotal = convertible.sumOf { uzs(it.startBalance.coerceAtLeast(it.balance), it.currency) }
+        // Progress yopilgan qarzlarni ham hisobga oladi: yopilgan qarz 100% to'langan sifatida qoladi.
+        val tracked = debts.filter { rates.toUzs(1, it.currency) != null }
+        val startTotal = tracked.sumOf { uzs(it.startBalance.coerceAtLeast(it.balance), it.currency) }
+        val trackedLeft = tracked.sumOf { if (it.isClosed) 0L else uzs(it.balance, it.currency) }
         val total = lines.sumOf { it.balanceUzs }
         val safe = Budget.safeShareBp(settings.monthlyIncome, settings.livingMinimum)
         return Overview(
@@ -103,10 +110,12 @@ object OverviewCalc {
             dailyInterestUzs = MoneyMath.mulDivHalfUp(lines.sumOf { it.monthlyInterestUzs }, 1, 30),
             monthlyMinimumUzs = minimum,
             debtLoadBp = if (settings.monthlyIncome > 0) MoneyMath.ratioBp(minimum, settings.monthlyIncome) else null,
-            overallProgressBp = if (startTotal > 0) MoneyMath.ratioBp((startTotal - total).coerceAtLeast(0), startTotal) else 0,
+            overallProgressBp = if (startTotal > 0) MoneyMath.ratioBp((startTotal - trackedLeft).coerceAtLeast(0), startTotal) else 0,
             missingRates = missing,
             budgetUzs = budget,
             safeShareBp = safe,
+            suggestedShareBp = Budget.suggestedShareBp(settings.monthlyIncome, settings.livingMinimum, settings.debtShareBp),
+            livingLeftUzs = (settings.monthlyIncome - budget).coerceAtLeast(0),
             livingAtRisk = settings.monthlyIncome > 0 && settings.livingMinimum > 0 && settings.debtShareBp > safe,
             lines = lines,
             results = results,

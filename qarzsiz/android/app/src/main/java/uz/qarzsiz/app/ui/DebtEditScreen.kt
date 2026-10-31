@@ -57,7 +57,14 @@ fun DebtEditScreen(vm: AppViewModel, nav: Nav, id: String?) {
         Muted("Turi")
         ChoiceRow(DebtKind.entries, kind, { it.label }) { kind = it }
         Muted("Valyuta")
-        ChoiceRow(Currency.entries, currency, { it.code }) { currency = it }
+        // To'lovlar qarz valyutasida yozilgan: valyutani almashtirish tarixni buzadi.
+        val hasPayments = existing != null && vm.state.value.payments.any { it.debtId == existing.id }
+        if (hasPayments) {
+            Text(currency.code, color = Tok.ink)
+            Muted("To'lovlar yozilgani uchun valyutani o'zgartirib bo'lmaydi.")
+        } else {
+            ChoiceRow(Currency.entries, currency, { it.code }) { currency = it }
+        }
         MoneyInput(balance, { balance = it }, "Hozirgi qoldiq", suffix = currency.symbol, required = tried,
             hint = "Bankdan bo'lsa — ilova yoki chekdagi qolgan asosiy qarz")
 

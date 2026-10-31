@@ -46,6 +46,11 @@ class VectorTest {
         val inp = c.input
         assertEquals(c.expected.l("debtBudget"), Budget.debtBudget(inp.l("income"), inp.i("shareBp")), c.name)
         assertEquals(c.expected.i("safeShareBp"), Budget.safeShareBp(inp.l("income"), inp.l("livingMinimum")), c.name)
+        assertEquals(
+            c.expected.i("suggestedShareBp"),
+            Budget.suggestedShareBp(inp.l("income"), inp.l("livingMinimum"), inp.i("shareBp")),
+            c.name,
+        )
     }
 
     @Test

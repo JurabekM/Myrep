@@ -77,11 +77,12 @@ fun OnboardingScreen(vm: AppViewModel) {
                 val inc = MoneyFormat.parse(income) ?: 0
                 val liv = MoneyFormat.parse(living) ?: 0
                 if (inc > 0 && liv > 0) {
-                    val safe = uz.qarzsiz.core.Budget.safeShareBp(inc, liv)
-                    if (safe < uz.qarzsiz.core.Budget.DEFAULT_SHARE_BP) {
+                    val share = vm.state.value.settings.debtShareBp
+                    val suggested = uz.qarzsiz.core.Budget.suggestedShareBp(inc, liv, share)
+                    if (suggested != share) {
                         Notice(
-                            "Daromadning 70% ini qarzga bersangiz, yashashga yetmaydi. Xavfsiz ulush: " +
-                                "${MoneyFormat.percent(safe)}. Rejada shu taklif qilinadi.",
+                            "Daromadning ${MoneyFormat.percent(share)} ini qarzga bersangiz, yashashga yetmaydi. " +
+                                "Reja ${MoneyFormat.percent(suggested)} dan boshlanadi.",
                         )
                     }
                 }
@@ -97,12 +98,7 @@ fun OnboardingScreen(vm: AppViewModel) {
                     val inc = MoneyFormat.parse(income) ?: 0
                     val liv = MoneyFormat.parse(living) ?: 0
                     val s = vm.state.value.settings
-                    val safe = uz.qarzsiz.core.Budget.safeShareBp(inc, liv)
-                    val share = if (inc > 0 && liv > 0) {
-                        minOf(s.debtShareBp, safe).coerceAtLeast(uz.qarzsiz.core.Budget.MIN_SHARE_BP)
-                    } else {
-                        s.debtShareBp
-                    }
+                    val share = uz.qarzsiz.core.Budget.suggestedShareBp(inc, liv, s.debtShareBp)
                     vm.updateSettings(s.copy(monthlyIncome = inc, livingMinimum = liv, debtShareBp = share))
                     vm.finishOnboarding()
                 }

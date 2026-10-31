@@ -134,6 +134,13 @@ class HelpersTest {
         assertEquals(7_000_000_00, o.budgetUzs)
         assertEquals("a", o.lines.first().debt.id)
     }
+
+    @Test
+    fun progressKeepsClosedDebts() {
+        val open = Debt("a", "A", DebtKind.PERSONAL, balance = 10_000_00, createdOn = "2026-10-31")
+        val closed = Debt("b", "B", DebtKind.PERSONAL, balance = 0, startBalance = 10_000_00, closedOn = "2026-10-31", createdOn = "2026-10-01")
+        assertEquals(5_000, OverviewCalc.compute(listOf(open, closed), PlanSettings()).overallProgressBp)
+    }
 }
 
 class TranslitTest {

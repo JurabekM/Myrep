@@ -4,7 +4,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import uz.qarzsiz.core.Currency
@@ -25,8 +27,13 @@ fun CalculatorScreen() {
     val dp = if (down.isBlank()) 0L else MoneyFormat.parse(down)
     val m = MoneyFormat.parse(monthly)
     val n = months.toIntOrNull()?.takeIf { it in 1..600 }
-    val result = remember(c, dp, m, n) {
-        if (c != null && c > 0 && dp != null && dp < c && m != null && m > 0 && n != null) Installment.analyze(c, dp, m, n) else null
+    // Yashirin foiz — 50 xonali ikkiga bo'lish usuli: og'ir hisob, UI oqimidan tashqarida.
+    val result by produceState<uz.qarzsiz.core.InstallmentResult?>(null, c, dp, m, n) {
+        value = if (c != null && c > 0 && dp != null && dp < c && m != null && m > 0 && n != null) {
+            withContext(Dispatchers.Default) { Installment.analyze(c, dp, m, n) }
+        } else {
+            null
+        }
     }
     fun uzs(v: Long) = MoneyFormat.withCurrency(v, Currency.UZS)
 
@@ -44,7 +51,9 @@ fun CalculatorScreen() {
         )
         if (dp != null && c != null && dp >= c) Notice("Boshlang'ich to'lov narxdan kam bo'lishi kerak.", Tok.danger)
 
-        if (result != null && c != null && m != null && n != null) {
+        val r = result
+        if (r != null && c != null && m != null && n != null) {
+            val result = r
             Panel(border = if (result.overpay > 0) Tok.danger else Tok.calm) {
                 KeyValue("Jami to'laysiz", uzs(result.totalPaid))
                 KeyValue(

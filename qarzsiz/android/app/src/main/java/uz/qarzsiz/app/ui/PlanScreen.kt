@@ -58,7 +58,7 @@ fun PlanScreen(vm: AppViewModel, nav: Nav) {
             }
             val sliderLabel = t("Qarzga ulush, foizda")
             Slider(
-                value = s.debtShareBp / 100f,
+                value = (s.debtShareBp / 100f).coerceIn(Budget.MIN_SHARE_BP / 100f, Budget.MAX_SHARE_BP / 100f),
                 onValueChange = { v ->
                     val bp = (Math.round(v / 5f) * 5 * 100).coerceIn(Budget.MIN_SHARE_BP, Budget.MAX_SHARE_BP)
                     if (bp != vm.state.value.settings.debtShareBp) vm.updateSettings(vm.state.value.settings.copy(debtShareBp = bp))
@@ -71,7 +71,7 @@ fun PlanScreen(vm: AppViewModel, nav: Nav) {
             Muted("Standart — 70%. 100% emas: ovqat, yo'l va daromad manbasi uchun pul qolishi shart.")
             if (s.monthlyIncome > 0) {
                 KeyValue("Oyiga qarzga", uzs(o.budgetUzs), Tok.accentText)
-                KeyValue("Yashash va ishga", uzs(s.monthlyIncome - o.budgetUzs))
+                KeyValue("Yashash va ishga", uzs(o.livingLeftUzs))
             }
         }
 
@@ -81,9 +81,9 @@ fun PlanScreen(vm: AppViewModel, nav: Nav) {
                     "Och qolgan oila bir oydan keyin yana qarz oladi.",
                 Tok.warn, "Ehtiyot bo'ling",
             )
-            if (o.safeShareBp >= Budget.MIN_SHARE_BP) {
-                SecondaryButton("Xavfsiz ulushni qo'yish (${MoneyFormat.percent(o.safeShareBp - o.safeShareBp % 500)})") {
-                    vm.updateSettings(s.copy(debtShareBp = (o.safeShareBp - o.safeShareBp % 500).coerceAtLeast(Budget.MIN_SHARE_BP)))
+            if (o.suggestedShareBp != s.debtShareBp) {
+                SecondaryButton("Xavfsiz ulushni qo'yish (${MoneyFormat.percent(o.suggestedShareBp)})") {
+                    vm.updateSettings(s.copy(debtShareBp = o.suggestedShareBp))
                 }
             }
         }

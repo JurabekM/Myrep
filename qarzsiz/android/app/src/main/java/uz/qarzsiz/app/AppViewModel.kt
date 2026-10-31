@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -55,7 +57,11 @@ class AppViewModel(app: Application, private val store: StateStore) : AndroidVie
 
     /** Pul hisoblari faqat yadroda (`OverviewCalc`); UI tayyor raqamni ko'rsatadi. */
     val overview: StateFlow<Overview> = _state
-        .map { OverviewCalc.compute(it.debts, it.settings) }
+        .map { it.debts to it.settings }
+        .distinctUntilChanged()
+        .map { (debts, settings) -> OverviewCalc.compute(debts, settings) }
+        // 4 strategiya × 600 oygacha simulyatsiya — UI oqimidan tashqarida.
+        .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Eagerly, OverviewCalc.compute(emptyList(), PlanSettings()))
 
     init {

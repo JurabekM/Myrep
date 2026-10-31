@@ -256,7 +256,8 @@ fun RatesScreen(vm: AppViewModel, nav: Nav) {
                     val parsed = MoneyFormat.parse(v)
                     val s = vm.state.value.settings
                     val map = s.rates.uzsMinorPerUnit.toMutableMap()
-                    if (v.isBlank()) map.remove(c) else if (parsed != null && parsed > 0) map[c] = parsed
+                    // Bo'sh yoki 0 — kurs o'chiriladi (eski kurs jimgina qolib ketmasin).
+                    if (v.isBlank() || parsed == 0L) map.remove(c) else if (parsed != null) map[c] = parsed
                     vm.updateSettings(s.copy(rates = FxRates(map)))
                 },
                 "1 ${c.code} = ? so'm",

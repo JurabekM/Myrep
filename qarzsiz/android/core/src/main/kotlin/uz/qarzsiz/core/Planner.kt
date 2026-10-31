@@ -58,6 +58,18 @@ object Budget {
         if (free <= 0) return 0
         return MoneyMath.mulDivFloor(free, MoneyMath.BP_PER_UNIT, income).toInt()
     }
+
+    /**
+     * Taklif qilinadigan ulush: joriy ulush yashash minimumini buzmasa — o'zi; aks holda xavfsiz ulush
+     * 5% ga pastga yaxlitlanadi (kamida 10%); xavfsiz ulush 10% dan past bo'lsa — aynan o'zi.
+     */
+    fun suggestedShareBp(income: Long, livingMinimum: Long, currentBp: Int): Int {
+        if (income <= 0 || livingMinimum <= 0) return currentBp
+        val safe = safeShareBp(income, livingMinimum)
+        if (currentBp <= safe) return currentBp
+        if (safe < MIN_SHARE_BP) return safe
+        return maxOf(MIN_SHARE_BP, safe - safe % 500)
+    }
 }
 
 object Planner {
