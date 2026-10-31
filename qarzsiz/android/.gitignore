@@ -1,0 +1,10 @@
+local.properties
+.gradle/
+build/
+.idea/
+*.iml
+.kotlin/
+# Reliz kaliti hech qachon commit qilinmaydi
+*.jks
+*.keystore
+keystore.properties

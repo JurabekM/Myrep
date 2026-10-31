@@ -1,0 +1,67 @@
+# «Qarzsiz» CI. Faqat qarzsiz/ o'zgarganda ishlaydi.
+name: qarzsiz
+
+on:
+  push:
+    paths: ["qarzsiz/**", ".github/workflows/qarzsiz.yml"]
+  pull_request:
+    paths: ["qarzsiz/**", ".github/workflows/qarzsiz.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: qarzsiz-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: qarzsiz
+    shell: bash
+
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Mustaqil Python oracle va oltin vektorlar
+        run: |
+          python3 -I spec/oracle/oracle.py --selftest
+          python3 -I spec/oracle/oracle.py --check spec/test-vectors
+
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: qarzsiz/android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Yadro testlari (oltin vektorlar bilan)
+        run: ./gradlew :core:test --no-daemon
+      - name: Ekran testlari (Robolectric + Roborazzi)
+        run: ./gradlew :app:testDebugUnitTest --no-daemon
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qarzsiz-screenshots
+          path: qarzsiz/android/app/build/outputs/roborazzi/
+      - name: Release APK
+        run: ./gradlew :app:assembleRelease --no-daemon
+      - name: Offlayn kafolati — INTERNET ruxsati yo'q
+        run: |
+          AAPT2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | tail -1)
+          "$AAPT2" dump permissions app/build/outputs/apk/release/app-release.apk | tee perms.txt
+          if grep -E "android.permission.(INTERNET|ACCESS_NETWORK_STATE)" perms.txt; then
+            echo "::error::Qarzsiz offlayn ilova: tarmoq ruxsati qo'shilmasligi kerak"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qarzsiz-apk
+          path: qarzsiz/android/app/build/outputs/apk/release/app-release.apk

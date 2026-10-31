@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Oyna ochilganda oq «chaqnamasligi» uchun fon darhol paper (#262624). -->
+    <style name="Theme.Qarzsiz" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/paper</item>
+        <item name="android:statusBarColor">@color/sidebar</item>
+        <item name="android:navigationBarColor">@color/sidebar</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:colorBackground">@color/paper</item>
+    </style>
+</resources>
