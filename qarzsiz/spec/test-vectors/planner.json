@@ -1,0 +1,487 @@
+{
+  "suite": "planner",
+  "description": "Oylik simulyatsiya: foiz → majburiy to'lov (yetmasa — mutanosib) → ortgan pul strategiya bo'yicha.",
+  "cases": [
+    {
+      "name": "misol_avalanche",
+      "input": {
+        "debts": [
+          {
+            "id": "ipoteka",
+            "balance": 12000000000,
+            "annualRateBp": 1700,
+            "minPayment": 240000000
+          },
+          {
+            "id": "kaspi",
+            "balance": 1265000000,
+            "annualRateBp": 4500,
+            "minPayment": 90000000
+          },
+          {
+            "id": "nasiya",
+            "balance": 480000000,
+            "annualRateBp": 3800,
+            "minPayment": 60000000
+          },
+          {
+            "id": "ahmadjon",
+            "balance": 12650000000,
+            "annualRateBp": 0,
+            "minPayment": 0
+          },
+          {
+            "id": "toshmat",
+            "balance": 3795000000,
+            "annualRateBp": 0,
+            "minPayment": 100000000
+          }
+        ],
+        "budget": 840000000,
+        "strategy": "AVALANCHE"
+      },
+      "expected": {
+        "months": 39,
+        "finished": true,
+        "totalInterest": 2439015838,
+        "totalPaid": 32629015838,
+        "payoffMonth": [
+          22,
+          4,
+          4,
+          39,
+          24
+        ],
+        "firstMonth": [
+          240000000,
+          440000000,
+          60000000,
+          0,
+          100000000
+        ],
+        "shortfall": false
+      }
+    },
+    {
+      "name": "misol_snowball",
+      "input": {
+        "debts": [
+          {
+            "id": "ipoteka",
+            "balance": 12000000000,
+            "annualRateBp": 1700,
+            "minPayment": 240000000
+          },
+          {
+            "id": "kaspi",
+            "balance": 1265000000,
+            "annualRateBp": 4500,
+            "minPayment": 90000000
+          },
+          {
+            "id": "nasiya",
+            "balance": 480000000,
+            "annualRateBp": 3800,
+            "minPayment": 60000000
+          },
+          {
+            "id": "ahmadjon",
+            "balance": 12650000000,
+            "annualRateBp": 0,
+            "minPayment": 0
+          },
+          {
+            "id": "toshmat",
+            "balance": 3795000000,
+            "annualRateBp": 0,
+            "minPayment": 100000000
+          }
+        ],
+        "budget": 840000000,
+        "strategy": "SNOWBALL"
+      },
+      "expected": {
+        "months": 40,
+        "finished": true,
+        "totalInterest": 3054681682,
+        "totalPaid": 33244681682,
+        "payoffMonth": [
+          25,
+          4,
+          2,
+          40,
+          10
+        ],
+        "firstMonth": [
+          240000000,
+          90000000,
+          410000000,
+          0,
+          100000000
+        ],
+        "shortfall": false
+      }
+    },
+    {
+      "name": "misol_pro_rata",
+      "input": {
+        "debts": [
+          {
+            "id": "ipoteka",
+            "balance": 12000000000,
+            "annualRateBp": 1700,
+            "minPayment": 240000000
+          },
+          {
+            "id": "kaspi",
+            "balance": 1265000000,
+            "annualRateBp": 4500,
+            "minPayment": 90000000
+          },
+          {
+            "id": "nasiya",
+            "balance": 480000000,
+            "annualRateBp": 3800,
+            "minPayment": 60000000
+          },
+          {
+            "id": "ahmadjon",
+            "balance": 12650000000,
+            "annualRateBp": 0,
+            "minPayment": 0
+          },
+          {
+            "id": "toshmat",
+            "balance": 3795000000,
+            "annualRateBp": 0,
+            "minPayment": 100000000
+          }
+        ],
+        "budget": 840000000,
+        "strategy": "PRO_RATA"
+      },
+      "expected": {
+        "months": 41,
+        "finished": true,
+        "totalInterest": 4245945364,
+        "totalPaid": 34435945364,
+        "payoffMonth": [
+          40,
+          18,
+          9,
+          41,
+          30
+        ],
+        "firstMonth": [
+          379496562,
+          104293866,
+          65088759,
+          147915466,
+          143205347
+        ],
+        "shortfall": false
+      }
+    },
+    {
+      "name": "misol_minimum_only",
+      "input": {
+        "debts": [
+          {
+            "id": "ipoteka",
+            "balance": 12000000000,
+            "annualRateBp": 1700,
+            "minPayment": 240000000
+          },
+          {
+            "id": "kaspi",
+            "balance": 1265000000,
+            "annualRateBp": 4500,
+            "minPayment": 90000000
+          },
+          {
+            "id": "nasiya",
+            "balance": 480000000,
+            "annualRateBp": 3800,
+            "minPayment": 60000000
+          },
+          {
+            "id": "ahmadjon",
+            "balance": 12650000000,
+            "annualRateBp": 0,
+            "minPayment": 0
+          },
+          {
+            "id": "toshmat",
+            "balance": 3795000000,
+            "annualRateBp": 0,
+            "minPayment": 100000000
+          }
+        ],
+        "budget": 840000000,
+        "strategy": "MINIMUM_ONLY"
+      },
+      "expected": {
+        "months": 600,
+        "finished": false,
+        "totalInterest": 9670411632,
+        "totalPaid": 27210411632,
+        "payoffMonth": [
+          88,
+          21,
+          10,
+          null,
+          38
+        ],
+        "firstMonth": [
+          240000000,
+          90000000,
+          60000000,
+          0,
+          100000000
+        ],
+        "shortfall": false
+      }
+    },
+    {
+      "name": "shortfall_prorata_min",
+      "input": {
+        "debts": [
+          {
+            "id": "a",
+            "balance": 1000000000,
+            "annualRateBp": 2400,
+            "minPayment": 150000000
+          },
+          {
+            "id": "b",
+            "balance": 300000000,
+            "annualRateBp": 0,
+            "minPayment": 70000000
+          },
+          {
+            "id": "c",
+            "balance": 90000001,
+            "annualRateBp": 3600,
+            "minPayment": 30000000
+          }
+        ],
+        "budget": 100000000,
+        "strategy": "AVALANCHE"
+      },
+      "expected": {
+        "months": 17,
+        "finished": true,
+        "totalInterest": 215545150,
+        "totalPaid": 1605545151,
+        "payoffMonth": [
+          17,
+          17,
+          17
+        ],
+        "firstMonth": [
+          60000000,
+          28000000,
+          12000000
+        ],
+        "shortfall": true
+      }
+    },
+    {
+      "name": "never_finishes",
+      "input": {
+        "debts": [
+          {
+            "id": "a",
+            "balance": 10000000000,
+            "annualRateBp": 6000,
+            "minPayment": 10000000
+          }
+        ],
+        "budget": 200000000,
+        "strategy": "AVALANCHE"
+      },
+      "expected": {
+        "months": 57,
+        "finished": false,
+        "totalInterest": 102214698522,
+        "totalPaid": 11400000000,
+        "payoffMonth": [
+          null
+        ],
+        "firstMonth": [
+          200000000
+        ],
+        "shortfall": false
+      }
+    },
+    {
+      "name": "empty",
+      "input": {
+        "debts": [],
+        "budget": 100000000,
+        "strategy": "AVALANCHE"
+      },
+      "expected": {
+        "months": 0,
+        "finished": true,
+        "totalInterest": 0,
+        "totalPaid": 0,
+        "payoffMonth": [],
+        "firstMonth": [],
+        "shortfall": false
+      }
+    },
+    {
+      "name": "already_zero",
+      "input": {
+        "debts": [
+          {
+            "id": "a",
+            "balance": 0,
+            "annualRateBp": 2000,
+            "minPayment": 100
+          },
+          {
+            "id": "b",
+            "balance": 500,
+            "annualRateBp": 0,
+            "minPayment": 100
+          }
+        ],
+        "budget": 100,
+        "strategy": "SNOWBALL"
+      },
+      "expected": {
+        "months": 5,
+        "finished": true,
+        "totalInterest": 0,
+        "totalPaid": 500,
+        "payoffMonth": [
+          1,
+          5
+        ],
+        "firstMonth": [
+          0,
+          100
+        ],
+        "shortfall": false
+      }
+    },
+    {
+      "name": "prorata_odd_units",
+      "input": {
+        "debts": [
+          {
+            "id": "a",
+            "balance": 1001,
+            "annualRateBp": 0,
+            "minPayment": 0
+          },
+          {
+            "id": "b",
+            "balance": 2002,
+            "annualRateBp": 0,
+            "minPayment": 0
+          },
+          {
+            "id": "c",
+            "balance": 3,
+            "annualRateBp": 0,
+            "minPayment": 0
+          }
+        ],
+        "budget": 7,
+        "strategy": "PRO_RATA"
+      },
+      "expected": {
+        "months": 430,
+        "finished": true,
+        "totalInterest": 0,
+        "totalPaid": 3006,
+        "payoffMonth": [
+          430,
+          430,
+          430
+        ],
+        "firstMonth": [
+          2,
+          5,
+          0
+        ],
+        "shortfall": false
+      }
+    },
+    {
+      "name": "snowball_vs_rate",
+      "input": {
+        "debts": [
+          {
+            "id": "big",
+            "balance": 5000000000,
+            "annualRateBp": 3000,
+            "minPayment": 100000000
+          },
+          {
+            "id": "small",
+            "balance": 200000000,
+            "annualRateBp": 1000,
+            "minPayment": 20000000
+          }
+        ],
+        "budget": 300000000,
+        "strategy": "SNOWBALL"
+      },
+      "expected": {
+        "months": 23,
+        "finished": true,
+        "totalInterest": 1694862133,
+        "totalPaid": 6894862133,
+        "payoffMonth": [
+          23,
+          2
+        ],
+        "firstMonth": [
+          100000000,
+          200000000
+        ],
+        "shortfall": false
+      }
+    },
+    {
+      "name": "avalanche_tie_rate",
+      "input": {
+        "debts": [
+          {
+            "id": "y",
+            "balance": 500000,
+            "annualRateBp": 2000,
+            "minPayment": 0
+          },
+          {
+            "id": "x",
+            "balance": 500000,
+            "annualRateBp": 2000,
+            "minPayment": 0
+          }
+        ],
+        "budget": 300000,
+        "strategy": "AVALANCHE"
+      },
+      "expected": {
+        "months": 4,
+        "finished": true,
+        "totalInterest": 38017,
+        "totalPaid": 1038017,
+        "payoffMonth": [
+          4,
+          2
+        ],
+        "firstMonth": [
+          0,
+          300000
+        ],
+        "shortfall": false
+      }
+    }
+  ]
+}

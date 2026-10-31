@@ -1,0 +1,30 @@
+Bank loans, installment plans, money borrowed from friends — when it all piles up, it is hard to sleep. Qarzsiz turns that weight into clear numbers and a plan.
+
+The app interface is in Uzbek (Latin and Cyrillic scripts).
+
+THE PATH: 3 STEPS AND A PLAN
+1. List — every debt: who, how much, interest rate, monthly payment, due day. UZS, USD, EUR, RUB, KZT.
+2. Analyse — debts with interest or penalties are marked "A — hot" automatically, interest-free ones "B". See how much goes to interest every month.
+3. Agree — an honest proposal for the lender: an exact amount and date. A template letter asking the bank to extend the term.
+4. Plan 70/30 — 70% of income to debts, 30% to living and work. If that leaves too little to live on, the app suggests a safe share.
+
+TWO-LAYER PAYMENTS
+First the required payment on every debt — never stop, even if small. The rest goes to the most expensive debt. Compare avalanche, snowball and equal-share methods on your own numbers and see your debt-free date.
+
+INSTALLMENT CALCULATOR
+The real cost of "only … per month": total overpayment and the hidden annual rate.
+
+ALSO
+• Payment-day reminders — no internet needed
+• Payment history and closed debts
+• Daily routine: early rise, exercise, learning
+• Help: pressure and threats, when you cannot pay, signs of fraud
+• Backup when you change phones
+
+PRIVACY
+• The app never connects to the internet — it has no internet permission
+• Your data stays on your phone, encrypted
+• Optional PIN lock, screenshot blocking
+• No sign-up, no ads, no tracking
+
+Qarzsiz does not offer loans or microcredit and does not advertise financial services. It is an educational tool, not financial or legal advice; calculations are estimates.

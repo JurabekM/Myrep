@@ -1,0 +1,110 @@
+{
+  "suite": "budget",
+  "description": "70/30: qarz byudjeti va minimal yashash xarajatini buzmaydigan ulush.",
+  "cases": [
+    {
+      "name": "default_70",
+      "input": {
+        "income": 800000000,
+        "shareBp": 7000,
+        "livingMinimum": 300000000
+      },
+      "expected": {
+        "debtBudget": 560000000,
+        "safeShareBp": 6250,
+        "suggestedShareBp": 6000
+      }
+    },
+    {
+      "name": "living_too_high",
+      "input": {
+        "income": 500000000,
+        "shareBp": 7000,
+        "livingMinimum": 400000000
+      },
+      "expected": {
+        "debtBudget": 350000000,
+        "safeShareBp": 2000,
+        "suggestedShareBp": 2000
+      }
+    },
+    {
+      "name": "no_income",
+      "input": {
+        "income": 0,
+        "shareBp": 7000,
+        "livingMinimum": 100000000
+      },
+      "expected": {
+        "debtBudget": 0,
+        "safeShareBp": 0,
+        "suggestedShareBp": 7000
+      }
+    },
+    {
+      "name": "odd",
+      "input": {
+        "income": 333333333,
+        "shareBp": 6550,
+        "livingMinimum": 111111111
+      },
+      "expected": {
+        "debtBudget": 218333333,
+        "safeShareBp": 6666,
+        "suggestedShareBp": 6550
+      }
+    },
+    {
+      "name": "living_exceeds_income",
+      "input": {
+        "income": 200000000,
+        "shareBp": 7000,
+        "livingMinimum": 250000000
+      },
+      "expected": {
+        "debtBudget": 140000000,
+        "safeShareBp": 0,
+        "suggestedShareBp": 0
+      }
+    },
+    {
+      "name": "safe_below_min",
+      "input": {
+        "income": 500000000,
+        "shareBp": 7000,
+        "livingMinimum": 480000000
+      },
+      "expected": {
+        "debtBudget": 350000000,
+        "safeShareBp": 400,
+        "suggestedShareBp": 400
+      }
+    },
+    {
+      "name": "current_already_safe",
+      "input": {
+        "income": 1000000000,
+        "shareBp": 5000,
+        "livingMinimum": 300000000
+      },
+      "expected": {
+        "debtBudget": 500000000,
+        "safeShareBp": 7000,
+        "suggestedShareBp": 5000
+      }
+    },
+    {
+      "name": "round_down_to_5",
+      "input": {
+        "income": 1000000000,
+        "shareBp": 7000,
+        "livingMinimum": 351000000
+      },
+      "expected": {
+        "debtBudget": 700000000,
+        "safeShareBp": 6490,
+        "suggestedShareBp": 6000
+      }
+    }
+  ]
+}
