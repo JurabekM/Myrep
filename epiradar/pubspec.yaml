@@ -1,0 +1,29 @@
+name: epiradar
+description: "EpiRadar — epidemiya va pandemiyalardan oldindan ogohlantiruvchi mobil ilova (Flutter UI + Kotlin yadro)."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.5
+  flutter: 3.47.6
+
+# Tashqi Dart paketlari yo'q: tarmoq, tahlil, saqlash va bildirishnomalar Kotlin yadroda (engine/, android/).
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/NotoSans-Regular.ttf
+        - asset: assets/fonts/NotoSans-Bold.ttf
+          weight: 700

@@ -1,0 +1,217 @@
+# iso3	iso2	name_en	name_uz	lat	lng	subregion	borders	aliases
+# Manba: mledoze/countries (ODbL 1.0); o'zbekcha nomlar va sinonimlar — tool/gen_countries.py
+ABW	AW	Aruba	Aruba	12.50	-69.97	Caribbean		Aruba
+AFG	AF	Afghanistan	Afg'oniston	33.00	65.00	Southern Asia	IRN,PAK,TKM,UZB,TJK,CHN	Afghanistan|Islamic Republic of Afghanistan
+AGO	AO	Angola	Angola	-12.50	18.50	Middle Africa	COG,COD,ZMB,NAM	Angola|Republic of Angola
+ALB	AL	Albania	Albaniya	41.00	20.00	Southeast Europe	MNE,GRC,MKD,UNK	Albania|Republic of Albania|Shqipnia
+AND	AD	Andorra	Andorra	42.50	1.50	Southern Europe	FRA,ESP	Andorra|Principality of Andorra|Principat d'Andorra
+ARE	AE	United Arab Emirates	Birlashgan Arab Amirliklari	24.00	54.00	Western Asia	OMN,SAU	United Arab Emirates|Emirates
+ARG	AR	Argentina	Argentina	-34.00	-64.00	South America	BOL,BRA,CHL,PRY,URY	Argentina|Argentine Republic
+ARM	AM	Armenia	Armaniston	40.00	45.00	Western Asia	AZE,GEO,IRN,TUR	Armenia|Republic of Armenia|Hayastan
+ASM	AS	American Samoa	Amerika Samoasi	-14.33	-170.00	Polynesia		American Samoa
+ATG	AG	Antigua and Barbuda	Antigua va Barbuda	17.05	-61.80	Caribbean		Antigua and Barbuda
+AUS	AU	Australia	Avstraliya	-27.00	133.00	Australia and New Zealand		Australia|Commonwealth of Australia
+AUT	AT	Austria	Avstriya	47.33	13.33	Central Europe	CZE,DEU,HUN,ITA,LIE,SVK,SVN,CHE	Austria|Republic of Austria|Osterreich|Oesterreich
+AZE	AZ	Azerbaijan	Ozarbayjon	40.50	47.50	Western Asia	ARM,GEO,IRN,RUS,TUR	Azerbaijan|Republic of Azerbaijan
+BDI	BI	Burundi	Burundi	-3.50	30.00	Eastern Africa	COD,RWA,TZA	Burundi|Republic of Burundi|Republika y'Uburundi
+BEL	BE	Belgium	Belgiya	50.83	4.00	Western Europe	FRA,DEU,LUX,NLD	Belgium|Kingdom of Belgium|Belgie|Belgien|Belgique|Royaume de Belgique
+BEN	BJ	Benin	Benin	9.50	2.25	Western Africa	BFA,NER,NGA,TGO	Benin|Republic of Benin
+BFA	BF	Burkina Faso	Burkina-Faso	13.00	-2.00	Western Africa	BEN,CIV,GHA,MLI,NER,TGO	Burkina Faso
+BGD	BD	Bangladesh	Bangladesh	24.00	90.00	Southern Asia	MMR,IND	Bangladesh|People's Republic of Bangladesh|Gônôprôjatôntri Bangladesh
+BGR	BG	Bulgaria	Bolgariya	43.00	25.00	Southeast Europe	GRC,MKD,ROU,SRB,TUR	Bulgaria|Republic of Bulgaria
+BHR	BH	Bahrain	Bahrayn	26.00	50.55	Western Asia		Bahrain|Kingdom of Bahrain
+BHS	BS	Bahamas	Bagama orollari	24.25	-76.00	Caribbean		Bahamas|Commonwealth of the Bahamas
+BIH	BA	Bosnia and Herzegovina	Bosniya va Gertsegovina	44.00	18.00	Southeast Europe	HRV,MNE,SRB	Bosnia and Herzegovina|Bosnia-Herzegovina
+BLR	BY	Belarus	Belarus	53.00	28.00	Eastern Europe	LVA,LTU,POL,RUS,UKR	Belarus|Republic of Belarus
+BLZ	BZ	Belize	Beliz	17.25	-88.75	Central America	GTM,MEX	Belize
+BMU	BM	Bermuda	Bermud orollari	32.33	-64.75	North America		Bermuda|The Islands of Bermuda|The Bermudas|Somers Isles
+BOL	BO	Bolivia	Boliviya	-17.00	-65.00	South America	ARG,BRA,CHL,PRY,PER	Bolivia|Plurinational State of Bolivia|Buliwya|Wuliwya|Bolivia, Plurinational State of|Estado Plurinacional de Bolivia|Buliwya Mamallaqta|Wuliwya Suyu|Bolivia (Plurinational State of)
+BRA	BR	Brazil	Braziliya	-10.00	-55.00	South America	ARG,BOL,COL,GUF,GUY,PRY,PER,SUR,URY,VEN	Brazil|Federative Republic of Brazil|Brasil
+BRB	BB	Barbados	Barbados	13.17	-59.53	Caribbean		Barbados
+BRN	BN	Brunei	Bruney	4.50	114.67	South-Eastern Asia	MYS	Brunei|Nation of Brunei, Abode of Peace|Brunei Darussalam|Nation of Brunei|the Abode of Peace
+BTN	BT	Bhutan	Butan	27.50	90.50	Southern Asia	CHN,IND	Bhutan|Kingdom of Bhutan
+BWA	BW	Botswana	Botsvana	-22.00	24.00	Southern Africa	NAM,ZAF,ZMB,ZWE	Botswana|Republic of Botswana|Lefatshe la Botswana
+CAF	CF	Central African Republic	Markaziy Afrika Respublikasi	7.00	21.00	Middle Africa	CMR,TCD,COD,COG,SSD,SDN	Central African Republic
+CAN	CA	Canada	Kanada	60.00	-95.00	North America	USA	Canada
+CHE	CH	Switzerland	Shveytsariya	47.00	8.00	Western Europe	AUT,FRA,ITA,LIE,DEU	Switzerland|Swiss Confederation|Schweiz|Suisse|Svizzera|Svizra
+CHL	CL	Chile	Chili	-30.00	-71.00	South America	ARG,BOL,PER	Chile|Republic of Chile
+CHN	CN	China	Xitoy	35.00	105.00	Eastern Asia	AFG,BTN,MMR,HKG,IND,KAZ,NPL,PRK,KGZ,LAO,MAC,MNG,PAK,RUS,TJK,VNM	China|People's Republic of China|Zhongguo|Zhonghua
+CIV	CI	Côte d'Ivoire	Kot-d'Ivuar	8.00	-5.00	Western Africa	BFA,GHA,GIN,LBR,MLI	Côte d'Ivoire|Republic of Côte d'Ivoire|Cote d'Ivoire|Ivory Coast|République de Côte d'Ivoire
+CMR	CM	Cameroon	Kamerun	6.00	12.00	Middle Africa	CAF,TCD,COG,GNQ,GAB,NGA	Cameroon|Republic of Cameroon
+COD	CD	DR Congo	Kongo Demokratik Respublikasi	0.00	25.00	Middle Africa	AGO,BDI,CAF,COG,RWA,SSD,TZA,UGA,ZMB	DR Congo|Democratic Republic of the Congo|Congo-Kinshasa|Congo, the Democratic Republic of the|Democratic Republic of Congo|DRC
+COG	CG	Congo	Kongo Respublikasi	-1.00	15.00	Middle Africa	AGO,CMR,CAF,COD,GAB	Congo|Republic of the Congo|Congo-Brazzaville
+COL	CO	Colombia	Kolumbiya	4.00	-72.00	South America	BRA,ECU,PAN,PER,VEN	Colombia|Republic of Colombia
+COM	KM	Comoros	Komor orollari	-12.17	44.25	Eastern Africa		Comoros|Union of the Comoros|Union des Comores|Udzima wa Komori
+CPV	CV	Cape Verde	Kabo-Verde	16.00	-24.00	Western Africa		Cape Verde|Republic of Cabo Verde|Cabo Verde
+CRI	CR	Costa Rica	Kosta-Rika	10.00	-84.00	Central America	NIC,PAN	Costa Rica|Republic of Costa Rica
+CUB	CU	Cuba	Kuba	21.50	-80.00	Caribbean		Cuba|Republic of Cuba
+CUW	CW	Curaçao	Kyurasao	12.12	-68.93	Caribbean		Curacao
+CYP	CY	Cyprus	Kipr	35.00	33.00	Southern Europe		Cyprus|Republic of Cyprus
+CZE	CZ	Czechia	Chexiya	49.75	15.50	Central Europe	AUT,DEU,POL,SVK	Czechia|Czech Republic
+DEU	DE	Germany	Germaniya	51.00	9.00	Western Europe	AUT,BEL,CZE,DNK,FRA,LUX,NLD,POL,CHE	Germany|Federal Republic of Germany|Bundesrepublik Deutschland
+DJI	DJ	Djibouti	Jibuti	11.50	43.00	Eastern Africa	ERI,ETH,SOM	Djibouti|Republic of Djibouti|Jabuuti|Gabuuti|Gabuutih Ummuuno|Jamhuuriyadda Jabuuti
+DMA	DM	Dominica	Dominika	15.42	-61.33	Caribbean		Dominica|Commonwealth of Dominica|Dominique
+DNK	DK	Denmark	Daniya	56.00	10.00	Northern Europe	DEU	Denmark|Kingdom of Denmark|Danmark|Kongeriget Danmark
+DOM	DO	Dominican Republic	Dominikan Respublikasi	19.00	-70.67	Caribbean	HTI	Dominican Republic
+DZA	DZ	Algeria	Jazoir	28.00	3.00	Northern Africa	TUN,LBY,NER,ESH,MRT,MLI,MAR	Algeria|People's Democratic Republic of Algeria|Dzayer
+ECU	EC	Ecuador	Ekvador	-2.00	-77.50	South America	COL,PER	Ecuador|Republic of Ecuador
+EGY	EG	Egypt	Misr	27.00	30.00	Northern Africa	ISR,LBY,PSE,SDN	Egypt|Arab Republic of Egypt
+ERI	ER	Eritrea	Eritreya	15.00	39.00	Eastern Africa	DJI,ETH,SDN	Eritrea|State of Eritrea
+ESH	EH	Western Sahara	G'arbiy Sahroi Kabir	24.50	-13.00	Northern Africa	DZA,MRT,MAR	Western Sahara|Sahrawi Arab Democratic Republic
+ESP	ES	Spain	Ispaniya	40.00	-4.00	Southern Europe	AND,FRA,GIB,PRT,MAR	Spain|Kingdom of Spain
+EST	EE	Estonia	Estoniya	59.00	26.00	Northern Europe	LVA,RUS	Estonia|Republic of Estonia|Eesti|Eesti Vabariik
+ETH	ET	Ethiopia	Efiopiya	8.00	38.00	Eastern Africa	DJI,ERI,KEN,SOM,SSD,SDN	Ethiopia|Federal Democratic Republic of Ethiopia
+FIN	FI	Finland	Finlandiya	64.00	26.00	Northern Europe	NOR,SWE,RUS	Finland|Republic of Finland|Suomi|Suomen tasavalta|Republiken Finland
+FJI	FJ	Fiji	Fiji	-18.00	175.00	Melanesia		Fiji|Republic of Fiji|Viti|Matanitu ko Viti
+FRA	FR	France	Fransiya	46.00	2.00	Western Europe	AND,BEL,DEU,ITA,LUX,MCO,ESP,CHE	France|French Republic
+FSM	FM	Micronesia	Mikroneziya	6.92	158.25	Micronesia		Micronesia|Federated States of Micronesia|Micronesia, Federated States of|Micronesia (Federated States of)
+GAB	GA	Gabon	Gabon	-1.00	11.75	Middle Africa	CMR,COG,GNQ	Gabon|Gabonese Republic
+GBR	GB	United Kingdom	Buyuk Britaniya	54.00	-2.00	Northern Europe	IRL	United Kingdom|United Kingdom of Great Britain and Northern Ireland|UK|Great Britain|England|Scotland|Wales
+GEO	GE	Georgia	Gruziya	42.00	43.50	Western Asia	ARM,AZE,RUS,TUR	Georgia|Sakartvelo
+GHA	GH	Ghana	Gana	8.00	-2.00	Western Africa	BFA,CIV,TGO	Ghana|Republic of Ghana
+GIN	GN	Guinea	Gvineya	11.00	-10.00	Western Africa	CIV,GNB,LBR,MLI,SEN,SLE	Guinea|Republic of Guinea
+GLP	GP	Guadeloupe	Gvadelupa	16.25	-61.58	Caribbean		Guadeloupe|Gwadloup
+GMB	GM	Gambia	Gambiya	13.47	-16.57	Western Africa	SEN	Gambia|Republic of the Gambia
+GNB	GW	Guinea-Bissau	Gvineya-Bisau	12.00	-15.00	Western Africa	GIN,SEN	Guinea-Bissau|Republic of Guinea-Bissau
+GNQ	GQ	Equatorial Guinea	Ekvatorial Gvineya	2.00	10.00	Middle Africa	CMR,GAB	Equatorial Guinea|Republic of Equatorial Guinea
+GRC	GR	Greece	Gretsiya	39.00	22.00	Southern Europe	ALB,BGR,TUR,MKD	Greece|Hellenic Republic
+GRD	GD	Grenada	Grenada	12.12	-61.67	Caribbean		Grenada
+GRL	GL	Greenland	Grenlandiya	72.00	-40.00	North America		Greenland
+GTM	GT	Guatemala	Gvatemala	15.50	-90.25	Central America	BLZ,SLV,HND,MEX	Guatemala|Republic of Guatemala
+GUF	GF	French Guiana	Fransuz Gvianasi	4.00	-53.00	South America	BRA,SUR	French Guiana|Guiana|Guyane
+GUM	GU	Guam	Guam	13.47	144.78	Micronesia		Guam
+GUY	GY	Guyana	Gayana	5.00	-59.00	South America	BRA,SUR,VEN	Guyana|Co-operative Republic of Guyana
+HKG	HK	Hong Kong	Gonkong	22.27	114.19	Eastern Asia	CHN	Hong Kong|Hong Kong Special Administrative Region of the People's Republic of China|Hong Kong SAR|Hong Kong Special Administrative Region
+HND	HN	Honduras	Gonduras	15.00	-86.50	Central America	GTM,SLV,NIC	Honduras|Republic of Honduras
+HRV	HR	Croatia	Xorvatiya	45.17	15.50	Southeast Europe	BIH,HUN,MNE,SRB,SVN	Croatia|Republic of Croatia|Hrvatska|Republika Hrvatska
+HTI	HT	Haiti	Gaiti	19.00	-72.42	Caribbean	DOM	Haiti|Republic of Haiti|Repiblik Ayiti
+HUN	HU	Hungary	Vengriya	47.00	20.00	Central Europe	AUT,HRV,ROU,SRB,SVK,SVN,UKR	Hungary
+IDN	ID	Indonesia	Indoneziya	-5.00	120.00	South-Eastern Asia	TLS,MYS,PNG	Indonesia|Republic of Indonesia|Republik Indonesia
+IND	IN	India	Hindiston	20.00	77.00	Southern Asia	BGD,BTN,MMR,CHN,NPL,PAK	India|Republic of India|Bharat Ganrajya
+IRL	IE	Ireland	Irlandiya	53.00	-8.00	Northern Europe	GBR	Ireland|Republic of Ireland
+IRN	IR	Iran	Eron	32.00	53.00	Southern Asia	AFG,ARM,AZE,IRQ,PAK,TUR,TKM	Iran|Islamic Republic of Iran|Iran, Islamic Republic of|Iran (Islamic Republic of)
+IRQ	IQ	Iraq	Iroq	33.00	44.00	Western Asia	IRN,JOR,KWT,SAU,SYR,TUR	Iraq|Republic of Iraq
+ISL	IS	Iceland	Islandiya	65.00	-18.00	Northern Europe		Iceland|Island|Republic of Iceland
+ISR	IL	Israel	Isroil	31.47	35.13	Western Asia	EGY,JOR,LBN,PSE,SYR	Israel|State of Israel
+ITA	IT	Italy	Italiya	42.83	12.83	Southern Europe	AUT,FRA,SMR,SVN,CHE,VAT	Italy|Italian Republic|Repubblica italiana
+JAM	JM	Jamaica	Yamayka	18.25	-77.50	Caribbean		Jamaica
+JEY	JE	Jersey	Jersey	49.25	-2.17	Northern Europe		Bailiwick of Jersey|Bailliage de Jersey
+JOR	JO	Jordan	Iordaniya	31.00	36.00	Western Asia	IRQ,ISR,PSE,SAU,SYR	Jordan|Hashemite Kingdom of Jordan
+JPN	JP	Japan	Yaponiya	36.00	138.00	Eastern Asia		Japan|Nippon|Nihon
+KAZ	KZ	Kazakhstan	Qozog'iston	48.00	68.00	Central Asia	CHN,KGZ,RUS,TKM,UZB	Kazakhstan|Republic of Kazakhstan|Qazaqstan|Respublika Kazakhstan
+KEN	KE	Kenya	Keniya	1.00	38.00	Eastern Africa	ETH,SOM,SSD,TZA,UGA	Kenya|Republic of Kenya|Jamhuri ya Kenya
+KGZ	KG	Kyrgyzstan	Qirg'iziston	41.00	75.00	Central Asia	CHN,KAZ,TJK,UZB	Kyrgyzstan|Kyrgyz Republic|Kyrgyz Respublikasy
+KHM	KH	Cambodia	Kambodja	13.00	105.00	South-Eastern Asia	LAO,THA,VNM	Cambodia|Kingdom of Cambodia
+KIR	KI	Kiribati	Kiribati	1.42	173.00	Micronesia		Kiribati|Independent and Sovereign Republic of Kiribati|Republic of Kiribati|Ribaberiki Kiribati
+KNA	KN	Saint Kitts and Nevis	Sent-Kits va Nevis	17.33	-62.75	Caribbean		Saint Kitts and Nevis|Federation of Saint Christopher and Nevis
+KOR	KR	South Korea	Janubiy Koreya	37.00	127.50	Eastern Asia	PRK	South Korea|Republic of Korea|Korea, Republic of
+KWT	KW	Kuwait	Quvayt	29.50	45.75	Western Asia	IRQ,SAU	Kuwait|State of Kuwait|Dawlat al-Kuwait
+LAO	LA	Laos	Laos	18.00	105.00	South-Eastern Asia	MMR,KHM,CHN,THA,VNM	Laos|Lao People's Democratic Republic|Sathalanalat Paxathipatai Paxaxon Lao|Lao PDR
+LBN	LB	Lebanon	Livan	33.83	35.83	Western Asia	ISR,SYR	Lebanon|Lebanese Republic
+LBR	LR	Liberia	Liberiya	6.50	-9.50	Western Africa	GIN,CIV,SLE	Liberia|Republic of Liberia
+LBY	LY	Libya	Liviya	25.00	17.00	Northern Africa	DZA,TCD,EGY,NER,SDN,TUN	Libya|State of Libya|Dawlat Libya
+LCA	LC	Saint Lucia	Sent-Lyusiya	13.88	-60.97	Caribbean		Saint Lucia
+LIE	LI	Liechtenstein	Lixtenshteyn	47.27	9.53	Western Europe	AUT,CHE	Liechtenstein|Principality of Liechtenstein|Fürstentum Liechtenstein
+LKA	LK	Sri Lanka	Shri-Lanka	7.00	81.00	Southern Asia	IND	Sri Lanka|Democratic Socialist Republic of Sri Lanka
+LSO	LS	Lesotho	Lesoto	-29.50	28.50	Southern Africa	ZAF	Lesotho|Kingdom of Lesotho|Muso oa Lesotho
+LTU	LT	Lithuania	Litva	56.00	24.00	Northern Europe	BLR,LVA,POL,RUS	Lithuania|Republic of Lithuania|Lietuvos Respublika
+LUX	LU	Luxembourg	Lyuksemburg	49.75	6.17	Western Europe	BEL,FRA,DEU	Luxembourg|Grand Duchy of Luxembourg
+LVA	LV	Latvia	Latviya	57.00	25.00	Northern Europe	BLR,EST,LTU,RUS	Latvia|Republic of Latvia|Latvijas Republika
+MAC	MO	Macau	Makao	22.17	113.55	Eastern Asia	CHN	Macau|Macao Special Administrative Region of the People's Republic of China|Macao|Macao SAR
+MAR	MA	Morocco	Marokash	32.00	-5.00	Northern Africa	DZA,ESH,ESP	Morocco|Kingdom of Morocco
+MCO	MC	Monaco	Monako	43.73	7.40	Western Europe	FRA	Monaco|Principality of Monaco
+MDA	MD	Moldova	Moldova	47.00	29.00	Eastern Europe	ROU,UKR	Moldova|Republic of Moldova|Moldova, Republic of|Republica Moldova
+MDG	MG	Madagascar	Madagaskar	-20.00	47.00	Eastern Africa		Madagascar|Republic of Madagascar|Repoblikan'i Madagasikara
+MDV	MV	Maldives	Maldiv orollari	3.25	73.00	Southern Asia		Maldives|Republic of the Maldives|Maldive Islands|Dhivehi Raajjeyge Jumhooriyya
+MEX	MX	Mexico	Meksika	23.00	-102.00	North America	BLZ,GTM,USA	Mexico|United Mexican States|Mexicanos|Estados Unidos Mexicanos
+MHL	MH	Marshall Islands	Marshall orollari	9.00	168.00	Micronesia		Marshall Islands|Republic of the Marshall Islands
+MKD	MK	North Macedonia	Shimoliy Makedoniya	41.83	22.00	Southeast Europe	ALB,BGR,GRC,UNK,SRB	North Macedonia|Republic of North Macedonia|The former Yugoslav Republic of Macedonia|Macedonia, The Former Yugoslav Republic of|Macedonia
+MLI	ML	Mali	Mali	17.00	-4.00	Western Africa	DZA,BFA,GIN,CIV,MRT,NER,SEN	Mali|Republic of Mali
+MLT	MT	Malta	Malta	35.83	14.58	Southern Europe		Malta|Republic of Malta|Repubblika ta' Malta
+MMR	MM	Myanmar	Myanma	22.00	98.00	South-Eastern Asia	BGD,CHN,IND,LAO,THA	Myanmar|Republic of the Union of Myanmar|Burma
+MNE	ME	Montenegro	Chernogoriya	42.50	19.30	Southeast Europe	ALB,BIH,HRV,UNK,SRB	Montenegro|Crna Gora
+MNG	MN	Mongolia	Mo'g'uliston	46.00	105.00	Eastern Asia	CHN,RUS	Mongolia
+MOZ	MZ	Mozambique	Mozambik	-18.25	35.00	Eastern Africa	MWI,ZAF,SWZ,TZA,ZMB,ZWE	Mozambique|Republic of Mozambique
+MRT	MR	Mauritania	Mavritaniya	20.00	-12.00	Western Africa	DZA,MLI,SEN,ESH	Mauritania|Islamic Republic of Mauritania
+MTQ	MQ	Martinique	Martinika	14.67	-61.00	Caribbean		Martinique
+MUS	MU	Mauritius	Mavrikiy	-20.28	57.55	Eastern Africa		Mauritius|Republic of Mauritius
+MWI	MW	Malawi	Malavi	-13.50	34.00	Eastern Africa	MOZ,TZA,ZMB	Malawi|Republic of Malawi
+MYS	MY	Malaysia	Malayziya	2.50	112.50	South-Eastern Asia	BRN,IDN,THA	Malaysia
+MYT	YT	Mayotte	Mayotta	-12.83	45.17	Eastern Africa		Mayotte|Department of Mayotte
+NAM	NA	Namibia	Namibiya	-22.00	17.00	Southern Africa	AGO,BWA,ZAF,ZMB	Namibia|Republic of Namibia
+NCL	NC	New Caledonia	Yangi Kaledoniya	-21.50	165.50	Melanesia		New Caledonia
+NER	NE	Niger	Niger	16.00	8.00	Western Africa	DZA,BEN,BFA,TCD,LBY,MLI,NGA	Niger|Republic of Niger|Nijar
+NGA	NG	Nigeria	Nigeriya	10.00	8.00	Western Africa	BEN,CMR,TCD,NER	Nigeria|Federal Republic of Nigeria|Nijeriya
+NIC	NI	Nicaragua	Nikaragua	13.00	-85.00	Central America	CRI,HND	Nicaragua|Republic of Nicaragua
+NLD	NL	Netherlands	Niderlandiya	52.50	5.75	Western Europe	BEL,DEU	Netherlands|Kingdom of the Netherlands|Holland|Nederland|The Netherlands|Netherlands (Kingdom of the)
+NOR	NO	Norway	Norvegiya	62.00	10.00	Northern Europe	FIN,SWE,RUS	Norway|Kingdom of Norway|Norge|Noreg|Kongeriket Norge|Kongeriket Noreg
+NPL	NP	Nepal	Nepal	28.00	84.00	Southern Asia	CHN,IND	Nepal|Federal Democratic Republic of Nepal
+NRU	NR	Nauru	Nauru	-0.53	166.92	Micronesia		Nauru|Republic of Nauru|Naoero|Pleasant Island|Ripublik Naoero
+NZL	NZ	New Zealand	Yangi Zelandiya	-41.00	174.00	Australia and New Zealand		New Zealand|Aotearoa
+OMN	OM	Oman	Ummon	21.00	57.00	Western Asia	SAU,ARE,YEM	Oman|Sultanate of Oman
+PAK	PK	Pakistan	Pokiston	30.00	70.00	Southern Asia	AFG,CHN,IND,IRN	Pakistan|Islamic Republic of Pakistan
+PAN	PA	Panama	Panama	9.00	-80.00	Central America	COL,CRI	Panama|Republic of Panama
+PER	PE	Peru	Peru	-10.00	-76.00	South America	BOL,BRA,CHL,COL,ECU	Peru|Republic of Peru
+PHL	PH	Philippines	Filippin	13.00	122.00	South-Eastern Asia		Philippines|Republic of the Philippines
+PLW	PW	Palau	Palau	7.50	134.50	Micronesia		Palau|Republic of Palau|Beluu er a Belau
+PNG	PG	Papua New Guinea	Papua — Yangi Gvineya	-6.00	147.00	Melanesia	IDN	Papua New Guinea|Independent State of Papua New Guinea|Independen Stet bilong Papua Niugini
+POL	PL	Poland	Polsha	52.00	20.00	Central Europe	BLR,CZE,DEU,LTU,RUS,SVK,UKR	Poland|Republic of Poland|Rzeczpospolita Polska
+PRI	PR	Puerto Rico	Puerto-Riko	18.25	-66.50	Caribbean		Puerto Rico|Commonwealth of Puerto Rico|Estado Libre Asociado de Puerto Rico
+PRK	KP	North Korea	Shimoliy Koreya	40.00	127.00	Eastern Asia	CHN,KOR,RUS	North Korea|Democratic People's Republic of Korea|DPRK|Korea, Democratic People's Republic of
+PRT	PT	Portugal	Portugaliya	39.50	-8.00	Southern Europe	ESP	Portugal|Portuguese Republic|Portuguesa
+PRY	PY	Paraguay	Paragvay	-23.00	-58.00	South America	ARG,BOL,BRA	Paraguay|Republic of Paraguay
+PSE	PS	Palestine	Falastin	31.90	35.20	Western Asia	ISR,EGY,JOR	Palestine|State of Palestine|Palestine, State of|occupied Palestinian territory|Gaza|West Bank
+PYF	PF	French Polynesia	Fransuz Polineziyasi	-15.00	-140.00	Polynesia		French Polynesia
+QAT	QA	Qatar	Qatar	25.50	51.25	Western Asia	SAU	Qatar|State of Qatar
+REU	RE	Réunion	Reyunion	-21.15	55.50	Eastern Africa		Reunion
+ROU	RO	Romania	Ruminiya	46.00	25.00	Southeast Europe	BGR,HUN,MDA,SRB,UKR	Romania|Rumania|Roumania
+RUS	RU	Russia	Rossiya	60.00	100.00	Eastern Europe	AZE,BLR,CHN,EST,FIN,GEO,KAZ,PRK,LVA,LTU,MNG,NOR,POL,UKR	Russia|Russian Federation
+RWA	RW	Rwanda	Ruanda	-2.00	30.00	Eastern Africa	BDI,COD,TZA,UGA	Rwanda|Republic of Rwanda|Repubulika y'u Rwanda
+SAU	SA	Saudi Arabia	Saudiya Arabistoni	25.00	45.00	Western Asia	IRQ,JOR,KWT,OMN,QAT,ARE,YEM	Saudi Arabia|Kingdom of Saudi Arabia|Saudi
+SDN	SD	Sudan	Sudan	15.00	30.00	Northern Africa	CAF,TCD,EGY,ERI,ETH,LBY,SSD	Sudan|Republic of the Sudan
+SEN	SN	Senegal	Senegal	14.00	-14.00	Western Africa	GMB,GIN,GNB,MLI,MRT	Senegal|Republic of Senegal
+SGP	SG	Singapore	Singapur	1.37	103.80	South-Eastern Asia		Singapore|Republic of Singapore|Singapura|Republik Singapura
+SLB	SB	Solomon Islands	Solomon orollari	-8.00	159.00	Melanesia		Solomon Islands
+SLE	SL	Sierra Leone	Syerra-Leone	8.50	-11.50	Western Africa	GIN,LBR	Sierra Leone|Republic of Sierra Leone
+SLV	SV	El Salvador	Salvador	13.83	-88.92	Central America	GTM,HND	El Salvador|Republic of El Salvador
+SMR	SM	San Marino	San-Marino	43.77	12.42	Southern Europe	ITA	San Marino|Most Serene Republic of San Marino|Republic of San Marino|Repubblica di San Marino
+SOM	SO	Somalia	Somali	10.00	49.00	Eastern Africa	DJI,ETH,KEN	Somalia|Federal Republic of Somalia|Jamhuuriyadda Federaalka Soomaaliya
+SRB	RS	Serbia	Serbiya	44.00	21.00	Southeast Europe	BIH,BGR,HRV,HUN,UNK,MKD,MNE,ROU	Serbia|Republic of Serbia|Srbija|Republika Srbija
+SSD	SS	South Sudan	Janubiy Sudan	7.00	30.00	Middle Africa	CAF,COD,ETH,KEN,SDN,UGA	South Sudan|Republic of South Sudan
+STP	ST	São Tomé and Príncipe	San-Tome va Prinsipi	1.00	7.00	Middle Africa		Sao Tome and Principe
+SUR	SR	Suriname	Surinam	4.00	-56.00	South America	BRA,GUF,GUY	Suriname|Republic of Suriname|Sarnam|Sranangron|Republiek Suriname
+SVK	SK	Slovakia	Slovakiya	48.67	19.50	Central Europe	AUT,CZE,HUN,POL,UKR	Slovakia|Slovak Republic
+SVN	SI	Slovenia	Sloveniya	46.12	14.82	Central Europe	AUT,HRV,ITA,HUN	Slovenia|Republic of Slovenia|Republika Slovenija
+SWE	SE	Sweden	Shvetsiya	62.00	15.00	Northern Europe	FIN,NOR	Sweden|Kingdom of Sweden|Konungariket Sverige
+SWZ	SZ	Eswatini	Esvatini	-26.50	31.50	Southern Africa	MOZ,ZAF	Eswatini|Kingdom of Eswatini|Swaziland|weSwatini|Swatini|Ngwane|Umbuso weSwatini
+SYC	SC	Seychelles	Seyshel orollari	-4.58	55.67	Eastern Africa		Seychelles|Republic of Seychelles|Repiblik Sesel
+SYR	SY	Syria	Suriya	35.00	38.00	Western Asia	IRQ,ISR,JOR,LBN,TUR	Syria|Syrian Arab Republic
+TCD	TD	Chad	Chad	15.00	19.00	Middle Africa	CMR,CAF,LBY,NER,NGA,SDN	Republic of Chad|Tchad
+TGO	TG	Togo	Togo	8.00	1.17	Western Africa	BEN,BFA,GHA	Togo|Togolese Republic|Togolese
+THA	TH	Thailand	Tailand	15.00	100.00	South-Eastern Asia	MMR,KHM,LAO,MYS	Thailand|Kingdom of Thailand|Prathet|Thai|Ratcha Anachak Thai
+TJK	TJ	Tajikistan	Tojikiston	39.00	71.00	Central Asia	AFG,CHN,KGZ,UZB	Tajikistan|Republic of Tajikistan
+TKM	TM	Turkmenistan	Turkmaniston	40.00	60.00	Central Asia	AFG,IRN,KAZ,UZB	Turkmenistan
+TLS	TL	Timor-Leste	Timor-Leste	-8.83	125.92	South-Eastern Asia	IDN	Timor-Leste|Democratic Republic of Timor-Leste|East Timor|Timor|Timor Lorosae
+TON	TO	Tonga	Tonga	-20.00	-175.00	Polynesia		Tonga|Kingdom of Tonga
+TTO	TT	Trinidad and Tobago	Trinidad va Tobago	11.00	-61.00	Caribbean		Trinidad and Tobago|Republic of Trinidad and Tobago
+TUN	TN	Tunisia	Tunis	34.00	9.00	Northern Africa	DZA,LBY	Tunisia|Tunisian Republic|Republic of Tunisia
+TUR	TR	Türkiye	Turkiya	39.00	35.00	Western Asia	ARM,AZE,BGR,GEO,GRC,IRN,IRQ,SYR	Türkiye|Republic of Türkiye|Turkiye|Republic of Turkey|Türkiye Cumhuriyeti
+TUV	TV	Tuvalu	Tuvalu	-8.00	178.00	Polynesia		Tuvalu
+TWN	TW	Taiwan	Tayvan	23.50	121.00	Eastern Asia		Taiwan|Republic of China (Taiwan)|Republic of China|Chinese Taipei
+TZA	TZ	Tanzania	Tanzaniya	-6.00	35.00	Eastern Africa	BDI,COD,KEN,MWI,MOZ,RWA,UGA,ZMB	Tanzania|United Republic of Tanzania|Tanzania, United Republic of|Jamhuri ya Muungano wa Tanzania|Zanzibar
+UGA	UG	Uganda	Uganda	1.00	32.00	Eastern Africa	COD,KEN,RWA,SSD,TZA	Uganda|Republic of Uganda|Jamhuri ya Uganda
+UKR	UA	Ukraine	Ukraina	49.00	32.00	Eastern Europe	BLR,HUN,MDA,POL,ROU,RUS,SVK	Ukraine|Ukrayina
+UNK	XK	Kosovo	Kosovo	42.67	21.17	Southeast Europe	ALB,MKD,MNE,SRB	Kosovo|Republic of Kosovo
+URY	UY	Uruguay	Urugvay	-33.00	-56.00	South America	ARG,BRA	Uruguay|Oriental Republic of Uruguay
+USA	US	United States	AQSh	38.00	-97.00	North America	CAN,MEX	United States|United States of America|USA|U.S.
+UZB	UZ	Uzbekistan	O'zbekiston	41.00	64.00	Central Asia	AFG,KAZ,KGZ,TJK,TKM	Uzbekistan|Republic of Uzbekistan
+VAT	VA	Vatican City	Vatikan	41.90	12.45	Southern Europe	ITA	Vatican City|Vatican City State|Holy See (Vatican City State)|Vatican
+VCT	VC	Saint Vincent and the Grenadines	Sent-Vinsent va Grenadinlar	13.25	-61.20	Caribbean		Saint Vincent and the Grenadines
+VEN	VE	Venezuela	Venesuela	8.00	-66.00	South America	BRA,COL,GUY	Venezuela|Bolivarian Republic of Venezuela|Venezuela, Bolivarian Republic of|Venezuela (Bolivarian Republic of)
+VNM	VN	Vietnam	Vyetnam	16.17	107.83	South-Eastern Asia	KHM,CHN,LAO	Vietnam|Socialist Republic of Vietnam|Viet Nam
+VUT	VU	Vanuatu	Vanuatu	-16.00	167.00	Melanesia		Vanuatu|Republic of Vanuatu|Ripablik blong Vanuatu
+WSM	WS	Samoa	Samoa	-13.58	-172.33	Polynesia		Samoa|Independent State of Samoa
+YEM	YE	Yemen	Yaman	15.00	48.00	Western Asia	OMN,SAU	Yemen|Republic of Yemen|Yemeni Republic
+ZAF	ZA	South Africa	Janubiy Afrika Respublikasi	-29.00	24.00	Southern Africa	BWA,LSO,MOZ,NAM,SWZ,ZWE	South Africa|Republic of South Africa|Suid-Afrika
+ZMB	ZM	Zambia	Zambiya	-15.00	30.00	Eastern Africa	AGO,BWA,COD,MWI,MOZ,NAM,TZA,ZWE	Zambia|Republic of Zambia
+ZWE	ZW	Zimbabwe	Zimbabve	-20.00	30.00	Eastern Africa	BWA,MOZ,ZAF,ZMB	Zimbabwe|Republic of Zimbabwe

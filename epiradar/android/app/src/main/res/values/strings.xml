@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EpiRadar</string>
+    <string name="widget_label">EpiRadar — xavf darajasi</string>
+    <string name="widget_description">Mamlakatingiz uchun joriy epidemik xavf darajasi</string>
+    <string name="widget_empty">Ma\'lumot hali yuklanmagan</string>
+    <string name="channel_critical">Favqulodda ogohlantirishlar</string>
+    <string name="channel_critical_desc">Xavf va Favqulodda darajadagi epidemiya ogohlantirishlari</string>
+    <string name="channel_alerts">Ogohlantirishlar</string>
+    <string name="channel_alerts_desc">Kuzatuv va Ogohlik darajasidagi yangi avj olishlar</string>
+</resources>
