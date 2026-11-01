@@ -92,8 +92,10 @@ epiradar/
 
 ## Buyruqlar
 
+Windows kompyuterda sozlash (Flutter, Android Studio, emulyator, lokal Claude Code): [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md).
+
 ```bash
-cd epiradar/engine && gradle test
+cd epiradar/engine && ./gradlew test
 ```
 
 ```bash
@@ -107,20 +109,37 @@ cd epiradar && flutter build apk --release --split-per-abi
 Jonli manbalarga qarshi tekshiruv (internet kerak):
 
 ```bash
-cd epiradar/engine && EPIRADAR_LIVE=1 gradle test --tests '*LiveSmokeTest*' -i
+cd epiradar/engine && EPIRADAR_LIVE=1 ./gradlew test --tests '*LiveSmokeTest*' -i
 ```
 
 Flutter test fixture'larini yadrodan qayta yaratish (yadro JSON formati o'zgarganda):
 
 ```bash
-cd epiradar/engine && EPIRADAR_EXPORT=../test/fixtures gradle test --rerun-tasks
+cd epiradar/engine && EPIRADAR_EXPORT=../test/fixtures ./gradlew test --rerun-tasks
 ```
+
+## Emulyator testlari
+
+`tool/emulator_test.sh` haqiqiy Android'da (CI: KVM emulyator, API 29 va 36) ishlaydi:
+Kotlin instrumental testlar (`android/app/src/androidTest` — fon sinxronlash jonli internet bilan,
+bildirishnomalar, WorkManager), Flutter `integration_test/device_test.dart` (to'liq UI oqimi Kotlin yadro
+orqali), so'ng ilovani foydalanuvchidek ishga tushirib ekran matni, skrinshot va crash tekshiruvi.
+
+```bash
+cd epiradar && ./tool/emulator_test.sh
+```
+
+## Reliz va Google Play
+
+- Reliz imzosi va CI orqali imzolangan AAB: [docs/RELEASE.md](docs/RELEASE.md)
+- Maxfiylik siyosati: [docs/PRIVACY.md](docs/PRIVACY.md)
+- Do'kon matnlari, Data safety javoblari: [docs/PLAY_STORE.md](docs/PLAY_STORE.md)
 
 ## Cheklovlar va keyingi qadamlar
 
 - Rasmiy manbalar inglizcha: sarlavha va tahlil o'zbekcha, asl matn esa tarjima tugmasi orqali.
 - Mahalliy (O'zbekiston SSV) ma'lumotlari uchun ochiq API yo'q — paydo bo'lsa, `SignalSource` sifatida qo'shiladi.
-- Reliz imzosi hali sozlanmagan (`android/app/build.gradle.kts`): Play'ga chiqarishdan oldin o'z kalitingizni ulang.
+- Reliz uchun o'z yuklash kalitingiz kerak (docs/RELEASE.md) — kalitsiz faqat debug imzoli lokal sinov.
 - iOS hozircha yo'q (Kotlin yadro Android uchun; Kotlin Multiplatform orqali ko'chirish mumkin).
 
 ## Litsenziyalar va manbalar

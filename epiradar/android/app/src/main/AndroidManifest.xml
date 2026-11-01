@@ -1,8 +1,14 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Android 13+: ogohlantirish yuborish uchun foydalanuvchi ruxsati (ilova ichida so'raladi). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- WorkManager qo'shadi, lekin ilova foreground ish (setForeground/expedited) ishlatmaydi —
+         olib tashlanadi: ortiqcha ruxsat va Play'dagi foreground service deklaratsiyasi kerak bo'lmaydi. -->
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:node="remove" />
 
     <application
         android:name=".EpiRadarApp"
@@ -42,6 +48,10 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_risk_info" />
         </receiver>
+
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            tools:node="remove" />
 
         <meta-data
             android:name="flutterEmbedding"

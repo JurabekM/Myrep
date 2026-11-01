@@ -26,7 +26,7 @@ import java.time.Instant
  * Yadro ([Engine]) ustidagi Android qatlami: holatni faylda, sozlamalarni SharedPreferences'da
  * saqlaydi. Bir vaqtda faqat bitta sinxronlash ishlaydi (UI tugmasi va fon vazifasi to'qnashmaydi).
  */
-class Repository(
+class Repository private constructor(
     context: Context,
 ) {
     private val app = context.applicationContext
@@ -105,6 +105,17 @@ class Repository(
     private fun encodeNotified(map: Map<String, ThreatLevel>): String = JsonObject(map.mapValues { JsonPrimitive(it.value.name) }).toString()
 
     companion object {
+        @Volatile private var instance: Repository? = null
+
+        /**
+         * Jarayon bo'yicha yagona nusxa (Activity, WorkManager, vidjet bir xil holat va Mutex'ni ulashadi).
+         * `applicationContext` turiga tayanmaymiz: WorkManager/test kontekstlari Application bo'lmasligi mumkin.
+         */
+        fun get(context: Context): Repository =
+            instance ?: synchronized(this) {
+                instance ?: Repository(context.applicationContext ?: context).also { instance = it }
+            }
+
         private const val KEY_SETTINGS = "settings"
         private const val KEY_NOTIFIED = "notified"
         private const val KEY_LAST_SYNC = "last_sync"
