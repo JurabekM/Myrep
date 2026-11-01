@@ -1,0 +1,6 @@
+# Reliz imzosi (namuna). Nusxa: `android/key.properties` — gitignore'da, HECH QACHON commit qilinmaydi.
+# storeFile yo'li `epiradar/android/` papkasiga nisbatan yoki mutlaq. Batafsil: ../docs/RELEASE.md
+storeFile=/xavfsiz/joy/epiradar-upload.jks
+storePassword=PAROL
+keyAlias=upload
+keyPassword=PAROL
