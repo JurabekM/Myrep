@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Belgi: uzilgan zanjir halqasi ustida yuqoriga ko'tarilgan yo'l — «qarzdan chiqish». -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Chap halqa -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FAF9F5"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M48,40 L40,40 C33,40 28,46 28,54 C28,62 33,68 40,68 L46,68" />
+    <!-- O'ng halqa (uzilgan) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#D97757"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M62,40 L68,40 C75,40 80,46 80,54 C80,62 75,68 68,68 L60,68" />
+    <!-- Yuqoriga strelka -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#D97757"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M54,62 L54,32 M45,41 L54,32 L63,41" />
+</vector>

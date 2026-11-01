@@ -1,0 +1,38 @@
+{
+  "suite": "fx",
+  "description": "Valyuta → so'm: summa (kichik birlik) × kurs (tiyin / 1 birlik) / 100.",
+  "cases": [
+    {
+      "name": "usd_10000",
+      "input": {
+        "amount": 1000000,
+        "rate": 1265000
+      },
+      "expected": 12650000000
+    },
+    {
+      "name": "usd_cents",
+      "input": {
+        "amount": 1234567,
+        "rate": 1265055
+      },
+      "expected": 15617951562
+    },
+    {
+      "name": "kzt",
+      "input": {
+        "amount": 50000000,
+        "rate": 2480
+      },
+      "expected": 1240000000
+    },
+    {
+      "name": "rub_half",
+      "input": {
+        "amount": 1,
+        "rate": 150
+      },
+      "expected": 2
+    }
+  ]
+}

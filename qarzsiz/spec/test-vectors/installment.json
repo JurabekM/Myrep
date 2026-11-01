@@ -1,0 +1,108 @@
+{
+  "suite": "installment",
+  "description": "Bo'lib to'lash: ortiqcha to'lov va yashirin yillik foiz (bisection, 50 xona, 120 qadam).",
+  "cases": [
+    {
+      "name": "telefon_1000_2000",
+      "input": {
+        "cash": 100000,
+        "down": 0,
+        "monthly": 5556,
+        "months": 36
+      },
+      "expected": {
+        "financed": 100000,
+        "totalPaid": 200016,
+        "overpay": 100016,
+        "overpayBp": 10002,
+        "nominalAnnualBp": 5233,
+        "effectiveAnnualBp": 6690
+      }
+    },
+    {
+      "name": "nasiya_12oy",
+      "input": {
+        "cash": 600000000,
+        "down": 0,
+        "monthly": 65000000,
+        "months": 12
+      },
+      "expected": {
+        "financed": 600000000,
+        "totalPaid": 780000000,
+        "overpay": 180000000,
+        "overpayBp": 3000,
+        "nominalAnnualBp": 5144,
+        "effectiveAnnualBp": 6548
+      }
+    },
+    {
+      "name": "boshlangich_bilan",
+      "input": {
+        "cash": 1500000000,
+        "down": 300000000,
+        "monthly": 125000000,
+        "months": 12
+      },
+      "expected": {
+        "financed": 1200000000,
+        "totalPaid": 1800000000,
+        "overpay": 300000000,
+        "overpayBp": 2000,
+        "nominalAnnualBp": 4334,
+        "effectiveAnnualBp": 5308
+      }
+    },
+    {
+      "name": "ustamasiz",
+      "input": {
+        "cash": 360000000,
+        "down": 0,
+        "monthly": 30000000,
+        "months": 12
+      },
+      "expected": {
+        "financed": 360000000,
+        "totalPaid": 360000000,
+        "overpay": 0,
+        "overpayBp": 0,
+        "nominalAnnualBp": 0,
+        "effectiveAnnualBp": 0
+      }
+    },
+    {
+      "name": "juda_qimmat",
+      "input": {
+        "cash": 100000000,
+        "down": 0,
+        "monthly": 100000000,
+        "months": 6
+      },
+      "expected": {
+        "financed": 100000000,
+        "totalPaid": 600000000,
+        "overpay": 500000000,
+        "overpayBp": 50000,
+        "nominalAnnualBp": 118030,
+        "effectiveAnnualBp": 37092581
+      }
+    },
+    {
+      "name": "bir_oy",
+      "input": {
+        "cash": 100000000,
+        "down": 0,
+        "monthly": 105000000,
+        "months": 1
+      },
+      "expected": {
+        "financed": 100000000,
+        "totalPaid": 105000000,
+        "overpay": 5000000,
+        "overpayBp": 500,
+        "nominalAnnualBp": 6000,
+        "effectiveAnnualBp": 7959
+      }
+    }
+  ]
+}
