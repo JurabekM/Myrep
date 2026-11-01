@@ -70,7 +70,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(snap.events.first.title).first);
     await tester.pumpAndSettle();
-    expect(find.text('Nega bu daraja?'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Nega bu daraja?'), 200, scrollable: _scroll());
     await goBack(tester);
     await tester.pumpAndSettle();
 
@@ -84,13 +84,15 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('Ebola virusi').first);
     await tester.pumpAndSettle();
-    expect(find.text("Yuqish yo'li"), findsOneWidget);
+    // Kichik ekranli qurilmalarda bo'lim pastda — aylantirib topamiz.
+    await tester.scrollUntilVisible(find.text("Yuqish yo'li"), 200, scrollable: _scroll());
     await goBack(tester);
     await tester.pumpAndSettle();
 
     // Tayyorgarlik: belgi Kotlin SharedPreferences'ga saqlanadi.
     await tester.tap(find.text('Tayyorgarlik'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.textContaining('Ichimlik suvi'), 200, scrollable: _scroll());
     await tester.tap(find.textContaining('Ichimlik suvi'));
     await tester.pumpAndSettle();
     final persisted = await engine.settings();

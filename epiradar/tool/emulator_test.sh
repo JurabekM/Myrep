@@ -29,15 +29,17 @@ adb -s "$DEVICE" shell am force-stop uz.epiradar.app
 adb -s "$DEVICE" shell am start -W -n uz.epiradar.app/.MainActivity
 sleep 25
 adb -s "$DEVICE" exec-out screencap -p > "$OUT/home-api$API.png"
-# Flutter semantik daraxti accessibility orqali ko'rinadi — ekrandagi matnlar logga.
-for i in 1 2; do adb -s "$DEVICE" shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true; sleep 3; done
-adb -s "$DEVICE" shell cat /sdcard/ui.xml > "$OUT/ui-api$API.xml" || true
-echo "-- Ekrandagi matnlar:"
-grep -o 'content-desc="[^"]*"\|text="[^"]*"' "$OUT/ui-api$API.xml" | grep -v '=""' | sed 's/&#10;/ | /g' | head -60 || true
-# Skrinshot logda (kichraytirilgan JPEG, base64) — artefaktsiz ko'rish uchun.
-if command -v convert >/dev/null; then
-  convert "$OUT/home-api$API.png" -resize 360x -quality 55 "$OUT/home-api$API.jpg"
+# Skrinshot logda (kichraytirilgan JPEG, base64) — artefaktni yuklamasdan ko'rish uchun.
+IM=$(command -v magick || command -v convert || true)
+if [ -z "$IM" ] && [ -n "${CI:-}" ]; then
+  sudo apt-get install -y -qq imagemagick >/dev/null 2>&1 || true
+  IM=$(command -v magick || command -v convert || true)
+fi
+if [ -n "$IM" ]; then
+  "$IM" "$OUT/home-api$API.png" -resize 360x -quality 55 "$OUT/home-api$API.jpg"
   echo "EPIRADAR-SCREENSHOT-BEGIN"; base64 -w 0 "$OUT/home-api$API.jpg"; echo; echo "EPIRADAR-SCREENSHOT-END"
+else
+  echo "(ImageMagick yo'q — skrinshot faqat $OUT/home-api$API.png faylida)"
 fi
 adb -s "$DEVICE" logcat -d > "$OUT/logcat-api$API.txt"
 if grep -E "FATAL EXCEPTION|ANR in uz.epiradar" "$OUT/logcat-api$API.txt"; then
