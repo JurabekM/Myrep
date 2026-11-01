@@ -17,7 +17,7 @@ class SyncWorker(
     params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        val repo = (applicationContext as EpiRadarApp).repository
+        val repo = Repository.get(applicationContext)
         return try {
             val result = repo.sync()
             result.notifications.forEach { Notifier.show(applicationContext, it) }

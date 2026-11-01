@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  */
 class MainActivity : FlutterActivity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val repo by lazy { (application as EpiRadarApp).repository }
+    private val repo by lazy { Repository.get(this) }
     private var pendingPermission: MethodChannel.Result? = null
     private var launchEventId: String? = null
     private var channel: MethodChannel? = null

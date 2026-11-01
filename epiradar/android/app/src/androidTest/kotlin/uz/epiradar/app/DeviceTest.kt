@@ -30,7 +30,7 @@ import kotlin.test.assertTrue
 @RunWith(androidx.test.runner.AndroidJUnit4::class)
 class DeviceTest {
     private val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val app get() = context.applicationContext as EpiRadarApp
+    private val repo get() = Repository.get(context)
 
     @Before
     fun setUp() {
@@ -50,7 +50,7 @@ class DeviceTest {
         assertEquals(ListenableWorker.Result.success(), result, "SyncWorker natijasi")
 
         assertTrue(File(context.filesDir, "state.json").length() > 1000, "holat fayli yozildi")
-        val snapshot = runBlocking { app.repository.current() }
+        val snapshot = runBlocking { repo.current() }
         assertNotNull(snapshot)
         val ok = snapshot.sources.count { it.ok }
         println("EPIRADAR-DEVICE: manbalar ok=$ok/${snapshot.sources.size}, hodisalar=${snapshot.events.size}, shaxsiy=${snapshot.personalScore} (${snapshot.personalLevel.uz})")
@@ -58,7 +58,7 @@ class DeviceTest {
         assertTrue(ok >= 2, "kamida 2 ta manba ishlashi kerak: ${snapshot.sources}")
         assertTrue(snapshot.events.isNotEmpty(), "hodisalar bo'sh")
         // Qurilmada R8/resurslar to'g'ri: kasalliklar ma'lumotnomasi va mamlakatlar yuklangan.
-        assertTrue(app.repository.catalogJson().contains("\"cchf\""))
+        assertTrue(repo.catalogJson().contains("\"cchf\""))
     }
 
     @Test
@@ -78,7 +78,6 @@ class DeviceTest {
 
     @Test
     fun settingsAreSanitisedAndScheduleUpdated() {
-        val repo = app.repository
         val saved = repo.saveSettings("""{"country":"KAZ","syncHours":6,"alertThreshold":"CALM","watchCountries":["TUR","XXX"]}""")
         assertEquals("KAZ", saved.country)
         assertEquals(6, saved.syncHours)
@@ -91,7 +90,7 @@ class DeviceTest {
 
     @Test
     fun widgetUpdateWithoutWidgetsIsSafe() {
-        val snapshot = runBlocking { app.repository.current() } ?: return
+        val snapshot = runBlocking { repo.current() } ?: return
         RiskWidgetProvider.update(context, snapshot)
     }
 }

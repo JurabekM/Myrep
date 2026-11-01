@@ -26,7 +26,7 @@ class RiskWidgetProvider : AppWidgetProvider() {
         val pending = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
-                val snapshot = (context.applicationContext as EpiRadarApp).repository.current()
+                val snapshot = Repository.get(context).current()
                 render(context, manager, ids, snapshot)
             } catch (_: Exception) {
                 // Vidjet xatosi butun ilova jarayonini to'xtatmasligi kerak (masalan, holat fayli o'qilmadi).
@@ -66,7 +66,7 @@ class RiskWidgetProvider : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.widget_root, open)
             if (snapshot != null) {
                 val level = snapshot.personalLevel
-                val repo = (context.applicationContext as EpiRadarApp).repository
+                val repo = Repository.get(context)
                 views.setTextViewText(R.id.widget_score, snapshot.personalScore.toString())
                 views.setTextColor(R.id.widget_score, ContextCompat.getColor(context, Notifier.levelColor(level)))
                 views.setTextViewText(R.id.widget_level, level.uz)
