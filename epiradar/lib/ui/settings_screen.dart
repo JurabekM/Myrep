@@ -6,6 +6,9 @@ import '../theme.dart';
 import '../util/format.dart';
 import 'widgets.dart';
 
+/// Play Console'da ham shu havola ko'rsatiladi (docs/PRIVACY.md).
+const privacyPolicyUrl = 'https://github.com/JurabekM/Myrep/blob/master/epiradar/docs/PRIVACY.md';
+
 class SettingsButton extends StatelessWidget {
   const SettingsButton({super.key});
 
@@ -257,9 +260,19 @@ class SettingsScreen extends StatelessWidget {
                   style: TextStyle(color: t.inkMuted, fontSize: 12),
                 ),
                 const MedicalDisclaimer(),
-                OutlinedButton(
-                  onPressed: () => showLicensePage(context: context, applicationName: 'EpiRadar'),
-                  child: const Text('Litsenziyalar'),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => state.engine.openUrl(privacyPolicyUrl),
+                      child: const Text('Maxfiylik siyosati'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () => showLicensePage(context: context, applicationName: 'EpiRadar'),
+                      child: const Text('Litsenziyalar'),
+                    ),
+                  ],
                 ),
               ],
             ),

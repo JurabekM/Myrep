@@ -4,6 +4,7 @@ import 'package:epiradar/app.dart';
 import 'package:epiradar/data/models.dart';
 import 'package:epiradar/state/app_state.dart';
 import 'package:epiradar/ui/event_detail_screen.dart';
+import 'package:epiradar/ui/settings_screen.dart';
 import 'package:epiradar/util/format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -188,6 +189,11 @@ void main() {
     expect(engine.saved.last.lightTheme, isTrue);
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     expect(app.themeMode, ThemeMode.light);
+
+    await tester.ensureVisible(find.text('Maxfiylik siyosati'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Maxfiylik siyosati'));
+    expect(engine.opened.last, privacyPolicyUrl);
   });
 
   test('mamlakat sinxronlash paytida almashtirilsa, yangi sozlama bilan yana yangilanadi', () async {

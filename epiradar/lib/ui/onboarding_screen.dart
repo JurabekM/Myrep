@@ -80,6 +80,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(color: t.inkMuted, fontSize: 12),
             ),
+            TextButton(
+              onPressed: () => state.engine.openUrl(privacyPolicyUrl),
+              child: const Text('Maxfiylik siyosati'),
+            ),
           ],
         ),
       ),
