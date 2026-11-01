@@ -21,6 +21,12 @@ Future<void> waitFor(WidgetTester tester, bool Function() done, {int seconds = 1
   fail('Kutish vaqti tugadi: $what');
 }
 
+/// Android'ning tizim «orqaga» tugmasi (foydalanuvchi aynan shuni bosadi).
+Future<void> goBack(WidgetTester tester) async {
+  await tester.binding.handlePopRoute();
+  await tester.pumpAndSettle();
+}
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -65,7 +71,7 @@ void main() {
     await tester.tap(find.text(snap.events.first.title).first);
     await tester.pumpAndSettle();
     expect(find.text('Nega bu daraja?'), findsOneWidget);
-    await tester.pageBack();
+    await goBack(tester);
     await tester.pumpAndSettle();
 
     // Trendlar va kasalliklar ma'lumotnomasi.
@@ -79,7 +85,7 @@ void main() {
     await tester.tap(find.textContaining('Ebola virusi').first);
     await tester.pumpAndSettle();
     expect(find.text("Yuqish yo'li"), findsOneWidget);
-    await tester.pageBack();
+    await goBack(tester);
     await tester.pumpAndSettle();
 
     // Tayyorgarlik: belgi Kotlin SharedPreferences'ga saqlanadi.
@@ -104,7 +110,7 @@ void main() {
     await waitFor(tester, () => state.settings.country == 'KAZ' && state.snapshot?.country == 'KAZ' && !state.refreshing,
         what: 'mamlakat almashishi');
     debugPrint('EPIRADAR-IT: Qozog\'iston: ${state.snapshot!.personal.score} (${state.snapshot!.personal.name})');
-    await tester.pageBack();
+    await goBack(tester);
     await tester.pumpAndSettle();
     expect(find.text("Qozog'iston uchun xavf darajasi"), findsOneWidget);
 
