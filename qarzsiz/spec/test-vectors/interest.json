@@ -1,0 +1,54 @@
+{
+  "suite": "interest",
+  "description": "Oylik foiz: qoldiq × yillik bp / 120000, yarmi yuqoriga.",
+  "cases": [
+    {
+      "name": "ipoteka_8",
+      "input": {
+        "balance": 5000000000,
+        "annualRateBp": 800
+      },
+      "expected": 33333333
+    },
+    {
+      "name": "kredit_24",
+      "input": {
+        "balance": 3900000000,
+        "annualRateBp": 2400
+      },
+      "expected": 78000000
+    },
+    {
+      "name": "half_up",
+      "input": {
+        "balance": 15,
+        "annualRateBp": 4000
+      },
+      "expected": 1
+    },
+    {
+      "name": "zero_rate",
+      "input": {
+        "balance": 100000000,
+        "annualRateBp": 0
+      },
+      "expected": 0
+    },
+    {
+      "name": "zero_balance",
+      "input": {
+        "balance": 0,
+        "annualRateBp": 5000
+      },
+      "expected": 0
+    },
+    {
+      "name": "mikroqarz_56",
+      "input": {
+        "balance": 733333333,
+        "annualRateBp": 5650
+      },
+      "expected": 34527778
+    }
+  ]
+}

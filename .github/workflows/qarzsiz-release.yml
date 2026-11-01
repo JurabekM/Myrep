@@ -1,0 +1,129 @@
+# «Qarzsiz» — Google Play uchun imzolangan reliz (AAB + APK).
+# Ishga tushirish: `git tag qarzsiz-v1.0.0 && git push origin qarzsiz-v1.0.0` yoki Actions → «Run workflow».
+# Kerakli GitHub Secrets (qarzsiz/play/RELEASE.md, 2-qadam):
+#   QARZSIZ_UPLOAD_KEYSTORE_B64 — upload keystore (.jks) base64 ko'rinishida
+#   QARZSIZ_STORE_PASSWORD, QARZSIZ_KEY_ALIAS, QARZSIZ_KEY_PASSWORD
+name: qarzsiz-release
+
+on:
+  push:
+    tags: ["qarzsiz-v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versiya (masalan 1.0.0)"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qarzsiz-release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: qarzsiz/android
+    shell: bash
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versiya (versionName / versionCode)
+        id: ver
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          RAW="${INPUT_VERSION:-${GITHUB_REF_NAME#qarzsiz-v}}"
+          if ! [[ "$RAW" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "::error::Versiya X.Y.Z ko'rinishida bo'lishi kerak (teg: qarzsiz-v1.0.0), berilgan: '$RAW'"
+            exit 1
+          fi
+          MINOR=${BASH_REMATCH[2]}; PATCH=${BASH_REMATCH[3]}
+          if (( MINOR > 99 || PATCH > 99 )); then
+            echo "::error::minor va patch 0..99 oralig'ida bo'lishi kerak"
+            exit 1
+          fi
+          # 1.2.3 → 10203: har yangi versiya kattaroq kod (Play talabi).
+          CODE=$(( BASH_REMATCH[1] * 10000 + MINOR * 100 + PATCH ))
+          echo "name=$RAW" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "Versiya $RAW, versionCode $CODE"
+
+      - name: Upload kaliti (GitHub Secrets)
+        env:
+          KEYSTORE_B64: ${{ secrets.QARZSIZ_UPLOAD_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.QARZSIZ_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.QARZSIZ_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.QARZSIZ_KEY_PASSWORD }}
+        run: |
+          for v in KEYSTORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!v}" ]; then
+              echo "::error::GitHub Secret yo'q: QARZSIZ_${v/KEYSTORE_B64/UPLOAD_KEYSTORE_B64} (qarzsiz/play/RELEASE.md)"
+              exit 1
+            fi
+          done
+          # Faqat kalit fayli; parollar keyingi qadamlarga umumiy muhit orqali o'tmaydi.
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Oracle va do'kon matnlari
+        working-directory: qarzsiz
+        run: |
+          python3 -I spec/oracle/oracle.py --selftest
+          python3 -I spec/oracle/oracle.py --check spec/test-vectors
+          python3 -I play/check_listing.py
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Testlar, AAB va APK
+        env:
+          QARZSIZ_KEYSTORE: ${{ runner.temp }}/upload.jks
+          QARZSIZ_STORE_PASSWORD: ${{ secrets.QARZSIZ_STORE_PASSWORD }}
+          QARZSIZ_KEY_ALIAS: ${{ secrets.QARZSIZ_KEY_ALIAS }}
+          QARZSIZ_KEY_PASSWORD: ${{ secrets.QARZSIZ_KEY_PASSWORD }}
+        run: >
+          ./gradlew --no-daemon :core:test :app:testDebugUnitTest :app:bundleRelease :app:assembleRelease
+          -Pqarzsiz.versionCode=${{ steps.ver.outputs.code }}
+          -Pqarzsiz.versionName=${{ steps.ver.outputs.name }}
+
+      - name: Imzo va ruxsatlar tekshiruvi
+        run: |
+          AAB=app/build/outputs/bundle/release/app-release.aab
+          APK=app/build/outputs/apk/release/app-release.apk
+          jarsigner -verify "$AAB" | tee verify.txt
+          grep -q "jar verified" verify.txt
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --print-certs "$APK" | tee certs.txt
+          if grep -q "CN=Android Debug" certs.txt; then
+            echo "::error::APK debug kaliti bilan imzolangan"
+            exit 1
+          fi
+          "$BT/aapt2" dump permissions "$APK" | tee perms.txt
+          if grep -E "android.permission.(INTERNET|ACCESS_NETWORK_STATE)" perms.txt; then
+            echo "::error::Qarzsiz offlayn ilova: tarmoq ruxsati bo'lmasligi kerak"
+            exit 1
+          fi
+          mkdir -p ../../dist
+          cp "$AAB" "../../dist/qarzsiz-${{ steps.ver.outputs.name }}.aab"
+          cp "$APK" "../../dist/qarzsiz-${{ steps.ver.outputs.name }}.apk"
+          cp app/build/outputs/mapping/release/mapping.txt "../../dist/mapping-${{ steps.ver.outputs.name }}.txt"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qarzsiz-${{ steps.ver.outputs.name }}-play
+          path: dist/
+          retention-days: 90
+
+      - name: Kalitni o'chirish
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks"

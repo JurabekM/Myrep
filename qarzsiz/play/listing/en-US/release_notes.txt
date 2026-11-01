@@ -1,0 +1,1 @@
+First release: debt list with A/B analysis, negotiation texts, 70/30 plan and debt-free date, installment calculator, payment reminders, PIN lock, Latin and Cyrillic Uzbek. Fully offline.
