@@ -14,6 +14,8 @@ echo "== Qurilma: API $API"
 
 echo "== 0. Debug APK (gradlew va local.properties ham yaratiladi)"
 flutter build apk --debug
+# integration_test shu faylni test versiyasi bilan almashtiradi — oddiy ilovani alohida saqlaymiz.
+cp build/app/outputs/flutter-apk/app-debug.apk "$OUT/epiradar-debug.apk"
 
 echo "== 1. Kotlin instrumental testlar"
 (cd android && ./gradlew app:connectedDebugAndroidTest --console=plain -Pandroid.testInstrumentationRunnerArguments.class=uz.epiradar.app.DeviceTest)
@@ -23,12 +25,13 @@ echo "== 2. Flutter integration_test"
 flutter test integration_test/device_test.dart -d "$DEVICE" --reporter expanded
 
 echo "== 3. Foydalanuvchi sifatida ishga tushirish"
-adb -s "$DEVICE" install -r build/app/outputs/flutter-apk/app-debug.apk >/dev/null
+adb -s "$DEVICE" install -r "$OUT/epiradar-debug.apk" >/dev/null
 adb -s "$DEVICE" logcat -c
 adb -s "$DEVICE" shell am force-stop uz.epiradar.app
 adb -s "$DEVICE" shell am start -W -n uz.epiradar.app/.MainActivity
-sleep 25
+sleep 30
 adb -s "$DEVICE" exec-out screencap -p > "$OUT/home-api$API.png"
+echo "-- Flutter loglari:"; adb -s "$DEVICE" logcat -d -s flutter:I | tail -15 || true
 # Skrinshot logda (kichraytirilgan JPEG, base64) — artefaktni yuklamasdan ko'rish uchun.
 IM=$(command -v magick || command -v convert || true)
 if [ -z "$IM" ] && [ -n "${CI:-}" ]; then
