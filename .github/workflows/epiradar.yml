@@ -29,17 +29,15 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "9.3.1"
       - name: Yadro testlari (fixture'lar bilan, tarmoqsiz)
-        run: gradle test --console=plain
+        run: ./gradlew test --console=plain
       - name: Jonli manbalar (faqat jadval/qo'lda)
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         env:
           EPIRADAR_LIVE: "1"
         run: |
           set -o pipefail
-          gradle test --tests '*LiveSmokeTest*' --rerun-tasks --console=plain -i | grep -E '^\s+(WHO|ECDC|CDC|Shaxsiy|trend|[0-9]+/)'
+          ./gradlew test --tests '*LiveSmokeTest*' --rerun-tasks --console=plain -i | grep -E '^\s+(WHO|ECDC|CDC|Shaxsiy|trend|[0-9]+/)'
       - uses: actions/upload-artifact@v4
         if: always()
         with:

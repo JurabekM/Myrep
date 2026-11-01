@@ -92,8 +92,10 @@ epiradar/
 
 ## Buyruqlar
 
+Windows kompyuterda sozlash (Flutter, Android Studio, emulyator, lokal Claude Code): [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md).
+
 ```bash
-cd epiradar/engine && gradle test
+cd epiradar/engine && ./gradlew test
 ```
 
 ```bash
@@ -107,13 +109,13 @@ cd epiradar && flutter build apk --release --split-per-abi
 Jonli manbalarga qarshi tekshiruv (internet kerak):
 
 ```bash
-cd epiradar/engine && EPIRADAR_LIVE=1 gradle test --tests '*LiveSmokeTest*' -i
+cd epiradar/engine && EPIRADAR_LIVE=1 ./gradlew test --tests '*LiveSmokeTest*' -i
 ```
 
 Flutter test fixture'larini yadrodan qayta yaratish (yadro JSON formati o'zgarganda):
 
 ```bash
-cd epiradar/engine && EPIRADAR_EXPORT=../test/fixtures gradle test --rerun-tasks
+cd epiradar/engine && EPIRADAR_EXPORT=../test/fixtures ./gradlew test --rerun-tasks
 ```
 
 ## Emulyator testlari
