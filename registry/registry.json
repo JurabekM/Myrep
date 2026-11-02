@@ -1,0 +1,1450 @@
+{
+ "schema": 1,
+ "db_version": 1,
+ "organizations": [
+  {
+   "id": "click",
+   "name": "Click",
+   "kind": "payment",
+   "brand_keywords": [
+    "click"
+   ],
+   "domains": [
+    "click.uz"
+   ],
+   "domain_sources": [
+    "https://click.uz/ru"
+   ],
+   "packages": [
+    {
+     "id": "air.com.ssdsoftwaresolutions.clickuz",
+     "source": "https://play.google.com/store/apps/details?id=air.com.ssdsoftwaresolutions.clickuz",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.click.merchant.clickmerchant",
+     "source": "https://play.google.com/store/apps/details?id=uz.click.merchant.clickmerchant",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "+998 71 231 08 80",
+     "label": "aloqa",
+     "source": "https://click.uz/ru"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "payme",
+   "name": "Payme",
+   "kind": "payment",
+   "brand_keywords": [
+    "payme",
+    "paycom"
+   ],
+   "domains": [
+    "payme.uz",
+    "paycom.uz"
+   ],
+   "domain_sources": [
+    "https://payme.uz/",
+    "https://play.google.com/store/apps/details?id=uz.paycom.merchantcabinet"
+   ],
+   "packages": [
+    {
+     "id": "uz.dida.payme",
+     "source": "https://play.google.com/store/apps/details?id=uz.dida.payme",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.paycom.merchantcabinet",
+     "source": "https://play.google.com/store/apps/details?id=uz.paycom.merchantcabinet",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "+998 78 150 22 45",
+     "label": "JSON-LD",
+     "source": "https://payme.uz/"
+    }
+   ],
+   "confidence": "partial",
+   "notes": "Play dasturchisi 'Paymego', email support@payme.uz"
+  },
+  {
+   "id": "uzum",
+   "name": "Uzum",
+   "kind": "payment",
+   "brand_keywords": [
+    "uzum",
+    "uzumbank"
+   ],
+   "domains": [
+    "uzumbank.uz",
+    "uzum.uz",
+    "uzum.com"
+   ],
+   "domain_sources": [
+    "https://uzumbank.uz/",
+    "https://uzum.uz/",
+    "https://play.google.com/store/apps/details?id=uz.uzum.app"
+   ],
+   "packages": [
+    {
+     "id": "uz.kapitalbank.android",
+     "source": "https://play.google.com/store/apps/details?id=uz.kapitalbank.android",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.uzum.app",
+     "source": "https://play.google.com/store/apps/details?id=uz.uzum.app",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.uzum.tezkor",
+     "source": "https://play.google.com/store/apps/details?id=uz.uzum.tezkor",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.uzum.sellers",
+     "source": "https://play.google.com/store/apps/details?id=uz.uzum.sellers",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.uzum.avto.android",
+     "source": "https://play.google.com/store/apps/details?id=uz.uzum.avto.android",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "+998 78 777 07 99",
+     "label": "Uzum Bank",
+     "source": "https://uzumbank.uz/uz/card/"
+    }
+   ],
+   "confidence": "partial",
+   "notes": "uz.kapitalbank.android = Uzum Bank (eski paket nomi), Kapitalbank EMAS"
+  },
+  {
+   "id": "paynet",
+   "name": "Paynet",
+   "kind": "payment",
+   "brand_keywords": [
+    "paynet"
+   ],
+   "domains": [
+    "paynet.uz"
+   ],
+   "domain_sources": [
+    "https://paynet.uz/uz"
+   ],
+   "packages": [
+    {
+     "id": "uz.paynet.app",
+     "source": "https://play.google.com/store/apps/details?id=uz.paynet.app",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.paynet.paynet_business",
+     "source": "https://play.google.com/store/apps/details?id=uz.paynet.paynet_business",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "+998 71 202 07 07",
+     "label": "aloqa",
+     "source": "https://paynet.uz/uz"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "uzcard",
+   "name": "Uzcard",
+   "kind": "card",
+   "brand_keywords": [
+    "uzcard"
+   ],
+   "domains": [
+    "uzcard.uz"
+   ],
+   "domain_sources": [
+    "https://uzcard.uz/"
+   ],
+   "packages": [
+    {
+     "id": "uz.uzcardpay.android",
+     "source": "https://play.google.com/store/apps/details?id=uz.uzcardpay.android",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "+998 71 200 28 28",
+     "label": "JSON-LD",
+     "source": "https://uzcard.uz/"
+    },
+    {
+     "number": "1257",
+     "label": "sarlavha",
+     "source": "https://uzcard.uz/"
+    }
+   ],
+   "confidence": "partial",
+   "notes": "mobile.uzcard.uz.uzcard — Plum (PLUM TECHNOLOGIES), Uzcard emas"
+  },
+  {
+   "id": "humo",
+   "name": "Humo",
+   "kind": "card",
+   "brand_keywords": [
+    "humo",
+    "humopay"
+   ],
+   "domains": [
+    "humocard.uz"
+   ],
+   "domain_sources": [
+    "https://humocard.uz/uz/"
+   ],
+   "packages": [
+    {
+     "id": "com.humo.tech",
+     "source": "https://play.google.com/store/apps/details?id=com.humo.tech",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "+998 78 888 85 85",
+     "label": "aloqa",
+     "source": "https://humocard.uz/uz/"
+    },
+    {
+     "number": "+998 71 200 08 88",
+     "label": "aloqa",
+     "source": "https://humocard.uz/uz/"
+    }
+   ],
+   "confidence": "partial",
+   "notes": "com.humo.tech dasturchisi HUMO PAY (@nmpc.uz), sayt ilovaga havola bermaydi"
+  },
+  {
+   "id": "xalqbank",
+   "name": "Xalq banki",
+   "kind": "bank",
+   "brand_keywords": [
+    "xalq banki",
+    "xalqbank"
+   ],
+   "domains": [
+    "xb.uz"
+   ],
+   "domain_sources": [
+    "https://xb.uz/"
+   ],
+   "packages": [
+    {
+     "id": "uz.fb.cib.mobile.xalqbank_new",
+     "source": "https://play.google.com/store/apps/details?id=uz.fb.cib.mobile.xalqbank_new",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1106",
+     "label": "Aloqa markazi",
+     "source": "https://xb.uz/"
+    },
+    {
+     "number": "+998 71 210 20 02",
+     "label": "Ma'lumot uchun",
+     "source": "https://xb.uz/"
+    }
+   ],
+   "confidence": "partial",
+   "notes": "Faqat biznes ilova tasdiqlandi; chakana ilova tasdiqlanmadi"
+  },
+  {
+   "id": "nbu",
+   "name": "Milliy bank",
+   "kind": "bank",
+   "brand_keywords": [
+    "milliy bank",
+    "nbu"
+   ],
+   "domains": [
+    "nbu.uz"
+   ],
+   "domain_sources": [
+    "https://nbu.uz/"
+   ],
+   "packages": [
+    {
+     "id": "com.tune.milliy",
+     "source": "https://play.google.com/store/apps/details?id=com.tune.milliy",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.tune.milliybusiness",
+     "source": "https://play.google.com/store/apps/details?id=uz.tune.milliybusiness",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "+998 71 202 10 01",
+     "label": "meta",
+     "source": "https://nbu.uz/"
+    }
+   ],
+   "confidence": "partial",
+   "notes": "uz.milliypay.android — Universalbank, NBU emas"
+  },
+  {
+   "id": "kapitalbank",
+   "name": "Kapitalbank",
+   "kind": "bank",
+   "brand_keywords": [
+    "kapitalbank"
+   ],
+   "domains": [
+    "kapitalbank.uz"
+   ],
+   "domain_sources": [
+    "https://kapitalbank.uz/"
+   ],
+   "packages": [
+    {
+     "id": "uz.kapitalbank.kbonline",
+     "source": "https://play.google.com/store/apps/details?id=uz.kapitalbank.kbonline",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.kapitalbank.mobile24",
+     "source": "https://play.google.com/store/apps/details?id=uz.kapitalbank.mobile24",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1340",
+     "label": "jismoniy shaxslar",
+     "source": "https://kapitalbank.uz/"
+    },
+    {
+     "number": "+998 71 200 15 15",
+     "label": "jismoniy shaxslar",
+     "source": "https://kapitalbank.uz/"
+    },
+    {
+     "number": "1278",
+     "label": "yuridik shaxslar",
+     "source": "https://kapitalbank.uz/"
+    },
+    {
+     "number": "+998 78 148 40 08",
+     "label": "yuridik shaxslar",
+     "source": "https://kapitalbank.uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "agrobank",
+   "name": "Agrobank",
+   "kind": "bank",
+   "brand_keywords": [
+    "agrobank"
+   ],
+   "domains": [
+    "agrobank.uz"
+   ],
+   "domain_sources": [
+    "https://agrobank.uz/uz/person"
+   ],
+   "packages": [
+    {
+     "id": "uz.agrobank.mobile",
+     "source": "https://play.google.com/store/apps/details?id=uz.agrobank.mobile",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.agrobank.mobile.mbank",
+     "source": "https://play.google.com/store/apps/details?id=uz.agrobank.mobile.mbank",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.agrobank.dbo",
+     "source": "https://play.google.com/store/apps/details?id=uz.agrobank.dbo",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.agrobank.chakanapay",
+     "source": "https://play.google.com/store/apps/details?id=uz.agrobank.chakanapay",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "+998 71 203 88 88",
+     "label": "JSON-LD",
+     "source": "https://agrobank.uz/uz/person"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "aloqabank",
+   "name": "Aloqabank",
+   "kind": "bank",
+   "brand_keywords": [
+    "aloqabank",
+    "zoomrad"
+   ],
+   "domains": [
+    "aloqabank.uz",
+    "zoomrad.uz"
+   ],
+   "domain_sources": [
+    "https://aloqabank.uz/uz/",
+    "https://play.google.com/store/apps/details?id=uz.aloqabank.zoomrad"
+   ],
+   "packages": [
+    {
+     "id": "uz.aloqabank.zoomrad",
+     "source": "https://play.google.com/store/apps/details?id=uz.aloqabank.zoomrad",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.aloqabank.zoomradbusiness",
+     "source": "https://play.google.com/store/apps/details?id=uz.aloqabank.zoomradbusiness",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "+998 71 230 77 77",
+     "label": "Kontakt-markazi 24/7",
+     "source": "https://aloqabank.uz/uz/"
+    },
+    {
+     "number": "+998 71 230 44 44",
+     "label": "Ishonch telefoni",
+     "source": "https://aloqabank.uz/uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "asakabank",
+   "name": "Asakabank",
+   "kind": "bank",
+   "brand_keywords": [
+    "asakabank",
+    "asaka bank"
+   ],
+   "domains": [
+    "asakabank.uz"
+   ],
+   "domain_sources": [
+    "https://asakabank.uz/uz"
+   ],
+   "packages": [
+    {
+     "id": "uz.asakabank.myasaka",
+     "source": "https://play.google.com/store/apps/details?id=uz.asakabank.myasaka",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.asakabank.business",
+     "source": "https://play.google.com/store/apps/details?id=uz.asakabank.business",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [],
+   "confidence": "partial",
+   "notes": "Telefon rasmiy saytdan o'qilmadi"
+  },
+  {
+   "id": "hamkorbank",
+   "name": "Hamkorbank",
+   "kind": "bank",
+   "brand_keywords": [
+    "hamkorbank",
+    "hamkor bank"
+   ],
+   "domains": [
+    "hamkorbank.uz",
+    "tez.uz"
+   ],
+   "domain_sources": [
+    "https://hamkorbank.uz/uz/",
+    "https://play.google.com/store/apps/details?id=uz.hamkorbank.tezbank"
+   ],
+   "packages": [
+    {
+     "id": "com.hamkorbank.mobile",
+     "source": "https://play.google.com/store/apps/details?id=com.hamkorbank.mobile",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.hamkorbank.tezbank",
+     "source": "https://play.google.com/store/apps/details?id=uz.hamkorbank.tezbank",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.tune.hamkorbusiness",
+     "source": "https://play.google.com/store/apps/details?id=uz.tune.hamkorbusiness",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "0 800 1 200 200",
+     "label": "Aloqa markazi",
+     "source": "https://hamkorbank.uz/uz/"
+    },
+    {
+     "number": "1256",
+     "label": "aloqa",
+     "source": "https://hamkorbank.uz/uz/"
+    },
+    {
+     "number": "+998 78 150 91 25",
+     "label": "Ishonch telefoni",
+     "source": "https://hamkorbank.uz/uz/"
+    }
+   ],
+   "confidence": "partial",
+   "notes": "Telefonlar qo'lda qayta tekshirilsin"
+  },
+  {
+   "id": "ipakyuli",
+   "name": "Ipak Yo'li banki",
+   "kind": "bank",
+   "brand_keywords": [
+    "ipak yo'li",
+    "ipakyuli",
+    "monix"
+   ],
+   "domains": [
+    "ipakyulibank.uz",
+    "monix.uz"
+   ],
+   "domain_sources": [
+    "https://ipakyulibank.uz/physical",
+    "https://play.google.com/store/apps/details?id=uz.iyb.monix"
+   ],
+   "packages": [
+    {
+     "id": "com.ipakyulibank.mobile",
+     "source": "https://play.google.com/store/apps/details?id=com.ipakyulibank.mobile",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.iyb.monix",
+     "source": "https://play.google.com/store/apps/details?id=uz.iyb.monix",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1296",
+     "label": "24/7",
+     "source": "https://ipakyulibank.uz/physical"
+    },
+    {
+     "number": "+998 78 140 69 00",
+     "label": "24/7",
+     "source": "https://ipakyulibank.uz/physical"
+    },
+    {
+     "number": "+998 78 140 78 33",
+     "label": "Ishonch telefoni",
+     "source": "https://ipakyulibank.uz/physical"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "sqb",
+   "name": "SQB",
+   "kind": "bank",
+   "brand_keywords": [
+    "sqb",
+    "uzpsb"
+   ],
+   "domains": [
+    "sqb.uz",
+    "uzpsb.uz"
+   ],
+   "domain_sources": [
+    "https://sqb.uz/uz/individuals/",
+    "https://play.google.com/store/apps/details?id=com.uzpsb.olam"
+   ],
+   "packages": [
+    {
+     "id": "com.uzpsb.olam",
+     "source": "https://play.google.com/store/apps/details?id=com.uzpsb.olam",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.uzpsb.joydabusiness",
+     "source": "https://play.google.com/store/apps/details?id=uz.uzpsb.joydabusiness",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "0 800 120 77 77",
+     "label": "Yagona aloqa markazi",
+     "source": "https://sqb.uz/uz/individuals/"
+    },
+    {
+     "number": "1180",
+     "label": "aloqa",
+     "source": "https://sqb.uz/uz/individuals/"
+    },
+    {
+     "number": "+998 71 200 43 43",
+     "label": "aloqa",
+     "source": "https://sqb.uz/uz/individuals/"
+    },
+    {
+     "number": "+998 78 777 11 80",
+     "label": "Ishonch telefoni",
+     "source": "https://sqb.uz/uz/individuals/"
+    }
+   ],
+   "confidence": "partial",
+   "notes": ""
+  },
+  {
+   "id": "ipotekabank",
+   "name": "Ipoteka-bank",
+   "kind": "bank",
+   "brand_keywords": [
+    "ipoteka",
+    "ipotekabank"
+   ],
+   "domains": [
+    "ipotekabank.uz"
+   ],
+   "domain_sources": [
+    "https://www.ipotekabank.uz/"
+   ],
+   "packages": [
+    {
+     "id": "com.IpotekaMobile.v2",
+     "source": "https://play.google.com/store/apps/details?id=com.IpotekaMobile.v2",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.asbt.ipotekabank2.mobilebank.yur",
+     "source": "https://play.google.com/store/apps/details?id=uz.asbt.ipotekabank2.mobilebank.yur",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1233",
+     "label": "Aloqa markazi 24/7",
+     "source": "https://www.ipotekabank.uz/"
+    },
+    {
+     "number": "+998 78 150 11 22",
+     "label": "aloqa",
+     "source": "https://www.ipotekabank.uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "trastbank",
+   "name": "Trastbank",
+   "kind": "bank",
+   "brand_keywords": [
+    "trastbank",
+    "trustbank"
+   ],
+   "domains": [
+    "trustbank.uz",
+    "trastbank.uz"
+   ],
+   "domain_sources": [
+    "https://trustbank.uz/uz/",
+    "https://trastbank.uz/uz/"
+   ],
+   "packages": [
+    {
+     "id": "trastpay.uz",
+     "source": "https://play.google.com/store/apps/details?id=trastpay.uz",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.micros24.trastbank.mobile",
+     "source": "https://play.google.com/store/apps/details?id=uz.micros24.trastbank.mobile",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.fb.cib.mobile.trast_new",
+     "source": "https://play.google.com/store/apps/details?id=uz.fb.cib.mobile.trast_new",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1287",
+     "label": "aloqa markazi",
+     "source": "https://trustbank.uz/uz/"
+    },
+    {
+     "number": "+998 78 140 00 88",
+     "label": "aloqa markazi",
+     "source": "https://trustbank.uz/uz/"
+    },
+    {
+     "number": "+998 71 207 36 45",
+     "label": "Ishonch telefoni",
+     "source": "https://trustbank.uz/uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "ofb",
+   "name": "Orient Finans bank",
+   "kind": "bank",
+   "brand_keywords": [
+    "orient finans"
+   ],
+   "domains": [
+    "ofb.uz"
+   ],
+   "domain_sources": [
+    "https://ofb.uz/"
+   ],
+   "packages": [
+    {
+     "id": "uz.ofbmobile.android",
+     "source": "https://play.google.com/store/apps/details?id=uz.ofbmobile.android",
+     "cert_sha256": []
+    },
+    {
+     "id": "com.bssys.mbcphone.uz.ofb",
+     "source": "https://play.google.com/store/apps/details?id=com.bssys.mbcphone.uz.ofb",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "4004",
+     "label": "Ishonch telefoni 24/7",
+     "source": "https://ofb.uz/"
+    },
+    {
+     "number": "+998 71 200 88 99",
+     "label": "Ishonch telefoni 24/7",
+     "source": "https://ofb.uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "tbc",
+   "name": "TBC Bank",
+   "kind": "bank",
+   "brand_keywords": [
+    "tbc bank",
+    "tbcbank"
+   ],
+   "domains": [
+    "tbcbank.uz",
+    "tbcbusiness.uz"
+   ],
+   "domain_sources": [
+    "https://tbcbank.uz/",
+    "https://play.google.com/store/apps/details?id=com.space.business.app.uzbekistan"
+   ],
+   "packages": [
+    {
+     "id": "ge.space.app.uzbekistan",
+     "source": "https://play.google.com/store/apps/details?id=ge.space.app.uzbekistan",
+     "cert_sha256": []
+    },
+    {
+     "id": "com.space.business.app.uzbekistan",
+     "source": "https://play.google.com/store/apps/details?id=com.space.business.app.uzbekistan",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1150",
+     "label": "Aloqa markazi",
+     "source": "https://tbcbank.uz/"
+    },
+    {
+     "number": "+998 78 777 27 27",
+     "label": "chet eldan",
+     "source": "https://tbcbank.uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "anorbank",
+   "name": "Anorbank",
+   "kind": "bank",
+   "brand_keywords": [
+    "anorbank",
+    "anor bank"
+   ],
+   "domains": [
+    "anorbank.uz"
+   ],
+   "domain_sources": [
+    "https://anorbank.uz/"
+   ],
+   "packages": [
+    {
+     "id": "uz.anormobile.retail",
+     "source": "https://play.google.com/store/apps/details?id=uz.anormobile.retail",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.anorbank.business",
+     "source": "https://play.google.com/store/apps/details?id=uz.anorbank.business",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1290",
+     "label": "aloqa",
+     "source": "https://anorbank.uz/"
+    },
+    {
+     "number": "+998 55 503 00 00",
+     "label": "aloqa",
+     "source": "https://anorbank.uz/"
+    },
+    {
+     "number": "+998 55 503 11 11",
+     "label": "aloqa",
+     "source": "https://anorbank.uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "davrbank",
+   "name": "Davr bank",
+   "kind": "bank",
+   "brand_keywords": [
+    "davrbank",
+    "davr bank"
+   ],
+   "domains": [
+    "davrbank.uz"
+   ],
+   "domain_sources": [
+    "https://davrbank.uz/uz"
+   ],
+   "packages": [
+    {
+     "id": "uz.davrbank.mobile",
+     "source": "https://play.google.com/store/apps/details?id=uz.davrbank.mobile",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.davrbank.davrbusiness",
+     "source": "https://play.google.com/store/apps/details?id=uz.davrbank.davrbusiness",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1284",
+     "label": "aloqa",
+     "source": "https://davrbank.uz/uz"
+    },
+    {
+     "number": "+998 71 207 40 40",
+     "label": "aloqa",
+     "source": "https://davrbank.uz/uz"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "infinbank",
+   "name": "InfinBank",
+   "kind": "bank",
+   "brand_keywords": [
+    "infinbank"
+   ],
+   "domains": [
+    "infinbank.com"
+   ],
+   "domain_sources": [
+    "https://www.infinbank.com/uz/"
+   ],
+   "packages": [
+    {
+     "id": "uz.xsoft.myinfin",
+     "source": "https://play.google.com/store/apps/details?id=uz.xsoft.myinfin",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.infin.business",
+     "source": "https://play.google.com/store/apps/details?id=uz.infin.business",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "+998 71 202 50 60",
+     "label": "mijozlar xizmati",
+     "source": "https://www.infinbank.com/uz/"
+    },
+    {
+     "number": "1214",
+     "label": "biznes",
+     "source": "https://www.infinbank.com/uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "turonbank",
+   "name": "Turonbank",
+   "kind": "bank",
+   "brand_keywords": [
+    "turonbank"
+   ],
+   "domains": [
+    "turonbank.uz"
+   ],
+   "domain_sources": [
+    "https://turonbank.uz/uz/"
+   ],
+   "packages": [
+    {
+     "id": "com.colvir.turon.mobile",
+     "source": "https://play.google.com/store/apps/details?id=com.colvir.turon.mobile",
+     "cert_sha256": []
+    },
+    {
+     "id": "com.colvir.turon.ul",
+     "source": "https://play.google.com/store/apps/details?id=com.colvir.turon.ul",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1220",
+     "label": "Yagona telefon-markazi",
+     "source": "https://turonbank.uz/uz/"
+    },
+    {
+     "number": "+998 71 202 01 01",
+     "label": "Yagona telefon-markazi",
+     "source": "https://turonbank.uz/uz/"
+    },
+    {
+     "number": "+998 71 244 38 76",
+     "label": "Ishonch telefoni",
+     "source": "https://turonbank.uz/uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "mkbank",
+   "name": "Mikrokreditbank",
+   "kind": "bank",
+   "brand_keywords": [
+    "mikrokreditbank",
+    "mkbank",
+    "mavrid"
+   ],
+   "domains": [
+    "mkbank.uz",
+    "mikrokreditbank.uz"
+   ],
+   "domain_sources": [
+    "https://mkbank.uz/uz/",
+    "https://mikrokreditbank.uz/uz/"
+   ],
+   "packages": [
+    {
+     "id": "uz.tune.mkbdbo",
+     "source": "https://play.google.com/store/apps/details?id=uz.tune.mkbdbo",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.fb.cib.mobile.mikrokreditbank",
+     "source": "https://play.google.com/store/apps/details?id=uz.fb.cib.mobile.mikrokreditbank",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1285",
+     "label": "aloqa",
+     "source": "https://mkbank.uz/uz/"
+    },
+    {
+     "number": "+998 55 503 63 63",
+     "label": "aloqa",
+     "source": "https://mkbank.uz/uz/"
+    },
+    {
+     "number": "+998 71 202 99 99",
+     "label": "Ishonch telefoni",
+     "source": "https://mkbank.uz/uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "mygov",
+   "name": "MyGov",
+   "kind": "gov",
+   "brand_keywords": [
+    "mygov"
+   ],
+   "domains": [
+    "my.gov.uz"
+   ],
+   "domain_sources": [
+    "https://my.gov.uz/uz"
+   ],
+   "packages": [
+    {
+     "id": "uz.uzinfocom.mygov",
+     "source": "https://play.google.com/store/apps/details?id=uz.uzinfocom.mygov",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1242",
+     "label": "umumiy savollar 24/7",
+     "source": "https://my.gov.uz/uz"
+    },
+    {
+     "number": "1148",
+     "label": "taklif va shikoyatlar",
+     "source": "https://my.gov.uz/uz"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "soliq",
+   "name": "Soliq qo'mitasi",
+   "kind": "gov",
+   "brand_keywords": [
+    "soliq"
+   ],
+   "domains": [
+    "soliq.uz"
+   ],
+   "domain_sources": [
+    "https://gov.uz/oz/soliq",
+    "https://play.google.com/store/apps/details?id=uz.soliq.mobile"
+   ],
+   "packages": [
+    {
+     "id": "uz.soliq.mobile",
+     "source": "https://play.google.com/store/apps/details?id=uz.soliq.mobile",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.soliq.inspektor",
+     "source": "https://play.google.com/store/apps/details?id=uz.soliq.inspektor",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1198",
+     "label": "Ishonch telefoni",
+     "source": "https://gov.uz/oz/soliq"
+    },
+    {
+     "number": "+998 71 244 98 98",
+     "label": "Ishonch telefoni",
+     "source": "https://gov.uz/oz/soliq"
+    }
+   ],
+   "confidence": "partial",
+   "notes": ""
+  },
+  {
+   "id": "iiv",
+   "name": "Ichki ishlar vazirligi",
+   "kind": "gov",
+   "brand_keywords": [
+    "ichki ishlar"
+   ],
+   "domains": [],
+   "domain_sources": [],
+   "packages": [],
+   "phones": [
+    {
+     "number": "102",
+     "label": "Call-markaz",
+     "source": "https://gov.uz/oz/iiv"
+    },
+    {
+     "number": "1102",
+     "label": "Call-markaz",
+     "source": "https://gov.uz/oz/iiv"
+    }
+   ],
+   "confidence": "partial",
+   "notes": "Sayt gov.uz/oz/iiv (iiv.uz DNS'da yo'q). Rasmiy ilova tasdiqlanmadi"
+  },
+  {
+   "id": "cbu",
+   "name": "Markaziy bank",
+   "kind": "gov",
+   "brand_keywords": [
+    "markaziy bank"
+   ],
+   "domains": [
+    "cbu.uz"
+   ],
+   "domain_sources": [
+    "https://cbu.uz/uz/"
+   ],
+   "packages": [],
+   "phones": [
+    {
+     "number": "1800",
+     "label": "Aloqa markazi",
+     "source": "https://cbu.uz/uz/"
+    },
+    {
+     "number": "+998 71 200 00 44",
+     "label": "Ishonch telefoni",
+     "source": "https://cbu.uz/uz/"
+    }
+   ],
+   "confidence": "partial",
+   "notes": ""
+  },
+  {
+   "id": "govuz",
+   "name": "Hukumat portali",
+   "kind": "gov",
+   "brand_keywords": [],
+   "domains": [
+    "gov.uz"
+   ],
+   "domain_sources": [
+    "https://gov.uz/oz"
+   ],
+   "packages": [],
+   "phones": [],
+   "confidence": "partial",
+   "notes": ""
+  },
+  {
+   "id": "beeline",
+   "name": "Beeline",
+   "kind": "telecom",
+   "brand_keywords": [
+    "beeline"
+   ],
+   "domains": [
+    "beeline.uz"
+   ],
+   "domain_sources": [
+    "https://beeline.uz/uz/"
+   ],
+   "packages": [
+    {
+     "id": "uz.beeline.odp",
+     "source": "https://play.google.com/store/apps/details?id=uz.beeline.odp",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "0611",
+     "label": "Beeline abonentlari",
+     "source": "https://beeline.uz/uz/"
+    },
+    {
+     "number": "+998 90 185 00 55",
+     "label": "istalgan raqamdan",
+     "source": "https://beeline.uz/uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "ucell",
+   "name": "Ucell",
+   "kind": "telecom",
+   "brand_keywords": [
+    "ucell"
+   ],
+   "domains": [
+    "ucell.uz"
+   ],
+   "domain_sources": [
+    "https://ucell.uz/uz"
+   ],
+   "packages": [
+    {
+     "id": "uz.ucell.ucellmobile",
+     "source": "https://play.google.com/store/apps/details?id=uz.ucell.ucellmobile",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "8123",
+     "label": "Ucell abonentlari",
+     "source": "https://ucell.uz/uz"
+    },
+    {
+     "number": "+998 93 180 00 00",
+     "label": "istalgan raqamdan",
+     "source": "https://ucell.uz/uz"
+    },
+    {
+     "number": "+998 93 181 00 00",
+     "label": "istalgan raqamdan",
+     "source": "https://ucell.uz/uz"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "mobiuz",
+   "name": "Mobiuz",
+   "kind": "telecom",
+   "brand_keywords": [
+    "mobiuz"
+   ],
+   "domains": [
+    "mobi.uz"
+   ],
+   "domain_sources": [
+    "https://mobi.uz/uz/"
+   ],
+   "packages": [
+    {
+     "id": "uz.mobiuz.mobiservice",
+     "source": "https://play.google.com/store/apps/details?id=uz.mobiuz.mobiservice",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "0890",
+     "label": "aloqa",
+     "source": "https://mobi.uz/uz/"
+    },
+    {
+     "number": "+998 97 130 09 09",
+     "label": "aloqa",
+     "source": "https://mobi.uz/uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "uztelecom",
+   "name": "Uztelecom",
+   "kind": "telecom",
+   "brand_keywords": [
+    "uztelecom",
+    "uzmobile"
+   ],
+   "domains": [
+    "uztelecom.uz",
+    "uzmobile.uz"
+   ],
+   "domain_sources": [
+    "https://uztelecom.uz/uz/"
+   ],
+   "packages": [
+    {
+     "id": "uz.uztelecom.telecom",
+     "source": "https://play.google.com/store/apps/details?id=uz.uztelecom.telecom",
+     "cert_sha256": []
+    },
+    {
+     "id": "uz.telecom.telecomtv",
+     "source": "https://play.google.com/store/apps/details?id=uz.telecom.telecomtv",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [
+    {
+     "number": "1099",
+     "label": "Uzmobile",
+     "source": "https://uztelecom.uz/uz/"
+    },
+    {
+     "number": "1084",
+     "label": "internet/IPTV",
+     "source": "https://uztelecom.uz/uz/"
+    },
+    {
+     "number": "1155",
+     "label": "korporativ",
+     "source": "https://uztelecom.uz/uz/"
+    }
+   ],
+   "confidence": "verified",
+   "notes": ""
+  },
+  {
+   "id": "olx",
+   "name": "OLX",
+   "kind": "marketplace",
+   "brand_keywords": [
+    "olx"
+   ],
+   "domains": [
+    "olx.uz"
+   ],
+   "domain_sources": [
+    "https://www.olx.uz/"
+   ],
+   "packages": [
+    {
+     "id": "com.torg.torg",
+     "source": "https://play.google.com/store/apps/details?id=com.torg.torg",
+     "cert_sha256": []
+    }
+   ],
+   "phones": [],
+   "confidence": "verified",
+   "notes": ""
+  }
+ ],
+ "malicious": {
+  "apk_sha256": [],
+  "cert_sha256": [],
+  "domains": [],
+  "phones": []
+ },
+ "url_shorteners": [
+  "bit.ly",
+  "tinyurl.com",
+  "cutt.ly",
+  "t.ly",
+  "clck.ru",
+  "goo.su",
+  "is.gd",
+  "rb.gy",
+  "shorturl.at",
+  "tiny.cc",
+  "ow.ly",
+  "s.id",
+  "u.to",
+  "vk.cc"
+ ],
+ "risky_tlds": [
+  "top",
+  "xyz",
+  "icu",
+  "shop",
+  "online",
+  "site",
+  "click",
+  "buzz",
+  "live",
+  "store",
+  "monster",
+  "sbs",
+  "cfd",
+  "rest",
+  "quest",
+  "lol",
+  "fun"
+ ],
+ "trusted_installers": {
+  "com.android.vending": "Google Play",
+  "com.sec.android.app.samsungapps": "Galaxy Store",
+  "com.huawei.appmarket": "Huawei AppGallery",
+  "com.xiaomi.market": "Xiaomi GetApps",
+  "com.xiaomi.mipicks": "Xiaomi GetApps",
+  "com.heytap.market": "OPPO App Market",
+  "com.bbk.appstore": "vivo App Store",
+  "com.oppo.market": "OPPO App Market",
+  "ru.vk.store": "RuStore"
+ },
+ "messenger_installers": {
+  "org.telegram.messenger": "Telegram",
+  "org.telegram.messenger.web": "Telegram",
+  "org.thunderdog.challegram": "Telegram X",
+  "com.whatsapp": "WhatsApp",
+  "com.imo.android.imoim": "imo",
+  "com.android.chrome": "Chrome",
+  "com.opera.browser": "Opera",
+  "com.yandex.browser": "Yandex Browser"
+ },
+ "lookalike_packages": [
+  {
+   "id": "uz.iiv.portal",
+   "claims": "Ichki ishlar vazirligi",
+   "source": "https://play.google.com/store/apps/details?id=uz.iiv.portal",
+   "reason": "Dasturchi sifatida vazirlik ko'rsatilgan, lekin aloqa gmail, maxfiylik siyosati github.io'da"
+  },
+  {
+   "id": "uz.meganet.uzmobile",
+   "claims": "Uzmobile",
+   "source": "https://play.google.com/store/apps/details?id=uz.meganet.uzmobile",
+   "reason": "Dasturchi 'Rasmiy Mobile Operator XK' (gmail), Uztelecom emas"
+  },
+  {
+   "id": "uz.pdp.uzmobile",
+   "claims": "Uztelecom",
+   "source": "https://play.google.com/store/apps/details?id=uz.pdp.uzmobile",
+   "reason": "Dasturchi IMKON MOBIL ALOQA, Uztelecom emas"
+  },
+  {
+   "id": "mobile.uzcard.uz.uzcard",
+   "claims": "Uzcard",
+   "source": "https://play.google.com/store/apps/details?id=mobile.uzcard.uz.uzcard",
+   "reason": "Bu Plum (PLUM TECHNOLOGIES) ilovasi, Uzcard'ning o'zi emas",
+   "severity": "info"
+  }
+ ],
+ "registry_checked": "2026-11-01"
+}

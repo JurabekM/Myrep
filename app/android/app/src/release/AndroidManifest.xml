@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Q5: reliz APK'da tarmoq ruxsati bo'lmasligi kafolati. Biror kutubxona INTERNET'ni
+         qo'shsa ham, manifest merger uni shu yerda olib tashlaydi. tools/check_release.py
+         yig'ilgan APK'da buni aapt2 bilan alohida tekshiradi. -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+</manifest>
