@@ -1,0 +1,23 @@
+# Yig'ilgan APK'lar gitga kirmaydi (release/ ga qo'lda ko'chiriladi)
+release/*.apk
+*.apk
+!app/android/app/src/main/assets/**
+
+# Sinov APK loyihasi
+tools/testapks/.gradle/
+tools/testapks/build/
+tools/testapks/app/build/
+tools/testapks/local.properties
+
+__pycache__/
+*.pyc
+
+# Maxfiy kalitlar hech qachon repoda bo'lmaydi
+*.seed
+key.properties
+*.jks
+*.keystore
+
+# Reliz natijalari (tools/build_release.ps1): APK, AAB, mapping, Dart belgilari
+release/*/
+*.aab

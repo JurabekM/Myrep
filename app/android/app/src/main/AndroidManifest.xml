@@ -1,0 +1,87 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Q1: minimal ruxsatlar. INTERNET yo'q (reliz manifestida majburan olib tashlanadi),
+         MANAGE_EXTERNAL_STORAGE va Accessibility yo'q. -->
+    <!-- Qurilma auditi uchun barcha o'rnatilgan ilovalarni ko'rish (Play: antivirus toifasi). -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- F2: Qo'ng'iroq Qalqoni ogohlantirishi (Android 13+ da foydalanuvchi ruxsat beradi). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:label="ROSTOR-2"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- T1: Telegram yoki fayl menejerida APK bosilganda "ROSTOR-2 bilan ochish" tanlovi. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:mimeType="application/vnd.android.package-archive"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="application/vnd.android.package-archive"/>
+            </intent-filter>
+            <!-- Havola yoki xabar matnini "Ulashish" orqali tekshirish. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+            <!-- Istalgan ilovada matnni belgilab, menyudan "ROSTOR-2 bilan tekshirish". -->
+            <intent-filter android:label="@string/process_text_label">
+                <action android:name="android.intent.action.PROCESS_TEXT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+        </activity>
+        <!-- F2: kiruvchi qo'ng'iroqni bazadagi raqamlar bilan solishtirish. Tizim faqat
+             foydalanuvchi ROSTOR-2 ga "qo'ng'iroqlarni saralash" rolini berganda bog'laydi. -->
+        <service
+            android:name=".call.ShieldScreeningService"
+            android:permission="android.permission.BIND_SCREENING_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService"/>
+            </intent-filter>
+        </service>
+        <!-- F3: imzolangan hisobot faylini foydalanuvchi tanlagan ilovaga faqat o'qish uchun berish. -->
+        <provider
+            android:name=".report.ReportFileProvider"
+            android:authorities="uz.rostor.rostor2.reports"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
+</manifest>
