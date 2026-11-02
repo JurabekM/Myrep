@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HavoRadar belgisi: quyosh (issiqlik) va shamol to'lqinlari (havo). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Adaptiv ikonka xavfsiz zonasi (66dp doira) ichida qolishi uchun 0,8 ga kichraytirilgan. -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.8"
+        android:scaleY="0.8">
+        <path
+            android:fillColor="#D97757"
+            android:pathData="M46,30a14,14 0,1 1,0 28a14,14 0,1 1,0 -28z" />
+        <path
+            android:strokeColor="#D97757"
+            android:strokeWidth="4"
+            android:strokeLineCap="round"
+            android:pathData="M46,20L46,24M46,64L46,68M22,44L26,44M66,44L70,44M29,27L32,30M60,58L63,61M29,61L32,58M60,30L63,27" />
+        <path
+            android:strokeColor="#FAF9F5"
+            android:strokeWidth="4"
+            android:strokeLineCap="round"
+            android:fillColor="#00000000"
+            android:pathData="M40,72c6,-5 12,-5 18,0s12,5 18,0M34,82c6,-5 12,-5 18,0s12,5 18,0" />
+        <path
+            android:strokeColor="#FAF9F5"
+            android:strokeAlpha="0.6"
+            android:strokeWidth="4"
+            android:strokeLineCap="round"
+            android:fillColor="#00000000"
+            android:pathData="M58,52c5,-4 10,-4 15,0s10,4 15,0" />
+    </group>
+</vector>

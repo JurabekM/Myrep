@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Myrep dizayn tokenlari (CLAUDE.md, Claude Code dark uslubi). -->
+<resources>
+    <color name="paper">#FF262624</color>
+    <color name="sidebar">#FF1F1E1D</color>
+    <color name="surface">#FF30302E</color>
+    <color name="line">#FF4A4945</color>
+    <color name="ink">#FFFAF9F5</color>
+    <color name="ink_muted">#FFA6A39A</color>
+    <color name="accent">#FFD97757</color>
+    <color name="accent_text">#FFE8957A</color>
+    <color name="warn">#FFE0A458</color>
+    <color name="danger">#FFE5786D</color>
+    <!-- Xavf darajalari (Flutter'dagi LevelColors bilan bir xil). -->
+    <color name="level_calm">#FF7FB77E</color>
+    <color name="level_watch">#FF8FB3D9</color>
+    <color name="level_advisory">#FFE0A458</color>
+    <color name="level_warning">#FFE8957A</color>
+    <color name="level_emergency">#FFE5786D</color>
+</resources>

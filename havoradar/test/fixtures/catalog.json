@@ -1,0 +1,538 @@
+{
+    "places": [
+        {
+            "id": "tashkent",
+            "name": "Toshkent",
+            "abroad": false
+        },
+        {
+            "id": "chirchiq",
+            "name": "Chirchiq",
+            "abroad": false
+        },
+        {
+            "id": "angren",
+            "name": "Angren",
+            "abroad": false
+        },
+        {
+            "id": "andijan",
+            "name": "Andijon",
+            "abroad": false
+        },
+        {
+            "id": "namangan",
+            "name": "Namangan",
+            "abroad": false
+        },
+        {
+            "id": "fergana",
+            "name": "Farg'ona",
+            "abroad": false
+        },
+        {
+            "id": "kokand",
+            "name": "Qo'qon",
+            "abroad": false
+        },
+        {
+            "id": "guliston",
+            "name": "Guliston",
+            "abroad": false
+        },
+        {
+            "id": "jizzakh",
+            "name": "Jizzax",
+            "abroad": false
+        },
+        {
+            "id": "samarkand",
+            "name": "Samarqand",
+            "abroad": false
+        },
+        {
+            "id": "navoi",
+            "name": "Navoiy",
+            "abroad": false
+        },
+        {
+            "id": "bukhara",
+            "name": "Buxoro",
+            "abroad": false
+        },
+        {
+            "id": "karshi",
+            "name": "Qarshi",
+            "abroad": false
+        },
+        {
+            "id": "shahrisabz",
+            "name": "Shahrisabz",
+            "abroad": false
+        },
+        {
+            "id": "termez",
+            "name": "Termiz",
+            "abroad": false
+        },
+        {
+            "id": "urgench",
+            "name": "Urganch",
+            "abroad": false
+        },
+        {
+            "id": "khiva",
+            "name": "Xiva",
+            "abroad": false
+        },
+        {
+            "id": "nukus",
+            "name": "Nukus",
+            "abroad": false
+        },
+        {
+            "id": "muynak",
+            "name": "Mo'ynoq",
+            "abroad": false
+        },
+        {
+            "id": "almaty",
+            "name": "Olmaota (Qozog'iston)",
+            "abroad": true
+        },
+        {
+            "id": "bishkek",
+            "name": "Bishkek (Qirg'iziston)",
+            "abroad": true
+        },
+        {
+            "id": "dushanbe",
+            "name": "Dushanbe (Tojikiston)",
+            "abroad": true
+        },
+        {
+            "id": "ashgabat",
+            "name": "Ashxobod (Turkmaniston)",
+            "abroad": true
+        },
+        {
+            "id": "moscow",
+            "name": "Moskva (Rossiya)",
+            "abroad": true
+        },
+        {
+            "id": "istanbul",
+            "name": "Istanbul (Turkiya)",
+            "abroad": true
+        },
+        {
+            "id": "dubai",
+            "name": "Dubay (BAA)",
+            "abroad": true
+        },
+        {
+            "id": "mecca",
+            "name": "Makka (Saudiya Arabistoni)",
+            "abroad": true
+        },
+        {
+            "id": "medina",
+            "name": "Madina (Saudiya Arabistoni)",
+            "abroad": true
+        },
+        {
+            "id": "seoul",
+            "name": "Seul (Janubiy Koreya)",
+            "abroad": true
+        },
+        {
+            "id": "delhi",
+            "name": "Dehli (Hindiston)",
+            "abroad": true
+        }
+    ],
+    "levels": [
+        {
+            "level": "CALM",
+            "name": "Xavfsiz",
+            "minScore": 0,
+            "advice": "Alohida choralar shart emas."
+        },
+        {
+            "level": "WATCH",
+            "name": "Kuzatuv",
+            "minScore": 20,
+            "advice": "Sezgir guruhlar ehtiyot bo'lsin, prognozni kuzatib boring."
+        },
+        {
+            "level": "ADVISORY",
+            "name": "Ehtiyot",
+            "minScore": 40,
+            "advice": "Ochiq havoda uzoq va og'ir jismoniy ishni kamaytiring; sezgir guruhlar alohida ehtiyot bo'lsin."
+        },
+        {
+            "level": "WARNING",
+            "name": "Xavfli",
+            "minScore": 60,
+            "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+        },
+        {
+            "level": "EMERGENCY",
+            "name": "Favqulodda",
+            "minScore": 80,
+            "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+        }
+    ],
+    "vulnerabilities": [
+        {
+            "id": "ELDERLY",
+            "name": "65 yoshdan kattalar",
+            "heat": true,
+            "air": true
+        },
+        {
+            "id": "CHILD",
+            "name": "Yosh bolalar",
+            "heat": true,
+            "air": true
+        },
+        {
+            "id": "PREGNANT",
+            "name": "Homiladorlik",
+            "heat": true,
+            "air": true
+        },
+        {
+            "id": "HEART",
+            "name": "Yurak-qon tomir kasalligi yoki gipertoniya",
+            "heat": true,
+            "air": true
+        },
+        {
+            "id": "LUNG",
+            "name": "Astma yoki surunkali o'pka kasalligi",
+            "heat": true,
+            "air": true
+        },
+        {
+            "id": "DIABETES",
+            "name": "Qandli diabet",
+            "heat": true,
+            "air": false
+        },
+        {
+            "id": "OUTDOOR",
+            "name": "Ochiq havoda ishlash yoki sport",
+            "heat": true,
+            "air": true
+        }
+    ],
+    "uvCategories": [
+        {
+            "category": "LOW",
+            "name": "Past",
+            "min": 0.0,
+            "advice": "Himoya shart emas."
+        },
+        {
+            "category": "MODERATE",
+            "name": "O'rtacha",
+            "min": 3.0,
+            "advice": "Himoya kerak: tushlik paytida soyada turing, bosh kiyim va quyosh ko'zoynagi taqing, quyoshdan himoya kremi surting."
+        },
+        {
+            "category": "HIGH",
+            "name": "Yuqori",
+            "min": 6.0,
+            "advice": "Himoya kerak: tushlik paytida soyada turing, yopiq kiyim, bosh kiyim, ko'zoynak va quyoshdan himoya kremi."
+        },
+        {
+            "category": "VERY_HIGH",
+            "name": "Juda yuqori",
+            "min": 8.0,
+            "advice": "Qo'shimcha himoya: tushlik soatlarida tashqarida bo'lmang; soya, kiyim, bosh kiyim va krem majburiy."
+        },
+        {
+            "category": "EXTREME",
+            "name": "Haddan tashqari",
+            "min": 11.0,
+            "advice": "Qo'shimcha himoya: tushlik soatlarida tashqarida bo'lmang; soya, kiyim, bosh kiyim va krem majburiy."
+        }
+    ],
+    "guide": [
+        {
+            "id": "heat_stroke",
+            "title": "Issiq urishi",
+            "icon": "emergency",
+            "urgent": true,
+            "summary": "Eng xavfli issiqlik kasalligi: organizm haroratni boshqara olmay qoladi. Tez yordamsiz nogironlik yoki o'limga olib kelishi mumkin.",
+            "sections": [
+                {
+                    "title": "Belgilari",
+                    "items": [
+                        "Chalkashlik, o'zini g'alati tutish, nutqning buzilishi",
+                        "Hushdan ketish",
+                        "Teri issiq va quruq yoki juda ko'p terlash",
+                        "Tutqanoq",
+                        "Juda yuqori tana harorati"
+                    ]
+                },
+                {
+                    "title": "Nima qilish kerak",
+                    "items": [
+                        "Darhol 103 ga qo'ng'iroq qiling — bu favqulodda holat.",
+                        "Tez yordam kelguncha odamni yolg'iz qoldirmang.",
+                        "Uni soyali, salqin joyga o'tkazing va ustki kiyimlarini yeching.",
+                        "Tezda soviting: sovuq suv, teriga sovuq nam mato, kiyimni salqin suvda ho'llang, havoni yelpiting.",
+                        "Bosh, bo'yin, qo'ltiq osti va chov sohasiga sovuq nam mato yoki muz qo'ying."
+                    ]
+                }
+            ],
+            "sources": [
+                {
+                    "name": "CDC NIOSH — Heat-related illnesses",
+                    "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html"
+                }
+            ]
+        },
+        {
+            "id": "heat_exhaustion",
+            "title": "Issiqlikdan holsizlanish",
+            "icon": "thermostat",
+            "urgent": false,
+            "summary": "Ko'p terlash natijasida organizm suv va tuzni yo'qotadi. Davolanmasa, issiq urishiga o'tishi mumkin.",
+            "sections": [
+                {
+                    "title": "Belgilari",
+                    "items": [
+                        "Bosh og'rig'i, bosh aylanishi",
+                        "Ko'ngil aynishi",
+                        "Holsizlik, asabiylik",
+                        "Chanqoq, kuchli terlash",
+                        "Tana harorati ko'tarilgan",
+                        "Siydik kamaygan"
+                    ]
+                },
+                {
+                    "title": "Nima qilish kerak",
+                    "items": [
+                        "Shifokor ko'rigiga olib boring; tibbiy yordam bo'lmasa — 103.",
+                        "Yordam kelguncha yonida kimdir bo'lsin.",
+                        "Issiq joydan olib chiqing, ortiqcha kiyimni (oyoq kiyim va paypoqni ham) yeching.",
+                        "Sovuq kompress qo'ying yoki bosh, yuz va bo'yinni sovuq suv bilan yuvdiring.",
+                        "Salqin suvdan tez-tez ho'plab ichiring."
+                    ]
+                }
+            ],
+            "sources": [
+                {
+                    "name": "CDC NIOSH — Heat-related illnesses",
+                    "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html"
+                }
+            ]
+        },
+        {
+            "id": "heat_minor",
+            "title": "Mushak tortishishi, hushdan ketish, issiqlik toshmasi",
+            "icon": "healing",
+            "urgent": false,
+            "summary": "Yengilroq, lekin e'tibor talab qiladigan holatlar. Ular issiqlikdan holsizlanishning boshlanishi ham bo'lishi mumkin.",
+            "sections": [
+                {
+                    "title": "Issiqlikdan mushak tortishishi",
+                    "items": [
+                        "Belgilari: og'ir ish paytida qorin, qo'l yoki oyoqda og'riqli tortishish.",
+                        "Har 15–20 daqiqada suv iching; yo'qotilgan tuz va uglevodni to'ldiradigan yengil ovqat yoki ichimlik iste'mol qiling. Tuz tabletkasini ichmang.",
+                        "Yurak kasalligi bo'lsa, kam tuzli parhezda bo'lsangiz yoki tortishish 1 soatda o'tmasa — tibbiy yordam oling."
+                    ]
+                },
+                {
+                    "title": "Issiqda hushdan ketish yoki bosh aylanishi",
+                    "items": [
+                        "Ko'pincha uzoq tik turganda yoki o'tirgan joydan to'satdan turganda bo'ladi.",
+                        "Salqin joyda o'tiring yoki yoting, sekin-asta suv, tiniq sharbat yoki sport ichimligi iching."
+                    ]
+                },
+                {
+                    "title": "Issiqlik toshmasi",
+                    "items": [
+                        "Belgilari: bo'yin, ko'krak, chov, tirsak bukilmalarida qizil mayda pufakchalar.",
+                        "Salqinroq va quruqroq joyda bo'ling, toshma joyini quruq tuting; malham va krem surtmang."
+                    ]
+                }
+            ],
+            "sources": [
+                {
+                    "name": "CDC NIOSH — Heat-related illnesses",
+                    "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html"
+                }
+            ]
+        },
+        {
+            "id": "heat_prevention",
+            "title": "Issiqda o'zingizni va uyni salqin saqlash",
+            "icon": "home",
+            "urgent": false,
+            "summary": "Issiqlik kasalliklarining aksariyatini oddiy choralar bilan oldini olsa bo'ladi.",
+            "sections": [
+                {
+                    "title": "Suv",
+                    "items": [
+                        "Chanqashni kutmasdan kun bo'yi suv iching, yoningizda suv idishi bo'lsin.",
+                        "Shakar va tuzi ko'p ichimliklar, kofein va spirtli ichimliklarni cheklang.",
+                        "Siydik och sariq yoki tiniq bo'lsa — odatda suv yetarli ichilyapti."
+                    ]
+                },
+                {
+                    "title": "Salqinlik",
+                    "items": [
+                        "Konditsionerli yoki salqin joyda bo'ling.",
+                        "Ventilyatorni faqat xona harorati 32°C dan past bo'lsa ishlating: undan yuqorida ventilyator tana haroratini oshirishi mumkin.",
+                        "Kunduzi parda va darchalarni yoping, tunda salqin havoda derazalarni oching.",
+                        "Bolani yoki uy hayvonini to'xtab turgan mashinada hech qachon qoldirmang."
+                    ]
+                },
+                {
+                    "title": "Dori-darmonlar",
+                    "items": [
+                        "Ko'p dorilar issiqda suvsizlanish yoki qizib ketish xavfini oshiradi.",
+                        "Shifokor bilan gaplashmasdan dorini to'xtatmang va dozasini o'zgartirmang.",
+                        "Ba'zi dorilarni issiq joyda saqlab bo'lmaydi; elektr o'chib qolsa, muzlatgichdagi dorilar uchun reja tuzib qo'ying."
+                    ]
+                },
+                {
+                    "title": "Yaqinlaringiz",
+                    "items": [
+                        "Yolg'iz yashaydigan, keksa, yurak, o'pka yoki buyrak kasalligi bor yaqinlaringiz va qo'shnilaringizdan muntazam xabar oling.",
+                        "65 yoshdan kattalarni issiq kunlarda kuniga ikki marta tekshiring: suv ichyaptimi, salqin joy bormi, o'zini qanday his qilyapti?"
+                    ]
+                }
+            ],
+            "sources": [
+                {
+                    "name": "CDC — About heat and your health",
+                    "url": "https://www.cdc.gov/heat-health/about/index.html"
+                },
+                {
+                    "name": "CDC — Heat and older adults",
+                    "url": "https://www.cdc.gov/heat-health/risk-factors/heat-and-older-adults-aged-65.html"
+                },
+                {
+                    "name": "JSST — Climate change, heat and health",
+                    "url": "https://www.who.int/news-room/fact-sheets/detail/climate-change-heat-and-health"
+                }
+            ]
+        },
+        {
+            "id": "groups",
+            "title": "Sezgir guruhlar",
+            "icon": "groups",
+            "urgent": false,
+            "summary": "Issiqlik har kimga ta'sir qiladi, lekin ba'zi guruhlar uchun xavf yuqoriroq. Profilingizda belgilasangiz, ilova ularni hisobga olib ertaroq ogohlantiradi.",
+            "sections": [
+                {
+                    "title": "Kimlar uchun xavf yuqori",
+                    "items": [
+                        "65 yoshdan kattalar",
+                        "Go'daklar va yosh bolalar",
+                        "Homiladorlar",
+                        "Yurak-qon tomir kasalligi bor odamlar",
+                        "Astma (ayniqsa bolalarda) va boshqa surunkali o'pka kasalliklari",
+                        "Ochiq havoda ishlaydigan yoki sport bilan shug'ullanadiganlar",
+                        "Surunkali kasalliklari bor odamlar (masalan, qandli diabet)"
+                    ]
+                },
+                {
+                    "title": "Ochiq havoda ishlaydiganlar",
+                    "items": [
+                        "Yangi ishchi birinchi kuni issiqda odatdagi ish vaqtining 20% idan ko'p ishlamasin, keyin har kuni ko'pi bilan 20% ga oshirsin.",
+                        "Tajribali ishchi ham (masalan, ta'tildan keyin) birinchi kuni 50% dan boshlasin.",
+                        "Har 15–20 daqiqada suv iching, soyada dam oling, o'zingizda va hamkasblaringizda belgilarni kuzating."
+                    ]
+                }
+            ],
+            "sources": [
+                {
+                    "name": "CDC — About heat and your health",
+                    "url": "https://www.cdc.gov/heat-health/about/index.html"
+                },
+                {
+                    "name": "CDC NIOSH — Workplace recommendations",
+                    "url": "https://www.cdc.gov/niosh/heat-stress/recommendations/index.html"
+                }
+            ]
+        },
+        {
+            "id": "air",
+            "title": "Havo ifloslanishi",
+            "icon": "air",
+            "urgent": false,
+            "summary": "Mayda zarrachalar (PM2.5) o'pkaga chuqur kirib, qon oqimiga o'tishi mumkin. Ular yurak-qon tomir va nafas yo'llari kasalliklari xavfini oshiradi.",
+            "sections": [
+                {
+                    "title": "JSST tavsiyalari (2021)",
+                    "items": [
+                        "PM2.5: 24 soatlik o'rtacha 15 µg/m³, yillik o'rtacha 5 µg/m³ dan oshmasligi kerak.",
+                        "PM10: 24 soatlik o'rtacha 45 µg/m³.",
+                        "Ozon: 8 soatlik eng yuqori 100 µg/m³.",
+                        "Azot dioksidi: 24 soatlik o'rtacha 25 µg/m³."
+                    ]
+                },
+                {
+                    "title": "Ifloslanish yuqori kunlarda",
+                    "items": [
+                        "Ochiq havodagi og'ir jismoniy faollikni qisqartiring yoki yopiq joyga ko'chiring.",
+                        "Derazalarni yopiq tuting; HEPA filtrli havo tozalagich bo'lsa, yoqing.",
+                        "Uy ichida tutunni kamaytiring: chekmang, ochiq olov va tutatqi ishlatmang.",
+                        "Tashqariga chiqish zarur bo'lsa, yuzga zich yopishadigan N95/FFP2 respirator taqing.",
+                        "Astma bo'lsa, ingalyatorni yoningizda saqlang va shifokor bergan harakat rejasiga amal qiling.",
+                        "Nafas qisishi, ko'krakda og'riq yoki xirillash kuchaysa — shifokorga murojaat qiling."
+                    ]
+                },
+                {
+                    "title": "Ma'lumot haqida",
+                    "items": [
+                        "Ilovadagi havo sifati — Copernicus CAMS modeli prognozi, o'lchov emas. Shahar ichidagi ko'cha darajasidagi farqlarni ko'rsatmasligi mumkin."
+                    ]
+                }
+            ],
+            "sources": [
+                {
+                    "name": "JSST — Ambient air quality and health",
+                    "url": "https://www.who.int/news-room/fact-sheets/detail/ambient-(outdoor)-air-quality-and-health"
+                },
+                {
+                    "name": "JSST — Global air quality guidelines (2021)",
+                    "url": "https://www.who.int/publications/i/item/9789240034228"
+                },
+                {
+                    "name": "AQSh EPA — AQI basics",
+                    "url": "https://www.airnow.gov/aqi/aqi-basics/"
+                }
+            ]
+        },
+        {
+            "id": "uv",
+            "title": "Quyosh nurlari (UV indeksi)",
+            "icon": "sun",
+            "urgent": false,
+            "summary": "UV indeksi qancha yuqori bo'lsa, teri va ko'z shunchalik tez zararlanadi. Indeks JSST, BMT Atrof-muhit dasturi va JMT tomonidan ishlab chiqilgan.",
+            "sections": [
+                {
+                    "title": "Toifalar",
+                    "items": [
+                        "0–2 Past: himoya shart emas.",
+                        "3–7 O'rtacha va yuqori: himoya kerak — tushlik paytida soyada turing, yopiq kiyim, bosh kiyim va quyoshdan himoya kremi.",
+                        "8+ Juda yuqori va haddan tashqari: qo'shimcha himoya — tushlik soatlarida tashqarida bo'lmang, soya, kiyim, bosh kiyim va krem majburiy."
+                    ]
+                }
+            ],
+            "sources": [
+                {
+                    "name": "JSST — The ultraviolet (UV) index",
+                    "url": "https://www.who.int/news-room/questions-and-answers/item/radiation-the-ultraviolet-(uv)-index"
+                }
+            ]
+        }
+    ]
+}
