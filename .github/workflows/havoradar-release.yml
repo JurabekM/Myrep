@@ -1,0 +1,77 @@
+# HavoRadar imzolangan reliz: `havoradar-v1.0.1` kabi teg yoki qo'lda (Actions → Run workflow).
+# Kalit faqat secret'larda (docs/RELEASE.md): HAVORADAR_UPLOAD_KEYSTORE_B64, HAVORADAR_KEYSTORE_PASSWORD,
+# HAVORADAR_KEY_ALIAS, HAVORADAR_KEY_PASSWORD. Kalitsiz yig'ish to'xtaydi (HAVORADAR_REQUIRE_RELEASE_SIGNING).
+name: havoradar-release
+
+on:
+  push:
+    tags: ["havoradar-v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: havoradar-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: havoradar
+    env:
+      HAVORADAR_REQUIRE_RELEASE_SIGNING: "1"
+      HAVORADAR_KEYSTORE_PASSWORD: ${{ secrets.HAVORADAR_KEYSTORE_PASSWORD }}
+      HAVORADAR_KEY_ALIAS: ${{ secrets.HAVORADAR_KEY_ALIAS }}
+      HAVORADAR_KEY_PASSWORD: ${{ secrets.HAVORADAR_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Teg pubspec versiyasiga mosmi
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          V=$(grep -E '^version:' pubspec.yaml | sed -E 's/version: *([^+]+).*/\1/')
+          test "${GITHUB_REF_NAME}" = "havoradar-v$V" || { echo "Teg ${GITHUB_REF_NAME}, pubspec versiyasi $V — mos emas"; exit 1; }
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+      - name: Yuklash kaliti (secret'dan, faqat runner'da)
+        env:
+          KEYSTORE_B64: ${{ secrets.HAVORADAR_UPLOAD_KEYSTORE_B64 }}
+        run: |
+          test -n "$KEYSTORE_B64" || { echo "HAVORADAR_UPLOAD_KEYSTORE_B64 secret yo'q (docs/RELEASE.md)"; exit 1; }
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/havoradar-upload.jks"
+          echo "HAVORADAR_KEYSTORE_FILE=$RUNNER_TEMP/havoradar-upload.jks" >> "$GITHUB_ENV"
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+        env:
+          TZ: Asia/Tashkent
+      - name: AAB (Play) va APK (arm64, armv7)
+        run: |
+          flutter build appbundle --release --obfuscate --split-debug-info=build/symbols
+          flutter build apk --release --split-per-abi --target-platform android-arm64,android-arm --obfuscate --split-debug-info=build/symbols
+      - name: Imzoni tekshirish
+        run: |
+          BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          for f in build/app/outputs/flutter-apk/app-*-release.apk; do
+            "$BT/apksigner" verify --print-certs "$f" | tee /dev/stderr | grep -q "CN=Android Debug" && { echo "Debug kalit bilan imzolangan: $f"; exit 1; } || true
+          done
+          jarsigner -verify build/app/outputs/bundle/release/app-release.aab | tail -1
+      - name: Kalitni o'chirish
+        if: always()
+        run: rm -f "$RUNNER_TEMP/havoradar-upload.jks"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: havoradar-release
+          path: |
+            havoradar/build/app/outputs/bundle/release/app-release.aab
+            havoradar/build/app/outputs/flutter-apk/app-*-release.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: havoradar-symbols
+          path: havoradar/build/symbols

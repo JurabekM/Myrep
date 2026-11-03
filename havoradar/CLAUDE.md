@@ -22,5 +22,8 @@ Arxitektura EpiRadar bilan bir xil (`../epiradar`): o'xshash muammo bo'lsa, avva
   `maven-central.storage-download.googleapis.com/maven2/` ni `--init-script` bilan birinchi repo qilish)
 - `flutter analyze && TZ=Asia/Tashkent flutter test` (Flutter 3.47.6)
 - `flutter build apk --release --split-per-abi`
+- Emulyator: `./tool/emulator_test.sh` (emulyator ishga tushgan bo'lsin; jonli Open-Meteo 429 bersa, jonli qism
+  o'tkazib yuboriladi)
+- Reliz: `havoradar-v<versiya>` tegi → `.github/workflows/havoradar-release.yml` (docs/RELEASE.md)
 - Jonli: `HAVORADAR_LIVE=1 ./gradlew test --tests '*LiveSmokeTest*' -i` (bulut IP'sidan api.open-meteo.com
   kunlik limitga tushishi mumkin — HTTP 429)

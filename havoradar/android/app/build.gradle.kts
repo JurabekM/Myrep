@@ -37,6 +37,7 @@ android {
 
     defaultConfig {
         applicationId = "uz.havoradar.app"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // java.time (yadro) va adaptiv ikonka uchun Android 8.0+.
         minSdk = 26
         targetSdk = flutter.targetSdkVersion
@@ -91,4 +92,10 @@ dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("androidx.work:work-runtime-ktx:2.11.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
+
+    // Qurilma/emulyator testlari: SyncWorker, bildirishnomalar, vidjet (src/androidTest).
+    // Versiyalar Flutter Gradle plagini debug'ga qo'shadigan androidx.test (runner 1.3) bilan mos.
+    androidTestImplementation("androidx.test:runner:1.3.0")
+    androidTestImplementation("androidx.work:work-testing:2.11.2")
+    androidTestImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.4.0")
 }

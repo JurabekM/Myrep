@@ -123,6 +123,7 @@ havoradar/
 ├── android/           # Kotlin: MainActivity (MethodChannel), SyncWorker, Notifier, vidjet, Repository
 ├── lib/               # Flutter UI (Dart): faqat ko'rsatadi, hech narsa hisoblamaydi
 ├── test/              # Flutter vidjet testlari; fixtures/ — yadroning haqiqiy JSON chiqishi
+├── integration_test/  # qurilmada to'liq oqim: UI → MethodChannel → Kotlin → jonli Open-Meteo
 └── tool/synth_fixtures.py  # namunaviy ob-havo javoblari (iyul issiqlik to'lqini)
 ```
 
@@ -145,6 +146,14 @@ Jonli Open-Meteo'ga qarshi tekshiruv (internet kerak):
 ```bash
 cd havoradar/engine && HAVORADAR_LIVE=1 ./gradlew test --tests '*LiveSmokeTest*' -i
 ```
+
+Emulyatorda to'liq tekshiruv (Kotlin instrumental testlar, Flutter integration_test, ilovani ishga tushirib skrinshot):
+
+```bash
+cd havoradar && ./tool/emulator_test.sh
+```
+
+Imzolangan reliz — teg orqali CI'da: [docs/RELEASE.md](docs/RELEASE.md).
 
 Yadro JSON formati o'zgarganda Flutter test fixture'larini qayta yaratish:
 

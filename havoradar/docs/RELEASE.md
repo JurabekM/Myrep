@@ -29,7 +29,29 @@ cd havoradar && HAVORADAR_REQUIRE_RELEASE_SIGNING=1 flutter build appbundle --re
 tasodifan Play'ga yuklamaslik uchun). CI'da kalit muhit o'zgaruvchilaridan olinadi: `HAVORADAR_KEYSTORE_FILE`,
 `HAVORADAR_KEYSTORE_PASSWORD`, `HAVORADAR_KEY_ALIAS`, `HAVORADAR_KEY_PASSWORD`.
 
-## 3. Play Console
+## 3. CI orqali reliz (tavsiya etiladi)
+
+GitHub → Settings → Secrets and variables → Actions'ga qo'shing:
+
+| Secret | Qiymat |
+|---|---|
+| `HAVORADAR_UPLOAD_KEYSTORE_B64` | `base64 -w0 havoradar-upload.jks` natijasi |
+| `HAVORADAR_KEYSTORE_PASSWORD` | keystore paroli |
+| `HAVORADAR_KEY_ALIAS` | `upload` |
+| `HAVORADAR_KEY_PASSWORD` | kalit paroli |
+
+Keyin `pubspec.yaml` dagi `version` ni oshiring (masalan `1.0.1+2`: `+` dan keyingi son har relizda o'sishi shart),
+commit qiling va teg qo'ying. Teg pubspec versiyasiga mos bo'lishi kerak, aks holda workflow to'xtaydi:
+
+```bash
+git tag havoradar-v1.0.1 && git push origin havoradar-v1.0.1
+```
+
+`havoradar-release` workflow'i testlarni o'tkazadi, imzolangan AAB va APK'larni (arm64, armv7) yig'adi, debug kalit
+bilan imzolanmaganini tekshiradi va `havoradar-release` artefaktiga joylaydi (Actions → run → Artifacts).
+Obfuskatsiya belgilari `havoradar-symbols` artefaktida — Play Console'dagi crash'larni o'qish uchun saqlang.
+
+## 4. Play Console
 
 - Maxfiylik siyosati: https://github.com/JurabekM/Myrep/blob/master/havoradar/docs/PRIVACY.md
 - Data safety: ma'lumot yig'ilmaydi va uzatilmaydi; shahar koordinatasi prognoz uchun Open-Meteo'ga yuboriladi
