@@ -82,7 +82,7 @@ void main() {
 
     // Radar → issiqlik kartasi → kun tafsiloti.
     expect(find.text('Toshkent'), findsWidgets);
-    await tapVisible(tester, find.text('Issiqlik').first);
+    await tapVisible(tester, find.text('Issiqlik'));
     expect(find.text('Nega bu daraja?'), findsWidgets);
     await goBack(tester);
 
@@ -90,7 +90,7 @@ void main() {
     await tester.tap(find.text('Prognoz'));
     await tester.pumpAndSettle();
     expect(find.text('Keyingi 48 soat'), findsOneWidget);
-    await tapVisible(tester, find.text('Ertaga').first);
+    await tapVisible(tester, find.text('Ertaga'));
     expect(find.text('Nega bu daraja?'), findsWidgets);
     await goBack(tester);
 

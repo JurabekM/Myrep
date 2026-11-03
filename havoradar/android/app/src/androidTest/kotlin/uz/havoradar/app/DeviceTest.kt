@@ -72,8 +72,9 @@ class DeviceTest {
             val today = p.today
             println("HAVORADAR-DEVICE: ${p.place.name}: bugun ${today?.personalScore} · ${p.days.size} kun · issiq ${today?.heatRisk?.baseScore} havo ${today?.airRisk?.baseScore}")
             assertTrue(p.days.size >= 5, "${p.place.name}: kunlar ${p.days.size}")
-            assertNotNull(today?.heatRisk, "${p.place.name}: bugungi issiqlik bahosi")
-            assertNotNull(today?.airRisk, "${p.place.name}: bugungi havo bahosi")
+            assertNotNull(today, "${p.place.name}: bugungi kun")
+            assertNotNull(today.heatRisk, "${p.place.name}: bugungi issiqlik bahosi")
+            assertNotNull(today.airRisk, "${p.place.name}: bugungi havo bahosi")
             assertEquals(48, p.hours.size)
         }
         // Qurilmada resurslar to'g'ri yuklangan: ma'lumotnoma va shaharlar.
