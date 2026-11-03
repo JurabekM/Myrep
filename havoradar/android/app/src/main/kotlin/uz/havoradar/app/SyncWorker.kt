@@ -18,6 +18,8 @@ class SyncWorker(
 ) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val repo = Repository.get(applicationContext)
+        // Onboarding tugamaguncha (joy tanlanmagan, ruxsat so'ralmagan) fonda hech narsa yuklanmaydi.
+        if (!repo.settings().onboardingDone) return Result.success()
         return try {
             val result = repo.sync()
             result.notifications.forEach { Notifier.show(applicationContext, it) }

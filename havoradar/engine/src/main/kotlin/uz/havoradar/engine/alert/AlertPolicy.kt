@@ -77,6 +77,11 @@ class AlertPolicy {
                         if (before == null) notified[k] = level
                         continue
                     }
+                    // Bugungi issiqlik cho'qqisi o'tib bo'lgan bo'lsa — kechikkan «bugun» xabari yuborilmaydi va belgilanmaydi
+                    // (aks holda ertangi kun «to'lqin davomi» deb jim qolardi).
+                    val peakPassed =
+                        hazard == Hazard.HEAT && day.date == today && day.feelsPeakHour?.let { report.localNow.hour > it } == true
+                    if (peakPassed && level < RiskLevel.EMERGENCY) continue
                     val send = settings.notificationsEnabled && (!quiet || level == RiskLevel.EMERGENCY) && (!firstRun || level == RiskLevel.EMERGENCY)
                     if (send) {
                         due += Due(report, day, hazard, level, escalated || (before == null && yesterday != null), risk.personalScore)

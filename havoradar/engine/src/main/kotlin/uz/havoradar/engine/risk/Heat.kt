@@ -71,6 +71,7 @@ object HeatRisk {
         }
 
     /**
+     * @param tempMin shu kundan keyingi tunning eng past harorati (bo'lmasa — kunning minimumi).
      * @param streak shu kun bilan tugaydigan ketma-ket «Xavf» toifasidagi kunlar soni.
      */
     fun assess(
@@ -94,7 +95,7 @@ object HeatRisk {
         if (raw >= 20) {
             if (tempMin != null && tempMin > TROPICAL_NIGHT) {
                 bonus += TROPICAL_BONUS
-                reasons += "Tunda havo ${num(TROPICAL_NIGHT)}°C dan pastga tushmaydi (eng past ${num(tempMin)}°C) — organizm tunda tiklanishga ulgurmaydi."
+                reasons += "Kechasi havo ${num(TROPICAL_NIGHT)}°C dan pastga tushmaydi (eng past ${num(tempMin)}°C) — organizm tunda tiklanishga ulgurmaydi."
             }
             if (streak >= STREAK_DAYS && feelsMax >= DANGER) {
                 bonus += STREAK_BONUS

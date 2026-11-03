@@ -48,8 +48,9 @@ String weekday(DateTime d) => _weekdays[d.weekday - 1];
 
 /// Joyning mahalliy sanasi bo'yicha: «bugun», «ertaga» yoki hafta kuni.
 String dayLabel(DateTime date, DateTime today) {
-  final d = DateTime(date.year, date.month, date.day);
-  final t = DateTime(today.year, today.month, today.day);
+  // UTC: yozgi vaqtga o'tish kunida ham farq aniq 24 soat.
+  final d = DateTime.utc(date.year, date.month, date.day);
+  final t = DateTime.utc(today.year, today.month, today.day);
   final diff = d.difference(t).inDays;
   if (diff == 0) return 'Bugun';
   if (diff == 1) return 'Ertaga';

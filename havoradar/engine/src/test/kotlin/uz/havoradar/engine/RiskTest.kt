@@ -117,6 +117,13 @@ class RiskTest {
         assertTrue(dusty.reasons.any { "chang" in it }, dusty.reasons.toString())
         assertTrue(dusty.advice.any { "N95" in it })
 
+        // PM10 tayanchlari (JSST AQG/IT va EPA).
+        fun pm10(v: Double) = AirRisk.assess(AirDay(null, v, null, null, null, null, null), emptySet())!!.baseScore
+        assertEquals(listOf(20, 40, 60, 80, 100), listOf(45.0, 75.0, 150.0, 355.0, 425.0).map(::pm10))
+        // Ozon bali 60 dan oshmaydi (JSST 240 dan yuqori chegara bermaydi).
+        fun o3(v: Double) = AirRisk.assess(AirDay(1.0, 1.0, v, null, null, null, null), emptySet())!!.baseScore
+        assertEquals(listOf(20, 40, 60, 60), listOf(100.0, 160.0, 240.0, 400.0).map(::o3))
+
         assertNull(AirRisk.assess(AirDay(null, null, 120.0, null, null, null, null), emptySet()))
         // NO₂ 1 soatlik JSST chegarasi.
         assertEquals(50, AirRisk.assess(AirDay(5.0, 10.0, null, 30.0, 210.0, null, null), emptySet())!!.baseScore)

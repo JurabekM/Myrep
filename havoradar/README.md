@@ -41,7 +41,8 @@ Open-Meteo ──► soatlik qatorlar ──► kunlik ko'rsatkichlar ──► 
   | 51,7°C | Extreme danger | 80 |
 
 - Qo'shimchalar (kunning bali ≥ 20 bo'lsa):
-  - **+5** — tropik tun (eng past harorat > 20°C, WMO ETCCDI «TR» ta'rifi);
+  - **+5** — tropik tun: issiq kundan keyingi tunda (18:00–09:00) harorat 20°C dan pastga tushmaydi (chegara — WMO ETCCDI
+    «TR» ko'rsatkichi). Prognozda keyingi tun bo'lmasa, kunning eng past harorati olinadi;
   - **+7** — ketma-ket 3-kun va undan ortiq «Danger» toifasi.
 
 ### Havo sifati (`engine/.../risk/Air.kt`)
@@ -78,7 +79,8 @@ ko'pini tashkil qilsa, sabablar ro'yxatiga «chang bo'roni» qo'shiladi.
 
 ### Ogohlantirish (`engine/.../alert/AlertPolicy.kt`)
 
-- Faqat **bugun va ertaga** uchun ogohlantiradi. Daraja siz tanlagan chegaradan past bo'lmasligi kerak (standart — «Xavfli»,
+- Faqat **bugun va ertaga** uchun ogohlantiradi. Bugungi issiqlik cho'qqisi o'tib bo'lgan bo'lsa, kechikkan «bugun»
+  xabari yuborilmaydi (faqat «Favqulodda» bundan mustasno), ertangi kun esa odatdagidek xabar qilinadi. Daraja siz tanlagan chegaradan past bo'lmasligi kerak (standart — «Xavfli»,
   chunki yozda «Ehtiyot» darajasi deyarli har kuni bo'ladi).
 - **Bir to'lqin — bir xabar.** Oldingi kun xabar qilingan bo'lsa, davomi jim qoladi. Daraja oshsa, «Xavf darajasi
   oshdi» deb yana xabar beriladi. Xabarda to'lqin necha kun davom etishi ham aytiladi.

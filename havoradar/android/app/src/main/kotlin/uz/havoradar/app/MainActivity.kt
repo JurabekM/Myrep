@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Flutter UI ↔ Kotlin yadro ko'prigi. Barcha ma'lumot JSON matn sifatida uzatiladi
@@ -79,7 +80,7 @@ class MainActivity : FlutterActivity() {
                     RiskWidgetProvider.update(this, r.snapshot)
                     repo.encode(r.snapshot)
                 }
-            "getSettings" -> result.success(repo.engine.codec.encodeSettings(repo.settings()).toString())
+            "getSettings" -> async(result) { withContext(Dispatchers.IO) { repo.engine.codec.encodeSettings(repo.settings()).toString() } }
             "saveSettings" ->
                 async(result) {
                     val saved = repo.saveSettings(call.arguments as String)

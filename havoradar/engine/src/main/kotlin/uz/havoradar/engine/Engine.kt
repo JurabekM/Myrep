@@ -75,7 +75,8 @@ class Engine(
                         stale = true
                     }
                 }
-                val lastOk = previous?.sources?.firstOrNull { it.source == id && it.ok }?.fetchedAt
+                // Xato holatida fetchedAt — oxirgi muvaffaqiyatli vaqt; ketma-ket xatolarda ham saqlanib qoladi.
+                val lastOk = previous?.sources?.firstOrNull { it.source == id }?.fetchedAt
                 statuses +=
                     SourceStatus(
                         source = id,

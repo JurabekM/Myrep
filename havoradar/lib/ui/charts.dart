@@ -100,15 +100,24 @@ void _text(Canvas canvas, String s, Offset at, Color color) {
   tp.paint(canvas, at);
 }
 
-/// Har 6 soatda vaqt belgisi.
-void _timeAxis(Canvas canvas, Size size, List<HourPoint> hours, Color color) {
-  final w = size.width - _left;
+/// Har 6 soatda vaqt belgisi; `x` — grafikdagi i-soat nuqtasi (chiziq yoki ustun markazi).
+void _timeAxis(Canvas canvas, Size size, List<HourPoint> hours, Color color, double Function(int i) x) {
   final h = size.height - _bottom;
   for (var i = 0; i < hours.length; i++) {
     if (hours[i].time.hour % 6 != 0) continue;
-    final x = _left + (hours.length == 1 ? 0 : i / (hours.length - 1)) * w;
-    if (x > size.width - 26) continue;
-    _text(canvas, hourLabel(hours[i].time.hour), Offset(x - 2, h + 3), color);
+    final px = x(i);
+    if (px > size.width - 26) continue;
+    _text(canvas, hourLabel(hours[i].time.hour), Offset(math.max(px - 12, _left - 4), h + 3), color);
+  }
+}
+
+/// Gorizontal shtrix chiziq (chegara belgisi).
+void _dashed(Canvas canvas, double y, double from, double to, Color color) {
+  final paint = Paint()
+    ..color = color
+    ..strokeWidth = 1.2;
+  for (var dx = from; dx < to; dx += 8) {
+    canvas.drawLine(Offset(dx, y), Offset(math.min(dx + 4, to), y), paint);
   }
 }
 
@@ -150,15 +159,8 @@ class _TempPainter extends CustomPainter {
       canvas.drawLine(Offset(_left, y(v)), Offset(size.width, y(v)), gridPaint);
       _text(canvas, '${v.round()}°', Offset(0, y(v) - 7), label);
     }
-    if (dangerLine > lo && dangerLine < hi) {
-      final dy = y(dangerLine);
-      for (var dx = _left; dx < size.width; dx += 8) {
-        canvas.drawLine(Offset(dx, dy), Offset(math.min(dx + 4, size.width), dy), Paint()
-          ..color = danger
-          ..strokeWidth = 1.2);
-      }
-    }
-    _timeAxis(canvas, size, hours, label);
+    if (dangerLine > lo && dangerLine < hi) _dashed(canvas, y(dangerLine), _left, size.width, danger);
+    _timeAxis(canvas, size, hours, label, x);
 
     Path line(double Function(HourPoint) f) {
       final p = Path();
@@ -226,13 +228,9 @@ class _BarPainter extends CustomPainter {
     }
     // JSST tavsiyasi chizig'i.
     final wy = y(Pm25Chart.who);
-    for (var dx = _left; dx < size.width; dx += 8) {
-      canvas.drawLine(Offset(dx, wy), Offset(math.min(dx + 4, size.width), wy), Paint()
-        ..color = label
-        ..strokeWidth = 1.2);
-    }
+    _dashed(canvas, wy, _left, size.width, label);
     _text(canvas, 'JSST 15', Offset(0, wy - 7), label);
-    _timeAxis(canvas, size, hours, label);
+    _timeAxis(canvas, size, hours, label, (i) => _left + (i + 0.5) / hours.length * w);
   }
 
   @override

@@ -58,6 +58,19 @@ class AlertPolicyTest {
         }
 
     @Test
+    fun `no late 'today' heat alert after the peak, tomorrow is still announced`() =
+        runTest {
+            val settings = Settings()
+            // Toshkentda 19:00 — bugungi cho'qqi (15:00) o'tgan.
+            val evening = snapshot(settings, Instant.parse("2026-07-15T14:00:00Z"))
+            val d = policy.decide(evening, settings, emptyMap(), firstRun = false, localTime = LocalTime.of(19, 0))
+            val heat = d.notifications.filter { it.key.contains("HEAT") }
+            assertEquals(listOf("tashkent|HEAT|2026-07-16"), heat.map { it.key })
+            assertTrue(heat.single().title.endsWith("ertaga"), heat.single().title)
+            assertTrue("tashkent|HEAT|2026-07-15" !in d.notified)
+        }
+
+    @Test
     fun `quiet hours defer non-emergency alerts until morning`() =
         runTest {
             val settings = Settings()

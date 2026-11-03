@@ -93,6 +93,8 @@ class EngineTest {
             val hottest = r.days.maxBy { it.heatRisk?.baseScore ?: 0 }
             assertEquals(LocalDate.parse("2026-07-17"), hottest.date)
             assertEquals(RiskLevel.EMERGENCY, hottest.heatRisk!!.baseLevel)
+            // Tropik tun — issiq kundan KEYINGI tun bo'yicha (16-iyul ertalab ~27,5°C), 15-iyul ertalabgi 26,5°C emas.
+            assertTrue(today.heatRisk.reasons.any { "eng past 27" in it || "eng past 28" in it }, today.heatRisk.reasons.toString())
             // Havo: 17-iyulda chang ko'tarilishi; CAMS prognozi 5 kun (oxirgi kunlarda havo bahosi yo'q).
             assertTrue(hottest.airRisk!!.reasons.any { "chang" in it }, hottest.airRisk.reasons.toString())
             assertNull(r.days.last().airRisk)
@@ -144,6 +146,10 @@ class EngineTest {
             assertEquals("Toshkent: Server xatosi (HTTP 503)", w.error)
             assertNotNull(second.snapshot.main!!.today!!.heatRisk, "eski prognoz ishlatiladi")
             assertEquals(JULY, second.snapshot.main!!.weatherFetchedAt)
+
+            // Ketma-ket ikkinchi xato: oxirgi muvaffaqiyatli vaqt yo'qolmaydi.
+            val again = engine(FakeHttp(Scenario.JULY, failing = setOf("api.open-meteo.com")), later.plusSeconds(3600)).sync(Settings(), second.state)
+            assertEquals(JULY, again.snapshot.sources.first { it.source == SourceId.WEATHER }.fetchedAt)
 
             // 3 kundan eski prognoz ishlatilmaydi.
             val muchLater = JULY.plus(Engine.STALE_MAX).plusSeconds(3600)

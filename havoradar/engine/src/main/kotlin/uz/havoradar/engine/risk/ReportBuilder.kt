@@ -19,6 +19,8 @@ object ReportBuilder {
     const val MIN_HOURS = 18
     const val MAX_DAYS = 7
     const val CHART_HOURS = 48
+    const val NIGHT_FROM = 18
+    const val NIGHT_TO = 9
 
     fun build(
         place: Place,
@@ -65,7 +67,12 @@ object ReportBuilder {
                     feelsPeakHour = feels?.second,
                     uvMax = uvMax,
                     air = airDay,
-                    heatRisk = if (feels != null) HeatRisk.assess(tMax!!, feels.first, feels.second, tMin, streaks[date] ?: 0, profile) else null,
+                    heatRisk =
+                        if (feels != null) {
+                            HeatRisk.assess(tMax!!, feels.first, feels.second, nightMin(weather, wByDay, date) ?: tMin, streaks[date] ?: 0, profile)
+                        } else {
+                            null
+                        },
                     airRisk = airDay?.let { AirRisk.assess(it, profile) },
                 )
             }
@@ -81,6 +88,23 @@ object ReportBuilder {
             weatherFetchedAt = weather?.fetchedAt,
             airFetchedAt = air?.fetchedAt,
         )
+    }
+
+    /**
+     * Issiq kundan keyingi tun (18:00–09:00) eng past harorati — organizm aynan shu tunda tiklanishi kerak.
+     * Kalendar kunining minimumi odatda o'sha kun ertalabi (ya'ni oldingi tun) bo'ladi. Ertasi ertalab prognozda
+     * bo'lmasa — null (chaqiruvchi kalendar minimumini oladi).
+     */
+    private fun nightMin(
+        w: WeatherSeries?,
+        byDay: Map<LocalDate, List<Int>>,
+        date: LocalDate,
+    ): Double? {
+        if (w == null) return null
+        val evening = byDay[date].orEmpty().filter { w.times[it].hour >= NIGHT_FROM }.mapNotNull { w.temp[it] }
+        val morning = byDay[date.plusDays(1)].orEmpty().filter { w.times[it].hour < NIGHT_TO }.mapNotNull { w.temp[it] }
+        if (evening.size < 4 || morning.size < 6) return null
+        return (evening + morning).min()
     }
 
     /** Kunning eng yuqori issiqlik ko'rsatkichi va u kuzatiladigan soat. */
