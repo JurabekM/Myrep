@@ -1,6 +1,7 @@
 package uz.havoradar.engine.net
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -28,7 +29,24 @@ class UrlConnectionFetcher(
     private val timeoutMs: Int = 20_000,
     private val maxBytes: Int = 2 * 1024 * 1024,
 ) : HttpFetcher {
-    override suspend fun get(url: String): String =
+    /**
+     * Vaqtinchalik ulanish xatosida (mobil tarmoq, IPv6 marshruti uzilishi) bir marta qayta uriniladi.
+     * Server javobi (HTTP xato kodi) qayta urinilmaydi — u darhol yuqoriga uzatiladi.
+     */
+    override suspend fun get(url: String): String {
+        repeat(RETRIES) {
+            try {
+                return fetch(url)
+            } catch (e: HttpException) {
+                throw e
+            } catch (_: IOException) {
+                delay(RETRY_DELAY_MS)
+            }
+        }
+        return fetch(url)
+    }
+
+    private suspend fun fetch(url: String): String =
         withContext(Dispatchers.IO) {
             val uri = URI(url)
             require(uri.scheme == "https") { "Faqat HTTPS: $url" }
@@ -62,5 +80,10 @@ class UrlConnectionFetcher(
             if (out.size() > maxBytes) throw IOException("Javob juda katta (> $maxBytes bayt)")
         }
         return out.toByteArray()
+    }
+
+    private companion object {
+        const val RETRIES = 1
+        const val RETRY_DELAY_MS = 1_500L
     }
 }
