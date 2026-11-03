@@ -1,0 +1,1046 @@
+{
+    "schema": 1,
+    "generatedAt": "2026-07-15T04:00:00Z",
+    "profile": [
+        "ELDERLY"
+    ],
+    "places": [
+        {
+            "id": "tashkent",
+            "name": "Toshkent",
+            "localNow": "2026-07-15T09:00",
+            "weatherFetchedAt": "2026-07-15T04:00:00Z",
+            "airFetchedAt": "2026-07-15T04:00:00Z",
+            "today": {
+                "score": 85,
+                "level": "EMERGENCY",
+                "name": "Favqulodda",
+                "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+            },
+            "current": {
+                "time": "2026-07-15T09:00",
+                "temp": 31.7,
+                "feels": 31.7,
+                "humidity": 32.0,
+                "uv": 6.0,
+                "pm25": 23.2,
+                "pm10": 65.0
+            },
+            "days": [
+                {
+                    "date": "2026-07-15",
+                    "overall": {
+                        "score": 85,
+                        "level": "EMERGENCY",
+                        "name": "Favqulodda",
+                        "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+                    },
+                    "tempMax": 41.5,
+                    "tempMin": 26.5,
+                    "feelsMax": 41.5,
+                    "feelsPeakHour": 15,
+                    "uvMax": 9.7,
+                    "uv": {
+                        "category": "VERY_HIGH",
+                        "name": "Juda yuqori",
+                        "advice": "Qo'shimcha himoya: tushlik soatlarida tashqarida bo'lmang; soya, kiyim, bosh kiyim va krem majburiy."
+                    },
+                    "air": {
+                        "pm25": 20.2,
+                        "pm10": 56.9,
+                        "ozone8h": 114.6,
+                        "no2": 23.7,
+                        "no2Max": 38.2,
+                        "dustShare": 0.16,
+                        "worstHour": 20
+                    },
+                    "heatRisk": {
+                        "hazard": "HEAT",
+                        "name": "Issiqlik",
+                        "base": {
+                            "score": 68,
+                            "level": "WARNING",
+                            "name": "Xavfli",
+                            "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+                        },
+                        "personal": {
+                            "score": 85,
+                            "level": "EMERGENCY",
+                            "name": "Favqulodda",
+                            "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+                        },
+                        "reasons": [
+                            "Eng yuqori harorat 42°C (15:00 atrofida) — NWS «Xavf» toifasi (39,4–51,7°C).",
+                            "Kechasi havo 20°C dan pastga tushmaydi (eng past 28°C) — organizm tunda tiklanishga ulgurmaydi.",
+                            "Profilingizda issiqqa sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Chanqashni kutmasdan muntazam suv iching; spirtli, ko'p kofeinli va shakarli ichimliklardan saqlaning.",
+                            "Yengil, keng va och rangli kiyim kiying, boshingizni yoping.",
+                            "Kunning eng issiq soatlarida (bugun eng issiq payt — 15:00 atrofida) tashqarida og'ir jismoniy ish va sportdan saqlaning, soyada bo'ling.",
+                            "Kunduzi parda va darchalarni yoping, tunda havo salqinlashganda derazalarni oching.",
+                            "Bolani yoki uy hayvonini to'xtab turgan mashinada bir daqiqaga ham qoldirmang.",
+                            "Konditsionerli yoki salqin joyda vaqt o'tkazing. Ventilyatorni faqat xona 32°C dan salqin bo'lsa ishlating — undan issiqda u tana haroratini oshirishi mumkin (CDC).",
+                            "Yolg'iz yashaydigan keksa va kasal yaqinlaringizdan kuniga ikki marta xabar oling.",
+                            "Ko'p dorilar issiqda suvsizlanish xavfini oshiradi: dorini o'zingiz to'xtatmang, shifokoringizdan so'rang; dorilarni issiq joyda saqlamang.",
+                            "Issiq urishi belgilari — chalkashlik, nutq buzilishi, hushdan ketish, tutqanoq, juda yuqori tana harorati: darhol 103 ga qo'ng'iroq qiling."
+                        ]
+                    },
+                    "airRisk": {
+                        "hazard": "AIR",
+                        "name": "Havo sifati",
+                        "base": {
+                            "score": 28,
+                            "level": "WATCH",
+                            "name": "Kuzatuv",
+                            "advice": "Sezgir guruhlar ehtiyot bo'lsin, prognozni kuzatib boring."
+                        },
+                        "personal": {
+                            "score": 35,
+                            "level": "WATCH",
+                            "name": "Kuzatuv",
+                            "advice": "Sezgir guruhlar ehtiyot bo'lsin, prognozni kuzatib boring."
+                        },
+                        "reasons": [
+                            "PM10 (chang zarrachalari) sutkalik o'rtacha 57 µg/m³ (JSST tavsiyasi: 45).",
+                            "Ozon 8 soatlik eng yuqori 115 µg/m³ (JSST tavsiyasi: 100) — quyoshli issiq kunlarda tushdan keyin ko'tariladi.",
+                            "PM2.5 (mayda zarrachalar) sutkalik o'rtacha 20 µg/m³ — JSST tavsiyasidan (15) 1,3 barobar yuqori.",
+                            "Profilingizda havo ifloslanishiga sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Sezgir guruhlar (bolalar, keksalar, homiladorlar, yurak va o'pka kasallari) ochiq havoda uzoq va og'ir jismoniy faollikni kamaytirsin."
+                        ]
+                    }
+                },
+                {
+                    "date": "2026-07-16",
+                    "overall": {
+                        "score": 98,
+                        "level": "EMERGENCY",
+                        "name": "Favqulodda",
+                        "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+                    },
+                    "tempMax": 43.0,
+                    "tempMin": 27.5,
+                    "feelsMax": 43.0,
+                    "feelsPeakHour": 15,
+                    "uvMax": 9.9,
+                    "uv": {
+                        "category": "VERY_HIGH",
+                        "name": "Juda yuqori",
+                        "advice": "Qo'shimcha himoya: tushlik soatlarida tashqarida bo'lmang; soya, kiyim, bosh kiyim va krem majburiy."
+                    },
+                    "air": {
+                        "pm25": 22.3,
+                        "pm10": 66.5,
+                        "ozone8h": 125.0,
+                        "no2": 23.7,
+                        "no2Max": 38.2,
+                        "dustShare": 0.19,
+                        "worstHour": 20
+                    },
+                    "heatRisk": {
+                        "hazard": "HEAT",
+                        "name": "Issiqlik",
+                        "base": {
+                            "score": 78,
+                            "level": "WARNING",
+                            "name": "Xavfli",
+                            "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+                        },
+                        "personal": {
+                            "score": 98,
+                            "level": "EMERGENCY",
+                            "name": "Favqulodda",
+                            "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+                        },
+                        "reasons": [
+                            "Eng yuqori harorat 43°C (15:00 atrofida) — NWS «Xavf» toifasi (39,4–51,7°C).",
+                            "Kechasi havo 20°C dan pastga tushmaydi (eng past 29°C) — organizm tunda tiklanishga ulgurmaydi.",
+                            "Ketma-ket 3-kun xavfli issiqlik — ta'siri kundan-kunga jamlanadi.",
+                            "Profilingizda issiqqa sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Chanqashni kutmasdan muntazam suv iching; spirtli, ko'p kofeinli va shakarli ichimliklardan saqlaning.",
+                            "Yengil, keng va och rangli kiyim kiying, boshingizni yoping.",
+                            "Kunning eng issiq soatlarida (bugun eng issiq payt — 15:00 atrofida) tashqarida og'ir jismoniy ish va sportdan saqlaning, soyada bo'ling.",
+                            "Kunduzi parda va darchalarni yoping, tunda havo salqinlashganda derazalarni oching.",
+                            "Bolani yoki uy hayvonini to'xtab turgan mashinada bir daqiqaga ham qoldirmang.",
+                            "Konditsionerli yoki salqin joyda vaqt o'tkazing. Ventilyatorni faqat xona 32°C dan salqin bo'lsa ishlating — undan issiqda u tana haroratini oshirishi mumkin (CDC).",
+                            "Yolg'iz yashaydigan keksa va kasal yaqinlaringizdan kuniga ikki marta xabar oling.",
+                            "Ko'p dorilar issiqda suvsizlanish xavfini oshiradi: dorini o'zingiz to'xtatmang, shifokoringizdan so'rang; dorilarni issiq joyda saqlamang.",
+                            "Issiq urishi belgilari — chalkashlik, nutq buzilishi, hushdan ketish, tutqanoq, juda yuqori tana harorati: darhol 103 ga qo'ng'iroq qiling."
+                        ]
+                    },
+                    "airRisk": {
+                        "hazard": "AIR",
+                        "name": "Havo sifati",
+                        "base": {
+                            "score": 34,
+                            "level": "WATCH",
+                            "name": "Kuzatuv",
+                            "advice": "Sezgir guruhlar ehtiyot bo'lsin, prognozni kuzatib boring."
+                        },
+                        "personal": {
+                            "score": 43,
+                            "level": "ADVISORY",
+                            "name": "Ehtiyot",
+                            "advice": "Ochiq havoda uzoq va og'ir jismoniy ishni kamaytiring; sezgir guruhlar alohida ehtiyot bo'lsin."
+                        },
+                        "reasons": [
+                            "PM10 (chang zarrachalari) sutkalik o'rtacha 66 µg/m³ (JSST tavsiyasi: 45).",
+                            "Ozon 8 soatlik eng yuqori 125 µg/m³ (JSST tavsiyasi: 100) — quyoshli issiq kunlarda tushdan keyin ko'tariladi.",
+                            "PM2.5 (mayda zarrachalar) sutkalik o'rtacha 22 µg/m³ — JSST tavsiyasidan (15) 1,5 barobar yuqori.",
+                            "Profilingizda havo ifloslanishiga sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Sezgir guruhlar (bolalar, keksalar, homiladorlar, yurak va o'pka kasallari) ochiq havoda uzoq va og'ir jismoniy faollikni kamaytirsin.",
+                            "Ochiq havodagi og'ir mashg'ulotlarni qisqartiring yoki yopiq joyga ko'chiring (eng ifloslangan payt — 20:00 atrofida).",
+                            "Ifloslanish yuqori soatlarda derazalarni yopiq tuting; HEPA filtrli havo tozalagich bo'lsa, yoqing.",
+                            "Uy ichida tutunni kamaytiring: chekmang, ochiq olov va tutatqi ishlatmang."
+                        ]
+                    }
+                },
+                {
+                    "date": "2026-07-17",
+                    "overall": {
+                        "score": 100,
+                        "level": "EMERGENCY",
+                        "name": "Favqulodda",
+                        "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+                    },
+                    "tempMax": 44.5,
+                    "tempMin": 28.5,
+                    "feelsMax": 44.5,
+                    "feelsPeakHour": 15,
+                    "uvMax": 10.1,
+                    "uv": {
+                        "category": "VERY_HIGH",
+                        "name": "Juda yuqori",
+                        "advice": "Qo'shimcha himoya: tushlik soatlarida tashqarida bo'lmang; soya, kiyim, bosh kiyim va krem majburiy."
+                    },
+                    "air": {
+                        "pm25": 51.0,
+                        "pm10": 182.4,
+                        "ozone8h": 135.4,
+                        "no2": 26.0,
+                        "no2Max": 42.0,
+                        "dustShare": 0.54,
+                        "worstHour": 19
+                    },
+                    "heatRisk": {
+                        "hazard": "HEAT",
+                        "name": "Issiqlik",
+                        "base": {
+                            "score": 80,
+                            "level": "EMERGENCY",
+                            "name": "Favqulodda",
+                            "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+                        },
+                        "personal": {
+                            "score": 100,
+                            "level": "EMERGENCY",
+                            "name": "Favqulodda",
+                            "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+                        },
+                        "reasons": [
+                            "Eng yuqori harorat 45°C (15:00 atrofida) — NWS «Xavf» toifasi (39,4–51,7°C).",
+                            "Kechasi havo 20°C dan pastga tushmaydi (eng past 28°C) — organizm tunda tiklanishga ulgurmaydi.",
+                            "Ketma-ket 4-kun xavfli issiqlik — ta'siri kundan-kunga jamlanadi.",
+                            "Profilingizda issiqqa sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Chanqashni kutmasdan muntazam suv iching; spirtli, ko'p kofeinli va shakarli ichimliklardan saqlaning.",
+                            "Yengil, keng va och rangli kiyim kiying, boshingizni yoping.",
+                            "Kunning eng issiq soatlarida (bugun eng issiq payt — 15:00 atrofida) tashqarida og'ir jismoniy ish va sportdan saqlaning, soyada bo'ling.",
+                            "Kunduzi parda va darchalarni yoping, tunda havo salqinlashganda derazalarni oching.",
+                            "Bolani yoki uy hayvonini to'xtab turgan mashinada bir daqiqaga ham qoldirmang.",
+                            "Konditsionerli yoki salqin joyda vaqt o'tkazing. Ventilyatorni faqat xona 32°C dan salqin bo'lsa ishlating — undan issiqda u tana haroratini oshirishi mumkin (CDC).",
+                            "Yolg'iz yashaydigan keksa va kasal yaqinlaringizdan kuniga ikki marta xabar oling.",
+                            "Ko'p dorilar issiqda suvsizlanish xavfini oshiradi: dorini o'zingiz to'xtatmang, shifokoringizdan so'rang; dorilarni issiq joyda saqlamang.",
+                            "Issiq urishi belgilari — chalkashlik, nutq buzilishi, hushdan ketish, tutqanoq, juda yuqori tana harorati: darhol 103 ga qo'ng'iroq qiling."
+                        ]
+                    },
+                    "airRisk": {
+                        "hazard": "AIR",
+                        "name": "Havo sifati",
+                        "base": {
+                            "score": 63,
+                            "level": "WARNING",
+                            "name": "Xavfli",
+                            "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+                        },
+                        "personal": {
+                            "score": 79,
+                            "level": "WARNING",
+                            "name": "Xavfli",
+                            "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+                        },
+                        "reasons": [
+                            "PM10 (chang zarrachalari) sutkalik o'rtacha 182 µg/m³ (JSST tavsiyasi: 45).",
+                            "PM2.5 (mayda zarrachalar) sutkalik o'rtacha 51 µg/m³ — JSST tavsiyasidan (15) 3,4 barobar yuqori.",
+                            "Ozon 8 soatlik eng yuqori 135 µg/m³ (JSST tavsiyasi: 100) — quyoshli issiq kunlarda tushdan keyin ko'tariladi.",
+                            "Azot dioksidi (transport tutuni) sutkalik o'rtacha 26 µg/m³ (JSST tavsiyasi: 25).",
+                            "Zarrachalarning ko'p qismi chang — chang bo'roni yoki shamolda chang ko'tarilishi.",
+                            "Profilingizda havo ifloslanishiga sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Sezgir guruhlar (bolalar, keksalar, homiladorlar, yurak va o'pka kasallari) ochiq havoda uzoq va og'ir jismoniy faollikni kamaytirsin.",
+                            "Ochiq havodagi og'ir mashg'ulotlarni qisqartiring yoki yopiq joyga ko'chiring (eng ifloslangan payt — 19:00 atrofida).",
+                            "Ifloslanish yuqori soatlarda derazalarni yopiq tuting; HEPA filtrli havo tozalagich bo'lsa, yoqing.",
+                            "Uy ichida tutunni kamaytiring: chekmang, ochiq olov va tutatqi ishlatmang.",
+                            "Tashqariga chiqish zarur bo'lsa, yuzga zich yopishadigan N95/FFP2 respirator taqing — mato niqob mayda zarrachalardan himoya qilmaydi.",
+                            "Nafas qisishi, ko'krakda og'riq, xirillash yoki yurak urishi tezlashsa — shifokorga murojaat qiling; og'ir holatda 103."
+                        ]
+                    }
+                },
+                {
+                    "date": "2026-07-18",
+                    "overall": {
+                        "score": 99,
+                        "level": "EMERGENCY",
+                        "name": "Favqulodda",
+                        "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+                    },
+                    "tempMax": 44.0,
+                    "tempMin": 28.0,
+                    "feelsMax": 44.0,
+                    "feelsPeakHour": 15,
+                    "uvMax": 10.0,
+                    "uv": {
+                        "category": "VERY_HIGH",
+                        "name": "Juda yuqori",
+                        "advice": "Qo'shimcha himoya: tushlik soatlarida tashqarida bo'lmang; soya, kiyim, bosh kiyim va krem majburiy."
+                    },
+                    "air": {
+                        "pm25": 30.5,
+                        "pm10": 98.1,
+                        "ozone8h": 142.4,
+                        "no2": 22.5,
+                        "no2Max": 36.3,
+                        "dustShare": 0.37,
+                        "worstHour": 20
+                    },
+                    "heatRisk": {
+                        "hazard": "HEAT",
+                        "name": "Issiqlik",
+                        "base": {
+                            "score": 79,
+                            "level": "WARNING",
+                            "name": "Xavfli",
+                            "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+                        },
+                        "personal": {
+                            "score": 99,
+                            "level": "EMERGENCY",
+                            "name": "Favqulodda",
+                            "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+                        },
+                        "reasons": [
+                            "Eng yuqori harorat 44°C (15:00 atrofida) — NWS «Xavf» toifasi (39,4–51,7°C).",
+                            "Kechasi havo 20°C dan pastga tushmaydi (eng past 26°C) — organizm tunda tiklanishga ulgurmaydi.",
+                            "Ketma-ket 5-kun xavfli issiqlik — ta'siri kundan-kunga jamlanadi.",
+                            "Profilingizda issiqqa sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Chanqashni kutmasdan muntazam suv iching; spirtli, ko'p kofeinli va shakarli ichimliklardan saqlaning.",
+                            "Yengil, keng va och rangli kiyim kiying, boshingizni yoping.",
+                            "Kunning eng issiq soatlarida (bugun eng issiq payt — 15:00 atrofida) tashqarida og'ir jismoniy ish va sportdan saqlaning, soyada bo'ling.",
+                            "Kunduzi parda va darchalarni yoping, tunda havo salqinlashganda derazalarni oching.",
+                            "Bolani yoki uy hayvonini to'xtab turgan mashinada bir daqiqaga ham qoldirmang.",
+                            "Konditsionerli yoki salqin joyda vaqt o'tkazing. Ventilyatorni faqat xona 32°C dan salqin bo'lsa ishlating — undan issiqda u tana haroratini oshirishi mumkin (CDC).",
+                            "Yolg'iz yashaydigan keksa va kasal yaqinlaringizdan kuniga ikki marta xabar oling.",
+                            "Ko'p dorilar issiqda suvsizlanish xavfini oshiradi: dorini o'zingiz to'xtatmang, shifokoringizdan so'rang; dorilarni issiq joyda saqlamang.",
+                            "Issiq urishi belgilari — chalkashlik, nutq buzilishi, hushdan ketish, tutqanoq, juda yuqori tana harorati: darhol 103 ga qo'ng'iroq qiling."
+                        ]
+                    },
+                    "airRisk": {
+                        "hazard": "AIR",
+                        "name": "Havo sifati",
+                        "base": {
+                            "score": 46,
+                            "level": "ADVISORY",
+                            "name": "Ehtiyot",
+                            "advice": "Ochiq havoda uzoq va og'ir jismoniy ishni kamaytiring; sezgir guruhlar alohida ehtiyot bo'lsin."
+                        },
+                        "personal": {
+                            "score": 58,
+                            "level": "ADVISORY",
+                            "name": "Ehtiyot",
+                            "advice": "Ochiq havoda uzoq va og'ir jismoniy ishni kamaytiring; sezgir guruhlar alohida ehtiyot bo'lsin."
+                        },
+                        "reasons": [
+                            "PM10 (chang zarrachalari) sutkalik o'rtacha 98 µg/m³ (JSST tavsiyasi: 45).",
+                            "Ozon 8 soatlik eng yuqori 142 µg/m³ (JSST tavsiyasi: 100) — quyoshli issiq kunlarda tushdan keyin ko'tariladi.",
+                            "PM2.5 (mayda zarrachalar) sutkalik o'rtacha 31 µg/m³ — JSST tavsiyasidan (15) 2 barobar yuqori.",
+                            "Profilingizda havo ifloslanishiga sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Sezgir guruhlar (bolalar, keksalar, homiladorlar, yurak va o'pka kasallari) ochiq havoda uzoq va og'ir jismoniy faollikni kamaytirsin.",
+                            "Ochiq havodagi og'ir mashg'ulotlarni qisqartiring yoki yopiq joyga ko'chiring (eng ifloslangan payt — 20:00 atrofida).",
+                            "Ifloslanish yuqori soatlarda derazalarni yopiq tuting; HEPA filtrli havo tozalagich bo'lsa, yoqing.",
+                            "Uy ichida tutunni kamaytiring: chekmang, ochiq olov va tutatqi ishlatmang."
+                        ]
+                    }
+                },
+                {
+                    "date": "2026-07-19",
+                    "overall": {
+                        "score": 94,
+                        "level": "EMERGENCY",
+                        "name": "Favqulodda",
+                        "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+                    },
+                    "tempMax": 41.0,
+                    "tempMin": 26.0,
+                    "feelsMax": 41.0,
+                    "feelsPeakHour": 15,
+                    "uvMax": 9.5,
+                    "uv": {
+                        "category": "VERY_HIGH",
+                        "name": "Juda yuqori",
+                        "advice": "Qo'shimcha himoya: tushlik soatlarida tashqarida bo'lmang; soya, kiyim, bosh kiyim va krem majburiy."
+                    },
+                    "air": {
+                        "pm25": 20.7,
+                        "pm10": 61.1,
+                        "ozone8h": 126.7,
+                        "no2": 21.3,
+                        "no2Max": 34.4,
+                        "dustShare": 0.18,
+                        "worstHour": 20
+                    },
+                    "heatRisk": {
+                        "hazard": "HEAT",
+                        "name": "Issiqlik",
+                        "base": {
+                            "score": 75,
+                            "level": "WARNING",
+                            "name": "Xavfli",
+                            "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+                        },
+                        "personal": {
+                            "score": 94,
+                            "level": "EMERGENCY",
+                            "name": "Favqulodda",
+                            "advice": "Hayot uchun xavfli sharoit: barcha ehtiyot choralarini ko'ring, zaif yaqinlaringizni yolg'iz qoldirmang."
+                        },
+                        "reasons": [
+                            "Eng yuqori harorat 41°C (15:00 atrofida) — NWS «Xavf» toifasi (39,4–51,7°C).",
+                            "Kechasi havo 20°C dan pastga tushmaydi (eng past 24°C) — organizm tunda tiklanishga ulgurmaydi.",
+                            "Ketma-ket 6-kun xavfli issiqlik — ta'siri kundan-kunga jamlanadi.",
+                            "Profilingizda issiqqa sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Chanqashni kutmasdan muntazam suv iching; spirtli, ko'p kofeinli va shakarli ichimliklardan saqlaning.",
+                            "Yengil, keng va och rangli kiyim kiying, boshingizni yoping.",
+                            "Kunning eng issiq soatlarida (bugun eng issiq payt — 15:00 atrofida) tashqarida og'ir jismoniy ish va sportdan saqlaning, soyada bo'ling.",
+                            "Kunduzi parda va darchalarni yoping, tunda havo salqinlashganda derazalarni oching.",
+                            "Bolani yoki uy hayvonini to'xtab turgan mashinada bir daqiqaga ham qoldirmang.",
+                            "Konditsionerli yoki salqin joyda vaqt o'tkazing. Ventilyatorni faqat xona 32°C dan salqin bo'lsa ishlating — undan issiqda u tana haroratini oshirishi mumkin (CDC).",
+                            "Yolg'iz yashaydigan keksa va kasal yaqinlaringizdan kuniga ikki marta xabar oling.",
+                            "Ko'p dorilar issiqda suvsizlanish xavfini oshiradi: dorini o'zingiz to'xtatmang, shifokoringizdan so'rang; dorilarni issiq joyda saqlamang.",
+                            "Issiq urishi belgilari — chalkashlik, nutq buzilishi, hushdan ketish, tutqanoq, juda yuqori tana harorati: darhol 103 ga qo'ng'iroq qiling."
+                        ]
+                    },
+                    "airRisk": {
+                        "hazard": "AIR",
+                        "name": "Havo sifati",
+                        "base": {
+                            "score": 31,
+                            "level": "WATCH",
+                            "name": "Kuzatuv",
+                            "advice": "Sezgir guruhlar ehtiyot bo'lsin, prognozni kuzatib boring."
+                        },
+                        "personal": {
+                            "score": 39,
+                            "level": "WATCH",
+                            "name": "Kuzatuv",
+                            "advice": "Sezgir guruhlar ehtiyot bo'lsin, prognozni kuzatib boring."
+                        },
+                        "reasons": [
+                            "PM10 (chang zarrachalari) sutkalik o'rtacha 61 µg/m³ (JSST tavsiyasi: 45).",
+                            "Ozon 8 soatlik eng yuqori 127 µg/m³ (JSST tavsiyasi: 100) — quyoshli issiq kunlarda tushdan keyin ko'tariladi.",
+                            "PM2.5 (mayda zarrachalar) sutkalik o'rtacha 21 µg/m³ — JSST tavsiyasidan (15) 1,4 barobar yuqori.",
+                            "Profilingizda havo ifloslanishiga sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Sezgir guruhlar (bolalar, keksalar, homiladorlar, yurak va o'pka kasallari) ochiq havoda uzoq va og'ir jismoniy faollikni kamaytirsin."
+                        ]
+                    }
+                },
+                {
+                    "date": "2026-07-20",
+                    "overall": {
+                        "score": 76,
+                        "level": "WARNING",
+                        "name": "Xavfli",
+                        "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+                    },
+                    "tempMax": 38.0,
+                    "tempMin": 24.0,
+                    "feelsMax": 38.0,
+                    "feelsPeakHour": 15,
+                    "uvMax": 9.2,
+                    "uv": {
+                        "category": "VERY_HIGH",
+                        "name": "Juda yuqori",
+                        "advice": "Qo'shimcha himoya: tushlik soatlarida tashqarida bo'lmang; soya, kiyim, bosh kiyim va krem majburiy."
+                    },
+                    "air": null,
+                    "heatRisk": {
+                        "hazard": "HEAT",
+                        "name": "Issiqlik",
+                        "base": {
+                            "score": 61,
+                            "level": "WARNING",
+                            "name": "Xavfli",
+                            "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+                        },
+                        "personal": {
+                            "score": 76,
+                            "level": "WARNING",
+                            "name": "Xavfli",
+                            "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+                        },
+                        "reasons": [
+                            "Eng yuqori harorat 38°C (15:00 atrofida) — NWS «Kuchli ehtiyot» toifasi (32,2–39,4°C).",
+                            "Kechasi havo 20°C dan pastga tushmaydi (eng past 23°C) — organizm tunda tiklanishga ulgurmaydi.",
+                            "Profilingizda issiqqa sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Chanqashni kutmasdan muntazam suv iching; spirtli, ko'p kofeinli va shakarli ichimliklardan saqlaning.",
+                            "Yengil, keng va och rangli kiyim kiying, boshingizni yoping.",
+                            "Kunning eng issiq soatlarida (bugun eng issiq payt — 15:00 atrofida) tashqarida og'ir jismoniy ish va sportdan saqlaning, soyada bo'ling.",
+                            "Kunduzi parda va darchalarni yoping, tunda havo salqinlashganda derazalarni oching.",
+                            "Bolani yoki uy hayvonini to'xtab turgan mashinada bir daqiqaga ham qoldirmang.",
+                            "Konditsionerli yoki salqin joyda vaqt o'tkazing. Ventilyatorni faqat xona 32°C dan salqin bo'lsa ishlating — undan issiqda u tana haroratini oshirishi mumkin (CDC).",
+                            "Yolg'iz yashaydigan keksa va kasal yaqinlaringizdan kuniga ikki marta xabar oling.",
+                            "Ko'p dorilar issiqda suvsizlanish xavfini oshiradi: dorini o'zingiz to'xtatmang, shifokoringizdan so'rang; dorilarni issiq joyda saqlamang.",
+                            "Issiq urishi belgilari — chalkashlik, nutq buzilishi, hushdan ketish, tutqanoq, juda yuqori tana harorati: darhol 103 ga qo'ng'iroq qiling."
+                        ]
+                    },
+                    "airRisk": null
+                },
+                {
+                    "date": "2026-07-21",
+                    "overall": {
+                        "score": 71,
+                        "level": "WARNING",
+                        "name": "Xavfli",
+                        "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+                    },
+                    "tempMax": 36.5,
+                    "tempMin": 23.0,
+                    "feelsMax": 36.5,
+                    "feelsPeakHour": 15,
+                    "uvMax": 9.0,
+                    "uv": {
+                        "category": "VERY_HIGH",
+                        "name": "Juda yuqori",
+                        "advice": "Qo'shimcha himoya: tushlik soatlarida tashqarida bo'lmang; soya, kiyim, bosh kiyim va krem majburiy."
+                    },
+                    "air": null,
+                    "heatRisk": {
+                        "hazard": "HEAT",
+                        "name": "Issiqlik",
+                        "base": {
+                            "score": 57,
+                            "level": "ADVISORY",
+                            "name": "Ehtiyot",
+                            "advice": "Ochiq havoda uzoq va og'ir jismoniy ishni kamaytiring; sezgir guruhlar alohida ehtiyot bo'lsin."
+                        },
+                        "personal": {
+                            "score": 71,
+                            "level": "WARNING",
+                            "name": "Xavfli",
+                            "advice": "Sog'liq uchun jiddiy xavf: eng og'ir soatlarda tashqarida bo'lmang, yaqinlaringiz holatidan xabar oling."
+                        },
+                        "reasons": [
+                            "Eng yuqori harorat 37°C (15:00 atrofida) — NWS «Kuchli ehtiyot» toifasi (32,2–39,4°C).",
+                            "Kechasi havo 20°C dan pastga tushmaydi (eng past 23°C) — organizm tunda tiklanishga ulgurmaydi.",
+                            "Profilingizda issiqqa sezgir guruh bor (65 yoshdan kattalar) — xavf 25% yuqori baholandi."
+                        ],
+                        "advice": [
+                            "Chanqashni kutmasdan muntazam suv iching; spirtli, ko'p kofeinli va shakarli ichimliklardan saqlaning.",
+                            "Yengil, keng va och rangli kiyim kiying, boshingizni yoping.",
+                            "Kunning eng issiq soatlarida (bugun eng issiq payt — 15:00 atrofida) tashqarida og'ir jismoniy ish va sportdan saqlaning, soyada bo'ling.",
+                            "Kunduzi parda va darchalarni yoping, tunda havo salqinlashganda derazalarni oching.",
+                            "Bolani yoki uy hayvonini to'xtab turgan mashinada bir daqiqaga ham qoldirmang.",
+                            "Konditsionerli yoki salqin joyda vaqt o'tkazing. Ventilyatorni faqat xona 32°C dan salqin bo'lsa ishlating — undan issiqda u tana haroratini oshirishi mumkin (CDC).",
+                            "Yolg'iz yashaydigan keksa va kasal yaqinlaringizdan kuniga ikki marta xabar oling.",
+                            "Ko'p dorilar issiqda suvsizlanish xavfini oshiradi: dorini o'zingiz to'xtatmang, shifokoringizdan so'rang; dorilarni issiq joyda saqlamang.",
+                            "Issiq urishi belgilari — chalkashlik, nutq buzilishi, hushdan ketish, tutqanoq, juda yuqori tana harorati: darhol 103 ga qo'ng'iroq qiling."
+                        ]
+                    },
+                    "airRisk": null
+                }
+            ],
+            "hours": [
+                {
+                    "time": "2026-07-15T09:00",
+                    "temp": 31.7,
+                    "feels": 31.7,
+                    "humidity": 32.0,
+                    "uv": 6.0,
+                    "pm25": 23.2,
+                    "pm10": 65.0
+                },
+                {
+                    "time": "2026-07-15T10:00",
+                    "temp": 34.0,
+                    "feels": 34.0,
+                    "humidity": 28.0,
+                    "uv": 7.6,
+                    "pm25": 20.5,
+                    "pm10": 58.3
+                },
+                {
+                    "time": "2026-07-15T11:00",
+                    "temp": 36.3,
+                    "feels": 36.3,
+                    "humidity": 24.0,
+                    "uv": 8.7,
+                    "pm25": 18.9,
+                    "pm10": 54.4
+                },
+                {
+                    "time": "2026-07-15T12:00",
+                    "temp": 38.4,
+                    "feels": 38.4,
+                    "humidity": 20.0,
+                    "uv": 9.5,
+                    "pm25": 18.4,
+                    "pm10": 53.6
+                },
+                {
+                    "time": "2026-07-15T13:00",
+                    "temp": 40.1,
+                    "feels": 40.1,
+                    "humidity": 17.0,
+                    "uv": 9.7,
+                    "pm25": 18.5,
+                    "pm10": 53.8
+                },
+                {
+                    "time": "2026-07-15T14:00",
+                    "temp": 41.1,
+                    "feels": 41.1,
+                    "humidity": 15.0,
+                    "uv": 9.5,
+                    "pm25": 18.5,
+                    "pm10": 54.1
+                },
+                {
+                    "time": "2026-07-15T15:00",
+                    "temp": 41.5,
+                    "feels": 41.5,
+                    "humidity": 14.0,
+                    "uv": 8.7,
+                    "pm25": 18.6,
+                    "pm10": 54.2
+                },
+                {
+                    "time": "2026-07-15T16:00",
+                    "temp": 41.3,
+                    "feels": 41.3,
+                    "humidity": 14.0,
+                    "uv": 7.6,
+                    "pm25": 19.0,
+                    "pm10": 55.2
+                },
+                {
+                    "time": "2026-07-15T17:00",
+                    "temp": 40.8,
+                    "feels": 40.8,
+                    "humidity": 15.0,
+                    "uv": 6.0,
+                    "pm25": 20.4,
+                    "pm10": 58.5
+                },
+                {
+                    "time": "2026-07-15T18:00",
+                    "temp": 40.0,
+                    "feels": 40.0,
+                    "humidity": 17.0,
+                    "uv": 4.2,
+                    "pm25": 23.1,
+                    "pm10": 65.4
+                },
+                {
+                    "time": "2026-07-15T19:00",
+                    "temp": 38.9,
+                    "feels": 38.9,
+                    "humidity": 19.0,
+                    "uv": 2.2,
+                    "pm25": 26.3,
+                    "pm10": 73.2
+                },
+                {
+                    "time": "2026-07-15T20:00",
+                    "temp": 37.5,
+                    "feels": 37.5,
+                    "humidity": 22.0,
+                    "uv": 0.0,
+                    "pm25": 27.4,
+                    "pm10": 75.8
+                },
+                {
+                    "time": "2026-07-15T21:00",
+                    "temp": 36.1,
+                    "feels": 36.1,
+                    "humidity": 25.0,
+                    "uv": 0.0,
+                    "pm25": 25.4,
+                    "pm10": 69.7
+                },
+                {
+                    "time": "2026-07-15T22:00",
+                    "temp": 34.5,
+                    "feels": 34.5,
+                    "humidity": 28.0,
+                    "uv": 0.0,
+                    "pm25": 21.9,
+                    "pm10": 60.4
+                },
+                {
+                    "time": "2026-07-15T23:00",
+                    "temp": 32.9,
+                    "feels": 32.9,
+                    "humidity": 31.0,
+                    "uv": 0.0,
+                    "pm25": 18.8,
+                    "pm10": 52.2
+                },
+                {
+                    "time": "2026-07-16T00:00",
+                    "temp": 31.9,
+                    "feels": 31.9,
+                    "humidity": 34.0,
+                    "uv": 0.0,
+                    "pm25": 18.1,
+                    "pm10": 53.4
+                },
+                {
+                    "time": "2026-07-16T01:00",
+                    "temp": 30.4,
+                    "feels": 30.4,
+                    "humidity": 37.0,
+                    "uv": 0.0,
+                    "pm25": 18.1,
+                    "pm10": 53.4
+                },
+                {
+                    "time": "2026-07-16T02:00",
+                    "temp": 29.2,
+                    "feels": 29.2,
+                    "humidity": 39.0,
+                    "uv": 0.0,
+                    "pm25": 18.1,
+                    "pm10": 53.4
+                },
+                {
+                    "time": "2026-07-16T03:00",
+                    "temp": 28.3,
+                    "feels": 28.3,
+                    "humidity": 41.0,
+                    "uv": 0.0,
+                    "pm25": 18.1,
+                    "pm10": 53.4
+                },
+                {
+                    "time": "2026-07-16T04:00",
+                    "temp": 27.7,
+                    "feels": 27.7,
+                    "humidity": 42.0,
+                    "uv": 0.0,
+                    "pm25": 18.2,
+                    "pm10": 53.8
+                },
+                {
+                    "time": "2026-07-16T05:00",
+                    "temp": 27.5,
+                    "feels": 27.5,
+                    "humidity": 42.0,
+                    "uv": 0.0,
+                    "pm25": 18.9,
+                    "pm10": 55.8
+                },
+                {
+                    "time": "2026-07-16T06:00",
+                    "temp": 27.9,
+                    "feels": 27.9,
+                    "humidity": 41.0,
+                    "uv": 0.0,
+                    "pm25": 21.0,
+                    "pm10": 61.7
+                },
+                {
+                    "time": "2026-07-16T07:00",
+                    "temp": 29.0,
+                    "feels": 29.0,
+                    "humidity": 39.0,
+                    "uv": 2.2,
+                    "pm25": 24.3,
+                    "pm10": 70.9
+                },
+                {
+                    "time": "2026-07-16T08:00",
+                    "temp": 30.7,
+                    "feels": 30.7,
+                    "humidity": 36.0,
+                    "uv": 4.3,
+                    "pm25": 26.7,
+                    "pm10": 78.4
+                },
+                {
+                    "time": "2026-07-16T09:00",
+                    "temp": 32.9,
+                    "feels": 32.9,
+                    "humidity": 32.0,
+                    "uv": 6.2,
+                    "pm25": 25.5,
+                    "pm10": 75.8
+                },
+                {
+                    "time": "2026-07-16T10:00",
+                    "temp": 35.2,
+                    "feels": 35.2,
+                    "humidity": 28.0,
+                    "uv": 7.7,
+                    "pm25": 22.8,
+                    "pm10": 68.7
+                },
+                {
+                    "time": "2026-07-16T11:00",
+                    "temp": 37.6,
+                    "feels": 37.6,
+                    "humidity": 24.0,
+                    "uv": 8.9,
+                    "pm25": 21.1,
+                    "pm10": 64.5
+                },
+                {
+                    "time": "2026-07-16T12:00",
+                    "temp": 39.8,
+                    "feels": 39.8,
+                    "humidity": 20.0,
+                    "uv": 9.6,
+                    "pm25": 20.8,
+                    "pm10": 63.9
+                },
+                {
+                    "time": "2026-07-16T13:00",
+                    "temp": 41.5,
+                    "feels": 41.5,
+                    "humidity": 17.0,
+                    "uv": 9.9,
+                    "pm25": 20.8,
+                    "pm10": 64.4
+                },
+                {
+                    "time": "2026-07-16T14:00",
+                    "temp": 42.6,
+                    "feels": 42.6,
+                    "humidity": 15.0,
+                    "uv": 9.6,
+                    "pm25": 20.9,
+                    "pm10": 64.7
+                },
+                {
+                    "time": "2026-07-16T15:00",
+                    "temp": 43.0,
+                    "feels": 43.0,
+                    "humidity": 14.0,
+                    "uv": 8.9,
+                    "pm25": 21.0,
+                    "pm10": 64.8
+                },
+                {
+                    "time": "2026-07-16T16:00",
+                    "temp": 42.8,
+                    "feels": 42.8,
+                    "humidity": 14.0,
+                    "uv": 7.7,
+                    "pm25": 21.4,
+                    "pm10": 65.7
+                },
+                {
+                    "time": "2026-07-16T17:00",
+                    "temp": 42.3,
+                    "feels": 42.3,
+                    "humidity": 15.0,
+                    "uv": 6.2,
+                    "pm25": 22.8,
+                    "pm10": 69.2
+                },
+                {
+                    "time": "2026-07-16T18:00",
+                    "temp": 41.4,
+                    "feels": 41.4,
+                    "humidity": 17.0,
+                    "uv": 4.3,
+                    "pm25": 25.6,
+                    "pm10": 76.6
+                },
+                {
+                    "time": "2026-07-16T19:00",
+                    "temp": 40.3,
+                    "feels": 40.3,
+                    "humidity": 19.0,
+                    "uv": 2.2,
+                    "pm25": 28.8,
+                    "pm10": 84.9
+                },
+                {
+                    "time": "2026-07-16T20:00",
+                    "temp": 38.9,
+                    "feels": 38.9,
+                    "humidity": 22.0,
+                    "uv": 0.0,
+                    "pm25": 29.9,
+                    "pm10": 87.4
+                },
+                {
+                    "time": "2026-07-16T21:00",
+                    "temp": 37.4,
+                    "feels": 37.4,
+                    "humidity": 25.0,
+                    "uv": 0.0,
+                    "pm25": 27.6,
+                    "pm10": 80.1
+                },
+                {
+                    "time": "2026-07-16T22:00",
+                    "temp": 35.8,
+                    "feels": 35.8,
+                    "humidity": 28.0,
+                    "uv": 0.0,
+                    "pm25": 23.9,
+                    "pm10": 69.6
+                },
+                {
+                    "time": "2026-07-16T23:00",
+                    "temp": 34.1,
+                    "feels": 34.1,
+                    "humidity": 31.0,
+                    "uv": 0.0,
+                    "pm25": 20.6,
+                    "pm10": 60.4
+                },
+                {
+                    "time": "2026-07-17T00:00",
+                    "temp": 33.0,
+                    "feels": 33.0,
+                    "humidity": 34.0,
+                    "uv": 0.0,
+                    "pm25": 38.5,
+                    "pm10": 136.0
+                },
+                {
+                    "time": "2026-07-17T01:00",
+                    "temp": 31.5,
+                    "feels": 31.5,
+                    "humidity": 37.0,
+                    "uv": 0.0,
+                    "pm25": 38.5,
+                    "pm10": 136.0
+                },
+                {
+                    "time": "2026-07-17T02:00",
+                    "temp": 30.2,
+                    "feels": 30.2,
+                    "humidity": 39.0,
+                    "uv": 0.0,
+                    "pm25": 38.5,
+                    "pm10": 136.0
+                },
+                {
+                    "time": "2026-07-17T03:00",
+                    "temp": 29.3,
+                    "feels": 29.3,
+                    "humidity": 41.0,
+                    "uv": 0.0,
+                    "pm25": 38.5,
+                    "pm10": 136.1
+                },
+                {
+                    "time": "2026-07-17T04:00",
+                    "temp": 28.7,
+                    "feels": 28.7,
+                    "humidity": 42.0,
+                    "uv": 0.0,
+                    "pm25": 38.7,
+                    "pm10": 136.6
+                },
+                {
+                    "time": "2026-07-17T05:00",
+                    "temp": 28.5,
+                    "feels": 28.5,
+                    "humidity": 42.0,
+                    "uv": 0.0,
+                    "pm25": 39.7,
+                    "pm10": 139.7
+                },
+                {
+                    "time": "2026-07-17T06:00",
+                    "temp": 28.9,
+                    "feels": 28.9,
+                    "humidity": 41.0,
+                    "uv": 0.0,
+                    "pm25": 42.5,
+                    "pm10": 148.9
+                },
+                {
+                    "time": "2026-07-17T07:00",
+                    "temp": 30.0,
+                    "feels": 30.0,
+                    "humidity": 39.0,
+                    "uv": 2.2,
+                    "pm25": 47.1,
+                    "pm10": 163.3
+                },
+                {
+                    "time": "2026-07-17T08:00",
+                    "temp": 31.8,
+                    "feels": 31.8,
+                    "humidity": 36.0,
+                    "uv": 4.4,
+                    "pm25": 54.4,
+                    "pm10": 190.6
+                }
+            ]
+        },
+        {
+            "id": "termez",
+            "name": "Termiz",
+            "localNow": "2026-07-15T04:00",
+            "weatherFetchedAt": null,
+            "airFetchedAt": null,
+            "today": null,
+            "current": null,
+            "days": [],
+            "hours": []
+        }
+    ],
+    "sources": [
+        {
+            "id": "WEATHER",
+            "title": "Open-Meteo — ob-havo prognozi (milliy meteorologiya xizmatlari modellari)",
+            "homepage": "https://open-meteo.com/en/docs",
+            "ok": false,
+            "fetchedAt": "2026-07-15T04:00:00Z",
+            "error": "Termiz: Server xatosi (HTTP 404)",
+            "stale": false
+        },
+        {
+            "id": "AIR",
+            "title": "Open-Meteo — havo sifati (Copernicus CAMS modeli)",
+            "homepage": "https://open-meteo.com/en/docs/air-quality-api",
+            "ok": false,
+            "fetchedAt": "2026-07-15T04:00:00Z",
+            "error": "Termiz: Server xatosi (HTTP 404)",
+            "stale": false
+        }
+    ]
+}

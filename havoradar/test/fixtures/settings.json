@@ -1,0 +1,15 @@
+{
+    "placeId": "tashkent",
+    "extraPlaces": [
+        "termez"
+    ],
+    "profile": [
+        "ELDERLY"
+    ],
+    "notificationsEnabled": true,
+    "alertThreshold": "WARNING",
+    "syncHours": 3,
+    "quietHours": true,
+    "onboardingDone": false,
+    "lightTheme": false
+}

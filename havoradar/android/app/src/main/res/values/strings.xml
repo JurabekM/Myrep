@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HavoRadar</string>
+    <string name="widget_label">HavoRadar — issiqlik va havo</string>
+    <string name="widget_description">Bugungi issiqlik va havo sifati xavfi</string>
+    <string name="widget_empty">Ma\'lumot hali yuklanmagan</string>
+    <string name="channel_critical">Xavfli issiqlik va havo</string>
+    <string name="channel_critical_desc">Xavfli va Favqulodda darajadagi issiqlik yoki havo ifloslanishi ogohlantirishlari</string>
+    <string name="channel_alerts">Ogohlantirishlar</string>
+    <string name="channel_alerts_desc">Kuzatuv va Ehtiyot darajasidagi ogohlantirishlar</string>
+</resources>

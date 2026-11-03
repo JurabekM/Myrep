@@ -1,0 +1,31 @@
+# id	nomi	kenglik	uzunlik	xorij(0/1) — shahar markazlari (WGS84). Qo'shish: shu formatda qator, test PlacesTest.
+tashkent	Toshkent	41.2995	69.2401	0
+chirchiq	Chirchiq	41.4689	69.5822	0
+angren	Angren	41.0167	70.1436	0
+andijan	Andijon	40.7821	72.3442	0
+namangan	Namangan	40.9983	71.6726	0
+fergana	Farg'ona	40.3864	71.7864	0
+kokand	Qo'qon	40.5286	70.9425	0
+guliston	Guliston	40.4897	68.7842	0
+jizzakh	Jizzax	40.1158	67.8422	0
+samarkand	Samarqand	39.6542	66.9597	0
+navoi	Navoiy	40.0844	65.3792	0
+bukhara	Buxoro	39.7747	64.4286	0
+karshi	Qarshi	38.8606	65.7891	0
+shahrisabz	Shahrisabz	39.0578	66.8342	0
+termez	Termiz	37.2242	67.2783	0
+urgench	Urganch	41.5500	60.6333	0
+khiva	Xiva	41.3783	60.3639	0
+nukus	Nukus	42.4531	59.6103	0
+muynak	Mo'ynoq	43.7683	59.0214	0
+almaty	Olmaota (Qozog'iston)	43.2389	76.8897	1
+bishkek	Bishkek (Qirg'iziston)	42.8746	74.5698	1
+dushanbe	Dushanbe (Tojikiston)	38.5598	68.7870	1
+ashgabat	Ashxobod (Turkmaniston)	37.9601	58.3261	1
+moscow	Moskva (Rossiya)	55.7558	37.6173	1
+istanbul	Istanbul (Turkiya)	41.0082	28.9784	1
+dubai	Dubay (BAA)	25.2048	55.2708	1
+mecca	Makka (Saudiya Arabistoni)	21.4225	39.8262	1
+medina	Madina (Saudiya Arabistoni)	24.4672	39.6111	1
+seoul	Seul (Janubiy Koreya)	37.5665	126.9780	1
+delhi	Dehli (Hindiston)	28.6139	77.2090	1

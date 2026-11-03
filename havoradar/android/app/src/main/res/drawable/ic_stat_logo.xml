@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bildirishnoma belgisi (bir rangli, oq): quyosh va shamol to'lqini. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M10,5a5,5 0,1 1,0 10a5,5 0,1 1,0 -10z" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M10,1.5L10,2.5M2.5,10L3.5,10M4.7,4.7L5.4,5.4M15.3,4.7L14.6,5.4M5,19c2,-1.6 4,-1.6 6,0s4,1.6 6,0s4,-1.6 6,0" />
+</vector>
