@@ -111,7 +111,9 @@ void main() {
     expect((await engine.settings()).profile, contains('DIABETES'));
 
     await tester.scrollUntilVisible(find.text('Asosiy joy'), -200, scrollable: _scroll());
-    await tester.tap(find.text('Toshkent').first);
+    await tester.ensureVisible(find.text('Toshkent'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Toshkent'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Samar');
     await tester.pumpAndSettle();
