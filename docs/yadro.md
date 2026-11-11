@@ -46,6 +46,8 @@ Hamma so'rovda `Authorization: Bearer <token>` (faqat `/health` tokensiz).
 |------|------|-------|
 | `GET /api/v1/health` | yo'q | `{status, version, uptime_s}` |
 | `GET /api/v1/system` | token | `{ts, cpu, memory, disks[], process}` |
+| `GET /api/v1/system/processes` | token | yadro va bola plaginlar xotirasi, 350 MB chegarasi |
+| `GET /api/v1/logs?tail=N` | token | oxirgi log yozuvlari (1–500, INFO va yuqori) |
 | `WS /ws/events?topics=a.*,b` | token (sarlavhada) | hodisalar oqimi |
 | `/api/v1/plugins...` | token | [plaginlar.md](plaginlar.md) |
 
@@ -71,6 +73,7 @@ Hozirgi mavzular:
 |-------|--------|
 | `system.stats` | har `stats_interval_s` da, faqat obunachi bo'lsa |
 | `audit` | har audit yozuvida |
+| `log` | har log yozuvida (INFO va yuqori) |
 | `plugins.state` | plagin holati o'zgarganda |
 | `plugin.<nom>.*` | plaginlar nashr qiladi |
 

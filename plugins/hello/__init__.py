@@ -125,29 +125,51 @@ def srv1_subscriptions(ctx: PluginContext) -> list[EventHandler]:
     return [EventHandler(f"plugin.{ctx.name}.tick", on_tick)]
 
 
+def _t(uz: str, ru: str, en: str) -> dict[str, str]:
+    return {"uz": uz, "ru": ru, "en": en}
+
+
 @hookimpl
 def srv1_panel(ctx: PluginContext) -> PanelSpec:
     return PanelSpec(
-        title="Salom",
+        title=_t("Salom", "Привет", "Hello"),
         widgets=(
-            LabelWidget(text="Namuna plagin: har 10 soniyada bitta «tick» hodisasi."),
-            ValueWidget(label="Ticklar", source="/stats", field="ticks", refresh_s=2.0),
-            ValueWidget(label="Eslatmalar", source="/stats", field="notes"),
-            ChartWidget(label="Tick raqami", topic="tick", field="n"),
-            ButtonWidget(label="Hozir tick", path="/tick"),
+            LabelWidget(
+                text=_t(
+                    "Namuna plagin: har 10 soniyada bitta «tick» hodisasi.",
+                    "Пример плагина: одно событие «tick» каждые 10 секунд.",
+                    "Sample plugin: one “tick” event every 10 seconds.",
+                )
+            ),
+            ValueWidget(
+                label=_t("Ticklar", "Тики", "Ticks"), source="/stats", field="ticks", refresh_s=2.0
+            ),
+            ValueWidget(
+                label=_t("Eslatmalar", "Заметки", "Notes"),
+                source="/stats",
+                field="notes",
+                refresh_s=2.0,
+            ),
+            ChartWidget(
+                label=_t("Tick raqami", "Номер тика", "Tick number"), topic="tick", field="n"
+            ),
+            ButtonWidget(label=_t("Hozir tick", "Тик сейчас", "Tick now"), path="/tick"),
             FormWidget(
-                label="Salomlashish",
+                label=_t("Salomlashish", "Приветствие", "Greeting"),
                 method="GET",
                 path="/greet",
-                fields=(FormField(name="name", label="Ism", required=False),),
+                fields=(FormField(name="name", label=_t("Ism", "Имя", "Name"), required=False),),
             ),
             FormWidget(
-                label="Eslatma qo'shish",
+                label=_t("Eslatma qo'shish", "Добавить заметку", "Add a note"),
                 path="/notes",
-                fields=(FormField(name="text", label="Matn"),),
+                fields=(FormField(name="text", label=_t("Matn", "Текст", "Text")),),
             ),
             ButtonWidget(
-                label="Eslatmalarni o'chirish", method="DELETE", path="/notes", confirm=True
+                label=_t("Eslatmalarni o'chirish", "Удалить заметки", "Delete notes"),
+                method="DELETE",
+                path="/notes",
+                confirm=True,
             ),
         ),
     )

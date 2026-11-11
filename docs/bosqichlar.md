@@ -5,8 +5,8 @@
 | 0 | Skelet | ✅ tugadi | 2026-11-11 |
 | 1 | Yadro | ✅ tugadi | 2026-11-11 |
 | 2 | SDK va plagin yuklovchi | ✅ tugadi | 2026-11-11 |
-| 3 | Shell | ⏳ reja tasdiqlanishi kutilmoqda | — |
-| 4 | `files` | — | — |
+| 3 | Shell | ✅ tugadi | 2026-11-11 |
+| 4 | `files` | ⏳ reja tasdiqlanishi kutilmoqda | — |
 | 5 | `hosting` | — | — |
 | 6 | `iot` | — | — |
 | 7 | `data` | — | — |
@@ -163,3 +163,76 @@ Yadro 1-bosqichga nisbatan +3,4 MB. Jami bola plagin bilan 128,5 MB, bolasiz
   o'ralgan va o'sha fayllarda pyright qoidalari yumshatilgan.
 - Haqiqiy jarayonda toza to'xtatish (Ctrl+C) hamon sinalmagan; uvicorn'ning
   jarayon ichidagi to'xtashi sinalgan (bola plaginlar to'xtaydi).
+
+## 3-bosqich — Shell
+
+Tafsilot: [shell.md](shell.md).
+
+**Qilindi**
+
+- Shell (`srv1_shell`): asosiy oyna, to'rt sahifa (tizim, plaginlar, jurnal,
+  xotira), plagin panellarini `PanelSpec` dan chizish (olti vidjet turi).
+- Uch til: o'zbekcha, ruscha, inglizcha — dastur ichida almashtiriladi va
+  eslab qolinadi. Plagin panellari ham uch tilli (`hello` tarjima qilingan).
+- Yadro API klienti (`httpx`, fon oqimida) va hodisalar oqimi (`QtWebSockets`,
+  uzilganda qayta ulanadi).
+- Yadroga qo'shildi: `GET /api/v1/system/processes`, `GET /api/v1/logs`,
+  `log` mavzusi.
+- Yangi kutubxonalar (ro'yxatdan): `PyQt6` 6.12, `pyqtgraph` 0.14 (`numpy`
+  bilan); `httpx` asosiy bog'liqliklarga ko'chdi.
+
+**Tekshiruv natijasi (2026-11-11)**
+
+- `uv run pytest` — 247 passed (≈41 s), ikki marta ketma-ket barqaror.
+  GUI testlari haqiqiy yadro jarayoniga ulanadi va tugma/formalarni
+  haqiqatan bosadi.
+- `uv run ruff check .`, `ruff format --check .` — toza; `uv run pyright` — 0 xato.
+- Har sahifa skrinshot bilan ko'zdan kechirildi (uch tilda, eng kichik
+  oyna o'lchamida ham). Namunalar: `docs/img/`.
+
+**O'lchangan RAM** (`psutil`, bitta yugurish, bo'sh holat)
+
+| Jarayon | Working Set, MB | Private, MB |
+|---------|-----------------|-------------|
+| shell, ochilgandan 5 s keyin (faqat «Tizim» sahifasi) | 113,9 | 69,2 |
+| shell, hamma sahifa ochilgandan keyin, 20 s | 120,2 | 74,7 |
+| yadro + `hello` (shu yugurishda) | 81,5 | 67,7 |
+
+Yadro + shell jami ≈ 202 MB — 350 MB chegarasining 58 %. Caddy hali yo'q
+(5-bosqich); unga ≈ 148 MB qoladi.
+
+Shell xotirasi qayerga ketadi (import bosqichlari bo'yicha, Working Set):
+Python 17, PyQt6 + `QApplication` 18, `httpx` 13, `numpy` 9, `pyqtgraph` 11,
+`pydantic` 4, shell kodi 5, oyna va vidjetlar 37 MB.
+
+**Yo'lda topilgan va tuzatilgan**
+
+- `numpy` har protsessor yadrosi uchun BLAS oqim havzasini ochib, xususiy
+  xotirani 233 MB ga oshirardi (jami 313 MB). `OPENBLAS_NUM_THREADS=1`
+  bilan 74,8 MB ga tushdi.
+- Barcha sahifalar birdan qurilardi va til almashtirganda xotira o'sardi.
+  Endi sahifa birinchi ochilganda quriladi (Working Set 147 → 120 MB,
+  o'sish yo'qoldi).
+- Signal nomi `event` Qt'ning `QObject.event()` metodi bilan to'qnashgan edi
+  (`pyright` ushladi) — `received` ga o'zgartirildi.
+- Panel grafigi butun sahifani egallab, tugmalarni pastga surib yuborardi
+  (skrinshotda ko'rindi) — balandligi qat'iy qilindi.
+
+**Qilinmadi / ma'lum kamchiliklar**
+
+- Yadro qaytaradigan xato matnlari (`detail`) faqat o'zbekcha; shell
+  tarmoq va token xatolarini o'zi tarjima qiladi, qolganini boricha ko'rsatadi.
+- Manifestdagi `description` bir tilli (plaginlar jadvalida ruscha
+  interfeysda ham o'zbekcha chiqadi).
+- Til almashtirilganda sahifalar qayta quriladi: grafik tarixi va jurnal
+  filtri yo'qoladi.
+- API so'rovlari bitta fon oqimida ketma-ket bajariladi: sekin plagin
+  so'rovi (30 s gacha) qolganlarini kutdirib qo'yadi.
+- Shell yadroni ishga tushirmaydi va to'xtatmaydi; yadro alohida ishga
+  tushirilgan bo'lishi kerak.
+- Token qo'lda kiritilsa, xotirada qoladi va saqlanmaydi (har ishga
+  tushirishda qayta so'raladi).
+- GUI testlari `offscreen` rejimida ishlaydi: shrift o'lchamlari haqiqiy
+  ekrandan farq qiladi, shuning uchun joylashuv ko'z bilan tekshirilgan.
+  Haqiqiy ekranda sichqoncha bilan qo'lda sinalmagan.
+- 4 GB RAM li mashinada sinalmagan (bu mashinada 24 GB).

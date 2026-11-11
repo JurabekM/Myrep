@@ -2,6 +2,8 @@
 
 import os
 import time
+from collections.abc import Mapping
+from typing import Literal
 
 import psutil
 from pydantic import BaseModel
@@ -91,6 +93,46 @@ def _process() -> ProcessInfo:
         mem = proc.memory_info()
         private: int | None = getattr(mem, "private", None)
         return ProcessInfo(pid=proc.pid, rss=mem.rss, private=private, threads=proc.num_threads())
+
+
+class ProcessMemory(BaseModel):
+    name: str
+    kind: Literal["core", "plugin"]
+    pid: int
+    rss: int
+    private: int | None
+
+
+class ProcessReport(BaseModel):
+    budget_bytes: int
+    total_rss: int
+    processes: list[ProcessMemory]
+
+
+# Butun tizim (yadro + Caddy + shell) bo'sh holatda shundan oshmasligi kerak.
+IDLE_BUDGET_BYTES = 350 * 1024 * 1024
+
+
+def _memory_of(name: str, kind: Literal["core", "plugin"], pid: int) -> ProcessMemory | None:
+    try:
+        mem = psutil.Process(pid).memory_info()
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        return None
+    return ProcessMemory(
+        name=name, kind=kind, pid=pid, rss=mem.rss, private=getattr(mem, "private", None)
+    )
+
+
+def process_report(plugin_pids: Mapping[str, int]) -> ProcessReport:
+    """Yadro va bola plaginlar bo'yicha xotira. Bloklovchi: `asyncio.to_thread` bilan chaqiring."""
+    candidates = [_memory_of("core", "core", os.getpid())]
+    candidates += [_memory_of(name, "plugin", pid) for name, pid in sorted(plugin_pids.items())]
+    processes = [item for item in candidates if item is not None]
+    return ProcessReport(
+        budget_bytes=IDLE_BUDGET_BYTES,
+        total_rss=sum(item.rss for item in processes),
+        processes=processes,
+    )
 
 
 def take_snapshot() -> SystemSnapshot:

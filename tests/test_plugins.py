@@ -97,7 +97,7 @@ async def test_hello_full_cycle(paths: DataPaths, plugin_root: Path, mode: str) 
 
         # panel va audit
         panel = (await client.get(f"{API}/hello/panel")).json()
-        assert panel["title"] == "Salom"
+        assert panel["title"] == {"uz": "Salom", "ru": "Привет", "en": "Hello"}
         assert {widget["type"] for widget in panel["widgets"]} >= {"label", "value", "form"}
         assert (await client.delete(f"{API}/hello/api/notes")).json()["notes"] == 0
         assert not notes_file.exists()

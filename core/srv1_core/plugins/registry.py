@@ -147,6 +147,14 @@ class PluginRegistry:
     def list(self) -> list[PluginInfo]:
         return [self._info(entry) for entry in sorted(self._entries.values(), key=lambda e: e.name)]
 
+    def process_ids(self) -> dict[str, int]:
+        """Alohida jarayonda ishlayotgan plaginlar: nom -> pid."""
+        return {
+            entry.name: entry.runner.pid
+            for entry in self._entries.values()
+            if entry.runner is not None and entry.runner.pid is not None
+        }
+
     def get(self, name: str) -> PluginInfo:
         return self._info(self._entry(name))
 

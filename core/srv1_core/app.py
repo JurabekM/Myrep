@@ -16,7 +16,12 @@ from srv1_core.audit import AuditLogger
 from srv1_core.auth import TokenAuth, load_or_create_token, restrict_to_owner
 from srv1_core.db import Database
 from srv1_core.events import EventBus
-from srv1_core.log_setup import configure_logging, get_logger, shutdown_logging
+from srv1_core.log_setup import (
+    attach_bus_handler,
+    configure_logging,
+    get_logger,
+    shutdown_logging,
+)
 from srv1_core.paths import DataPaths
 from srv1_core.plugins.registry import BUILTIN_DIR, PluginRegistry, Source
 from srv1_core.plugins.scheduler import Scheduler
@@ -98,6 +103,7 @@ def create_app(
         db = Database(paths.db_file)
         await db.start()
         bus = EventBus(cfg.events.queue_size)
+        logs = attach_bus_handler(bus.publish)
         audit = AuditLogger(db, bus)
         auth = await _setup_auth(paths, audit)
         prime_cpu()
@@ -119,6 +125,7 @@ def create_app(
             auth=auth,
             audit=audit,
             plugins=plugins,
+            logs=logs,
             started_at=time.monotonic(),
         )
         await plugins.start()

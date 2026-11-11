@@ -49,6 +49,36 @@ async def test_system_snapshot(served: Served) -> None:
     assert any(disk["total"] > 0 for disk in body["disks"])
 
 
+async def test_process_report_lists_core(served: Served) -> None:
+    async with served.client() as client:
+        report = (await client.get("/api/v1/system/processes")).json()
+    assert report["budget_bytes"] == 350 * 1024 * 1024
+    assert [(p["name"], p["kind"], p["pid"]) for p in report["processes"]] == [
+        ("core", "core", os.getpid())
+    ]
+    assert report["total_rss"] == report["processes"][0]["rss"] > 1_000_000
+
+
+async def test_logs_tail_and_live_stream(served: Served) -> None:
+    async with served.client() as client:
+        entries = (await client.get("/api/v1/logs")).json()
+        assert "core_started" in [entry["event"] for entry in entries]
+        assert all(entry["level"] != "debug" for entry in entries)
+        last = (await client.get("/api/v1/logs", params={"tail": 1})).json()
+        assert len(last) == 1
+        assert (await client.get("/api/v1/logs", params={"tail": 0})).status_code == 422
+        assert (await client.get("/api/v1/logs", params={"tail": 501})).status_code == 422
+    async with served.client(authorized=False) as anonymous:
+        assert (await anonymous.get("/api/v1/logs")).status_code == 401
+
+    async with connect(served.ws_url("?topics=log"), additional_headers=served.headers) as ws:
+        await _until(lambda: served.core.bus.has_subscribers("log"))
+        await served.core.audit.record("test.action", "nishon")
+        message = json.loads(await ws.recv())
+    assert message["topic"] == "log"
+    assert (message["data"]["event"], message["data"]["target"]) == ("audit", "nishon")
+
+
 def test_snapshot_function_directly() -> None:
     snapshot = take_snapshot()
     assert snapshot.process.threads >= 1

@@ -20,6 +20,9 @@ from srv1_core.log_setup import shutdown_logging
 from srv1_core.paths import DataPaths
 from srv1_core.state import CoreState, get_core_from_app
 
+# Qt oynalari ekranga chiqmasin; QApplication yaratilishidan oldin o'rnatilishi shart.
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
 
 def free_port() -> int:
     with socket.socket() as sock:

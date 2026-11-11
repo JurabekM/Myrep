@@ -6,9 +6,34 @@
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 _PATH = Field(pattern=r"^/[A-Za-z0-9_\-./]*$", max_length=200)
+LANGUAGES = ("uz", "ru", "en")
+
+
+def _check_localized(value: str | dict[str, str]) -> str | dict[str, str]:
+    if isinstance(value, dict):
+        unknown = set(value) - set(LANGUAGES)
+        if unknown or not value:
+            raise ValueError(f"til kalitlari faqat {LANGUAGES} bo'lishi mumkin")
+    return value
+
+
+# Bitta satr (hamma tilda bir xil) yoki `{"uz": ..., "ru": ..., "en": ...}`.
+LocalizedText = Annotated[str | dict[str, str], AfterValidator(_check_localized)]
+
+
+def localize(text: str | dict[str, str], language: str) -> str:
+    """Kerakli tildagi matn; yo'q bo'lsa `en`, `uz`, so'ng mavjud birinchisi."""
+    if isinstance(text, str):
+        return text
+    for candidate in (language, "en", "uz"):
+        if candidate in text:
+            return text[candidate]
+    return next(iter(text.values()))
+
+
 HttpMethod = Literal["GET", "POST", "PUT", "DELETE"]
 
 
@@ -18,14 +43,14 @@ class _Widget(BaseModel):
 
 class LabelWidget(_Widget):
     type: Literal["label"] = "label"
-    text: str
+    text: LocalizedText
 
 
 class ValueWidget(_Widget):
     """`source` dan JSON olib, `field` kalitini ko'rsatadi."""
 
     type: Literal["value"] = "value"
-    label: str
+    label: LocalizedText
     source: Annotated[str, _PATH]
     field: str
     refresh_s: float = Field(default=5.0, ge=0.5)
@@ -33,7 +58,7 @@ class ValueWidget(_Widget):
 
 class ButtonWidget(_Widget):
     type: Literal["button"] = "button"
-    label: str
+    label: LocalizedText
     method: HttpMethod = "POST"
     path: Annotated[str, _PATH]
     confirm: bool = False
@@ -41,7 +66,7 @@ class ButtonWidget(_Widget):
 
 class FormField(_Widget):
     name: str
-    label: str
+    label: LocalizedText
     kind: Literal["text", "number", "bool", "choice"] = "text"
     choices: tuple[str, ...] = ()
     required: bool = True
@@ -51,7 +76,7 @@ class FormWidget(_Widget):
     """Maydonlar `GET`da so'rov parametri, boshqa metodlarda JSON tana bo'lib yuboriladi."""
 
     type: Literal["form"] = "form"
-    label: str
+    label: LocalizedText
     method: HttpMethod = "POST"
     path: Annotated[str, _PATH]
     fields: tuple[FormField, ...]
@@ -59,14 +84,14 @@ class FormWidget(_Widget):
 
 class TableColumn(_Widget):
     key: str
-    title: str
+    title: LocalizedText
 
 
 class TableWidget(_Widget):
     """`source` JSON ro'yxat (obyektlar) qaytaradi."""
 
     type: Literal["table"] = "table"
-    label: str
+    label: LocalizedText
     source: Annotated[str, _PATH]
     columns: tuple[TableColumn, ...]
     refresh_s: float = Field(default=5.0, ge=0.5)
@@ -76,7 +101,7 @@ class ChartWidget(_Widget):
     """`plugin.<nom>.<topic>` hodisasidagi `field` qiymatining jonli grafigi."""
 
     type: Literal["chart"] = "chart"
-    label: str
+    label: LocalizedText
     topic: str = Field(pattern=r"^[a-z0-9_.-]{1,64}$")
     field: str
     window: int = Field(default=120, ge=10, le=5000)
@@ -91,7 +116,7 @@ Widget = Annotated[
 class PanelSpec(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    title: str = Field(min_length=1, max_length=60)
+    title: LocalizedText
     widgets: tuple[Widget, ...] = Field(max_length=64)
 
 

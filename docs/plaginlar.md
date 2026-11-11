@@ -137,5 +137,10 @@ Audit: `plugin.enable`, `plugin.disable`, `plugin.crashed`, `process.spawn`
 | `table` | `label`, `source`, `columns[]`, `refresh_s` |
 | `chart` | `label`, `topic`, `field`, `window` |
 
+Ko'rinadigan har matn (`title`, `text`, `label`) ikki xil berilishi mumkin: oddiy
+satr (hamma tilda bir xil) yoki `{"uz": ..., "ru": ..., "en": ...}`. Shell joriy
+tilni tanlaydi; u yo'q bo'lsa `en`, so'ng `uz`. Boshqa til kaliti — xato.
+Manifestdagi `description` hozircha bir tilli.
+
 `source`/`path` — plaginning o'z API'siga nisbatan (`/stats`); tashqi URL rad
 etiladi. `topic` — `plugin.<nom>.` dan keyingi qism.

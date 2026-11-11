@@ -15,6 +15,7 @@ uv run pyright          # tip tekshiruvi (strict)
 
 $env:SRV1_DATA_DIR = "$PWD\.srv1-data"
 uv run python -m srv1_core   # yadro: http://127.0.0.1:8710
+uv run python -m srv1_shell  # shell (boshqa oynada; SRV1_DATA_DIR bir xil bo'lsin)
 ```
 
 ## Paketlar joylashuvi
