@@ -5,7 +5,17 @@ description = "SRV_1 — Windows 10 uchun universal modulli server (yadro + plag
 requires-python = ">=3.12,<3.13"
 # Bog'liqliklar bosqichma-bosqich qo'shiladi (qarang: docs/bosqichlar.md).
 # Ro'yxatda yo'q kutubxona faqat loyiha egasining roziligi bilan qo'shiladi.
-dependencies = []
+dependencies = [
+    "aiosqlite>=0.22.1",
+    "fastapi>=0.162.4",
+    "psutil>=7.2.2",
+    "pydantic>=2.14.3",
+    "pydantic-settings>=2.16.2",
+    "sqlalchemy[asyncio]>=2.1.8",
+    "structlog>=26.1.0",
+    "uvicorn>=0.54.0",
+    "websockets>=17.4",
+]
 
 [dependency-groups]
 dev = [
@@ -13,6 +23,8 @@ dev = [
     "pytest-asyncio>=0.24",
     "ruff>=0.8",
     "pyright>=1.1.390",
+    "httpx>=0.28.1",
+    "types-psutil>=7.2.2.20260906",
 ]
 
 [build-system]
@@ -47,12 +59,12 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101"]
+"tests/**" = ["S101", "S603", "ASYNC110"]
 
 # --- pyright ----------------------------------------------------------------
 [tool.pyright]
 include = ["core", "sdk", "shell", "plugins", "tests"]
-extraPaths = ["core", "sdk", "shell"]
+extraPaths = ["core", "sdk", "shell", "tests"]
 pythonVersion = "3.12"
 pythonPlatform = "Windows"
 typeCheckingMode = "strict"

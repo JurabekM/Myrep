@@ -3,8 +3,8 @@
 | # | Bosqich | Holat | Sana |
 |---|---------|-------|------|
 | 0 | Skelet | ✅ tugadi | 2026-11-11 |
-| 1 | Yadro | ⏳ reja tasdiqlanishi kutilmoqda | — |
-| 2 | SDK va plagin yuklovchi | — | — |
+| 1 | Yadro | ✅ tugadi | 2026-11-11 |
+| 2 | SDK va plagin yuklovchi | ⏳ reja tasdiqlanishi kutilmoqda | — |
 | 3 | Shell | — | — |
 | 4 | `files` | — | — |
 | 5 | `hosting` | — | — |
@@ -50,3 +50,54 @@ marta 1-bosqichda (yadro), to'liq holda 5-bosqichda (Caddy bilan) o'lchanadi.
 - `git init` bajarilmadi: papka allaqachon git repozitoriy (worktree) edi.
 - CI yo'q (so'ralmagan).
 - `tools/` bo'sh: binarlar 5, 6, 8, 10-bosqichlarda kerak bo'ladi.
+
+## 1-bosqich — Yadro
+
+Tafsilot: [yadro.md](yadro.md).
+
+**Qilindi**
+
+- `paths` (ma'lumotlar papkasi, `safe_join`), `settings` (TOML + muhit),
+  `log_setup` (structlog JSON), `db` (SQLite WAL, `audit_log`, `schema_version`),
+  `auth` (token + `icacls` ACL), `events` (pub/sub), `audit`, `system` (psutil).
+- API: `GET /api/v1/health`, `GET /api/v1/system`, `WS /ws/events`.
+- `python -m srv1_core` — uvicorn, 1 worker, Proactor loop.
+- Rozilik bilan qo'shilgan, ro'yxatda bo'lmagan kutubxonalar: `websockets`
+  (uvicorn WebSocket uchun), `types-psutil` (faqat dev).
+
+**Tekshiruv natijasi (2026-11-11)**
+
+- `uv run pytest` — 101 passed (8,8 s). Shundan 5 tasi alohida jarayondagi
+  haqiqiy `python -m srv1_core` ga, 19 tasi test jarayoni ichidagi haqiqiy
+  uvicorn'ga HTTP/WebSocket orqali ulanadi.
+- `uv run ruff check .`, `ruff format --check .` — toza; `uv run pyright` — 0 xato.
+
+**O'lchangan RAM** (`Get-Process`, bitta yugurish, obunachisiz bo'sh holat)
+
+| Vaqt | Jarayon | Working Set, MB | Private, MB |
+|------|---------|-----------------|-------------|
+| 5 s | yadro `python.exe` | 74,8 | 62,8 |
+| 65 s | yadro `python.exe` | 77,9 | 64,5 |
+| 65 s | venv ishga tushirgichi `python.exe` | 3,9 | 0,8 |
+
+Jami 65 s da: 81,8 MB Working Set. 350 MB chegarasining 23 %. Reja oldidan
+aytilgan «80 MB dan kam» mo'ljali ishga tushirgich bilan birga 1,8 MB ga
+oshdi. Yuk ostida va uzoq muddatda (soatlab) o'lchanmagan.
+
+**Qilinmadi / ma'lum kamchiliklar**
+
+- Toza to'xtatish (Ctrl+C, xizmat signali) sinalmagan: testlar jarayonni
+  `kill` qiladi. WAL tufayli baza buzilmaydi, lekin `core_stopped` log yozuvi
+  va lifespan tozalashi haqiqiy jarayonda tekshirilmagan.
+- Ishlab chiqishda standart papka hamon `%PROGRAMDATA%\SRV_1`; repo ichida
+  ishlash uchun `SRV1_DATA_DIR` ni qo'lda berish kerak.
+- Tokenni almashtirish (rotatsiya) yo'q: faylni o'chirib, qayta ishga tushirish kerak.
+- `icacls` muvaffaqiyatsiz bo'lsa yadro to'xtamaydi, faqat ogohlantiradi va
+  auditga `ok=false` yozadi.
+- `config.toml` dagi noma'lum *bo'lim* nomi (masalan `[servr]`) jim e'tiborsiz
+  qoladi; bo'lim ichidagi noma'lum kalit esa xato beradi.
+- So'rovlar jurnali (access log) o'chiq; so'rov tezligini cheklash yo'q.
+- Log yozuvlari hodisalar shinasiga chiqmaydi — shell'ning «jonli jurnal»i
+  uchun 3-bosqichda kerak bo'ladi.
+- Bog'liqliklar orasida `opentelemetry-api` tranzitiv keladi (FastAPI/Starlette
+  orqali); RAM'ga ta'siri alohida o'lchanmagan.
