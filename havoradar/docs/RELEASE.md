@@ -53,6 +53,8 @@ Obfuskatsiya belgilari `havoradar-symbols` artefaktida — Play Console'dagi cra
 
 ## 4. Play Console
 
+Do'kon matnlari, grafika, Data safety javoblari va deklaratsiyalar: [PLAY_STORE.md](PLAY_STORE.md).
+
 - Maxfiylik siyosati: https://github.com/JurabekM/Myrep/blob/master/havoradar/docs/PRIVACY.md
 - Data safety: ma'lumot yig'ilmaydi va uzatilmaydi; shahar koordinatasi prognoz uchun Open-Meteo'ga yuboriladi
   (foydalanuvchi joylashuvi emas).

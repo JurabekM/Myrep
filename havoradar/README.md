@@ -153,7 +153,8 @@ Emulyatorda to'liq tekshiruv (Kotlin instrumental testlar, Flutter integration_t
 cd havoradar && ./tool/emulator_test.sh
 ```
 
-Imzolangan reliz — teg orqali CI'da: [docs/RELEASE.md](docs/RELEASE.md).
+Imzolangan reliz — teg orqali CI'da: [docs/RELEASE.md](docs/RELEASE.md). Google Play matnlari va grafikasi:
+[docs/PLAY_STORE.md](docs/PLAY_STORE.md).
 
 Yadro JSON formati o'zgarganda Flutter test fixture'larini qayta yaratish:
 
