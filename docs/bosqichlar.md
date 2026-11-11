@@ -68,7 +68,7 @@ Tafsilot: [yadro.md](yadro.md).
 **Tekshiruv natijasi (2026-11-11)**
 
 - `uv run pytest` — 101 passed (8,8 s). Shundan 5 tasi alohida jarayondagi
-  haqiqiy `python -m srv1_core` ga, 19 tasi test jarayoni ichidagi haqiqiy
+  haqiqiy `python -m srv1_core` ga, 17 tasi test jarayoni ichidagi haqiqiy
   uvicorn'ga HTTP/WebSocket orqali ulanadi.
 - `uv run ruff check .`, `ruff format --check .` — toza; `uv run pyright` — 0 xato.
 
@@ -99,5 +99,5 @@ oshdi. Yuk ostida va uzoq muddatda (soatlab) o'lchanmagan.
 - So'rovlar jurnali (access log) o'chiq; so'rov tezligini cheklash yo'q.
 - Log yozuvlari hodisalar shinasiga chiqmaydi — shell'ning «jonli jurnal»i
   uchun 3-bosqichda kerak bo'ladi.
-- Bog'liqliklar orasida `opentelemetry-api` tranzitiv keladi (FastAPI/Starlette
+- Bog'liqliklar orasida `opentelemetry-api` tranzitiv keladi (FastAPI
   orqali); RAM'ga ta'siri alohida o'lchanmagan.
