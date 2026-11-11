@@ -8,8 +8,8 @@
 | 3 | Shell | ✅ tugadi | 2026-11-11 |
 | 4 | `files` | ✅ tugadi | 2026-11-11 |
 | 5 | `hosting` | ✅ tugadi | 2026-11-11 |
-| 6 | `iot` | ⏳ reja tasdiqlanishi kutilmoqda | — |
-| 7 | `data` | — | — |
+| 6 | `iot` | ✅ tugadi (Mosquitto va temir bilan sinalmagan) | 2026-11-11 |
+| 7 | `data` | ⏳ reja tasdiqlanishi kutilmoqda | — |
 | 8 | `electronics` | — | — |
 | 9 | `itops` | — | — |
 | 10 | Yakun | — | — |
@@ -353,3 +353,61 @@ har biri o'z limitiga ega.
 - Haqiqiy brauzerda `*.localhost` manzili ochib ko'rilmagan (testlar `Host`
   sarlavhasi bilan `127.0.0.1` ga murojaat qiladi).
 - Yuk ostida (ko'p parallel so'rov) o'lchanmagan.
+
+## 6-bosqich — `iot` plagini
+
+Tafsilot: [iot.md](iot.md).
+
+**Qilindi**
+
+- `plugins/iot` (yadro ichida): MQTT klient (`paho-mqtt`, o'z oqimida),
+  Mosquitto boshqaruvi, serial portlar (`pyserial`), Modbus TCP/RTU
+  (`pymodbus`), telemetriya ombori (SQLite, 30 kun).
+- Uch manbadan kelgan matndan sonli qiymat ajratish: son, JSON, `kalit=qiymat`.
+- Uch tilli panel: oxirgi qiymatlar (filtr bilan), qo'lda yozuv, MQTT nashr va
+  obunalar, Modbus qurilmalari, serial portlar va monitor.
+- Shell: log vidjeti davriy so'rov xatosini o'z oynasida ko'rsatadi.
+- Yangi kutubxonalar (ro'yxatdan): `paho-mqtt` 2.2, `pymodbus` 3.16, `pyserial` 3.5.
+
+**Tekshiruv natijasi (2026-11-11)**
+
+- `uv run pytest` — 298 passed (≈ 129 s), ikki marta ketma-ket barqaror.
+- `uv run ruff check .`, `ruff format --check .` — toza; `uv run pyright` — 0 xato.
+- IoT paneli skrinshot bilan ko'zdan kechirildi.
+
+**Nima bilan sinalgan — va nima bilan emas**
+
+| Qism | Sinalgan | Sinalmagan |
+|------|----------|------------|
+| MQTT klient | haqiqiy TCP, testdagi kichik broker: obuna, nashr (QoS 0/1), qayta ulanish, login | haqiqiy Mosquitto |
+| Mosquitto boshqaruvi | «topilmadi» holati | ishga tushirish, sozlama fayli, parol fayli formati |
+| Serial | `loop://` soxta porti; ruxsat tekshiruvi | haqiqiy COM port (mashinada yo'q) |
+| Modbus TCP | `pymodbus` simulyatori: o'qish (5 tur), yozish, uzilish, xato manzil | haqiqiy qurilma |
+| Modbus RTU | sozlama va ruxsat tekshiruvi | aloqaning o'zi |
+
+Sabab: `mosquitto.org` bu mashinadan ochilmadi (TLS ulanishi uzildi), COM
+port esa yo'q. Ikkalasi ham foydalanuvchi bilan kelishilgan.
+
+**O'lchangan RAM — butun tizim birga** (bitta yugurish, 55 s bo'sh holat)
+
+| Jarayon | Working Set, MB | Private, MB |
+|---------|-----------------|-------------|
+| yadro (`hello` + `files` + `hosting` + `iot`) | 94,5 | 78,0 |
+| Caddy | 32,4 | 58,2 |
+| shell | 116,2 | 71,3 |
+| venv ishga tushirgichlari (2 ta) | 7,8 | 1,6 |
+| **Jami** | **251,0** | **209,1** |
+
+350 MB ning 72 %; zaxira 99 MB. `iot` yadroga ≈ 3 MB qo'shdi. Mosquitto
+(ishlasa) bunga kirmaydi — o'lchanmagan.
+
+**Qilinmadi / ma'lum kamchiliklar**
+
+- Yuqoridagi jadvaldagi «sinalmagan» ustuni to'liq.
+- Panelda grafik yo'q (vaqt qatori faqat API'da); holat nomlari tarjimasiz.
+- Modbus qurilmasi faqat API orqali qo'shiladi; tahrirlash yo'q.
+- MQTT TLS va QoS 2 yo'q; MQTT paroli `iot.json` da ochiq matnda.
+- Chiquvchi ulanishlar manifest bilan cheklanmagan.
+- `pymodbus` ning test simulyatori eskirgan API'dan foydalanadi (4.0 da
+  olib tashlanadi) — faqat testlarga ta'sir qiladi.
+- Yuqori oqimda (soniyasiga yuzlab xabar) o'lchanmagan.

@@ -87,7 +87,11 @@ class LogView(QWidget):
     def refresh(self) -> None:
         params = self.params()
         if params is not None:
-            self._fetch(self.spec.source, params, self.show_lines)
+            self._fetch(self.spec.source, params, self.show_lines, self.show_error)
+
+    def show_error(self, text: str) -> None:
+        """Davriy so'rov xatosi shu oynada ko'rsatiladi (sahifa xabarini bosib ketmaydi)."""
+        self.view.setPlainText(text)
 
     def show_lines(self, data: Any) -> None:  # noqa: ANN401
         lines = [str(line) for line in cast(list[Any], data)] if isinstance(data, list) else []

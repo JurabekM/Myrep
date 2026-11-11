@@ -26,7 +26,9 @@ from srv1_shell.common import section_title
 from srv1_shell.i18n import I18n
 
 Row = dict[str, Any]
-Fetch = Callable[[str, dict[str, Any], Callable[[Any], None]], None]
+ErrorSink = Callable[[str], None]
+# (manba, parametrlar, natija qabul qiluvchi, xato qabul qiluvchi — None bo'lsa sahifa ko'rsatadi)
+Fetch = Callable[[str, dict[str, Any], Callable[[Any], None], ErrorSink | None], None]
 Act = Callable[[RowAction, str, dict[str, Any]], None]
 _RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
@@ -155,7 +157,7 @@ class DataTable(QWidget):
         return values
 
     def refresh(self) -> None:
-        self._fetch(self.spec.source, self.params(), self.show_rows)
+        self._fetch(self.spec.source, self.params(), self.show_rows, None)
 
     def show_rows(self, data: Any) -> None:  # noqa: ANN401
         selected = self.selected_row()

@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import QApplication, QCheckBox, QComboBox, QLineEdit
 
 from conftest import free_port, write_plugin
 from hosting_helpers import CADDY_EXE, HostingPorts, install_hosting
+from iot_helpers import install_iot
 from srv1_core.plugins.registry import BUILTIN_DIR
 from srv1_shell.app import apply_theme
 from srv1_shell.config import ShellConfig
@@ -139,6 +140,7 @@ def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
             BUILTIN_DIR / name, plugin_root / name, ignore=shutil.ignore_patterns("__pycache__")
         )
     hosting = install_hosting(plugin_root, data_dir / "plugins" / "hosting" / "data")
+    install_iot(plugin_root, data_dir / "plugins" / "iot" / "data", mqtt={"enabled": False})
     port = free_port()
     env = {key: value for key, value in os.environ.items() if not key.startswith("SRV1_")}
     env |= {
@@ -174,7 +176,7 @@ def window(qapp: QApplication, core: Core) -> Iterator[MainWindow]:
     main = MainWindow(core.config, core.token)
     main.show()
     pump(lambda: main.events.connected, what="WebSocket ulanishi")
-    wanted = {"panel:files", "panel:hello", "panel:hosting", "panel:inventory"}
+    wanted = {"panel:files", "panel:hello", "panel:hosting", "panel:inventory", "panel:iot"}
     pump(lambda: wanted <= set(main.page_keys()), what="panellar")
     yield main
     main.shutdown()
@@ -220,14 +222,14 @@ def test_connects_and_shows_system(window: MainWindow) -> None:
 def test_navigation_lists_fixed_pages_and_panels(window: MainWindow) -> None:
     labels = _nav_labels(window)
     assert labels[:4] == ["Tizim", "Plaginlar", "Jurnal", "Xotira"]
-    assert sorted(labels[4:]) == ["Fayllar", "Hosting", "Ombor", "Salom"]
+    assert sorted(labels[4:]) == ["Fayllar", "Hosting", "IoT", "Ombor", "Salom"]
     assert window.windowTitle() == "SRV_1 boshqaruvi"
 
 
 # --- plaginlar: yoqish/o'chirish tugmasi --------------------------------------------
 def test_plugin_toggle_button(window: MainWindow, core: Core) -> None:
     page = _page(window, "plugins", PluginsPage)
-    pump(lambda: page.table.rowCount() == 4, what="plaginlar ro'yxati")
+    pump(lambda: page.table.rowCount() == 5, what="plaginlar ro'yxati")
     row = next(i for i, plugin in enumerate(page.plugins) if plugin["name"] == "hello")
 
     def status_text() -> str:
@@ -483,6 +485,78 @@ def test_hosting_panel_create_stop_start_and_log(
     assert (project_dir / "app.py").is_file()
 
 
+# --- IoT paneli: qo'lda yozuv, filtrli jadval, serial monitor --------------------------
+def test_iot_panel_record_filter_and_serial_monitor(window: MainWindow, core: Core) -> None:
+    page = _page(window, "panel:iot", PanelPage)
+    pump(lambda: page.values["mqtt_state"].value.text() == "disabled", what="MQTT holati")
+
+    # qo'lda yozuv: matn + son maydonlari
+    record = page.forms["/telemetry/record"]
+    for name, text in (("source", "gui"), ("key", "harorat"), ("value", "21,5")):
+        editor = record.inputs[name]
+        assert isinstance(editor, QLineEdit)
+        editor.setText(text)
+    record.submit.click()
+    latest = page.tables["/telemetry/latest"]
+    pump(
+        lambda: (
+            [(r["source"], r["key"], r["value"]) for r in latest.rows]
+            == [("manual:gui", "harorat", 21.5)]
+        ),
+        what="oxirgi qiymatlar jadvali",
+    )
+    stored = core.get("/api/v1/plugins/iot/api/telemetry/latest").json()
+    assert (stored[0]["source"], stored[0]["value"]) == ("manual:gui", 21.5)
+
+    # jadval filtri: manba boshi bo'yicha
+    source = latest.filters["source"]
+    assert isinstance(source, QLineEdit)
+    source.setText("modbus:")
+    latest.search_button.click()
+    pump(lambda: latest.rows == [], what="filtrlangan jadval")
+    source.clear()
+    latest.search_button.click()
+    pump(lambda: len(latest.rows) == 1, what="filtrsiz jadval")
+
+    # serial: halqa portni forma orqali ochish, yozish, monitorda ko'rish
+    open_form = page.forms["/serial/open"]
+    port = open_form.inputs["port"]
+    assert isinstance(port, QLineEdit)
+    port.setText("loop://")
+    open_form.submit.click()
+    ports = page.tables["/serial/ports"]
+    pump(
+        lambda: any(row["port"] == "loop://" and row["open"] for row in ports.rows),
+        what="ochiq port",
+    )
+
+    write_form = page.forms["/serial/write"]
+    for name, text in (("port", "loop://"), ("text", "volt=3.3")):
+        editor = write_form.inputs[name]
+        assert isinstance(editor, QLineEdit)
+        editor.setText(text)
+    write_form.submit.click()
+    monitor = page.logs["/serial/lines"]
+    monitor_port = monitor.filters["port"]
+    assert isinstance(monitor_port, QLineEdit)
+    monitor_port.setText("loop://")
+    monitor.show_button.click()
+    pump(lambda: "volt=3.3" in monitor.view.toPlainText(), what="serial monitor")
+    pump(lambda: len(latest.rows) == 2, what="serial qiymati jadvalda")
+
+    # qator amali: portni yopish
+    row = next(i for i, item in enumerate(ports.rows) if item["port"] == "loop://")
+    ports.table.selectRow(row)
+    ports.action_buttons["POST /serial/close"].click()
+    pump(lambda: not any(item["open"] for item in ports.rows), what="portni yopish")
+
+    # ruxsat etilmagan port: xato ko'rsatiladi
+    port.setText("COM9")
+    open_form.submit.click()
+    pump(lambda: page.result.objectName() == "ErrorText", what="rad etilgan port")
+    assert "403" in page.result.text()
+
+
 # --- jurnal ------------------------------------------------------------------------------
 def test_logs_page_tail_live_and_filter(window: MainWindow) -> None:
     page = _page(window, "logs", LogsPage)
@@ -567,7 +641,7 @@ def test_language_switch_rebuilds_everything(core: Core, qapp: QApplication) -> 
         pump(lambda: memory.table.rowCount() >= 2, what="xotira jadvali")
         assert "limit 350.0 MB" in memory.total.text()
         plugins = _page(main, "plugins", PluginsPage)
-        pump(lambda: plugins.table.rowCount() == 4, what="plaginlar")
+        pump(lambda: plugins.table.rowCount() == 5, what="plaginlar")
         header = plugins.table.horizontalHeaderItem(3)
         assert header is not None
         assert header.text() == "Status"

@@ -1,0 +1,14 @@
+name = "iot"
+version = "0.1.0"
+description = "IoT: MQTT (Mosquitto), serial portlar, Modbus va telemetriyani saqlash."
+mode = "inprocess"
+heavy = false
+
+[permissions]
+paths = []
+# 1883 — MQTT broker (Mosquitto).
+ports = [1883]
+# Ochishga ruxsat etilgan serial portlar, masalan: serial = ["COM3", "COM4"]
+serial = []
+# Mosquitto'ni ishga tushirish uchun.
+spawn = true

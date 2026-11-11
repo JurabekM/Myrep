@@ -222,6 +222,15 @@ wheels = [
 ]
 
 [[package]]
+name = "paho-mqtt"
+version = "2.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/66/bba39edaac853235385c59e1e30600cd104b8779164c181780742d8095fc/paho_mqtt-2.2.0.tar.gz", hash = "sha256:bcf706f03f1f49e0fc3ae166dc7b67ee35463496f8bdfd7c9c36181f6ba635c9", size = 133751, upload-time = "2026-11-04T20:10:51.405Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bf/af/fea4b0ee14cee6149f18d180430a14be0963b9a4fbc7875421a7de75f831/paho_mqtt-2.2.0-py3-none-any.whl", hash = "sha256:3243630f7c2b05f71d1de8c6f59865eb04d3a59ae8c866e92377faed6753db4d", size = 77202, upload-time = "2026-11-04T20:10:50.148Z" },
+]
+
+[[package]]
 name = "pluggy"
 version = "1.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -316,6 +325,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pymodbus"
+version = "3.16.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/44/e8/910c866f041769d323df554835965571b054b10e1a3265427d246c4d2ccb/pymodbus-3.16.2.tar.gz", hash = "sha256:64057981fac117ed4b75ea8ef6035369f6ae803247700a5efdf75d76a2be8aef", size = 170282, upload-time = "2026-11-03T12:04:07.347Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/51/d4/ac60401cb41999f375887c8dee0902db0bf9d0f43dc6f8b0695483b7016c/pymodbus-3.16.2-py3-none-any.whl", hash = "sha256:385ad145955a7af15020ee55c266f7a2c6d9af2180d45c3755a56db9a5014078", size = 168896, upload-time = "2026-11-03T12:04:05.255Z" },
+]
+
+[[package]]
 name = "pyqt6"
 version = "6.12.0"
 source = { registry = "https://pypi.org/simple" }
@@ -381,6 +399,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e1/1b/244c7b710031ada80f27e579ec20d28a2285dfc318fed0339866b1047f12/pyright-1.1.414.tar.gz", hash = "sha256:523c0a97c60da6333234955c277730c9cf4f5bd6d5399e7b7d2b0fc5d3599524", size = 4154638, upload-time = "2026-09-10T12:26:53.181Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d7/ba/18b6e682ead424ad24bcc134339ae5d1b931cd9ae260540592a058a91279/pyright-1.1.414-py3-none-any.whl", hash = "sha256:2a6b4b3298c9eec174c5ed83bd338de6eee82df2992f3e1930e6199d381be36f", size = 6225049, upload-time = "2026-09-10T12:26:51.427Z" },
+]
+
+[[package]]
+name = "pyserial"
+version = "3.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1e/7d/ae3f0a63f41e4d2f6cb66a5b57197850f919f59e558159a4dd3a818f5082/pyserial-3.5.tar.gz", hash = "sha256:3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb", size = 159125, upload-time = "2020-11-23T03:59:15.045Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558/pyserial-3.5-py2.py3-none-any.whl", hash = "sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0", size = 90585, upload-time = "2020-11-23T03:59:13.41Z" },
 ]
 
 [[package]]
@@ -492,12 +519,15 @@ dependencies = [
     { name = "apscheduler" },
     { name = "fastapi" },
     { name = "httpx" },
+    { name = "paho-mqtt" },
     { name = "pluggy" },
     { name = "psutil" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "pymodbus" },
     { name = "pyqt6" },
     { name = "pyqtgraph" },
+    { name = "pyserial" },
     { name = "pywin32" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
@@ -522,12 +552,15 @@ requires-dist = [
     { name = "apscheduler", specifier = ">=3.10,<4" },
     { name = "fastapi", specifier = ">=0.162.4" },
     { name = "httpx", specifier = ">=0.28.1" },
+    { name = "paho-mqtt", specifier = ">=2.2.0" },
     { name = "pluggy", specifier = ">=1.7.0" },
     { name = "psutil", specifier = ">=7.2.2" },
     { name = "pydantic", specifier = ">=2.14.3" },
     { name = "pydantic-settings", specifier = ">=2.16.2" },
+    { name = "pymodbus", specifier = ">=3.16.2" },
     { name = "pyqt6", specifier = ">=6.12.0" },
     { name = "pyqtgraph", specifier = ">=0.14.0" },
+    { name = "pyserial", specifier = ">=3.5" },
     { name = "pywin32", specifier = ">=312" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.1.8" },
     { name = "structlog", specifier = ">=26.1.0" },

@@ -35,7 +35,7 @@ from srv1_sdk.panel import (
 from srv1_shell.api import Reply
 from srv1_shell.charts import LineChart
 from srv1_shell.common import AppContext, Card, Page, section_title
-from srv1_shell.pages.data_table import DataTable, make_editor
+from srv1_shell.pages.data_table import DataTable, ErrorSink, make_editor
 from srv1_shell.pages.log_view import LogView
 
 RESULT_MAX_CHARS = 300
@@ -257,14 +257,20 @@ class PanelPage(Page):
         for log in self.logs.values():
             log.refresh()
 
-    def fetch(self, source: str, params: dict[str, Any], consumer: Consumer) -> None:
+    def fetch(
+        self,
+        source: str,
+        params: dict[str, Any],
+        consumer: Consumer,
+        on_error: ErrorSink | None = None,
+    ) -> None:
         """Plagin API'sidan `source` ni so'rov parametrlari bilan oladi."""
 
         def deliver(reply: Reply) -> None:
             if reply.ok:
                 consumer(reply.data)
             else:
-                self.show_error(self.describe_error(reply))
+                (on_error or self.show_error)(self.describe_error(reply))
 
         self.ctx.api.request("GET", self._prefix + source, deliver, owner=self, params=params)
 
