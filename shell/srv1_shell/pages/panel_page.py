@@ -3,24 +3,20 @@
 import json
 from collections.abc import Callable
 from functools import partial
-from typing import Any, cast
+from typing import Any
 
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import (
-    QAbstractItemView,
     QCheckBox,
     QComboBox,
     QFormLayout,
     QFrame,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
     QScrollArea,
-    QTableWidget,
-    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -28,16 +24,17 @@ from PyQt6.QtWidgets import (
 from srv1_sdk.panel import (
     ButtonWidget,
     ChartWidget,
-    FormField,
     FormWidget,
     LabelWidget,
     PanelSpec,
+    RowAction,
     TableWidget,
     ValueWidget,
 )
 from srv1_shell.api import Reply
 from srv1_shell.charts import LineChart
 from srv1_shell.common import AppContext, Card, Page, section_title
+from srv1_shell.pages.data_table import DataTable, make_editor
 
 RESULT_MAX_CHARS = 300
 CHART_HEIGHT = 220
@@ -64,7 +61,7 @@ class _Form(QFrame):
         outer.addWidget(section_title(i18n.pick(spec.label)))
         form = QFormLayout()
         for field in spec.fields:
-            editor = self._editor(field)
+            editor = make_editor(field)
             self.inputs[field.name] = editor
             form.addRow(i18n.pick(field.label), editor)
         outer.addLayout(form)
@@ -75,15 +72,6 @@ class _Form(QFrame):
         row.addStretch(1)
         row.addWidget(self.submit)
         outer.addLayout(row)
-
-    def _editor(self, field: FormField) -> QWidget:
-        if field.kind == "bool":
-            return QCheckBox()
-        if field.kind == "choice":
-            combo = QComboBox()
-            combo.addItems(list(field.choices))
-            return combo
-        return QLineEdit()
 
     def values(self) -> dict[str, Any] | None:
         """Maydon qiymatlari; xato bo'lsa xabar ko'rsatib `None` qaytaradi."""
@@ -138,7 +126,7 @@ class PanelPage(Page):
         self.values: dict[str, Card] = {}
         self.buttons: dict[str, QPushButton] = {}
         self.forms: dict[str, _Form] = {}
-        self.tables: dict[str, QTableWidget] = {}
+        self.tables: dict[str, DataTable] = {}
         self.charts: dict[str, LineChart] = {}
 
         self.add_title(ctx.i18n.pick(spec.title))
@@ -223,35 +211,9 @@ class PanelPage(Page):
         self._button_row.insertWidget(self._button_row.count() - 1, button)
 
     def _add_table(self, widget: TableWidget) -> None:
-        i18n = self.ctx.i18n
-        self._content.addWidget(section_title(i18n.pick(widget.label)))
-        table = QTableWidget(0, len(widget.columns))
-        table.setHorizontalHeaderLabels([i18n.pick(column.title) for column in widget.columns])
-        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        table.setAlternatingRowColors(True)
-        table.setShowGrid(False)
-        table.setMinimumHeight(160)
-        header = table.horizontalHeader()
-        if header is not None:
-            header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        vertical = table.verticalHeader()
-        if vertical is not None:
-            vertical.setVisible(False)
+        table = DataTable(widget, self.ctx.i18n, self.fetch, self._row_action)
         self.tables[widget.source] = table
         self._content.addWidget(table)
-        keys = [column.key for column in widget.columns]
-
-        def show(data: Any) -> None:  # noqa: ANN401
-            rows = cast(list[Any], data) if isinstance(data, list) else []
-            table.setUpdatesEnabled(False)
-            table.setRowCount(len(rows))
-            for index, row in enumerate(rows):
-                for column, key in enumerate(keys):
-                    value = row.get(key, "") if isinstance(row, dict) else ""  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
-                    table.setItem(index, column, QTableWidgetItem(str(value)))  # pyright: ignore[reportUnknownArgumentType]
-            table.setUpdatesEnabled(True)
-
-        self._watch(widget.source, widget.refresh_s, show)
 
     def _add_chart(self, widget: ChartWidget) -> None:
         label = self.ctx.i18n.pick(widget.label)
@@ -267,14 +229,36 @@ class PanelPage(Page):
         self.refresh_sources()
         for timer in self._timers:
             timer.start()
+        for table in self.tables.values():
+            table.start()
 
     def deactivate(self) -> None:
         for timer in self._timers:
             timer.stop()
+        for table in self.tables.values():
+            table.stop()
 
     def refresh_sources(self) -> None:
         for source in self._consumers:
             self._fetch(source)
+        for table in self.tables.values():
+            table.refresh()
+
+    def fetch(self, source: str, params: dict[str, Any], consumer: Consumer) -> None:
+        """Plagin API'sidan `source` ni so'rov parametrlari bilan oladi."""
+
+        def deliver(reply: Reply) -> None:
+            if reply.ok:
+                consumer(reply.data)
+            else:
+                self.show_error(self.describe_error(reply))
+
+        self.ctx.api.request("GET", self._prefix + source, deliver, owner=self, params=params)
+
+    def _row_action(self, action: RowAction, label: str, body: dict[str, Any]) -> None:
+        if action.confirm and not self.confirm(label):
+            return
+        self.call(action.method, action.path, body=body)
 
     def _fetch(self, source: str) -> None:
         self.ctx.api.get(self._prefix + source, partial(self._on_source, source), owner=self)

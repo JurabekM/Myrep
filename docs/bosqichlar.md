@@ -6,8 +6,8 @@
 | 1 | Yadro | ✅ tugadi | 2026-11-11 |
 | 2 | SDK va plagin yuklovchi | ✅ tugadi | 2026-11-11 |
 | 3 | Shell | ✅ tugadi | 2026-11-11 |
-| 4 | `files` | ⏳ reja tasdiqlanishi kutilmoqda | — |
-| 5 | `hosting` | — | — |
+| 4 | `files` | ✅ tugadi | 2026-11-11 |
+| 5 | `hosting` | ⏳ reja tasdiqlanishi kutilmoqda | — |
 | 6 | `iot` | — | — |
 | 7 | `data` | — | — |
 | 8 | `electronics` | — | — |
@@ -236,3 +236,58 @@ Python 17, PyQt6 + `QApplication` 18, `httpx` 13, `numpy` 9, `pyqtgraph` 11,
   ekrandan farq qiladi, shuning uchun joylashuv ko'z bilan tekshirilgan.
   Haqiqiy ekranda sichqoncha bilan qo'lda sinalmagan.
 - 4 GB RAM li mashinada sinalmagan (bu mashinada 24 GB).
+
+## 4-bosqich — `files` plagini
+
+Tafsilot: [fayllar.md](fayllar.md).
+
+**Qilindi**
+
+- `plugins/files` (alohida jarayonda, 256 MB limit): indeks (SQLite FTS5
+  trigram), to'liq skanerlash, `watchdog` bilan kuzatuv, nom bo'yicha qidiruv.
+- Amallar: papka yaratish, nomini o'zgartirish, ko'chirish, nusxalash,
+  savatga tashlash, tiklash, butunlay o'chirish. Hech qachon ustidan yozilmaydi.
+- Panel sxemasi kengaydi: jadvalda filtrlar, tanlangan qator ustidagi amallar,
+  ustun formati (`size`, `datetime`). Shell ularni chizadi.
+- Uch tilli panel: qidiruv jadvali, savat, formalar.
+- Yangi kutubxona (ro'yxatdan): `watchdog` 7.1.
+
+**Tekshiruv natijasi (2026-11-11)**
+
+- `uv run pytest` — 264 passed (≈77 s), ikki marta ketma-ket barqaror.
+- `uv run ruff check .`, `ruff format --check .` — toza; `uv run pyright` — 0 xato.
+- Fayllar paneli skrinshot bilan ko'zdan kechirildi.
+
+**O'lchangan** (bitta yugurish; to'liq jadval: [fayllar.md](fayllar.md))
+
+| O'lchov | Natija |
+|---------|--------|
+| 20 000 faylni skanerlash | 0,41 s |
+| qidiruv | 8–30 ms |
+| tashqi o'zgarish indeksga tushishi | ≈ 1,6 s |
+| `files` bola jarayoni, Working Set | 50–52 MB |
+
+Bo'sh holatdagi jami (alohida o'lchovlar yig'indisi, bitta yugurishda emas):
+yadro ≈ 82 + `files` ≈ 51 + shell ≈ 120 = ≈ 253 MB — 350 MB ning 72 %.
+Caddy hali yo'q.
+
+**Xulosa: har bola jarayon ≈ 45–50 MB turadi**
+
+`hello` (43 MB) va `files` (51 MB) ko'rsatdiki, alohida jarayondagi har
+plagin Python + FastAPI uchun shuncha to'laydi. Qolgan besh plagin ham shu
+yo'ldan borsa, 350 MB chegarasi buziladi. Shuning uchun 5-bosqichdan boshlab
+plaginlar standart holatda yadro ichida ishlashi, alohida jarayon esa faqat
+`heavy` (talab bo'yicha yoqiladigan) plaginlarga qolishi kerak.
+
+**Qilinmadi / ma'lum kamchiliklar**
+
+- Simvolik havola va junction'lar bilan test yo'q (Windows'da yaratish uchun
+  maxsus huquq kerak); kod ularni tashlab ketadi, lekin sinalmagan.
+- Uzoq ko'chirish/nusxalashda jarayon ko'rsatkichi yo'q; 30 s dan oshsa klient
+  504 oladi, amal davom etadi.
+- Panelda papkalar bo'ylab yurish yo'q — yo'l va ildiz raqami qo'lda kiritiladi.
+- Kuzatiladigan papka qo'shish uchun `plugin.toml` ni qo'lda tahrirlash kerak
+  (repozitoriydagi fayl o'zgaradi).
+- Tarmoq disklarida kuzatuv sinalmagan.
+- Fayl ichidan qidirish yo'q (kelishilganidek).
+- 20 000 dan ortiq fayl bilan sinalmagan.

@@ -134,8 +134,17 @@ Audit: `plugin.enable`, `plugin.disable`, `plugin.crashed`, `process.spawn`
 | `value` | `label`, `source`, `field`, `refresh_s` |
 | `button` | `label`, `method`, `path`, `confirm` |
 | `form` | `label`, `method`, `path`, `fields[]` (`name`, `label`, `kind`, `choices`, `required`) |
-| `table` | `label`, `source`, `columns[]`, `refresh_s` |
+| `table` | `label`, `source`, `columns[]`, `refresh_s`, `auto_refresh`, `filters[]`, `row_actions[]` |
 | `chart` | `label`, `topic`, `field`, `window` |
+
+Jadval kengaytmalari:
+
+- `columns[].format`: `text` (standart), `size` (baytlar → `1,2 MB`),
+  `datetime` (Unix vaqti → mahalliy sana-vaqt).
+- `filters[]`: maydonlar jadval ustida chiqadi va `source` ga so'rov parametri
+  bo'lib yuboriladi (qidiruv jadvali).
+- `row_actions[]`: `{label, method, path, params[], confirm}` — tanlangan
+  qatordan `params` dagi kalitlar olinib, JSON tana bo'lib yuboriladi.
 
 Ko'rinadigan har matn (`title`, `text`, `label`) ikki xil berilishi mumkin: oddiy
 satr (hamma tilda bir xil) yoki `{"uz": ..., "ru": ..., "en": ...}`. Shell joriy

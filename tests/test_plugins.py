@@ -138,7 +138,8 @@ async def test_builtin_hello_is_discovered(
     async with serve_app(paths) as served, served.client() as client:
         plugins = (await client.get(API)).json()
     assert [(p["name"], p["source"], p["status"]) for p in plugins] == [
-        ("hello", "builtin", "running")
+        ("files", "builtin", "running"),
+        ("hello", "builtin", "running"),
     ]
 
 

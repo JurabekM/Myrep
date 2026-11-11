@@ -85,16 +85,34 @@ class FormWidget(_Widget):
 class TableColumn(_Widget):
     key: str
     title: LocalizedText
+    # size — baytlar (shell birlik qo'shadi); datetime — Unix vaqti (soniya).
+    format: Literal["text", "size", "datetime"] = "text"
+
+
+class RowAction(_Widget):
+    """Tanlangan qator ustidagi amal: `params` dagi kalitlar qatordan olinib, JSON tana bo'ladi."""
+
+    label: LocalizedText
+    method: HttpMethod = "POST"
+    path: Annotated[str, _PATH]
+    params: tuple[str, ...]
+    confirm: bool = False
 
 
 class TableWidget(_Widget):
-    """`source` JSON ro'yxat (obyektlar) qaytaradi."""
+    """`source` JSON ro'yxat (obyektlar) qaytaradi.
+
+    `filters` bo'lsa, ular so'rov parametri bo'lib yuboriladi (qidiruv jadvali).
+    """
 
     type: Literal["table"] = "table"
     label: LocalizedText
     source: Annotated[str, _PATH]
     columns: tuple[TableColumn, ...]
     refresh_s: float = Field(default=5.0, ge=0.5)
+    auto_refresh: bool = True
+    filters: tuple[FormField, ...] = ()
+    row_actions: tuple[RowAction, ...] = ()
 
 
 class ChartWidget(_Widget):

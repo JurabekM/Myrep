@@ -63,7 +63,7 @@ bilmaydi); qolgan qatorlar yadrodan keladi.
 | `value` | kartochka | `source` dan `refresh_s` da yangilanadi |
 | `button` | tugma | `confirm` bo'lsa avval so'raydi; so'ng so'rov |
 | `form` | maydonlar + «Yuborish» | `GET` — so'rov parametrlari, boshqasi — JSON |
-| `table` | jadval | `source` dagi ro'yxat |
+| `table` | jadval | `source` dagi ro'yxat; ixtiyoriy filtrlar va tanlangan qator amallari |
 | `chart` | chiziqli grafik | `plugin.<nom>.<topic>` hodisalari |
 
 Bir xil `source` ga qaragan vidjetlar bitta so'rovni bo'lishadi. Har

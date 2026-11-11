@@ -98,6 +98,7 @@ TEXTS: dict[str, dict[str, str]] = {
     ),
     # --- plagin paneli ----------------------------------------------------
     "panel.submit": _t("Yuborish", "Отправить", "Submit"),
+    "panel.search": _t("Qidirish", "Найти", "Search"),
     "panel.confirm.title": _t("Tasdiqlash", "Подтверждение", "Confirm"),
     "panel.confirm.text": _t(
         "«{action}» bajarilsinmi?", "Выполнить «{action}»?", "Run “{action}”?"

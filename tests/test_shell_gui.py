@@ -11,6 +11,7 @@ import sys
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from pathlib import Path
 
 import httpx
 import pytest
@@ -88,6 +89,7 @@ INVENTORY_PLUGIN = """
 class Core:
     port: int
     token: str
+    data_dir: Path
 
     @property
     def config(self) -> ShellConfig:
@@ -149,7 +151,7 @@ def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
                 assert process.poll() is None, "yadro o'ldi"
                 time.sleep(0.1)
         token = (data_dir / "auth.token").read_text(encoding="ascii").strip()
-        yield Core(port=port, token=token)
+        yield Core(port=port, token=token, data_dir=data_dir)
     finally:
         process.kill()
         process.wait(timeout=10)
@@ -160,10 +162,8 @@ def window(qapp: QApplication, core: Core) -> Iterator[MainWindow]:
     main = MainWindow(core.config, core.token)
     main.show()
     pump(lambda: main.events.connected, what="WebSocket ulanishi")
-    pump(
-        lambda: "panel:hello" in main.page_keys() and "panel:inventory" in main.page_keys(),
-        what="panellar",
-    )
+    wanted = {"panel:files", "panel:hello", "panel:inventory"}
+    pump(lambda: wanted <= set(main.page_keys()), what="panellar")
     yield main
     main.shutdown()
     main.close()
@@ -206,14 +206,16 @@ def test_connects_and_shows_system(window: MainWindow) -> None:
 
 
 def test_navigation_lists_fixed_pages_and_panels(window: MainWindow) -> None:
-    assert _nav_labels(window) == ["Tizim", "Plaginlar", "Jurnal", "Xotira", "Salom", "Ombor"]
+    labels = _nav_labels(window)
+    assert labels[:4] == ["Tizim", "Plaginlar", "Jurnal", "Xotira"]
+    assert sorted(labels[4:]) == ["Fayllar", "Ombor", "Salom"]
     assert window.windowTitle() == "SRV_1 boshqaruvi"
 
 
 # --- plaginlar: yoqish/o'chirish tugmasi --------------------------------------------
 def test_plugin_toggle_button(window: MainWindow, core: Core) -> None:
     page = _page(window, "plugins", PluginsPage)
-    pump(lambda: page.table.rowCount() == 2, what="plaginlar ro'yxati")
+    pump(lambda: page.table.rowCount() == 3, what="plaginlar ro'yxati")
     row = next(i for i, plugin in enumerate(page.plugins) if plugin["name"] == "hello")
 
     def status_text() -> str:
@@ -299,7 +301,7 @@ def test_hello_panel_values_button_chart_and_forms(
 
 def test_table_and_typed_form_fields(window: MainWindow, core: Core) -> None:
     page = _page(window, "panel:inventory", PanelPage)
-    table = page.tables["/items"]
+    table = page.tables["/items"].table
     pump(lambda: table.rowCount() >= 1, what="jadval vidjeti")
     first = table.item(0, 0)
     assert first is not None
@@ -327,6 +329,81 @@ def test_table_and_typed_form_fields(window: MainWindow, core: Core) -> None:
         "kind": "aktiv",
         "urgent": True,
     }
+
+
+# --- fayllar paneli: filtrli jadval va qator amallari ----------------------------------
+def test_files_panel_search_trash_and_restore(
+    window: MainWindow, core: Core, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    library = core.data_dir / "plugins" / "files" / "data" / "library"
+    target = library / "gui_sinov_hisobot.txt"
+    target.write_text("matn", encoding="utf-8")
+    (library / "boshqa.bin").write_bytes(b"0" * 2048)
+
+    page = _page(window, "panel:files", PanelPage)
+    monkeypatch.setattr(page, "confirm", lambda _action: True)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
+    search, trash = page.tables["/search"], page.tables["/trash"]
+    roots = page.tables["/roots"]
+    pump(lambda: roots.table.rowCount() == 1, what="ildizlar jadvali")
+    pump(lambda: page.values["files"].value.text() == "2", what="kuzatuv indeksi")
+
+    # filtr: nom bo'yicha qidirish, Enter bilan ham ishlaydi
+    name_filter = search.filters["q"]
+    assert isinstance(name_filter, QLineEdit)
+    name_filter.setText("gui_sinov")
+    search.search_button.click()
+    pump(lambda: [row["name"] for row in search.rows] == ["gui_sinov_hisobot.txt"], what="qidiruv")
+    cell = search.table.item(0, 3)
+    assert cell is not None
+    assert cell.text() == "0 KB"
+    name_filter.setText("boshqa")
+    name_filter.returnPressed.emit()
+    pump(lambda: [row["name"] for row in search.rows] == ["boshqa.bin"], what="Enter bilan qidiruv")
+    size_cell = search.table.item(0, 3)
+    assert size_cell is not None
+    assert size_cell.text() == "2 KB"
+
+    # qator amali: tanlanmaguncha tugma o'chiq
+    delete = search.action_buttons["POST /delete"]
+    assert delete.text() == "Savatga"
+    assert not delete.isEnabled()
+    name_filter.setText("gui_sinov")
+    search.search_button.click()
+    pump(lambda: [row["name"] for row in search.rows] == ["gui_sinov_hisobot.txt"], what="qidiruv")
+    search.table.selectRow(0)
+    assert delete.isEnabled()
+    delete.click()
+    pump(lambda: not target.exists(), what="savatga ko'chirish")
+    pump(lambda: search.rows == [], what="natija yo'qolishi")
+    pump(
+        lambda: [row["name"] for row in trash.rows] == ["gui_sinov_hisobot.txt"],
+        what="savat jadvali",
+    )
+    assert not delete.isEnabled()
+
+    # savatdan tiklash
+    restore = trash.action_buttons["POST /trash/restore"]
+    assert not restore.isEnabled()
+    trash.table.selectRow(0)
+    restore.click()
+    pump(lambda: target.exists(), what="tiklash")
+    assert target.read_text(encoding="utf-8") == "matn"
+    pump(lambda: trash.rows == [], what="savat bo'shashi")
+
+    # forma + son maydoni: papka yaratish
+    form = page.forms["/mkdir"]
+    root_input, path_input = form.inputs["root"], form.inputs["path"]
+    assert isinstance(root_input, QLineEdit)
+    assert isinstance(path_input, QLineEdit)
+    root_input.setText("0")
+    path_input.setText("gui_papka")
+    form.submit.click()
+    pump(lambda: (library / "gui_papka").is_dir(), what="papka yaratish")
+    path_input.setText("../tashqari")
+    form.submit.click()
+    pump(lambda: page.result.objectName() == "ErrorText", what="rad etilgan yo'l")
+    assert "403" in page.result.text()
+    assert not (library.parent / "tashqari").exists()
 
 
 # --- jurnal ------------------------------------------------------------------------------
@@ -371,10 +448,14 @@ def test_memory_page_lists_core_and_shell(window: MainWindow) -> None:
     page = _page(window, "memory", MemoryPage)
     pump(lambda: page.table.rowCount() >= 2, what="jarayonlar jadvali")
     kinds = [row["kind"] for row in page.rows]
-    assert kinds == ["core", "shell"]
-    assert page.rows[1]["pid"] == os.getpid()
+    assert kinds == ["core", "plugin", "shell"]
+    assert page.rows[-1]["pid"] == os.getpid()
     labels = [page.table.item(row, 0) for row in range(page.table.rowCount())]
-    assert [item.text() for item in labels if item is not None] == ["Yadro", "Shell (shu oyna)"]
+    assert [item.text() for item in labels if item is not None] == [
+        "Yadro",
+        "Plagin: files",
+        "Shell (shu oyna)",
+    ]
     assert "chegara 350,0 MB" in page.total.text()
     assert 0 < page.bar.value() <= 100
     total = sum(int(row["rss"]) for row in page.rows)
@@ -391,7 +472,9 @@ def test_language_switch_rebuilds_everything(core: Core, qapp: QApplication) -> 
         main.select("panel:hello")
 
         main.language.setCurrentIndex(main.language.findData("ru"))
-        assert _nav_labels(main)[:5] == ["Система", "Плагины", "Журнал", "Память", "Привет"]
+        russian = _nav_labels(main)
+        assert russian[:4] == ["Система", "Плагины", "Журнал", "Память"]
+        assert {"Привет", "Файлы"} <= set(russian)
         assert main.windowTitle() == "Управление SRV_1"
         assert main.current_key() == "panel:hello", "tanlangan sahifa saqlanishi kerak"
         panel = main.page("panel:hello")
@@ -404,12 +487,14 @@ def test_language_switch_rebuilds_everything(core: Core, qapp: QApplication) -> 
         )
 
         main.set_language("en")
-        assert _nav_labels(main)[:5] == ["System", "Plugins", "Log", "Memory", "Hello"]
+        english = _nav_labels(main)
+        assert english[:4] == ["System", "Plugins", "Log", "Memory"]
+        assert {"Hello", "Files"} <= set(english)
         memory = _page(main, "memory", MemoryPage)
         pump(lambda: memory.table.rowCount() >= 2, what="xotira jadvali")
         assert "limit 350.0 MB" in memory.total.text()
         plugins = _page(main, "plugins", PluginsPage)
-        pump(lambda: plugins.table.rowCount() == 2, what="plaginlar")
+        pump(lambda: plugins.table.rowCount() == 3, what="plaginlar")
         header = plugins.table.horizontalHeaderItem(3)
         assert header is not None
         assert header.text() == "Status"
