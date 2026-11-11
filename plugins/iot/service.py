@@ -9,11 +9,11 @@ from functools import partial
 from typing import Any
 
 from srv1_sdk.context import PluginContext
+from srv1_sdk.serialport import LOOPBACK_URL, SerialPort, available_ports
 
 from .modbus import ModbusError, ModbusPoller
 from .models import STORE_FILE, TOPIC_MAX, ModbusDevice, Store, load_store, save_store
 from .mqtt import Broker, MqttClient
-from .serial_io import LOOPBACK_URL, SerialPort, available_ports
 from .telemetry import Sample, TelemetryStore, parse_values
 
 FLUSH_INTERVAL_S = 1.0

@@ -10,8 +10,8 @@
 | 5 | `hosting` | ✅ tugadi | 2026-11-11 |
 | 6 | `iot` | ✅ tugadi (Mosquitto va temir bilan sinalmagan) | 2026-11-11 |
 | 7 | `data` | ✅ tugadi | 2026-11-11 |
-| 8 | `electronics` | ⏳ reja tasdiqlanishi kutilmoqda | — |
-| 9 | `itops` | — | — |
+| 8 | `electronics` | ✅ tugadi | 2026-11-11 |
+| 9 | `itops` | ⏳ reja tasdiqlanishi kutilmoqda | — |
 | 10 | Yakun | — | — |
 
 ## 0-bosqich — Skelet
@@ -469,3 +469,58 @@ qayta o'lchanmagan.
 - CSV kodirovkasi faqat UTF-8 va `cp1251`.
 - HTML hisobot va grafik yo'q (kelishilganidek: jadval + CSV).
 - Excel'ga eksport yo'q (yozuvchi kutubxona kerak bo'lardi).
+
+## 8-bosqich — `electronics` plagini
+
+Tafsilot: [elektronika.md](elektronika.md).
+
+**Qilindi**
+
+- `plugins/electronics` (jarayon ichida): portlarni USB identifikatori bo'yicha
+  aniqlash, serial monitor, proshivka yozish — ESP uchun `esptool`, AVR uchun
+  `avrdude` (alohida jarayonda, `shell`siz, 256 MB limit, vaqt chegarasi,
+  to'xtatish), ESP uchun yozishdan oldin ixtiyoriy zaxira.
+- Har urinish auditda (`firmware.flash`: port, plata, fayl, SHA-256, natija).
+- Serial kodi `iot` dan SDK'ga ko'chirildi (`srv1_sdk/serialport.py`), ikkala
+  plagin shundan foydalanadi; `probe_port` — port bandligini tekshirish.
+- Panel sxemasi: `form` vidjetiga `confirm` qo'shildi (shell tasdiq so'raydi).
+- Yangi kutubxona: `esptool` 5.6.0 (ro'yxatdan; o'zi bilan `cryptography`,
+  `rich`, `pyyaml` va boshqalarni olib keldi — ular faqat esptool jarayonida
+  yuklanadi). Tashqi dastur: `avrdude` 8.3 (`tools/avrdude/`, SHA-256 tekshirilgan).
+
+**Tekshiruv natijasi (2026-11-11)**
+
+- `uv run pytest` — 326 passed (≈ 180 s).
+- `uv run ruff check .`, `ruff format --check .` — toza; `uv run pyright` — 0 xato.
+- Panel skrinshot bilan ko'zdan kechirildi (uch joyi).
+
+**O'lchangan** (55 s bo'sh holat, bitta yugurish)
+
+| Jarayon | Working Set |
+|---------|-------------|
+| yadro (5 plagin ishlayapti, `data` o'chiq) | 97,4 MB |
+| Caddy | 31,8 MB |
+| shell | 119,1 MB |
+| venv ishga tushirgichlari (2 ta) | 7,8 MB |
+| **jami** | **256,1 MB** (chegaraning 73 %) |
+
+7-bosqichga nisbatan +5,1 MB (yadro +2,9; shell +2,9; Caddy −0,6 — oxirgi
+ikkitasi o'lchov tebranishi doirasida). esptool/avrdude jarayonining sarfi
+o'lchanmagan (ular faqat yozish paytida yashaydi).
+
+**Yo'lda topilgan va tuzatilgan**
+
+- Plagin ichida `from . import modul` ishlamaydi (plagin paketi `sys.modules`
+  da ota paketsiz yuklanadi) — `from .modul import nom` ishlatiladi.
+
+**Qilinmadi / ma'lum kamchiliklar**
+
+- **Haqiqiy plataga birorta bayt yozilmagan**: mashinada COM port va plata
+  yo'q. Yozish oqimi soxta dastur bilan, buyruq sintaksisi esa haqiqiy esptool
+  va avrdude bilan (port ochilgunga qadar) sinalgan.
+- Haqiqiy COM portda monitor va «port band» holati sinalmagan.
+- Leonardo/Micro (ATmega32U4) qo'llab-quvvatlanmaydi.
+- Proshivka faylini API orqali yuklash yo'q — fayl papkaga qo'lda qo'yiladi.
+- avrdude'ning tizim xato matni jurnalda buzuq belgilar bilan chiqadi.
+- Port ruxsati manifestda qo'lda yoziladi (plata boshqa COM raqam olsa,
+  manifestni tuzatish kerak).

@@ -17,10 +17,11 @@ from pathlib import Path
 import httpx
 import pytest
 from PyQt6.QtCore import QEventLoop, Qt, QTimer
-from PyQt6.QtWidgets import QApplication, QCheckBox, QComboBox, QLineEdit
+from PyQt6.QtWidgets import QApplication, QCheckBox, QComboBox, QLineEdit, QWidget
 
 from conftest import free_port, write_plugin
 from data_helpers import SALES_CSV, install_data
+from electronics_helpers import install_electronics
 from hosting_helpers import CADDY_EXE, HostingPorts, install_hosting
 from iot_helpers import install_iot
 from srv1_core.plugins.registry import BUILTIN_DIR
@@ -142,6 +143,8 @@ def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
         )
     hosting = install_hosting(plugin_root, data_dir / "plugins" / "hosting" / "data")
     install_iot(plugin_root, data_dir / "plugins" / "iot" / "data", mqtt={"enabled": False})
+    firmware = install_electronics(plugin_root, data_dir / "plugins" / "electronics" / "data")
+    (firmware / "blink.bin").write_bytes(bytes(2048))
     inbox = install_data(plugin_root, data_dir / "plugins" / "data" / "data")
     (inbox / "sotuvlar.csv").write_text(SALES_CSV, encoding="utf-8", newline="")
     port = free_port()
@@ -180,6 +183,7 @@ def window(qapp: QApplication, core: Core) -> Iterator[MainWindow]:
     main.show()
     pump(lambda: main.events.connected, what="WebSocket ulanishi")
     wanted = {"panel:files", "panel:hello", "panel:hosting", "panel:inventory", "panel:iot"}
+    wanted.add("panel:electronics")
     pump(lambda: wanted <= set(main.page_keys()), what="panellar")
     yield main
     main.shutdown()
@@ -225,14 +229,14 @@ def test_connects_and_shows_system(window: MainWindow) -> None:
 def test_navigation_lists_fixed_pages_and_panels(window: MainWindow) -> None:
     labels = _nav_labels(window)
     assert labels[:4] == ["Tizim", "Plaginlar", "Jurnal", "Xotira"]
-    assert sorted(labels[4:]) == ["Fayllar", "Hosting", "IoT", "Ombor", "Salom"]
+    assert sorted(labels[4:]) == ["Elektronika", "Fayllar", "Hosting", "IoT", "Ombor", "Salom"]
     assert window.windowTitle() == "SRV_1 boshqaruvi"
 
 
 # --- plaginlar: yoqish/o'chirish tugmasi --------------------------------------------
 def test_plugin_toggle_button(window: MainWindow, core: Core) -> None:
     page = _page(window, "plugins", PluginsPage)
-    pump(lambda: page.table.rowCount() == 6, what="plaginlar ro'yxati")
+    pump(lambda: page.table.rowCount() == 7, what="plaginlar ro'yxati")
     row = next(i for i, plugin in enumerate(page.plugins) if plugin["name"] == "hello")
 
     def status_text() -> str:
@@ -561,6 +565,72 @@ def test_iot_panel_record_filter_and_serial_monitor(window: MainWindow, core: Co
 
 
 # --- data paneli: og'ir plaginni yoqish, import, SQL so'rov vidjeti ---------------------
+def _fill(inputs: dict[str, QWidget], **texts: str) -> None:
+    for name, text in texts.items():
+        editor = inputs[name]
+        assert isinstance(editor, QLineEdit)
+        editor.setText(text)
+
+
+def test_electronics_panel_monitor_and_confirmed_flash(
+    window: MainWindow, core: Core, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pump(lambda: "panel:electronics" in window.page_keys(), what="elektronika paneli")
+    page = _page(window, "panel:electronics", PanelPage)
+    pump(lambda: page.values["flash_state"].value.text() == "idle", what="proshivka holati")
+    assert page.values["esptool"].value.text()[0].isdigit()
+    files = page.tables["/firmware"]
+    pump(lambda: [row["name"] for row in files.rows] == ["blink.bin"], what="proshivka fayllari")
+    size_cell = files.table.item(0, 1)
+    assert size_cell is not None and size_cell.text() == "2 KB"
+
+    # monitor: halqa portni ochish, yozish, ko'rish
+    open_form = page.forms["/monitor/open"]
+    _fill(open_form.inputs, port="loop://")
+    open_form.submit.click()
+    ports = page.tables["/ports"]
+    pump(
+        lambda: any(row["port"] == "loop://" and row["monitor"] for row in ports.rows),
+        what="ochiq monitor",
+    )
+    write_form = page.forms["/monitor/write"]
+    _fill(write_form.inputs, port="loop://", text="salom plata")
+    write_form.submit.click()
+    monitor = page.logs["/monitor/lines"]
+    monitor_port = monitor.filters["port"]
+    assert isinstance(monitor_port, QLineEdit)
+    monitor_port.setText("loop://")
+    monitor.show_button.click()
+    pump(lambda: "salom plata" in monitor.view.toPlainText(), what="serial monitor")
+
+    # proshivka formasi xavfli: tasdiqsiz hech narsa yuborilmaydi
+    flash = page.forms["/flash"]
+    assert flash.submit.objectName() == "Danger"
+    _fill(flash.inputs, port="COM9", file="blink.bin")
+    board = flash.inputs["board"]
+    assert isinstance(board, QComboBox)
+    board.setCurrentText("esp32")
+    asked: list[str] = []
+
+    def decline(action: str) -> bool:
+        asked.append(action)
+        return False
+
+    monkeypatch.setattr(page, "confirm", decline)
+    flash.submit.click()
+    wait(300)
+    assert asked == ["Proshivka yozish"]
+    api = "/api/v1/plugins/electronics/api"
+    assert core.get(f"{api}/flash").json() == {"state": "idle"}
+
+    # tasdiqlansa yuboriladi; COM9 manifestda yo'q — yadro rad etadi va xato ko'rinadi
+    monkeypatch.setattr(page, "confirm", lambda _action: True)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
+    flash.submit.click()
+    pump(lambda: page.result.objectName() == "ErrorText", what="rad etilgan proshivka")
+    assert "403" in page.result.text()
+    assert core.get(f"{api}/flash/history").json() == []
+
+
 def test_data_panel_enable_import_and_sql_query(window: MainWindow, core: Core) -> None:
     plugins = _page(window, "plugins", PluginsPage)
     pump(lambda: "data" in plugins.buttons, what="plaginlar ro'yxati")
@@ -722,7 +792,7 @@ def test_language_switch_rebuilds_everything(core: Core, qapp: QApplication) -> 
         pump(lambda: memory.table.rowCount() >= 2, what="xotira jadvali")
         assert "limit 350.0 MB" in memory.total.text()
         plugins = _page(main, "plugins", PluginsPage)
-        pump(lambda: plugins.table.rowCount() == 6, what="plaginlar")
+        pump(lambda: plugins.table.rowCount() == 7, what="plaginlar")
         header = plugins.table.horizontalHeaderItem(3)
         assert header is not None
         assert header.text() == "Status"

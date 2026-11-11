@@ -1,4 +1,8 @@
-"""Serial portlar: ro'yxat, ochish/yopish, satrlarni o'qish (alohida oqimda) va yozish."""
+"""Serial portlar: ro'yxat, bandlikni tekshirish, satrlarni o'qish (alohida oqimda), yozish.
+
+`iot` va `electronics` plaginlari uchun umumiy. Ruxsatni (`ctx.check_serial`)
+chaqiruvchi tekshiradi — bu modul faqat port bilan ishlaydi.
+"""
 # pyserial tip ma'lumotisiz keladi; shu fayl uning yagona iste'molchisi.
 # pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false
 # pyright: reportUnknownVariableType=false, reportUnknownArgumentType=false
@@ -23,12 +27,36 @@ READ_TIMEOUT_S = 0.2
 LineSink = Callable[[str, str], None]
 
 
-def available_ports() -> list[dict[str, str]]:
-    """Tizimdagi serial portlar (bloklovchi: `asyncio.to_thread` bilan chaqiring)."""
+def available_ports() -> list[dict[str, Any]]:
+    """Tizimdagi serial portlar (bloklovchi: `asyncio.to_thread` bilan chaqiring).
+
+    `vid`/`pid` — USB identifikatori (USB bo'lmagan portda `None`).
+    """
     return [
-        {"port": str(port.device), "description": str(port.description or "")}
+        {
+            "port": str(port.device),
+            "description": str(port.description or ""),
+            "vid": port.vid if isinstance(port.vid, int) else None,
+            "pid": port.pid if isinstance(port.pid, int) else None,
+            "manufacturer": str(port.manufacturer or ""),
+        }
         for port in sorted(list_ports.comports(), key=lambda p: str(p.device))
     ]
+
+
+def probe_port(name: str) -> str | None:
+    """Portni ochib-yopib ko'radi (bloklovchi). Ochilmasa — sabab matni, aks holda `None`.
+
+    Windows'da COM port bitta egaga tegishli: boshqa dastur ochgan bo'lsa, shu yerda
+    «ruxsat yo'q» xatosi chiqadi. Ochish DTR'ni o'zgartirib, platani qayta yuklashi mumkin.
+    """
+    try:
+        port = serial.serial_for_url(name, timeout=READ_TIMEOUT_S)
+    except (OSError, ValueError) as exc:
+        return str(exc) or type(exc).__name__
+    with suppress(OSError):
+        port.close()
+    return None
 
 
 class SerialPort:

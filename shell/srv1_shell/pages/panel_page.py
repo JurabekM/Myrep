@@ -70,7 +70,7 @@ class _Form(QFrame):
             form.addRow(i18n.pick(field.label), editor)
         outer.addLayout(form)
         self.submit = QPushButton(i18n.t("panel.submit"))
-        self.submit.setObjectName("Primary")
+        self.submit.setObjectName("Danger" if spec.confirm else "Primary")
         self.submit.clicked.connect(self._send)
         row = QHBoxLayout()
         row.addStretch(1)
@@ -109,6 +109,9 @@ class _Form(QFrame):
     def _send(self) -> None:
         values = self.values()
         if values is None:
+            return
+        label = self._page.ctx.i18n.pick(self.spec.label)
+        if self.spec.confirm and not self._page.confirm(label):
             return
         if self.spec.method == "GET":
             self._page.call(self.spec.method, self.spec.path, params=values)

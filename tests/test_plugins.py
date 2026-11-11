@@ -139,6 +139,7 @@ async def test_builtin_hello_is_discovered(
         plugins = (await client.get(API)).json()
     assert [(p["name"], p["source"]) for p in plugins] == [
         ("data", "builtin"),
+        ("electronics", "builtin"),
         ("files", "builtin"),
         ("hello", "builtin"),
         ("hosting", "builtin"),

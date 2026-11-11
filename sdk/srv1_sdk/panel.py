@@ -80,6 +80,8 @@ class FormWidget(_Widget):
     method: HttpMethod = "POST"
     path: Annotated[str, _PATH]
     fields: tuple[FormField, ...]
+    # Xavfli amal: shell yuborishdan oldin tasdiq so'raydi.
+    confirm: bool = False
 
 
 class TableColumn(_Widget):
