@@ -28,6 +28,7 @@ from srv1_sdk.panel import (
     LabelWidget,
     LogWidget,
     PanelSpec,
+    QueryWidget,
     RowAction,
     TableWidget,
     ValueWidget,
@@ -37,6 +38,7 @@ from srv1_shell.charts import LineChart
 from srv1_shell.common import AppContext, Card, Page, section_title
 from srv1_shell.pages.data_table import DataTable, ErrorSink, make_editor
 from srv1_shell.pages.log_view import LogView
+from srv1_shell.pages.query_view import QueryView
 
 RESULT_MAX_CHARS = 300
 CHART_HEIGHT = 220
@@ -130,6 +132,7 @@ class PanelPage(Page):
         self.forms: dict[str, _Form] = {}
         self.tables: dict[str, DataTable] = {}
         self.logs: dict[str, LogView] = {}
+        self.queries: dict[str, QueryView] = {}
         self.charts: dict[str, LineChart] = {}
 
         self.add_title(ctx.i18n.pick(spec.title))
@@ -183,6 +186,10 @@ class PanelPage(Page):
             log = LogView(widget, self.ctx.i18n, self.fetch)
             self.logs[widget.source] = log
             self._content.addWidget(log)
+        elif isinstance(widget, QueryWidget):
+            query = QueryView(widget, self.ctx.i18n, self.send)
+            self.queries[widget.path] = query
+            self._content.addWidget(query)
         elif isinstance(widget, ChartWidget):
             self._add_chart(widget)
 
@@ -310,6 +317,19 @@ class PanelPage(Page):
         box.addButton(t("common.no"), QMessageBox.ButtonRole.NoRole)
         box.exec()
         return box.clickedButton() is yes
+
+    def send(
+        self, path: str, body: dict[str, Any], consumer: Consumer, on_error: ErrorSink
+    ) -> None:
+        """Plagin API'siga `POST`; natija va xato chaqiruvchining o'ziga qaytadi."""
+
+        def deliver(reply: Reply) -> None:
+            if reply.ok:
+                consumer(reply.data)
+            else:
+                on_error(self.describe_error(reply))
+
+        self.ctx.api.request("POST", self._prefix + path, deliver, owner=self, body=body)
 
     def call(
         self,

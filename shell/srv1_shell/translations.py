@@ -100,6 +100,16 @@ TEXTS: dict[str, dict[str, str]] = {
     "panel.submit": _t("Yuborish", "Отправить", "Submit"),
     "panel.search": _t("Qidirish", "Найти", "Search"),
     "panel.show": _t("Koʻrsatish", "Показать", "Show"),
+    "panel.run": _t("Bajarish (Ctrl+Enter)", "Выполнить (Ctrl+Enter)", "Run (Ctrl+Enter)"),
+    "panel.running": _t("Bajarilmoqda…", "Выполняется…", "Running…"),
+    "panel.rows": _t(
+        "{rows} qator, {seconds} s", "Строк: {rows}, {seconds} с", "{rows} rows, {seconds} s"
+    ),
+    "panel.rows_truncated": _t(
+        "Birinchi {rows} qator koʻrsatildi (natija kattaroq), {seconds} s",
+        "Показаны первые {rows} строк (результат больше), {seconds} с",
+        "First {rows} rows shown (result is larger), {seconds} s",
+    ),
     "panel.confirm.title": _t("Tasdiqlash", "Подтверждение", "Confirm"),
     "panel.confirm.text": _t(
         "«{action}» bajarilsinmi?", "Выполнить «{action}»?", "Run “{action}”?"

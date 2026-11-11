@@ -92,6 +92,8 @@ def test_number_and_size_formatting() -> None:
     assert I18n("en").size(megabytes) == "81.3 MB"
     assert I18n("en").size(4 * 1024**3) == "4.0 GB"
     assert I18n("en").size(2048) == "2 KB"
+    assert I18n("en").size(1023) == "1023 B"
+    assert I18n("ru").size(0) == "0 Б"
     assert I18n("uz").percent(29.04) == "29,0 %"
 
 

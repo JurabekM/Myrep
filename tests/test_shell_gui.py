@@ -20,6 +20,7 @@ from PyQt6.QtCore import QEventLoop, Qt, QTimer
 from PyQt6.QtWidgets import QApplication, QCheckBox, QComboBox, QLineEdit
 
 from conftest import free_port, write_plugin
+from data_helpers import SALES_CSV, install_data
 from hosting_helpers import CADDY_EXE, HostingPorts, install_hosting
 from iot_helpers import install_iot
 from srv1_core.plugins.registry import BUILTIN_DIR
@@ -141,6 +142,8 @@ def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
         )
     hosting = install_hosting(plugin_root, data_dir / "plugins" / "hosting" / "data")
     install_iot(plugin_root, data_dir / "plugins" / "iot" / "data", mqtt={"enabled": False})
+    inbox = install_data(plugin_root, data_dir / "plugins" / "data" / "data")
+    (inbox / "sotuvlar.csv").write_text(SALES_CSV, encoding="utf-8", newline="")
     port = free_port()
     env = {key: value for key, value in os.environ.items() if not key.startswith("SRV1_")}
     env |= {
@@ -229,7 +232,7 @@ def test_navigation_lists_fixed_pages_and_panels(window: MainWindow) -> None:
 # --- plaginlar: yoqish/o'chirish tugmasi --------------------------------------------
 def test_plugin_toggle_button(window: MainWindow, core: Core) -> None:
     page = _page(window, "plugins", PluginsPage)
-    pump(lambda: page.table.rowCount() == 5, what="plaginlar ro'yxati")
+    pump(lambda: page.table.rowCount() == 6, what="plaginlar ro'yxati")
     row = next(i for i, plugin in enumerate(page.plugins) if plugin["name"] == "hello")
 
     def status_text() -> str:
@@ -369,7 +372,7 @@ def test_files_panel_search_trash_and_restore(
     pump(lambda: [row["name"] for row in search.rows] == ["gui_sinov_hisobot.txt"], what="qidiruv")
     cell = search.table.item(0, 3)
     assert cell is not None
-    assert cell.text() == "0 KB"
+    assert cell.text() == "4 B"
     name_filter.setText("boshqa")
     name_filter.returnPressed.emit()
     pump(lambda: [row["name"] for row in search.rows] == ["boshqa.bin"], what="Enter bilan qidiruv")
@@ -557,6 +560,84 @@ def test_iot_panel_record_filter_and_serial_monitor(window: MainWindow, core: Co
     assert "403" in page.result.text()
 
 
+# --- data paneli: og'ir plaginni yoqish, import, SQL so'rov vidjeti ---------------------
+def test_data_panel_enable_import_and_sql_query(window: MainWindow, core: Core) -> None:
+    plugins = _page(window, "plugins", PluginsPage)
+    pump(lambda: "data" in plugins.buttons, what="plaginlar ro'yxati")
+    assert "panel:data" not in window.page_keys(), "og'ir plagin standart holatda o'chiq"
+    assert plugins.buttons["data"].text() == "Yoqish"
+    plugins.buttons["data"].click()
+    pump(lambda: "panel:data" in window.page_keys(), timeout_s=30, what="data paneli")
+
+    page = _page(window, "panel:data", PanelPage)
+    inbox, datasets = page.tables["/inbox"], page.tables["/datasets"]
+    pump(lambda: [row["path"] for row in inbox.rows] == ["sotuvlar.csv"], what="inbox jadvali")
+
+    # qator amali: inbox'dagi faylni import qilish
+    inbox.table.selectRow(0)
+    inbox.action_buttons["POST /import"].click()
+    pump(
+        lambda: (
+            [(row["name"], row["state"], row["rows"]) for row in datasets.rows]
+            == [("sotuvlar", "ready", 6)]
+        ),
+        timeout_s=30,
+        what="import tugashi",
+    )
+    pump(lambda: page.values["rows"].value.text() == "6", what="qatorlar soni")
+
+    # SQL so'rov: ustunlar javobdan olinadi
+    query = page.queries["/query"]
+    assert query.run_button.text() == "Bajarish (Ctrl+Enter)"
+    query.run_button.click()
+    assert query.status.text() == "", "bo'sh so'rov yuborilmaydi"
+    query.editor.setPlainText(
+        "SELECT mahsulot, sum(soni) AS jami, avg(narx) AS ortacha\n"
+        "FROM sotuvlar GROUP BY mahsulot ORDER BY jami DESC"
+    )
+    query.run_button.click()
+    pump(lambda: len(query.rows) == 3, timeout_s=30, what="so'rov natijasi")
+    assert query.columns == ["mahsulot", "jami", "ortacha"]
+    assert query.rows[0][:2] == ["non", 20]
+    headers = [query.table.horizontalHeaderItem(i) for i in range(3)]
+    assert [item.text() for item in headers if item is not None] == query.columns
+    assert headers[1] is not None
+    assert headers[1].toolTip() == "HUGEINT"
+    first, third = query.table.item(0, 0), query.table.item(2, 2)
+    assert first is not None
+    assert third is not None
+    assert (first.text(), third.text()) == ("non", "12,6667")
+    assert query.status.text().startswith("3 qator, ")
+    assert query.status.objectName() == "ResultText"
+
+    # hisobot (SUMMARIZE) va katta natijaning kesilishi
+    query.editor.setPlainText("SUMMARIZE sotuvlar")
+    query.run_button.click()
+    pump(lambda: len(query.rows) == 4 and "column_name" in query.columns, what="hisobot")
+    query.editor.setPlainText("SELECT i FROM range(5000) t(i)")
+    query.run_button.click()
+    pump(lambda: len(query.rows) == 200, what="kesilgan natija")
+    assert query.status.text().startswith("Birinchi 200 qator koʻrsatildi")
+
+    # xato so'rov: sabab vidjetning o'zida, tugma qayta yoqiladi
+    query.editor.setPlainText("DROP VIEW sotuvlar")
+    query.run_button.click()
+    pump(lambda: query.status.objectName() == "ErrorText", what="rad etilgan so'rov")
+    assert "403" in query.status.text()
+    assert "faqat SELECT" in query.status.text()
+    assert query.run_button.isEnabled()
+    query.editor.setPlainText("SELECT count(*) FROM sotuvlar")
+    query.run_button.click()
+    pump(lambda: query.rows == [[6]], what="to'plam joyida")
+
+    # plaginni o'chirish: panel yo'qoladi
+    plugins = _page(window, "plugins", PluginsPage)
+    pump(lambda: plugins.buttons["data"].text() == "Oʻchirish", what="plagin holati")
+    plugins.buttons["data"].click()
+    pump(lambda: "panel:data" not in window.page_keys(), timeout_s=30, what="panel yopilishi")
+    assert core.get("/api/v1/plugins/data").json()["status"] == "stopped"
+
+
 # --- jurnal ------------------------------------------------------------------------------
 def test_logs_page_tail_live_and_filter(window: MainWindow) -> None:
     page = _page(window, "logs", LogsPage)
@@ -641,7 +722,7 @@ def test_language_switch_rebuilds_everything(core: Core, qapp: QApplication) -> 
         pump(lambda: memory.table.rowCount() >= 2, what="xotira jadvali")
         assert "limit 350.0 MB" in memory.total.text()
         plugins = _page(main, "plugins", PluginsPage)
-        pump(lambda: plugins.table.rowCount() == 5, what="plaginlar")
+        pump(lambda: plugins.table.rowCount() == 6, what="plaginlar")
         header = plugins.table.horizontalHeaderItem(3)
         assert header is not None
         assert header.text() == "Status"

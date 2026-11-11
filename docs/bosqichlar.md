@@ -9,8 +9,8 @@
 | 4 | `files` | ✅ tugadi | 2026-11-11 |
 | 5 | `hosting` | ✅ tugadi | 2026-11-11 |
 | 6 | `iot` | ✅ tugadi (Mosquitto va temir bilan sinalmagan) | 2026-11-11 |
-| 7 | `data` | ⏳ reja tasdiqlanishi kutilmoqda | — |
-| 8 | `electronics` | — | — |
+| 7 | `data` | ✅ tugadi | 2026-11-11 |
+| 8 | `electronics` | ⏳ reja tasdiqlanishi kutilmoqda | — |
 | 9 | `itops` | — | — |
 | 10 | Yakun | — | — |
 
@@ -411,3 +411,61 @@ port esa yo'q. Ikkalasi ham foydalanuvchi bilan kelishilgan.
 - `pymodbus` ning test simulyatori eskirgan API'dan foydalanadi (4.0 da
   olib tashlanadi) — faqat testlarga ta'sir qiladi.
 - Yuqori oqimda (soniyasiga yuzlab xabar) o'lchanmagan.
+
+## 7-bosqich — `data` plagini
+
+Tafsilot: [data.md](data.md).
+
+**Qilindi**
+
+- `plugins/data` (og'ir plagin: alohida jarayon, 700 MB limit, standart o'chiq):
+  CSV/Parquet/Excel import (`polars`, oqim bilan), DuckDB so'rovlari
+  (`memory_limit='400MB'`), hisobot (`SUMMARIZE`), CSV eksport, natijani
+  yangi to'plam sifatida saqlash.
+- CSV'da kodirovka (UTF-8 / `cp1251`) va ajratgich o'zi aniqlanadi.
+- So'rov xavfsizligi ikki qatlamda: faqat bitta `SELECT` turidagi ifoda;
+  DuckDB'da tashqi fayllarga murojaat yopiq va sozlama qulflangan.
+- Panel sxemasi: `query` vidjeti (SQL matni + ustunlari javobdan olinadigan
+  jadval); shell uni chizadi. Hajm formati: 1 KB dan kichigi baytlarda.
+- Yangi kutubxonalar: `duckdb` 2.0, `polars` 2.1 (ro'yxatdan); `fastexcel`
+  0.21 (ro'yxatda yo'q, Excel uchun — rozilik bilan).
+
+**Tekshiruv natijasi (2026-11-11)**
+
+- `uv run pytest` — 313 passed (≈ 168 s), ikki marta ketma-ket barqaror
+  (oxirgi kichik tuzatishlardan keyin bir marta qayta yugurtirilgan).
+- `uv run ruff check .`, `ruff format --check .` — toza; `uv run pyright` — 0 xato.
+- Panel skrinshot bilan ko'zdan kechirildi.
+
+**O'lchangan** (bitta yugurish; to'liq jadval: [data.md](data.md))
+
+| O'lchov | Natija |
+|---------|--------|
+| 1 000 000 qatorli CSV (39 MB) importi | 0,41 s |
+| so'rovlar (guruhlash, saralash, hisobot) | 0,006–0,33 s |
+| plagin jarayoni, yoqilgandan keyin | 43,9 MB |
+| plagin jarayoni, sinov cho'qqisi | 222,4 MB (limit 700 MB) |
+
+Bo'sh holatdagi umumiy sarf o'zgarmadi (≈ 251 MB, 6-bosqich o'lchovi): plagin
+standart holatda o'chiq va yadroga hech narsa yuklamaydi. Jami bu bosqichda
+qayta o'lchanmagan.
+
+**Yo'lda topilgan va tuzatilgan**
+
+- Vaqt chegarasi so'rovni to'xtatmasdi: to'xtatish buyrug'i asosiy ulanishga
+  ketar, so'rov esa alohida kursorda ishlar edi (test 5 s kutib yiqildi).
+- `COPY ... TO` ruxsat etilgan papka ichida ishlab ketardi — shuning uchun
+  matn darajasida ham faqat `SELECT` turiga ruxsat qoldirildi.
+- Skrinshotda: natija jadvalida oxirgi ustun butun kenglikka cho'zilgan,
+  kichik fayllar «0 KB» ko'rsatilgan edi.
+
+**Qilinmadi / ma'lum kamchiliklar**
+
+- 4 GB li mashinada va haqiqiy (sun'iy bo'lmagan) katta fayllarda o'lchanmagan.
+- 700 MB jarayon limitiga urilish sinalmagan (DuckDB'ning o'z 400 MB
+  chegarasi oldinroq ishlaydi — u sinalgan; `polars` importi limitga urilsa
+  nima bo'lishi sinalmagan).
+- Excel to'liq xotiraga o'qiladi; importni bekor qilish va foiz ko'rsatkichi yo'q.
+- CSV kodirovkasi faqat UTF-8 va `cp1251`.
+- HTML hisobot va grafik yo'q (kelishilganidek: jadval + CSV).
+- Excel'ga eksport yo'q (yozuvchi kutubxona kerak bo'lardi).

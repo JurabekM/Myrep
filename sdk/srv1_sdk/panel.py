@@ -125,6 +125,20 @@ class LogWidget(_Widget):
     filters: tuple[FormField, ...] = ()
 
 
+class QueryWidget(_Widget):
+    """Ko'p qatorli so'rov matni + natija jadvali (ustunlar javobdan olinadi).
+
+    Matn `path` ga `POST {<field>: matn}` bo'lib yuboriladi. Javob:
+    `{columns: [{name, type}], rows: [[...]], truncated, seconds}`.
+    """
+
+    type: Literal["query"] = "query"
+    label: LocalizedText
+    path: Annotated[str, _PATH]
+    field: str = Field(default="sql", pattern=r"^[a-z_]{1,32}$")
+    placeholder: LocalizedText = ""
+
+
 class ChartWidget(_Widget):
     """`plugin.<nom>.<topic>` hodisasidagi `field` qiymatining jonli grafigi."""
 
@@ -136,7 +150,14 @@ class ChartWidget(_Widget):
 
 
 Widget = Annotated[
-    LabelWidget | ValueWidget | ButtonWidget | FormWidget | TableWidget | LogWidget | ChartWidget,
+    LabelWidget
+    | ValueWidget
+    | ButtonWidget
+    | FormWidget
+    | TableWidget
+    | LogWidget
+    | QueryWidget
+    | ChartWidget,
     Field(discriminator="type"),
 ]
 

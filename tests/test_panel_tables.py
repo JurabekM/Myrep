@@ -76,3 +76,31 @@ def test_format_cell() -> None:
     assert format_cell(False, text, uz) == ""
     stamp = datetime(2026, 11, 11, 14, 5).timestamp()
     assert format_cell(stamp, when, uz) == "2026-11-11 14:05"
+
+
+def test_query_widget_and_cell_text() -> None:
+    from srv1_sdk.panel import QueryWidget
+    from srv1_shell.pages.query_view import cell_text
+
+    panel = PanelSpec.model_validate(
+        {"title": "T", "widgets": [{"type": "query", "label": "SQL", "path": "/query"}]}
+    )
+    widget = panel.widgets[0]
+    assert isinstance(widget, QueryWidget)
+    assert (widget.field, widget.placeholder) == ("sql", "")
+    for bad in ({"path": "http://x/q"}, {"path": "/q", "field": "Bad Field"}):
+        with pytest.raises(ValidationError):
+            PanelSpec.model_validate(
+                {"title": "T", "widgets": [{"type": "query", "label": "SQL", **bad}]}
+            )
+
+    uz, en = I18n("uz"), I18n("en")
+    assert cell_text(None, uz) == ""
+    assert cell_text(True, uz) == "true"
+    assert cell_text(42, uz) == "42"
+    assert cell_text(12.5, uz) == "12,5"
+    assert cell_text(12.5, en) == "12.5"
+    assert cell_text(3.0, uz) == "3"
+    assert cell_text(0.0, en) == "0"
+    assert cell_text(1 / 3, en) == "0.3333"
+    assert cell_text("matn", uz) == "matn"

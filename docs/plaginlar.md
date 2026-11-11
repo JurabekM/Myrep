@@ -148,6 +148,7 @@ Audit: `plugin.enable`, `plugin.disable`, `plugin.crashed`, `process.spawn`
 | `table` | `label`, `source`, `columns[]`, `refresh_s`, `auto_refresh`, `filters[]`, `row_actions[]` |
 | `chart` | `label`, `topic`, `field`, `window` |
 | `log` | `label`, `source`, `refresh_s`, `filters[]` — `source` satrlar ro'yxatini qaytaradi |
+| `query` | `label`, `path`, `field`, `placeholder` — ko'p qatorli matn `POST {field: matn}` bo'lib ketadi; javob `{columns[], rows[][], truncated, seconds}` |
 
 Jadval kengaytmalari:
 

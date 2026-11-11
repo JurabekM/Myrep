@@ -5,10 +5,10 @@ from collections.abc import Mapping
 from srv1_shell.translations import DEFAULT_LANGUAGE, LANGUAGE_NAMES, TEXTS
 
 _COMMA_DECIMAL = frozenset({"uz", "ru"})
-_UNITS: dict[str, tuple[str, str, str]] = {
-    "uz": ("KB", "MB", "GB"),
-    "ru": ("КБ", "МБ", "ГБ"),
-    "en": ("KB", "MB", "GB"),
+_UNITS: dict[str, tuple[str, str, str, str]] = {
+    "uz": ("B", "KB", "MB", "GB"),
+    "ru": ("Б", "КБ", "МБ", "ГБ"),
+    "en": ("B", "KB", "MB", "GB"),
 }
 
 
@@ -39,7 +39,9 @@ class I18n:
 
     def size(self, size_bytes: float) -> str:
         """Hajm: 1024 asosida, bitta kasr xonasi bilan."""
-        kb, mb, gb = _UNITS[self.language]
+        b, kb, mb, gb = _UNITS[self.language]
+        if size_bytes < 1024:
+            return f"{round(size_bytes)} {b}"
         if size_bytes >= 1024**3:
             return f"{self.number(size_bytes / 1024**3)} {gb}"
         if size_bytes >= 1024**2:
