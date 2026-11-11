@@ -93,10 +93,10 @@ class InprocessRunner:
         data_dir: Path,
         backend: CoreBackend,
         projects_dir: Path,
+        data_root: Path,
     ) -> None:
-        self._plugin = LoadedPlugin(
-            plugin_dir, manifest, PluginContext(manifest, data_dir, backend, projects_dir)
-        )
+        ctx = PluginContext(manifest, data_dir, backend, projects_dir, data_root)
+        self._plugin = LoadedPlugin(plugin_dir, manifest, ctx)
         self.panel: PanelSpec | None = None
         self.handlers: Sequence[EventHandler] = ()
         self.jobs: Sequence[Job] = ()
@@ -168,12 +168,14 @@ class SubprocessRunner:
         data_dir: Path,
         backend: CoreBackend,
         projects_dir: Path,
+        data_root: Path,
         on_exit: Callable[[str], None],
     ) -> None:
         self._dir = plugin_dir
         self._manifest = manifest
         self._data_dir = data_dir
         self._projects_dir = projects_dir
+        self._data_root = data_root
         self._backend = backend
         self._on_exit = on_exit
         self._process: asyncio.subprocess.Process | None = None
@@ -203,7 +205,7 @@ class SubprocessRunner:
         python, env = _child_python()
         args = [python, "-X", "utf8", "-m", "srv1_sdk.host"]
         args += ["--dir", str(self._dir), "--data-dir", str(self._data_dir)]
-        args += ["--projects-dir", str(self._projects_dir)]
+        args += ["--projects-dir", str(self._projects_dir), "--data-root", str(self._data_root)]
         self._process = await spawn_in_job(
             args,
             self._job,

@@ -153,12 +153,13 @@ async def _run(
     plugin_dir: Path,
     data_dir: Path,
     projects_dir: Path | None,
+    data_root: Path | None,
     stdin: BinaryIO,
     channel: _Channel,
 ) -> int:
     try:
         manifest = load_manifest(plugin_dir)
-        ctx = PluginContext(manifest, data_dir, channel, projects_dir)
+        ctx = PluginContext(manifest, data_dir, channel, projects_dir, data_root)
         plugin = LoadedPlugin(plugin_dir, manifest, ctx)
         plugin.load()
         await plugin.start()
@@ -181,13 +182,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dir", type=Path, required=True)
     parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--projects-dir", type=Path, default=None)
+    parser.add_argument("--data-root", type=Path, default=None)
     args = parser.parse_args(argv)
     args.data_dir.mkdir(parents=True, exist_ok=True)
     stdin, protocol_out = sys.stdin.buffer, sys.stdout.buffer
     sys.stdout = sys.stderr  # plagin print() protokolni buzmasin
     try:
         channel = _Channel(protocol_out)
-        return asyncio.run(_run(args.dir, args.data_dir, args.projects_dir, stdin, channel))
+        return asyncio.run(
+            _run(args.dir, args.data_dir, args.projects_dir, args.data_root, stdin, channel)
+        )
     except MemoryError:
         return EXIT_OUT_OF_MEMORY
 

@@ -144,6 +144,7 @@ async def test_builtin_hello_is_discovered(
         ("hello", "builtin"),
         ("hosting", "builtin"),
         ("iot", "builtin"),
+        ("itops", "builtin"),
     ]
     # hosting standart portlarga (8080, 2019, 9099) bog'lanadi; ular band bo'lsa bu yerda
     # tekshirilmaydi — plaginning o'z testlari bo'sh portlar bilan ishlaydi.

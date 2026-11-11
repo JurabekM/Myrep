@@ -1,0 +1,16 @@
+name = "itops"
+version = "0.1.0"
+description = "IT administrlash: jarayonlar, Windows xizmatlari, tarmoq skaneri, zaxira nusxa."
+mode = "inprocess"
+heavy = false
+
+[permissions]
+# Zaxira nusxa yoziladigan qo'shimcha papka (mutlaq yo'l), masalan boshqa disk:
+# paths = ["D:/srv1-zaxira"]. Bo'sh bo'lsa zaxira plaginning o'z `backups` papkasiga yoziladi.
+paths = []
+ports = []
+serial = []
+# Jarayonlarni to'xtatish, xizmatlarni boshqarish, mahalliy tarmoqni skanerlash.
+system = true
+# Zaxira nusxa uchun butun ma'lumotlar papkasini o'qish.
+data_root = true

@@ -35,6 +35,8 @@ paths = ["C:/data/in"]         # mutlaq papkalar
 ports = [9000, "9010-9019"]
 serial = ["COM3"]
 spawn = false                  # jarayon ishga tushirish (ctx.spawn)
+system = false                 # tizimni boshqarish: jarayonlar, xizmatlar, skaner (ctx.require_system)
+data_root = false              # butun ma'lumotlar papkasini o'qish (ctx.data_root)
 projects = false               # umumiy <ma'lumotlar>/projects papkasi
 ```
 
@@ -62,6 +64,8 @@ Hammasi ixtiyoriy; `ctx` — `PluginContext`.
 | `ctx.resolve_path(path)` | yo'lni tekshiradi: faqat o'z papkasi va `permissions.paths` |
 | `ctx.check_port(n)`, `ctx.check_serial("COM3")` | manifestda bo'lmasa `PermissionDenied` |
 | `ctx.projects_dir` | umumiy loyihalar papkasi (`permissions.projects`) |
+| `ctx.data_root` | butun ma'lumotlar papkasi, faqat o'qish uchun (`permissions.data_root`) |
+| `ctx.require_system(action)` | tizimni boshqarish amali oldidan tekshiruv (`permissions.system`) |
 | `await ctx.spawn(args, cwd=, env=, memory_limit_mb=, on_line=)` | jarayonni `shell`siz, Job Object ichida ishga tushiradi; auditga yozadi (`permissions.spawn`) |
 | `ctx.publish(topic, data)` | `plugin.<nom>.<topic>` ga nashr; boshqa mavzuga yoza olmaydi |
 | `await ctx.audit(action, target, ok=, detail=)` | audit jurnali, `actor = plugin:<nom>` |

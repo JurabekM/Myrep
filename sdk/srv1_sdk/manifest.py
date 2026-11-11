@@ -67,6 +67,10 @@ class Permissions(_Frozen):
     spawn: bool = False
     # Umumiy `<ma'lumotlar>/projects` papkasiga kirish.
     projects: bool = False
+    # Tizimni boshqarish: jarayonlarni to'xtatish, xizmatlar, tarmoqni skanerlash.
+    system: bool = False
+    # Butun ma'lumotlar papkasini o'qish (zaxira nusxa uchun). Yozish ruxsatini bermaydi.
+    data_root: bool = False
 
     @field_validator("paths")
     @classmethod

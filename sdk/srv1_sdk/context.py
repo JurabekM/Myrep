@@ -43,12 +43,14 @@ class PluginContext:
         data_dir: Path,
         backend: Backend,
         projects_dir: Path | None = None,
+        data_root: Path | None = None,
     ) -> None:
         self.manifest = manifest
         self.name = manifest.name
         self.data_dir = data_dir
         self._backend = backend
         self._projects_dir = projects_dir
+        self._data_root = data_root
 
     @property
     def projects_dir(self) -> Path:
@@ -56,6 +58,18 @@ class PluginContext:
         if not self.manifest.permissions.projects or self._projects_dir is None:
             raise self._denied("projects", "projects")
         return self._projects_dir
+
+    @property
+    def data_root(self) -> Path:
+        """Butun ma'lumotlar papkasi (faqat o'qish uchun); `permissions.data_root = true` shart."""
+        if not self.manifest.permissions.data_root or self._data_root is None:
+            raise self._denied("data_root", "data_root")
+        return self._data_root
+
+    def require_system(self, action: str) -> None:
+        """Tizimni boshqarish amali oldidan: `permissions.system = true` bo'lmasa rad etadi."""
+        if not self.manifest.permissions.system:
+            raise self._denied("system", action)
 
     def _roots(self) -> tuple[Path, ...]:
         roots = (self.data_dir, *self.manifest.permissions.paths)

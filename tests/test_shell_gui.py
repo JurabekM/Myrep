@@ -24,6 +24,7 @@ from data_helpers import SALES_CSV, install_data
 from electronics_helpers import install_electronics
 from hosting_helpers import CADDY_EXE, HostingPorts, install_hosting
 from iot_helpers import install_iot
+from srv1_core.paths import DataPaths
 from srv1_core.plugins.registry import BUILTIN_DIR
 from srv1_shell.app import apply_theme
 from srv1_shell.config import ShellConfig
@@ -33,6 +34,7 @@ from srv1_shell.pages.memory_page import MemoryPage
 from srv1_shell.pages.panel_page import PanelPage
 from srv1_shell.pages.plugins_page import PluginsPage
 from srv1_shell.pages.system_page import SystemPage
+from test_itops_plugin import install_itops
 
 INVENTORY_PLUGIN = """
     from fastapi import APIRouter
@@ -145,6 +147,7 @@ def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
     install_iot(plugin_root, data_dir / "plugins" / "iot" / "data", mqtt={"enabled": False})
     firmware = install_electronics(plugin_root, data_dir / "plugins" / "electronics" / "data")
     (firmware / "blink.bin").write_bytes(bytes(2048))
+    install_itops(plugin_root, DataPaths(root=data_dir))
     inbox = install_data(plugin_root, data_dir / "plugins" / "data" / "data")
     (inbox / "sotuvlar.csv").write_text(SALES_CSV, encoding="utf-8", newline="")
     port = free_port()
@@ -183,7 +186,7 @@ def window(qapp: QApplication, core: Core) -> Iterator[MainWindow]:
     main.show()
     pump(lambda: main.events.connected, what="WebSocket ulanishi")
     wanted = {"panel:files", "panel:hello", "panel:hosting", "panel:inventory", "panel:iot"}
-    wanted.add("panel:electronics")
+    wanted |= {"panel:electronics", "panel:itops"}
     pump(lambda: wanted <= set(main.page_keys()), what="panellar")
     yield main
     main.shutdown()
@@ -229,14 +232,22 @@ def test_connects_and_shows_system(window: MainWindow) -> None:
 def test_navigation_lists_fixed_pages_and_panels(window: MainWindow) -> None:
     labels = _nav_labels(window)
     assert labels[:4] == ["Tizim", "Plaginlar", "Jurnal", "Xotira"]
-    assert sorted(labels[4:]) == ["Elektronika", "Fayllar", "Hosting", "IoT", "Ombor", "Salom"]
+    assert sorted(labels[4:]) == [
+        "Elektronika",
+        "Fayllar",
+        "Hosting",
+        "IT boshqaruvi",
+        "IoT",
+        "Ombor",
+        "Salom",
+    ]
     assert window.windowTitle() == "SRV_1 boshqaruvi"
 
 
 # --- plaginlar: yoqish/o'chirish tugmasi --------------------------------------------
 def test_plugin_toggle_button(window: MainWindow, core: Core) -> None:
     page = _page(window, "plugins", PluginsPage)
-    pump(lambda: page.table.rowCount() == 7, what="plaginlar ro'yxati")
+    pump(lambda: page.table.rowCount() == 8, what="plaginlar ro'yxati")
     row = next(i for i, plugin in enumerate(page.plugins) if plugin["name"] == "hello")
 
     def status_text() -> str:
@@ -631,6 +642,49 @@ def test_electronics_panel_monitor_and_confirmed_flash(
     assert core.get(f"{api}/flash/history").json() == []
 
 
+def test_itops_panel_processes_services_and_backup(
+    window: MainWindow, core: Core, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    page = _page(window, "panel:itops", PanelPage)
+    processes = page.tables["/processes"]
+    pump(lambda: len(processes.rows) > 10, what="jarayonlar jadvali")
+    _fill(processes.filters, search="python")
+    processes.search_button.click()
+    pump(
+        lambda: bool(processes.rows) and all("python" in r["name"].lower() for r in processes.rows),
+        what="jarayonlar qidiruvi",
+    )
+    memory_cell = processes.table.item(0, 4)
+    assert memory_cell is not None and memory_cell.text().endswith(("MB", "KB", "GB"))
+
+    services = page.tables["/services"]
+    pump(lambda: len(services.rows) > 20, timeout_s=20, what="xizmatlar jadvali")
+    state = services.filters["state"]
+    assert isinstance(state, QComboBox)
+    state.setCurrentText("running")
+    services.search_button.click()
+    pump(
+        lambda: bool(services.rows) and all(r["state"] == "running" for r in services.rows),
+        timeout_s=20,
+        what="xizmatlar filtri",
+    )
+
+    # zaxira: tugma -> arxiv jadvalda -> tasdiq bilan o'chirish
+    backups = page.tables["/backups"]
+    pump(lambda: page.values["backup_state"].value.text() == "idle", what="zaxira holati")
+    assert backups.rows == []
+    page.buttons["POST /backups/run"].click()
+    pump(lambda: len(backups.rows) == 1, timeout_s=20, what="zaxira arxivi")
+    pump(lambda: page.values["backup_state"].value.text() == "done", what="zaxira tugashi")
+    name = backups.rows[0]["name"]
+    assert (core.data_dir / "plugins" / "itops" / "data" / "backups" / name).is_file()
+    monkeypatch.setattr(page, "confirm", lambda _action: True)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
+    backups.table.selectRow(0)
+    backups.action_buttons["POST /backups/remove"].click()
+    pump(lambda: backups.rows == [], what="zaxirani o'chirish")
+    assert list((core.data_dir / "plugins" / "itops" / "data" / "backups").iterdir()) == []
+
+
 def test_data_panel_enable_import_and_sql_query(window: MainWindow, core: Core) -> None:
     plugins = _page(window, "plugins", PluginsPage)
     pump(lambda: "data" in plugins.buttons, what="plaginlar ro'yxati")
@@ -792,7 +846,7 @@ def test_language_switch_rebuilds_everything(core: Core, qapp: QApplication) -> 
         pump(lambda: memory.table.rowCount() >= 2, what="xotira jadvali")
         assert "limit 350.0 MB" in memory.total.text()
         plugins = _page(main, "plugins", PluginsPage)
-        pump(lambda: plugins.table.rowCount() == 7, what="plaginlar")
+        pump(lambda: plugins.table.rowCount() == 8, what="plaginlar")
         header = plugins.table.horizontalHeaderItem(3)
         assert header is not None
         assert header.text() == "Status"

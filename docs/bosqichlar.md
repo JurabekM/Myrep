@@ -11,7 +11,7 @@
 | 6 | `iot` | ✅ tugadi (Mosquitto va temir bilan sinalmagan) | 2026-11-11 |
 | 7 | `data` | ✅ tugadi | 2026-11-11 |
 | 8 | `electronics` | ✅ tugadi | 2026-11-11 |
-| 9 | `itops` | ⏳ reja tasdiqlanishi kutilmoqda | — |
+| 9 | `itops` | ✅ tugadi | 2026-11-11 |
 | 10 | Yakun | — | — |
 
 ## 0-bosqich — Skelet
@@ -524,3 +524,58 @@ o'lchanmagan (ular faqat yozish paytida yashaydi).
 - avrdude'ning tizim xato matni jurnalda buzuq belgilar bilan chiqadi.
 - Port ruxsati manifestda qo'lda yoziladi (plata boshqa COM raqam olsa,
   manifestni tuzatish kerak).
+
+## 9-bosqich — `itops` plagini
+
+Tafsilot: [itops.md](itops.md).
+
+**Qilindi**
+
+- `plugins/itops` (jarayon ichida): jarayonlar ro'yxati va to'xtatish, Windows
+  xizmatlari ro'yxati va boshqaruvi, mahalliy tarmoq skaneri (TCP ulanish +
+  ARP jadvali), ma'lumotlar papkasining zip zaxirasi (cron jadvali, saqlash muddati).
+- Himoya: tizim jarayonlari, SRV_1 ning o'z jarayonlari va muhim xizmatlar
+  to'xtatilmaydi; skaner faqat o'z xususiy tarmoqlarida, ko'pi bilan /24;
+  token zaxiraga kirmaydi; hamma xavfli amal auditda.
+- Manifestga ikki ruxsat qo'shildi: `system` (tizimni boshqarish) va
+  `data_root` (ma'lumotlar papkasini o'qish). Yangi kutubxona yo'q.
+
+**Tekshiruv natijasi (2026-11-11)**
+
+- `uv run pytest` — 339 passed (≈ 250 s; shundan ≈ 30–60 s — cron testi
+  daqiqa boshini kutadi). Oxirgi ikki kichik tuzatishdan keyin faqat itops va
+  shell testlari qayta yugurtirilgan (29 passed).
+- `uv run ruff check .`, `ruff format --check .` — toza; `uv run pyright` — 0 xato.
+- Panel skrinshot bilan ko'zdan kechirildi (to'rt joyi).
+
+**O'lchangan** (55 s bo'sh holat, bitta yugurish)
+
+| Jarayon | Working Set |
+|---------|-------------|
+| yadro (6 plagin ishlayapti, `data` o'chiq) | 103,4 MB |
+| Caddy | 32,1 MB |
+| shell | 118,8 MB |
+| venv ishga tushirgichlari (2 ta) | 7,8 MB |
+| **jami** | **262,2 MB** (chegaraning 75 %) |
+
+8-bosqichga nisbatan +6,1 MB (yadro +6,0: `pywin32` xizmat moduli, `zipfile`,
+`ipaddress`, `ctypes`).
+
+**Yo'lda topilgan va tuzatilgan**
+
+- Bir soniyada olingan ikkinchi zaxira (`...-2.zip`) nom bo'yicha «eskiroq»
+  sanalib, saqlash muddati eng yangisini o'chirardi (test ushladi).
+- Skrinshotda: xizmatlar jadvalida «Holat» ustuni kesilib qolgan edi (uzun
+  tavsif ustuni oxiriga ko'chirildi); `MemCompression` himoyalanmagan edi.
+- Oldingi bosqichlardan qolgan «cron hech qachon ishga tushib ko'rilmagan»
+  bandi yopildi: zaxira testi haqiqiy cron bilan ishlaydi.
+
+**Qilinmadi / ma'lum kamchiliklar**
+
+- Xizmatni haqiqatan ishga tushirish/to'xtatish sinalmagan (administrator
+  huquqi yo'q; test tizim xizmatlariga tegmaydi).
+- Haqiqiy mahalliy tarmoq skanerlanmagan — faqat 127.0.0.0/8 da soxta serverlar.
+- Tiklash faqat qo'lda; tiklangan papkada yadro ishga tushirib ko'rilmagan.
+- Katta ma'lumotlar papkasida zaxira vaqti va xotirasi o'lchanmagan.
+- Panel jadvallari past (5 qator ko'rinadi, qolgani aylantiriladi).
+- SSH yo'q (reja ro'yxatida ham yo'q edi; kutubxona kerak bo'lardi).

@@ -209,14 +209,25 @@ class PluginRegistry:
         backend = CoreBackend(entry.name, self._bus, self._audit)
         if manifest.mode == "inprocess":
             return InprocessRunner(
-                entry.directory, manifest, data_dir, backend, self._paths.projects_dir
+                entry.directory,
+                manifest,
+                data_dir,
+                backend,
+                self._paths.projects_dir,
+                self._paths.root,
             )
 
         def on_exit(reason: str) -> None:
             self._spawn(self._handle_crash(entry.name, reason))
 
         return SubprocessRunner(
-            entry.directory, manifest, data_dir, backend, self._paths.projects_dir, on_exit
+            entry.directory,
+            manifest,
+            data_dir,
+            backend,
+            self._paths.projects_dir,
+            self._paths.root,
+            on_exit,
         )
 
     async def _start(self, entry: _Entry) -> None:
