@@ -208,12 +208,16 @@ class PluginRegistry:
         data_dir.mkdir(parents=True, exist_ok=True)
         backend = CoreBackend(entry.name, self._bus, self._audit)
         if manifest.mode == "inprocess":
-            return InprocessRunner(entry.directory, manifest, data_dir, backend)
+            return InprocessRunner(
+                entry.directory, manifest, data_dir, backend, self._paths.projects_dir
+            )
 
         def on_exit(reason: str) -> None:
             self._spawn(self._handle_crash(entry.name, reason))
 
-        return SubprocessRunner(entry.directory, manifest, data_dir, backend, on_exit)
+        return SubprocessRunner(
+            entry.directory, manifest, data_dir, backend, self._paths.projects_dir, on_exit
+        )
 
     async def _start(self, entry: _Entry) -> None:
         manifest = entry.manifest

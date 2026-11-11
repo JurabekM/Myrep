@@ -7,8 +7,8 @@
 | 2 | SDK va plagin yuklovchi | ✅ tugadi | 2026-11-11 |
 | 3 | Shell | ✅ tugadi | 2026-11-11 |
 | 4 | `files` | ✅ tugadi | 2026-11-11 |
-| 5 | `hosting` | ⏳ reja tasdiqlanishi kutilmoqda | — |
-| 6 | `iot` | — | — |
+| 5 | `hosting` | ✅ tugadi | 2026-11-11 |
+| 6 | `iot` | ⏳ reja tasdiqlanishi kutilmoqda | — |
 | 7 | `data` | — | — |
 | 8 | `electronics` | — | — |
 | 9 | `itops` | — | — |
@@ -291,3 +291,65 @@ plaginlar standart holatda yadro ichida ishlashi, alohida jarayon esa faqat
 - Tarmoq disklarida kuzatuv sinalmagan.
 - Fayl ichidan qidirish yo'q (kelishilganidek).
 - 20 000 dan ortiq fayl bilan sinalmagan.
+
+## 5-bosqich — `hosting` plagini
+
+Tafsilot: [hosting.md](hosting.md).
+
+**Qilindi**
+
+- `plugins/hosting` (yadro ichida): Caddy'ni boshqarish, statik sayt, Python va
+  Node loyihalari; port ajratish (9000–9098), RAM limiti, loglar.
+- Uxlatish va uyg'otish: so'rov kelmasa jarayon to'xtaydi, keyingi so'rovda
+  o'zi uyg'onadi (GET ham, POST ham yo'qolmaydi).
+- SDK: `ctx.spawn` (jarayon `shell`siz, Job Object ichida, audit bilan),
+  `ctx.projects_dir`, yangi ruxsatlar `spawn` va `projects`, `log` vidjeti.
+- Jarayonlar endi to'xtatilgan holda yaratilib, jobga biriktirilgach davom
+  ettiriladi — 2-bosqichdagi «qisqa limitsiz oraliq» yopildi; limit butun
+  jarayon daraxtiga tegishli.
+- `files` plagini yadro ichiga ko'chirildi (≈ 50 MB tejaldi).
+- Shell: `log` vidjeti; jadval ustunlari mazmunga qarab kengayadi.
+- Tashqi dastur: Caddy 2.11.9 (`tools/caddy.exe`, SHA-512 tekshirilgan).
+
+**Tekshiruv natijasi (2026-11-11)**
+
+- `uv run pytest` — 285 passed (≈ 111 s), ikki marta ketma-ket barqaror.
+  Hosting testlari haqiqiy Caddy, haqiqiy Python va Node jarayonlari bilan.
+- `uv run ruff check .`, `ruff format --check .` — toza; `uv run pyright` — 0 xato.
+- Hosting paneli skrinshot bilan ko'zdan kechirildi.
+
+**O'lchangan RAM — butun tizim birga** (bitta yugurish, standart portlar,
+55 s bo'sh holat, bitta statik sayt)
+
+| Jarayon | Working Set, MB | Private, MB |
+|---------|-----------------|-------------|
+| yadro (`hello` + `files` + `hosting`) | 91,6 | 75,1 |
+| Caddy | 32,4 | 58,4 |
+| shell | 115,9 | 71,1 |
+| venv ishga tushirgichlari (2 ta) | 7,8 | 1,6 |
+| **Jami** | **247,7** | **206,1** |
+
+350 MB chegarasining 71 %; zaxira 102 MB. Bu chegaraning birinchi to'liq
+tekshiruvi (yadro + Caddy + shell). Ishlab turgan loyihalar bunga kirmaydi —
+har biri o'z limitiga ega.
+
+**Rejadan chetlanish va topilmalar**
+
+- Caddy arxivi 17,5 MB chiqdi (15 MB deb aytilgan edi).
+- `npm start` rad etiladi: `npm` Windows'da `.cmd` skript, uni `shell`siz
+  xavfsiz bajarib bo'lmaydi. Node loyihalari `node server.js` bilan ishlaydi.
+- To'xtatilgan loyiha portini band qilib turardi — port tugash testida
+  topildi; endi faqat tirik loyiha portni ushlaydi.
+
+**Qilinmadi / ma'lum kamchiliklar**
+
+- HTTPS va tashqi domen yo'q (10-bosqich).
+- Bog'liqlik o'rnatish (`pip`/`npm install`) avtomatlashtirilmagan.
+- Yiqilgan loyiha o'zi qayta ishga tushmaydi.
+- Uzoq ochiq ulanishlar (WebSocket) faollik sifatida faqat boshida sanaladi.
+- Panelda holat/tur nomlari tarjimasiz; loyihani tahrirlash yo'q.
+- Caddy'ning o'zi yiqilsa, plagin buni holatda ko'rsatadi, lekin qayta ishga
+  tushirmaydi (plaginni o'chirib-yoqish kerak) — bu holat sinalmagan.
+- Haqiqiy brauzerda `*.localhost` manzili ochib ko'rilmagan (testlar `Host`
+  sarlavhasi bilan `127.0.0.1` ga murojaat qiladi).
+- Yuk ostida (ko'p parallel so'rov) o'lchanmagan.

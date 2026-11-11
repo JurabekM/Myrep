@@ -5,11 +5,24 @@
 
 from typing import Any
 
+import psutil
 import win32api
 import win32con
 import win32job
+import win32process
 
 _ACCESS = win32con.PROCESS_SET_QUOTA | win32con.PROCESS_TERMINATE
+_THREAD_SUSPEND_RESUME = 0x0002
+
+
+def resume_process(pid: int) -> None:
+    """`CREATE_SUSPENDED` bilan yaratilgan jarayonni davom ettiradi (hamma oqimlarini)."""
+    for thread in psutil.Process(pid).threads():
+        handle = win32api.OpenThread(_THREAD_SUSPEND_RESUME, False, thread.id)
+        try:
+            win32process.ResumeThread(handle)
+        finally:
+            win32api.CloseHandle(handle)
 
 
 class MemoryJob:

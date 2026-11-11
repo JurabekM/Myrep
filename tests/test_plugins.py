@@ -137,10 +137,14 @@ async def test_builtin_hello_is_discovered(
     monkeypatch.setenv("SRV1_PLUGINS__LOAD_BUILTIN", "true")
     async with serve_app(paths) as served, served.client() as client:
         plugins = (await client.get(API)).json()
-    assert [(p["name"], p["source"], p["status"]) for p in plugins] == [
-        ("files", "builtin", "running"),
-        ("hello", "builtin", "running"),
+    assert [(p["name"], p["source"]) for p in plugins] == [
+        ("files", "builtin"),
+        ("hello", "builtin"),
+        ("hosting", "builtin"),
     ]
+    # hosting standart portlarga (8080, 2019, 9099) bog'lanadi; ular band bo'lsa bu yerda
+    # tekshirilmaydi — plaginning o'z testlari bo'sh portlar bilan ishlaydi.
+    assert [p["status"] for p in plugins[:2]] == ["running", "running"]
 
 
 # --- API chegaralari ----------------------------------------------------------------

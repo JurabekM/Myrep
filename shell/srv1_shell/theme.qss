@@ -54,6 +54,7 @@ QTableWidget {
 }
 QTableWidget::item { padding: 4px 8px; }
 QTableWidget::item:selected { background: #24344d; color: #ffffff; }
+QHeaderView { background: #191d23; border: none; }
 QHeaderView::section {
     background: #191d23; color: #8b95a5; border: none;
     border-bottom: 1px solid #2b323c; padding: 7px 8px; font-weight: 600;

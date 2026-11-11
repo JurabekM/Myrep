@@ -1,5 +1,6 @@
 # `files` plagini
 
+Yadro ichida ishlaydi (skanerlash va disk amallari alohida oqimlarda).
 Papkalarni kuzatadi, fayl nomlari indeksini yuritadi, nom bo'yicha qidiradi va
 asosiy amallarni bajaradi. O'chirilgan narsa savatga tushadi va tiklanadi.
 
@@ -85,16 +86,15 @@ o'zi tozalanmaydi; `DELETE /trash` yoki paneldagi tugma bilan bo'shatiladi.
 | qidiruv: 1000 natija | 30 ms |
 | qidiruv: 2 belgi (`LIKE`) | 12 ms |
 | `index.db` hajmi | 5,0 MB |
-| bola jarayon, Working Set (skanerlashdan keyin) | 50,6 MB |
-| bola jarayon, 20 s bo'sh | 52,4 MB |
 
-Vaqtlar API orqali, HTTP va jarayonlararo uzatish bilan birga.
+Vaqtlar API orqali o'lchangan. O'lchov paytida plagin alohida jarayonda edi
+(52 MB); 5-bosqichda yadro ichiga ko'chirildi — vaqtlar qayta o'lchanmagan,
+jarayonlararo uzatish yo'qolgani uchun yomonlashmagan bo'lishi kerak.
 
 ## Cheklovlar
 
-- Katta fayl yoki papkani ko'chirish/nusxalash so'rov ichida bajariladi;
-  30 soniyadan oshsa klient 504 oladi, amal esa davom etadi (jarayon
-  ko'rsatkichi yo'q).
+- Katta fayl yoki papkani ko'chirish/nusxalash so'rov ichida bajariladi va
+  jarayon ko'rsatkichi yo'q; klient javobni amal tugaguncha kutadi.
 - Boshqa diskka ko'chirish va savatga tashlash — aslida nusxalash + o'chirish.
 - Kuzatuv ishlamay qolsa (masalan tarmoq diski), o'zgarishlar faqat keyingi
   to'liq skanerlashda ko'rinadi.

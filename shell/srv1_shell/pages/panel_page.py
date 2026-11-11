@@ -26,6 +26,7 @@ from srv1_sdk.panel import (
     ChartWidget,
     FormWidget,
     LabelWidget,
+    LogWidget,
     PanelSpec,
     RowAction,
     TableWidget,
@@ -35,6 +36,7 @@ from srv1_shell.api import Reply
 from srv1_shell.charts import LineChart
 from srv1_shell.common import AppContext, Card, Page, section_title
 from srv1_shell.pages.data_table import DataTable, make_editor
+from srv1_shell.pages.log_view import LogView
 
 RESULT_MAX_CHARS = 300
 CHART_HEIGHT = 220
@@ -127,6 +129,7 @@ class PanelPage(Page):
         self.buttons: dict[str, QPushButton] = {}
         self.forms: dict[str, _Form] = {}
         self.tables: dict[str, DataTable] = {}
+        self.logs: dict[str, LogView] = {}
         self.charts: dict[str, LineChart] = {}
 
         self.add_title(ctx.i18n.pick(spec.title))
@@ -176,6 +179,10 @@ class PanelPage(Page):
             self._content.addWidget(form)
         elif isinstance(widget, TableWidget):
             self._add_table(widget)
+        elif isinstance(widget, LogWidget):
+            log = LogView(widget, self.ctx.i18n, self.fetch)
+            self.logs[widget.source] = log
+            self._content.addWidget(log)
         elif isinstance(widget, ChartWidget):
             self._add_chart(widget)
 
@@ -231,18 +238,24 @@ class PanelPage(Page):
             timer.start()
         for table in self.tables.values():
             table.start()
+        for log in self.logs.values():
+            log.start()
 
     def deactivate(self) -> None:
         for timer in self._timers:
             timer.stop()
         for table in self.tables.values():
             table.stop()
+        for log in self.logs.values():
+            log.stop()
 
     def refresh_sources(self) -> None:
         for source in self._consumers:
             self._fetch(source)
         for table in self.tables.values():
             table.refresh()
+        for log in self.logs.values():
+            log.refresh()
 
     def fetch(self, source: str, params: dict[str, Any], consumer: Consumer) -> None:
         """Plagin API'sidan `source` ni so'rov parametrlari bilan oladi."""

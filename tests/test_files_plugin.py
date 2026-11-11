@@ -355,7 +355,7 @@ async def test_library_root_works_without_any_permission(
         info = (await client.get("/api/v1/plugins/files")).json()
         assert (info["status"], info["mode"], info["source"]) == (
             "running",
-            "subprocess",
+            "inprocess",
             "builtin",
         )
         assert info["permissions"]["paths"] == []

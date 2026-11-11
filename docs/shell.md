@@ -55,7 +55,7 @@ bilmaydi); qolgan qatorlar yadrodan keladi.
 
 ## Panel chizuvchi
 
-`pages/panel_page.py` `PanelSpec` dagi olti vidjet turini chizadi:
+`pages/panel_page.py` `PanelSpec` dagi yetti vidjet turini chizadi:
 
 | Vidjet | Qt ko'rinishi | Xatti-harakat |
 |--------|---------------|---------------|
@@ -65,6 +65,7 @@ bilmaydi); qolgan qatorlar yadrodan keladi.
 | `form` | maydonlar + «Yuborish» | `GET` — so'rov parametrlari, boshqasi — JSON |
 | `table` | jadval | `source` dagi ro'yxat; ixtiyoriy filtrlar va tanlangan qator amallari |
 | `chart` | chiziqli grafik | `plugin.<nom>.<topic>` hodisalari |
+| `log` | matn oynasi | `source` dagi satrlar; majburiy filtr bo'sh bo'lsa so'rov ketmaydi |
 
 Bir xil `source` ga qaragan vidjetlar bitta so'rovni bo'lishadi. Har
 muvaffaqiyatli amaldan keyin barcha manbalar darhol yangilanadi. Majburiy

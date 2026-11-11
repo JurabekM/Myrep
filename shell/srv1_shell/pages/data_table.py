@@ -107,7 +107,10 @@ class DataTable(QWidget):
         table.setMinimumHeight(190)
         header = table.horizontalHeader()
         if header is not None:
-            header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            # Kenglik mazmunga qarab (har to'ldirishda bir marta), oxirgi ustun qolganini oladi.
+            header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+            header.setStretchLastSection(True)
+            header.setMinimumSectionSize(70)
             header.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         vertical = table.verticalHeader()
         if vertical is not None:
@@ -173,6 +176,9 @@ class DataTable(QWidget):
         table.clearSelection()
         if selected is not None and selected in self.rows:
             table.selectRow(self.rows.index(selected))
+        # Oxirgi ustunga tegilmaydi: u qolgan joyni egallaydi (stretchLastSection).
+        for column_index in range(len(self.spec.columns) - 1):
+            table.resizeColumnToContents(column_index)
         table.blockSignals(False)
         table.setUpdatesEnabled(True)
         self._update_actions()

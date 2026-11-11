@@ -63,6 +63,10 @@ class Permissions(_Frozen):
     paths: tuple[Path, ...] = ()
     ports: tuple[Annotated[PortRange, BeforeValidator(_parse_port)], ...] = ()
     serial: tuple[str, ...] = ()
+    # Jarayon ishga tushirish (`ctx.spawn`) — har biri auditga yoziladi.
+    spawn: bool = False
+    # Umumiy `<ma'lumotlar>/projects` papkasiga kirish.
+    projects: bool = False
 
     @field_validator("paths")
     @classmethod

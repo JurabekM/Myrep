@@ -34,6 +34,8 @@ memory_limit_mb = 256          # faqat subprocess; 64..4096
 paths = ["C:/data/in"]         # mutlaq papkalar
 ports = [9000, "9010-9019"]
 serial = ["COM3"]
+spawn = false                  # jarayon ishga tushirish (ctx.spawn)
+projects = false               # umumiy <ma'lumotlar>/projects papkasi
 ```
 
 Noma'lum kalit — xato. Yaroqsiz manifest yadroni to'xtatmaydi: plagin ro'yxatda
@@ -59,6 +61,8 @@ Hammasi ixtiyoriy; `ctx` — `PluginContext`.
 | `ctx.data_path(*parts)` | o'z ish papkasi ichidagi yo'l |
 | `ctx.resolve_path(path)` | yo'lni tekshiradi: faqat o'z papkasi va `permissions.paths` |
 | `ctx.check_port(n)`, `ctx.check_serial("COM3")` | manifestda bo'lmasa `PermissionDenied` |
+| `ctx.projects_dir` | umumiy loyihalar papkasi (`permissions.projects`) |
+| `await ctx.spawn(args, cwd=, env=, memory_limit_mb=, on_line=)` | jarayonni `shell`siz, Job Object ichida ishga tushiradi; auditga yozadi (`permissions.spawn`) |
 | `ctx.publish(topic, data)` | `plugin.<nom>.<topic>` ga nashr; boshqa mavzuga yoza olmaydi |
 | `await ctx.audit(action, target, ok=, detail=)` | audit jurnali, `actor = plugin:<nom>` |
 | `ctx.log(level, event, **fields)` | yadro jurnaliga |
@@ -85,6 +89,13 @@ manbadan plagin o'rnatmang.
 | Plagin yiqilsa | xato logga tushadi; event loop'ni band qilsa yadro qotadi | yadro ishlayveradi, holat `crashed` |
 | Yadro o'lsa | — | bola ham o'ladi (Job Object) |
 | API | to'liq FastAPI router | xuddi shu router; oqimli javob yo'q |
+
+**Qaysi rejimni tanlash.** Har bola jarayon ≈ 45–50 MB turadi (Python +
+FastAPI), shuning uchun standart tanlov — `inprocess`. `subprocess` faqat
+talab bo'yicha yoqiladigan og'ir (`heavy`) plaginlar uchun. `inprocess`
+plagin bloklovchi ishni `asyncio.to_thread` ga chiqarishi shart; tashqi
+dasturlarni esa `ctx.spawn` bilan alohida jarayonda ishlatadi (`hosting`
+shunday qiladi).
 
 Plagin kodi ikkala rejimda bir xil: `hello` ni `mode = "subprocess"` ga
 o'zgartirish kifoya (testda tekshirilgan).
@@ -136,6 +147,7 @@ Audit: `plugin.enable`, `plugin.disable`, `plugin.crashed`, `process.spawn`
 | `form` | `label`, `method`, `path`, `fields[]` (`name`, `label`, `kind`, `choices`, `required`) |
 | `table` | `label`, `source`, `columns[]`, `refresh_s`, `auto_refresh`, `filters[]`, `row_actions[]` |
 | `chart` | `label`, `topic`, `field`, `window` |
+| `log` | `label`, `source`, `refresh_s`, `filters[]` — `source` satrlar ro'yxatini qaytaradi |
 
 Jadval kengaytmalari:
 

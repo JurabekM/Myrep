@@ -149,10 +149,17 @@ class _Host:
         )
 
 
-async def _run(plugin_dir: Path, data_dir: Path, stdin: BinaryIO, channel: _Channel) -> int:
+async def _run(
+    plugin_dir: Path,
+    data_dir: Path,
+    projects_dir: Path | None,
+    stdin: BinaryIO,
+    channel: _Channel,
+) -> int:
     try:
         manifest = load_manifest(plugin_dir)
-        plugin = LoadedPlugin(plugin_dir, manifest, PluginContext(manifest, data_dir, channel))
+        ctx = PluginContext(manifest, data_dir, channel, projects_dir)
+        plugin = LoadedPlugin(plugin_dir, manifest, ctx)
         plugin.load()
         await plugin.start()
     except MemoryError:
@@ -173,12 +180,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="srv1_sdk.host")
     parser.add_argument("--dir", type=Path, required=True)
     parser.add_argument("--data-dir", type=Path, required=True)
+    parser.add_argument("--projects-dir", type=Path, default=None)
     args = parser.parse_args(argv)
     args.data_dir.mkdir(parents=True, exist_ok=True)
     stdin, protocol_out = sys.stdin.buffer, sys.stdout.buffer
     sys.stdout = sys.stderr  # plagin print() protokolni buzmasin
     try:
-        return asyncio.run(_run(args.dir, args.data_dir, stdin, _Channel(protocol_out)))
+        channel = _Channel(protocol_out)
+        return asyncio.run(_run(args.dir, args.data_dir, args.projects_dir, stdin, channel))
     except MemoryError:
         return EXIT_OUT_OF_MEMORY
 

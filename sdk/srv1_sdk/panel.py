@@ -115,6 +115,16 @@ class TableWidget(_Widget):
     row_actions: tuple[RowAction, ...] = ()
 
 
+class LogWidget(_Widget):
+    """`source` satrlar ro'yxatini qaytaradi; `filters` so'rov parametri bo'lib yuboriladi."""
+
+    type: Literal["log"] = "log"
+    label: LocalizedText
+    source: Annotated[str, _PATH]
+    refresh_s: float = Field(default=3.0, ge=0.5)
+    filters: tuple[FormField, ...] = ()
+
+
 class ChartWidget(_Widget):
     """`plugin.<nom>.<topic>` hodisasidagi `field` qiymatining jonli grafigi."""
 
@@ -126,7 +136,7 @@ class ChartWidget(_Widget):
 
 
 Widget = Annotated[
-    LabelWidget | ValueWidget | ButtonWidget | FormWidget | TableWidget | ChartWidget,
+    LabelWidget | ValueWidget | ButtonWidget | FormWidget | TableWidget | LogWidget | ChartWidget,
     Field(discriminator="type"),
 ]
 

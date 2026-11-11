@@ -6,6 +6,7 @@ ma'lumot bo'yicha tekshiriladi.
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -19,6 +20,8 @@ from PyQt6.QtCore import QEventLoop, Qt, QTimer
 from PyQt6.QtWidgets import QApplication, QCheckBox, QComboBox, QLineEdit
 
 from conftest import free_port, write_plugin
+from hosting_helpers import CADDY_EXE, HostingPorts, install_hosting
+from srv1_core.plugins.registry import BUILTIN_DIR
 from srv1_shell.app import apply_theme
 from srv1_shell.config import ShellConfig
 from srv1_shell.main_window import MainWindow
@@ -90,6 +93,7 @@ class Core:
     port: int
     token: str
     data_dir: Path
+    hosting: HostingPorts
 
     @property
     def config(self) -> ShellConfig:
@@ -129,6 +133,12 @@ def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
     data_dir = tmp_path_factory.mktemp("shell-core")
     plugin_root = tmp_path_factory.mktemp("shell-plugins")
     write_plugin(plugin_root, "inventory", INVENTORY_PLUGIN)
+    # Builtin plaginlar nusxa qilinadi: hosting standart portlar o'rniga bo'sh portlarni oladi.
+    for name in ("hello", "files"):
+        shutil.copytree(
+            BUILTIN_DIR / name, plugin_root / name, ignore=shutil.ignore_patterns("__pycache__")
+        )
+    hosting = install_hosting(plugin_root, data_dir / "plugins" / "hosting" / "data")
     port = free_port()
     env = {key: value for key, value in os.environ.items() if not key.startswith("SRV1_")}
     env |= {
@@ -136,6 +146,8 @@ def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
         "SRV1_SERVER__PORT": str(port),
         "SRV1_EVENTS__STATS_INTERVAL_S": "0.5",
         "SRV1_PLUGINS__DIRS": json.dumps([str(plugin_root)]),
+        "SRV1_PLUGINS__LOAD_BUILTIN": "false",
+        "SRV1_CADDY_EXE": str(CADDY_EXE),
     }
     process = subprocess.Popen(
         [sys.executable, "-m", "srv1_core"], env=env, stderr=subprocess.DEVNULL
@@ -151,7 +163,7 @@ def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
                 assert process.poll() is None, "yadro o'ldi"
                 time.sleep(0.1)
         token = (data_dir / "auth.token").read_text(encoding="ascii").strip()
-        yield Core(port=port, token=token, data_dir=data_dir)
+        yield Core(port=port, token=token, data_dir=data_dir, hosting=hosting)
     finally:
         process.kill()
         process.wait(timeout=10)
@@ -162,7 +174,7 @@ def window(qapp: QApplication, core: Core) -> Iterator[MainWindow]:
     main = MainWindow(core.config, core.token)
     main.show()
     pump(lambda: main.events.connected, what="WebSocket ulanishi")
-    wanted = {"panel:files", "panel:hello", "panel:inventory"}
+    wanted = {"panel:files", "panel:hello", "panel:hosting", "panel:inventory"}
     pump(lambda: wanted <= set(main.page_keys()), what="panellar")
     yield main
     main.shutdown()
@@ -208,14 +220,14 @@ def test_connects_and_shows_system(window: MainWindow) -> None:
 def test_navigation_lists_fixed_pages_and_panels(window: MainWindow) -> None:
     labels = _nav_labels(window)
     assert labels[:4] == ["Tizim", "Plaginlar", "Jurnal", "Xotira"]
-    assert sorted(labels[4:]) == ["Fayllar", "Ombor", "Salom"]
+    assert sorted(labels[4:]) == ["Fayllar", "Hosting", "Ombor", "Salom"]
     assert window.windowTitle() == "SRV_1 boshqaruvi"
 
 
 # --- plaginlar: yoqish/o'chirish tugmasi --------------------------------------------
 def test_plugin_toggle_button(window: MainWindow, core: Core) -> None:
     page = _page(window, "plugins", PluginsPage)
-    pump(lambda: page.table.rowCount() == 3, what="plaginlar ro'yxati")
+    pump(lambda: page.table.rowCount() == 4, what="plaginlar ro'yxati")
     row = next(i for i, plugin in enumerate(page.plugins) if plugin["name"] == "hello")
 
     def status_text() -> str:
@@ -406,6 +418,71 @@ def test_files_panel_search_trash_and_restore(
     assert not (library.parent / "tashqari").exists()
 
 
+# --- hosting paneli: forma, qator amallari, log vidjeti -----------------------------------
+def test_hosting_panel_create_stop_start_and_log(
+    window: MainWindow, core: Core, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project_dir = core.data_dir / "projects" / "gui-api"
+    project_dir.mkdir(parents=True)
+    script = "import os, http.server as h; print('gui ilova tayyor', flush=True); "
+    script += "h.ThreadingHTTPServer(('127.0.0.1', int(os.environ['PORT'])), "
+    script += "h.SimpleHTTPRequestHandler).serve_forever()"
+    (project_dir / "app.py").write_text(script, encoding="utf-8")
+
+    page = _page(window, "panel:hosting", PanelPage)
+    table = page.tables["/projects"]
+    pump(lambda: page.values["caddy"].value.text() == "running", what="Caddy holati")
+
+    # forma: tanlov maydoni + ixtiyoriy son maydoni
+    form = page.forms["/projects"]
+    name, kind, command, idle = (
+        form.inputs[key] for key in ("name", "kind", "command", "idle_minutes")
+    )
+    assert isinstance(name, QLineEdit)
+    assert isinstance(kind, QComboBox)
+    assert isinstance(command, QLineEdit)
+    assert isinstance(idle, QLineEdit)
+    name.setText("gui-api")
+    kind.setCurrentText("python")
+    command.setText("python app.py")
+    idle.setText("0")
+    form.submit.click()
+    pump(lambda: [row["name"] for row in table.rows] == ["gui-api"], what="loyiha qatori")
+    pump(lambda: table.rows[0]["state"] == "running", what="loyiha ishga tushishi")
+    site = httpx.get(core.hosting.site_url(), headers=core.hosting.host_header("gui-api"))
+    assert site.status_code == 200
+    assert page.values["running"].value.text() in ("0", "1")
+
+    # log vidjeti: majburiy filtr bo'sh bo'lsa so'rov ketmaydi
+    log = page.logs["/log"]
+    assert log.view.toPlainText() == ""
+    log_name = log.filters["name"]
+    assert isinstance(log_name, QLineEdit)
+    log_name.setText("gui-api")
+    log.show_button.click()
+    pump(lambda: "gui ilova tayyor" in log.view.toPlainText(), what="loyiha jurnali")
+
+    # qator amallari: to'xtatish va qayta ishga tushirish
+    stop, start = table.action_buttons["POST /stop"], table.action_buttons["POST /start"]
+    assert (stop.text(), start.text()) == ("Toʻxtatish", "Ishga tushirish")
+    table.table.selectRow(0)
+    stop.click()
+    pump(lambda: table.rows[0]["state"] == "stopped", what="to'xtatish")
+    stopped = httpx.get(core.hosting.site_url(), headers=core.hosting.host_header("gui-api"))
+    assert stopped.status_code == 404
+    pump(lambda: "to'xtatildi" in log.view.toPlainText(), what="jurnalda to'xtatish")
+    table.table.selectRow(0)
+    start.click()
+    pump(lambda: table.rows[0]["state"] == "running", what="qayta ishga tushirish")
+
+    # tasdiqli amal: ro'yxatdan chiqarish (fayllar qoladi)
+    monkeypatch.setattr(page, "confirm", lambda _action: True)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
+    table.table.selectRow(0)
+    table.action_buttons["POST /remove"].click()
+    pump(lambda: table.rows == [], what="ro'yxatdan chiqarish")
+    assert (project_dir / "app.py").is_file()
+
+
 # --- jurnal ------------------------------------------------------------------------------
 def test_logs_page_tail_live_and_filter(window: MainWindow) -> None:
     page = _page(window, "logs", LogsPage)
@@ -448,14 +525,10 @@ def test_memory_page_lists_core_and_shell(window: MainWindow) -> None:
     page = _page(window, "memory", MemoryPage)
     pump(lambda: page.table.rowCount() >= 2, what="jarayonlar jadvali")
     kinds = [row["kind"] for row in page.rows]
-    assert kinds == ["core", "plugin", "shell"]
+    assert kinds == ["core", "shell"]
     assert page.rows[-1]["pid"] == os.getpid()
     labels = [page.table.item(row, 0) for row in range(page.table.rowCount())]
-    assert [item.text() for item in labels if item is not None] == [
-        "Yadro",
-        "Plagin: files",
-        "Shell (shu oyna)",
-    ]
+    assert [item.text() for item in labels if item is not None] == ["Yadro", "Shell (shu oyna)"]
     assert "chegara 350,0 MB" in page.total.text()
     assert 0 < page.bar.value() <= 100
     total = sum(int(row["rss"]) for row in page.rows)
@@ -494,7 +567,7 @@ def test_language_switch_rebuilds_everything(core: Core, qapp: QApplication) -> 
         pump(lambda: memory.table.rowCount() >= 2, what="xotira jadvali")
         assert "limit 350.0 MB" in memory.total.text()
         plugins = _page(main, "plugins", PluginsPage)
-        pump(lambda: plugins.table.rowCount() == 3, what="plaginlar")
+        pump(lambda: plugins.table.rowCount() == 4, what="plaginlar")
         header = plugins.table.horizontalHeaderItem(3)
         assert header is not None
         assert header.text() == "Status"

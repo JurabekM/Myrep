@@ -3,7 +3,6 @@
 import asyncio
 import itertools
 import os
-import subprocess
 import sys
 from collections.abc import Callable, Coroutine, Mapping, Sequence
 from contextlib import suppress
@@ -13,11 +12,12 @@ from typing import Any, Protocol
 from srv1_core.audit import AuditLogger
 from srv1_core.events import EventBus
 from srv1_core.log_setup import get_logger
-from srv1_core.plugins.jobobject import MemoryJob
 from srv1_sdk.asgi import AsgiResponse, json_error
 from srv1_sdk.context import LogLevel, PluginContext, plugin_topic_prefix
+from srv1_sdk.jobobject import MemoryJob
 from srv1_sdk.manifest import PluginManifest
 from srv1_sdk.panel import PanelSpec
+from srv1_sdk.process import spawn_in_job
 from srv1_sdk.protocol import (
     EXIT_LOAD_FAILED,
     EXIT_OUT_OF_MEMORY,
@@ -87,10 +87,15 @@ class Runner(Protocol):
 
 class InprocessRunner:
     def __init__(
-        self, plugin_dir: Path, manifest: PluginManifest, data_dir: Path, backend: CoreBackend
+        self,
+        plugin_dir: Path,
+        manifest: PluginManifest,
+        data_dir: Path,
+        backend: CoreBackend,
+        projects_dir: Path,
     ) -> None:
         self._plugin = LoadedPlugin(
-            plugin_dir, manifest, PluginContext(manifest, data_dir, backend)
+            plugin_dir, manifest, PluginContext(manifest, data_dir, backend, projects_dir)
         )
         self.panel: PanelSpec | None = None
         self.handlers: Sequence[EventHandler] = ()
@@ -162,11 +167,13 @@ class SubprocessRunner:
         manifest: PluginManifest,
         data_dir: Path,
         backend: CoreBackend,
+        projects_dir: Path,
         on_exit: Callable[[str], None],
     ) -> None:
         self._dir = plugin_dir
         self._manifest = manifest
         self._data_dir = data_dir
+        self._projects_dir = projects_dir
         self._backend = backend
         self._on_exit = on_exit
         self._process: asyncio.subprocess.Process | None = None
@@ -194,25 +201,19 @@ class SubprocessRunner:
         self._job = MemoryJob(self._manifest.memory_limit_mb * 1024 * 1024)
         self._ready = asyncio.get_running_loop().create_future()
         python, env = _child_python()
-        self._process = await asyncio.create_subprocess_exec(
-            python,
-            "-X",
-            "utf8",
-            "-m",
-            "srv1_sdk.host",
-            "--dir",
-            str(self._dir),
-            "--data-dir",
-            str(self._data_dir),
+        args = [python, "-X", "utf8", "-m", "srv1_sdk.host"]
+        args += ["--dir", str(self._dir), "--data-dir", str(self._data_dir)]
+        args += ["--projects-dir", str(self._projects_dir)]
+        self._process = await spawn_in_job(
+            args,
+            self._job,
+            env=env,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             limit=LINE_LIMIT,
-            env=env,
-            creationflags=subprocess.CREATE_NO_WINDOW,
         )
         try:
-            self._job.assign(self._process.pid)
             self._tasks = [
                 asyncio.create_task(self._read_stdout()),
                 asyncio.create_task(self._read_stderr()),

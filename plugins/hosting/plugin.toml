@@ -1,0 +1,13 @@
+name = "hosting"
+version = "0.1.0"
+description = "Hosting: statik sayt, Python va Node loyihalari; Caddy marshrutlari, RAM limiti, uxlatish."
+mode = "inprocess"
+heavy = false
+
+[permissions]
+paths = []
+# 2019 — Caddy admin API, 8080 — saytlar, 9000-9098 — loyihalar, 9099 — uyg'otish xizmati.
+ports = [2019, 8080, "9000-9099"]
+serial = []
+spawn = true
+projects = true
