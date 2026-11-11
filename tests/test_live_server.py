@@ -63,6 +63,7 @@ def live(tmp_path_factory: pytest.TempPathFactory) -> Iterator[LiveServer]:
         "SRV1_DATA_DIR": str(data_dir),
         "SRV1_SERVER__PORT": str(port),
         "SRV1_EVENTS__STATS_INTERVAL_S": "0.5",
+        "SRV1_PLUGINS__LOAD_BUILTIN": "false",
     }
     with stderr_file.open("wb") as stderr:
         process = subprocess.Popen([sys.executable, "-m", "srv1_core"], env=env, stderr=stderr)

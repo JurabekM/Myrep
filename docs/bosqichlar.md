@@ -4,8 +4,8 @@
 |---|---------|-------|------|
 | 0 | Skelet | ✅ tugadi | 2026-11-11 |
 | 1 | Yadro | ✅ tugadi | 2026-11-11 |
-| 2 | SDK va plagin yuklovchi | ⏳ reja tasdiqlanishi kutilmoqda | — |
-| 3 | Shell | — | — |
+| 2 | SDK va plagin yuklovchi | ✅ tugadi | 2026-11-11 |
+| 3 | Shell | ⏳ reja tasdiqlanishi kutilmoqda | — |
 | 4 | `files` | — | — |
 | 5 | `hosting` | — | — |
 | 6 | `iot` | — | — |
@@ -101,3 +101,65 @@ oshdi. Yuk ostida va uzoq muddatda (soatlab) o'lchanmagan.
   uchun 3-bosqichda kerak bo'ladi.
 - Bog'liqliklar orasida `opentelemetry-api` tranzitiv keladi (FastAPI
   orqali); RAM'ga ta'siri alohida o'lchanmagan.
+
+## 2-bosqich — SDK va plagin yuklovchi
+
+Tafsilot: [plaginlar.md](plaginlar.md).
+
+**Qilindi**
+
+- SDK (`srv1_sdk`): `manifest`, `hookspec` (pluggy), `context` (ruxsat
+  tekshiruvi), `panel` (shell uchun sxema), `runtime` (yuklash), `asgi`
+  (tarmoqsiz chaqirish), `protocol` + `host` (bola jarayon).
+- Yadro (`srv1_core/plugins`): `registry` (topish, holat, yoqish/o'chirish,
+  qulashni qayd etish), `runners` (jarayon ichida / bola jarayonda),
+  `jobobject` (RAM limiti), `scheduler` (APScheduler).
+- API: `/api/v1/plugins...` (ro'yxat, yoqish/o'chirish, panel, dispetcher).
+- Baza sxemasi v2 (`plugin_state`); v1 baza ochilganda o'zi yangilanadi.
+- Namuna plagin `plugins/hello` — ikkala rejimda bir xil kod bilan ishlaydi.
+- Yangi kutubxonalar (ro'yxatdan): `pluggy`, `pywin32`, `apscheduler` 3.11.
+
+**Tekshiruv natijasi (2026-11-11)**
+
+- `uv run pytest` — 152 passed (≈29 s), uch marta ketma-ket barqaror.
+- `uv run ruff check .`, `ruff format --check .` — toza; `uv run pyright` — 0 xato.
+
+**O'lchangan RAM** (`Get-Process`, bitta yugurish, bo'sh holat, 68 s)
+
+| Jarayon | Working Set, MB | Private, MB |
+|---------|-----------------|-------------|
+| yadro + `hello` (inprocess) + rejalashtiruvchi | 81,3 | 67,1 |
+| `hello` nusxasi `subprocess` rejimida (bola) | 43,3 | 35,5 |
+| venv ishga tushirgichi | 3,9 | 0,8 |
+
+Yadro 1-bosqichga nisbatan +3,4 MB. Jami bola plagin bilan 128,5 MB, bolasiz
+85,2 MB (350 MB chegarasining 37 % va 24 %). Yuk ostida o'lchanmagan.
+
+**Rejadan chetlanish va topilmalar**
+
+- venv'dagi `python.exe` ishga tushirgich ekan (haqiqiy Python — uning bolasi).
+  Bola plagin endi asosiy interpretator bilan to'g'ridan-to'g'ri ishga
+  tushiriladi (`__PYVENV_LAUNCHER__`), aks holda Job Object noto'g'ri jarayonga
+  biriktirilardi.
+- Reja oldidan «haqiqiy izolyatsiya faqat subprocess rejimida» deyilgan edi —
+  bu noto'g'ri: subprocess faqat RAM limiti va qulashdan izolyatsiya beradi.
+  Fayl/port ruxsatlari ikkala rejimda ham faqat `PluginContext` orqali ishlaydi.
+- RAM limitidan oshgan plagin «o'ldirilmaydi», balki ajratish rad etiladi
+  (`MemoryError`) va host o'zi chiqadi. Natija bir xil: holat `crashed`.
+
+**Qilinmadi / ma'lum kamchiliklar**
+
+- `cron` vazifalari ishga tushishi sinalmagan (faqat yaroqsiz ifoda rad
+  etilishi va `interval_s` sinalgan).
+- Bola jarayon ishga tushishi bilan Job Object'ga biriktirilishi orasida
+  qisqa oraliq bor (limitsiz).
+- Yiqilgan plagin avtomatik qayta ishga tushmaydi.
+- `inprocess` plagin event loop'ni band qilsa, butun yadro qotadi; uni
+  o'chirganda xotirasi bo'shashi kafolatlanmagan.
+- Subprocess plagin API'sida oqimli javob va WebSocket yo'q.
+- `builtin` plaginlar papkasi repozitoriy joylashuviga bog'liq; o'rnatilgan
+  holat uchun 10-bosqichda hal qilinadi.
+- `pywin32` va `apscheduler` tip ma'lumotisiz: ikkalasi bittadan faylga
+  o'ralgan va o'sha fayllarda pyright qoidalari yumshatilgan.
+- Haqiqiy jarayonda toza to'xtatish (Ctrl+C) hamon sinalmagan; uvicorn'ning
+  jarayon ichidagi to'xtashi sinalgan (bola plaginlar to'xtaydi).

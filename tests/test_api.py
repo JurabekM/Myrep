@@ -1,10 +1,8 @@
 """API va WebSocket testlari: haqiqiy uvicorn, test bilan bitta event loop'da."""
 
-import asyncio
 import json
 import os
 import sqlite3
-from collections.abc import Callable
 from contextlib import closing
 
 import pytest
@@ -12,17 +10,12 @@ from websockets.asyncio.client import connect
 from websockets.exceptions import ConnectionClosed, InvalidStatus
 
 from conftest import Served
+from conftest import until as _until
 from srv1_core import __version__
 from srv1_core.api.ws import DROPPED_TOPIC, parse_topics
 from srv1_core.app import create_app
 from srv1_core.paths import DataPaths
 from srv1_core.system import take_snapshot
-
-
-async def _until(condition: Callable[[], bool], timeout_s: float = 3.0) -> None:
-    async with asyncio.timeout(timeout_s):
-        while not condition():
-            await asyncio.sleep(0.01)
 
 
 async def test_health_needs_no_token(served: Served) -> None:

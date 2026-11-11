@@ -1,0 +1,10 @@
+name = "hello"
+version = "0.1.0"
+description = "Namuna plagin: API, davriy vazifa, hodisa obunasi va panel."
+mode = "inprocess"
+heavy = false
+
+[permissions]
+paths = []
+ports = []
+serial = []

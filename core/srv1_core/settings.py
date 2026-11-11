@@ -31,6 +31,12 @@ backup_count = 3
 queue_size = 256
 # Tizim holati hodisasi (system.stats) oralig'i, soniya. Obunachi bo'lmasa o'lchanmaydi.
 stats_interval_s = 5.0
+
+[plugins]
+# Repozitoriydagi plugins/ papkasini yuklash.
+load_builtin = true
+# Qo'shimcha plagin papkalari (mutlaq yo'llar). <ma'lumotlar>/plugins har doim qaraladi.
+dirs = []
 """
 
 
@@ -73,6 +79,11 @@ class EventSettings(_Section):
     stats_interval_s: float = Field(default=5.0, ge=0.5, le=3600)
 
 
+class PluginSettings(_Section):
+    load_builtin: bool = True
+    dirs: tuple[Path, ...] = ()
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="SRV1_", env_nested_delimiter="__", extra="ignore", frozen=True
@@ -81,6 +92,7 @@ class Settings(BaseSettings):
     server: ServerSettings = ServerSettings()
     logging: LoggingSettings = LoggingSettings()
     events: EventSettings = EventSettings()
+    plugins: PluginSettings = PluginSettings()
 
 
 def ensure_config_file(config_file: Path) -> bool:

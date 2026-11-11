@@ -1,9 +1,12 @@
 """Umumiy fixture'lar: vaqtinchalik ma'lumotlar papkasi, toza muhit, jarayon ichidagi server."""
 
 import asyncio
+import json
 import os
 import socket
-from collections.abc import AsyncGenerator, Iterator
+import textwrap
+from collections.abc import AsyncGenerator, Callable, Iterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -29,6 +32,8 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Tashqi `SRV1_*` o'zgaruvchilari testga ta'sir qilmasin; log fayli yopilsin."""
     for name in [key for key in os.environ if key.startswith("SRV1_")]:
         monkeypatch.delenv(name)
+    # Namuna plagin yadro testlariga aralashmasin; plagin testlari o'zi yoqadi.
+    monkeypatch.setenv("SRV1_PLUGINS__LOAD_BUILTIN", "false")
     yield
     shutdown_logging()
 
@@ -68,8 +73,34 @@ class Served:
         return httpx.AsyncClient(base_url=self.http_url, headers=headers, timeout=5.0)
 
 
+async def until(condition: Callable[[], bool], timeout_s: float = 5.0) -> None:
+    async with asyncio.timeout(timeout_s):
+        while not condition():
+            await asyncio.sleep(0.01)
+
+
+def write_plugin(root: Path, name: str, code: str, manifest: str = "") -> Path:
+    """`root/name` da plagin yaratadi. `manifest` — `plugin.toml` ga qo'shimcha qatorlar."""
+    directory = root / name
+    directory.mkdir(parents=True)
+    lines = [f'name = "{name}"', 'version = "1.0.0"', textwrap.dedent(manifest)]
+    toml = "\n".join(lines)
+    (directory / "plugin.toml").write_text(toml, encoding="utf-8")
+    (directory / "__init__.py").write_text(textwrap.dedent(code), encoding="utf-8")
+    return directory
+
+
 @pytest.fixture
-async def served(paths: DataPaths) -> AsyncGenerator[Served]:
+def plugin_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Bo'sh plagin papkasi; yadro uni `plugins.dirs` orqali ko'radi."""
+    root = tmp_path / "plugin-root"
+    root.mkdir()
+    monkeypatch.setenv("SRV1_PLUGINS__DIRS", json.dumps([str(root)]))
+    return root
+
+
+@asynccontextmanager
+async def serve_app(paths: DataPaths) -> AsyncGenerator[Served]:
     app = create_app(paths)
     port = free_port()
     config = uvicorn.Config(app, host="127.0.0.1", port=port, log_config=None, access_log=False)
@@ -86,3 +117,9 @@ async def served(paths: DataPaths) -> AsyncGenerator[Served]:
     finally:
         server.should_exit = True
         await task
+
+
+@pytest.fixture
+async def served(paths: DataPaths) -> AsyncGenerator[Served]:
+    async with serve_app(paths) as running:
+        yield running

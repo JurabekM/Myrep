@@ -1,4 +1,6 @@
+import sqlite3
 from collections.abc import AsyncIterator
+from contextlib import closing
 from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
@@ -6,7 +8,14 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import StatementError
 
 from srv1_core.audit import AuditLogger
-from srv1_core.db import SCHEMA_VERSION, AuditLog, Database, SchemaMismatchError, SchemaVersion
+from srv1_core.db import (
+    SCHEMA_VERSION,
+    AuditLog,
+    Database,
+    PluginState,
+    SchemaMismatchError,
+    SchemaVersion,
+)
 from srv1_core.events import EventBus
 from srv1_core.paths import DataPaths
 
@@ -36,6 +45,23 @@ async def test_restart_keeps_data_and_detects_mismatch(paths: DataPaths) -> None
     with pytest.raises(SchemaMismatchError):
         await second.start()
     await second.stop()
+
+
+async def test_v1_database_is_upgraded_in_place(paths: DataPaths) -> None:
+    """1-bosqichda yaratilgan baza (v1, `plugin_state` jadvalisiz) ochilganda yangilanadi."""
+    with closing(sqlite3.connect(paths.db_file)) as conn:
+        conn.execute(
+            "CREATE TABLE schema_version (id INTEGER PRIMARY KEY, version INTEGER NOT NULL)"
+        )
+        conn.execute("INSERT INTO schema_version VALUES (1, 1)")
+        conn.commit()
+
+    database = Database(paths.db_file)
+    await database.start()
+    async with database.session() as session:
+        assert await session.scalar(select(SchemaVersion.version)) == SCHEMA_VERSION
+        assert (await session.execute(select(PluginState))).all() == []
+    await database.stop()
 
 
 async def test_session_before_start_fails(paths: DataPaths) -> None:

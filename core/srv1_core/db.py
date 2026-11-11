@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, override
 
-from sqlalchemy import JSON, DateTime, Dialect, String, event, select
+from sqlalchemy import JSON, DateTime, Dialect, String, event, select, update
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -16,7 +16,9 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.pool import ConnectionPoolEntry
 from sqlalchemy.types import TypeDecorator
 
-SCHEMA_VERSION = 1
+# v2: `plugin_state` jadvali qo'shildi (faqat qo'shimcha — create_all yetarli).
+SCHEMA_VERSION = 2
+_ADDITIVE_VERSIONS = frozenset({2})
 
 
 class SchemaMismatchError(RuntimeError):
@@ -63,6 +65,14 @@ class AuditLog(Base):
     target: Mapped[str] = mapped_column(String(512))
     ok: Mapped[bool]
     detail: Mapped[dict[str, Any]] = mapped_column(JSON)
+
+
+class PluginState(Base):
+    __tablename__ = "plugin_state"
+
+    name: Mapped[str] = mapped_column(String(32), primary_key=True)
+    enabled: Mapped[bool]
+    updated_at: Mapped[datetime] = mapped_column(UtcDateTime)
 
 
 def _set_pragmas(dbapi_connection: DBAPIConnection, _record: ConnectionPoolEntry) -> None:
@@ -113,6 +123,10 @@ class Database:
             current = await session.scalar(select(SchemaVersion.version))
             if current is None:
                 session.add(SchemaVersion(id=1, version=SCHEMA_VERSION))
+            elif current < SCHEMA_VERSION and _ADDITIVE_VERSIONS.issuperset(
+                range(current + 1, SCHEMA_VERSION + 1)
+            ):
+                await session.execute(update(SchemaVersion).values(version=SCHEMA_VERSION))
             elif current != SCHEMA_VERSION:
                 raise SchemaMismatchError(
                     f"baza sxemasi v{current}, kod v{SCHEMA_VERSION} kutadi; migratsiya kerak"

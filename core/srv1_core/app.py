@@ -5,6 +5,7 @@ import sys
 import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, suppress
+from pathlib import Path
 
 from fastapi import FastAPI
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -17,6 +18,8 @@ from srv1_core.db import Database
 from srv1_core.events import EventBus
 from srv1_core.log_setup import configure_logging, get_logger, shutdown_logging
 from srv1_core.paths import DataPaths
+from srv1_core.plugins.registry import BUILTIN_DIR, PluginRegistry, Source
+from srv1_core.plugins.scheduler import Scheduler
 from srv1_core.settings import Settings, ensure_config_file, load_settings
 from srv1_core.state import CoreState
 from srv1_core.system import prime_cpu, take_snapshot
@@ -72,6 +75,15 @@ async def _stats_loop(bus: EventBus, interval_s: float) -> None:
         bus.publish(STATS_TOPIC, snapshot.model_dump())
 
 
+def _plugin_dirs(paths: DataPaths, cfg: Settings) -> list[tuple[Path, Source]]:
+    dirs: list[tuple[Path, Source]] = []
+    if cfg.plugins.load_builtin:
+        dirs.append((BUILTIN_DIR, "builtin"))
+    dirs.extend((directory, "extra") for directory in cfg.plugins.dirs)
+    dirs.append((paths.plugins_dir, "user"))
+    return dirs
+
+
 def create_app(
     paths: DataPaths, settings: Settings | None = None, *, console_log: bool = False
 ) -> FastAPI:
@@ -89,6 +101,16 @@ def create_app(
         audit = AuditLogger(db, bus)
         auth = await _setup_auth(paths, audit)
         prime_cpu()
+        scheduler = Scheduler()
+        scheduler.start()
+        plugins = PluginRegistry(
+            dirs=_plugin_dirs(paths, cfg),
+            paths=paths,
+            db=db,
+            bus=bus,
+            audit=audit,
+            scheduler=scheduler,
+        )
         app.state.core = CoreState(
             paths=paths,
             settings=cfg,
@@ -96,8 +118,10 @@ def create_app(
             bus=bus,
             auth=auth,
             audit=audit,
+            plugins=plugins,
             started_at=time.monotonic(),
         )
+        await plugins.start()
         stats = asyncio.create_task(_stats_loop(bus, cfg.events.stats_interval_s))
         log.info("core_started", version=__version__, data_dir=str(paths.root))
         try:
@@ -106,6 +130,8 @@ def create_app(
             stats.cancel()
             with suppress(asyncio.CancelledError):
                 await stats
+            await plugins.stop()
+            scheduler.shutdown()
             bus.close()
             await db.stop()
             log.info("core_stopped")

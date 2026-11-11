@@ -31,6 +31,8 @@ Ichki kalit ikki pastki chiziq bilan: `SRV1_SERVER__PORT=8711`.
 | `logging.max_bytes`, `logging.backup_count` | 5 000 000, 3 | log aylanishi |
 | `events.queue_size` | 256 | har obunachi navbati |
 | `events.stats_interval_s` | 5.0 | `system.stats` oralig'i |
+| `plugins.load_builtin` | `true` | repozitoriydagi `plugins/` ni yuklash |
+| `plugins.dirs` | `[]` | qo'shimcha plagin papkalari |
 
 Bo'lim ichidagi noma'lum kalit — xato (imlo xatosi jim o'tmaydi).
 
@@ -45,6 +47,7 @@ Hamma so'rovda `Authorization: Bearer <token>` (faqat `/health` tokensiz).
 | `GET /api/v1/health` | yo'q | `{status, version, uptime_s}` |
 | `GET /api/v1/system` | token | `{ts, cpu, memory, disks[], process}` |
 | `WS /ws/events?topics=a.*,b` | token (sarlavhada) | hodisalar oqimi |
+| `/api/v1/plugins...` | token | [plaginlar.md](plaginlar.md) |
 
 `/system`: `disks` faqat qattiq disklar (tarmoq/olinadigan disklar so'rovni osib
 qo'ymasligi uchun); `process` — yadro jarayonining `rss`, `private`, `threads`.
@@ -68,6 +71,8 @@ Hozirgi mavzular:
 |-------|--------|
 | `system.stats` | har `stats_interval_s` da, faqat obunachi bo'lsa |
 | `audit` | har audit yozuvida |
+| `plugins.state` | plagin holati o'zgarganda |
+| `plugin.<nom>.*` | plaginlar nashr qiladi |
 
 `publish` faqat event loop oqimidan chaqiriladi. Boshqa oqimdan nashr
 (`paho-mqtt` uchun) 6-bosqichda qo'shiladi.
@@ -93,6 +98,7 @@ bo'lmasa yadro ishga tushmaydi.
 
 ## Baza sxemasi
 
-`Base.metadata.create_all` + `schema_version` jadvali (hozir v1). Versiya mos
+`Base.metadata.create_all` + `schema_version` jadvali (hozir v2). Faqat yangi
+jadval qo'shadigan versiyalar o'zi yangilanadi. Versiya mos
 kelmasa yadro `SchemaMismatchError` bilan to'xtaydi. Migratsiya vositasi yo'q —
 sxema birinchi marta o'zgarganda hal qilinadi.

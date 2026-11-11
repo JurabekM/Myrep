@@ -17,10 +17,13 @@ def test_defaults_when_file_missing(tmp_path: Path) -> None:
     assert cfg.logging.level == "INFO"
 
 
-def test_default_config_file_equals_defaults(tmp_path: Path) -> None:
+def test_default_config_file_equals_defaults(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     config = tmp_path / "config.toml"
     assert ensure_config_file(config) is True
     assert ensure_config_file(config) is False
+    monkeypatch.delenv("SRV1_PLUGINS__LOAD_BUILTIN")
     assert load_settings(config).model_dump() == Settings().model_dump()
 
 

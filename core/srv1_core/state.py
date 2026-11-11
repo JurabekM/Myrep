@@ -11,6 +11,7 @@ from srv1_core.auth import TokenAuth
 from srv1_core.db import Database
 from srv1_core.events import EventBus
 from srv1_core.paths import DataPaths
+from srv1_core.plugins.registry import PluginRegistry
 from srv1_core.settings import Settings
 
 
@@ -22,6 +23,7 @@ class CoreState:
     bus: EventBus
     auth: TokenAuth
     audit: AuditLogger
+    plugins: PluginRegistry
     started_at: float  # time.monotonic()
 
 
