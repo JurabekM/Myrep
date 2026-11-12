@@ -45,8 +45,8 @@ android {
     defaultConfig {
         // Play identifikatori: birinchi yuklashdan keyin o'zgartirib bo'lmaydi.
         // namespace (Kotlin paketi) ichki — o'zgartirilmagan.
-        applicationId = if (isDemo) "uz.barakadastur.demo" else "uz.barakadastur.app"
-        manifestPlaceholders["appLabel"] = if (isDemo) "DEMO Baraka Dastur" else "Baraka Dastur"
+        applicationId = if (isDemo) "uz.barakaxazinasi.demo" else "uz.barakaxazinasi.app"
+        manifestPlaceholders["appLabel"] = if (isDemo) "DEMO Baraka Xazinasi" else "Baraka Xazinasi"
         // SPEC 4.1: minSdk 26.
         minSdk = 26
         // Android 16: predictive back va katta ekranda yo'nalish cheklovlari

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// «Baraka Dastur» nishoni: yashil fonda «B» va bug'doy boshog'i
+/// «Baraka Xazinasi» nishoni: yashil fonda «B» va bug'doy boshog'i
 /// (`tools/make_icon.py` yaratadi). Yonida ilova nomi matni bo'lgani uchun
 /// ekran o'quvchisiga alohida o'qilmaydi.
 class BrandLogo extends StatelessWidget {

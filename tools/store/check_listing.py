@@ -31,6 +31,8 @@ def limit_for(title: str) -> int | None:
 
 
 def main() -> int:
+    # Windows konsoli (cp1251) `ʻ` ni chiqara olmaydi.
+    sys.stdout.reconfigure(encoding="utf-8")
     path = Path(sys.argv[1] if len(sys.argv) > 1 else "docs/PLAY_LISTING.md")
     text = path.read_bytes().decode("utf-8")
     lang = "?"

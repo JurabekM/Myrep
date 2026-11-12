@@ -1,4 +1,4 @@
-"""«Baraka Dastur» logotipi va launcher ikonkalarini yaratadi (Pillow, tashqi
+"""«Baraka Xazinasi» logotipi va launcher ikonkalarini yaratadi (Pillow, tashqi
 rasm kerak emas; shrift — assets/fonts/NotoSans-Bold.ttf).
 
 Belgi: yashil fonda krem rangli «B» monogrammasi va tilla rang bug'doy
@@ -159,7 +159,7 @@ def feature_graphic() -> Image.Image:
     d = ImageDraw.Draw(img)
     title = ImageFont.truetype(str(FONT), 140)
     sub = ImageFont.truetype(str(FONT_REGULAR), 62)
-    d.text((800, 345), "Baraka Dastur", font=title, fill=CREAM)
+    d.text((800, 345), "Baraka Xazinasi", font=title, fill=CREAM)
     d.text((806, 550), "Ribosiz shaxsiy moliya", font=sub, fill=GOLD)
     return img.resize((w, h), Image.LANCZOS)
 

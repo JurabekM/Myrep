@@ -1,4 +1,4 @@
-# «BARAKA DASTUR» — TO'LIQ MVP (1–8-QONUNLAR) ISHGA TUSHIRISH PROMPTI
+# «BARAKA XAZINASI» — TO'LIQ MVP (1–8-QONUNLAR) ISHGA TUSHIRISH PROMPTI
 > AI-dasturchi (Claude Code va h.k.) uchun. Spetsifikatsiya: `docs/SPEC.md` (v1.1; v0.8 = `FINTECH_PROMPT.md`).
 > Bu fayl `MVP1_KICKOFF.md` ni **o'rnini bosadi**: 1–3-vazifalar o'sha fayldagi bilan bir xil, qolganlari 2–6-qonunlarni qo'shadi.
 > **v0.8 o'zgarishi:** 6-qonun uchun ikkita vazifa qo'shildi. **9A** (kelishuv dvigateli va jurnal) qarz va sheriklik vazifalaridan **oldin** bajariladi. **14A** (ko'rik, nizo, oilaviy kelishuvlar) 14-vazifadan keyin bajariladi. 10- va 13-vazifalar endi 9A dvigatelidan foydalanadi.
@@ -55,7 +55,7 @@
 
 ## 2. UMUMIY KIRISH (har bir sessiya boshiga qo'yiladi)
 ```
-Sen «Baraka Dastur» loyihasining senior Flutter + Kotlin dasturchisisan.
+Sen «Baraka Xazinasi» loyihasining senior Flutter + Kotlin dasturchisisan.
 Avval docs/SPEC.md va docs/MVP_PLAN.md (0-bo'lim) ni o'qi. SPEC 4-bo'lim (texnik qarorlar) qat'iy.
 Bu sessiyada FAQAT quyidagi vazifani bajar. Boshqa vazifalarning funksiyalarini qo'shma.
 Yangi jadval kerak bo'lsa — Drift sxema versiyasini oshir va migratsiya testini yoz.

@@ -1,8 +1,8 @@
-# Baraka Dastur — Maxfiylik siyosati / Политика конфиденциальности / Privacy Policy
+# Baraka Xazinasi — Maxfiylik siyosati / Политика конфиденциальности / Privacy Policy
 
 Kuchga kirgan sana / Дата вступления в силу / Effective date: **28.10.2026**
 
-Ilova / Приложение / App: Baraka Dastur (`uz.barakadastur.app`) · Muallif / Автор / Developer: JurabekM ·
+Ilova / Приложение / App: Baraka Xazinasi (`uz.barakaxazinasi.app`) · Muallif / Автор / Developer: JurabekM ·
 Aloqa / Связь / Contact: `<ALOQA_EMAIL>`
 
 > Ilova ichidagi matn: Sozlamalar → Ilova haqida → Maxfiylik siyosati (`lib/features/about/presentation/privacy_screen.dart`,
@@ -12,7 +12,7 @@ Aloqa / Связь / Contact: `<ALOQA_EMAIL>`
 
 ## Oʻzbekcha
 
-Baraka Dastur — internetsiz ishlaydigan shaxsiy va oilaviy moliya daftari (muallif: JurabekM). Bu siyosat ilova qanday maʼlumotlar bilan ishlashini tushuntiradi.
+Baraka Xazinasi — internetsiz ishlaydigan shaxsiy va oilaviy moliya daftari (muallif: JurabekM). Bu siyosat ilova qanday maʼlumotlar bilan ishlashini tushuntiradi.
 
 ### Nima saqlanadi va qayerda
 Siz kiritgan hamma narsa — daromad va xarajatlar, qarzlar, kelishuvlar, oila aʼzolarining ismlari, biriktirgan chek rasmlari — faqat shu telefonda saqlanadi. Maʼlumotlar bazasi shifrlangan, uning kaliti Android Keystore tizimida turadi. Qurilma xavfsizligi tekshiruvi (root, emulyator) natijalari ham faqat telefonda qoladi.
@@ -39,7 +39,7 @@ Siyosat oʻzgarsa, yangi matn ilovaning yangi versiyasi bilan keladi va yuqorida
 
 ## Русский
 
-Baraka Dastur — офлайн-дневник личных и семейных финансов (автор: JurabekM). Эта политика объясняет, с какими данными работает приложение.
+Baraka Xazinasi — офлайн-дневник личных и семейных финансов (автор: JurabekM). Эта политика объясняет, с какими данными работает приложение.
 
 ### Что и где хранится
 Всё, что вы вводите, — доходы и расходы, долги, договорённости, имена членов семьи, прикреплённые фото чеков — хранится только на этом телефоне. База данных зашифрована, её ключ хранится в системе Android Keystore. Результаты проверки безопасности устройства (root, эмулятор) тоже остаются только на телефоне.
@@ -66,7 +66,7 @@ Baraka Dastur — офлайн-дневник личных и семейных �
 
 ## English
 
-Baraka Dastur is an offline personal and family finance notebook (developer: JurabekM). This policy explains what data the app works with.
+Baraka Xazinasi is an offline personal and family finance notebook (developer: JurabekM). This policy explains what data the app works with.
 
 ### What is stored and where
 Everything you enter — income and expenses, debts, agreements, family members' names, receipt photos you attach — is stored only on this phone. The database is encrypted, and its key is kept in the Android Keystore. Results of the device security check (root, emulator) also stay only on the phone.

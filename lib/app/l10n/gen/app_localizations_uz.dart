@@ -9,7 +9,7 @@ class AppLocalizationsUz extends AppLocalizations {
   AppLocalizationsUz([String locale = 'uz']) : super(locale);
 
   @override
-  String get appTitle => 'Baraka Dastur';
+  String get appTitle => 'Baraka Xazinasi';
 
   @override
   String get languageName => 'Oʻzbekcha';
@@ -142,7 +142,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get biometricLater => 'Hozircha kerak emas';
 
   @override
-  String get biometricPromptTitle => 'Baraka Dastur';
+  String get biometricPromptTitle => 'Baraka Xazinasi';
 
   @override
   String get biometricPromptSubtitle => 'Daftaringizni ochish uchun tasdiqlang';
@@ -3184,7 +3184,7 @@ class AppLocalizationsUz extends AppLocalizations {
   }
 
   @override
-  String get obWelcome => 'Assalomu alaykum! Baraka Dasturga xush kelibsiz';
+  String get obWelcome => 'Assalomu alaykum! Baraka Xazinasiga xush kelibsiz';
 
   @override
   String get obLanguage => 'Til';
@@ -3328,7 +3328,7 @@ class AppLocalizationsUz extends AppLocalizations {
   String get backupBadPassword => 'Parol notoʻgʻri yoki fayl buzilgan.';
 
   @override
-  String get backupBadFormat => 'Bu Baraka Dastur zaxira nusxasi emas.';
+  String get backupBadFormat => 'Bu Baraka Xazinasi zaxira nusxasi emas.';
 
   @override
   String get backupVersion =>
@@ -4624,7 +4624,7 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String privacyIntro(String author) {
-    return 'Baraka Dastur — internetsiz ishlaydigan shaxsiy va oilaviy moliya daftari (muallif: $author). Bu siyosat ilova qanday maʼlumotlar bilan ishlashini tushuntiradi.';
+    return 'Baraka Xazinasi — internetsiz ishlaydigan shaxsiy va oilaviy moliya daftari (muallif: $author). Bu siyosat ilova qanday maʼlumotlar bilan ishlashini tushuntiradi.';
   }
 
   @override

@@ -1,4 +1,4 @@
-# «BARAKA DASTUR» — MVP-1 ISHGA TUSHIRISH
+# «BARAKA XAZINASI» — MVP-1 ISHGA TUSHIRISH
 > AI-dasturchi uchun. Spetsifikatsiya: `docs/SPEC.md` (bu `FINTECH_PROMPT.md` v0.7 ning nusxasi).
 
 ---
@@ -14,7 +14,7 @@
 
 ## UMUMIY KIRISH (har bir sessiya boshiga qo'yiladi)
 ```
-Sen «Baraka Dastur» loyihasining senior Flutter + Kotlin dasturchisisan.
+Sen «Baraka Xazinasi» loyihasining senior Flutter + Kotlin dasturchisisan.
 Avval docs/SPEC.md ni to'liq o'qi. 4-bo'lim (texnik qarorlar) qat'iy — undan chetga chiqma.
 Bu sessiyada FAQAT quyidagi vazifani bajar. Keyingi bosqich funksiyalarini qo'shma.
 Ishni boshlashdan oldin qisqa reja yoz (fayllar ro'yxati + qadamlar), keyin bajar.

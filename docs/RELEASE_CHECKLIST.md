@@ -567,3 +567,38 @@ Fayl: `release/demo/baraka-dastur-demo-1.0.0+6-2026-11-27.apk` — 84,6 MB, SHA-
 - Qurilmada sinalmadi: `Baraka_API36` AVD foydalanuvchi so'rovi bilan o'chirildi. Demo mantig'i (`DemoGate`, lenta, muddat) 1.0.0+5 dan beri o'zgarmagan va `about_demo_test` bilan tekshiriladi (17-bo'lim — qurilma sinovi), Android 16 xulqi — 18-bo'lim.
 
 `release/1.0.0+5-signed/`, `Baraka_API36` AVD va eski demo (`baraka-dastur-demo-1.0.0-2026-11-27.apk`, `demo-emulyator-2026-10-28.png`) foydalanuvchi so'rovi bilan o'chirildi (2026-10-28); ularning xeshlari 16–17-bo'limlarda qoladi.
+
+## 20. 1.0.0+7: «Baraka Xazinasi» nomi bilan reliz va demo (2026-11-12)
+
+Versiya: `1.0.0+7` (`versionCode 7`). Ilova kodi: `7d42fc3d` (nom «Baraka Xazinasi», paket `uz.barakaxazinasi.app`) + versiya. Yig'ish tartibi 16-bo'limdagidek: APK'lar `-ExpectedSignatureSha256 <upload xeshi> -NoBundle`, AAB `-NoApk` (xeshsiz). Paket yangi bo'lgani uchun Play'da bu — yangi ilova (OPEN_QUESTIONS 170).
+
+Artefaktlar: `release/1.0.0+7-signed/`, 12.11.2026 19:53–19:55.
+
+| Fayl | Hajm | SHA-256 |
+|---|---|---|
+| `app-release.aab` (Play; xeshsiz) | 57,8 MB | `0c76610f878674b7e99dccb3fd1da08c38a758c7d31a27d3e6bcf576e756d270` |
+| `app-arm64-v8a-release.apk` (telefon) | 29,5 MB | `fdbb8a53808d15a56a909f8c816d3b0164452c74cfc8a64bf81e1122ea240d89` |
+| `app-armeabi-v7a-release.apk` | 25,9 MB | `7bae4a0e96d31fee9abad4667745a2aea42287c8763067085daf4400ad1a3c0c` |
+| `app-x86_64-release.apk` | 31,2 MB | `055354625243a2d836f75c4e24516e151efc90218f57d30ed207008265f60cc8` |
+| `mapping-apk.txt` | 16,1 MB | `039c52fadfdf3e7ab513205d81eb1835e8bce012c40db77fc0bf2cdc4b51e95b` |
+| `mapping-aab.txt` | 16,1 MB | `8e50f9abcf51c5a108f2dd939c8ae3ce6266c27477534d8b9c2730e5742e4b20` |
+| `symbols-apk.zip` | 4,8 MB | `141660b9015eed4af214941d43712025fa411f64073c51189a310c28702c3e15` |
+| `symbols-aab.zip` | 4,8 MB | `152e5ee9f9c418f7f81d371c6119e125da6d1c252c4a37580683385f21e3ac3e` |
+
+Demo: `release/demo/baraka-xazinasi-demo-1.0.0+7-2026-12-12.apk` — 84,6 MB, SHA-256 `07f160dd953a9b7836af3dc8b5819825adda386c22fb7e9bbd51363d4266183a`; `uz.barakaxazinasi.demo`, «DEMO Baraka Xazinasi», debug imzo, barcha ABI, Toshkent vaqti bilan 12.12.2026 gacha.
+
+- `apksigner` (3 APK): `CN=JurabekM, C=UZ`, SHA-256 = upload xeshi; `keytool -printcert -jarfile` (AAB): shu sertifikat. `zipalign -c -P 16` — o'tdi. Mapping fayllari 1.0.0+6 niki bilan bir xil (Kotlin/Java kodi o'zgarmagan).
+- `aapt2`: `uz.barakaxazinasi.app`, `versionCode 7`, `targetSdkVersion 36`, «Baraka Xazinasi».
+- Testlar (`7d42fc3d`): `flutter test` — 832 o'tdi, 4 o'tkazib yuborildi; `flutter analyze` — toza; Kotlin JUnit 46/46.
+
+Qurilmada — `Baraka_API36` AVD (Android 16, 1080×1920; foydalanuvchi roziligi bilan qayta yaratildi), x86_64 APK va demo yonma-yon. Surat: `nom-tekshiruvi-emulyator-2026-11-12.png`.
+
+| Band | Natija | Izoh |
+|---|---|---|
+| O'rnatish, PIN, onboarding | PASS | «Assalomu alaykum! Baraka Xazinasiga xush kelibsiz» |
+| Ilova ichidagi imzo tekshiruvi | PASS | faqat «Aniqlangan: emulyator» |
+| Launcher yorlig'i | PASS | «Baraka Xazinasi», demo — «DEMO Baraka Xazinasi»; tor katakda «Baraka Xaz…» bo'lib kesiladi (OPEN 176) |
+| «Ilova haqida» | PASS | «Baraka Xazinasi», «Versiya 1.0.0 (7)» |
+| Maxfiylik siyosati | PASS | yangi nom bilan; Play skrinshoti `uz/07_maxfiylik.png` qayta olindi (holat qatori demo rejimida) |
+| Ruscha interfeys | PASS | «Барака Хазинаси», «Версия 1.0.0 (7)» |
+| FATAL / ANR | PASS | 0 / 0 |

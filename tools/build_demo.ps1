@@ -4,15 +4,15 @@
 #   powershell -File tools/build_demo.ps1 -Days 14
 #
 # Demo himoyasi:
-# - paket nomi uz.barakadastur.demo: haqiqiy ilova (uz.barakadastur.app) o'rnini
+# - paket nomi uz.barakaxazinasi.demo: haqiqiy ilova (uz.barakaxazinasi.app) o'rnini
 #   egallay olmaydi va uni yangilay olmaydi;
 # - har doim debug kaliti bilan imzolanadi (key.properties berilgan bo'lsa ham):
 #   Google Play bunday faylni qabul qilmaydi;
-# - launcher nomi "DEMO Baraka Dastur" (kesilsa ham DEMO ko'rinadi);
+# - launcher nomi "DEMO Baraka Xazinasi" (kesilsa ham DEMO ko'rinadi);
 # - har ekranda "DEMO" lentasi va muallif / "nashr qilish taqiqlanadi" yozuvi;
 # - muddat tugagach (-Days) ilova ochilmaydi, faqat xabar ko'rsatadi;
 # - Dart kodi obfuskatsiya qilingan, R8 yoqilgan.
-# Natija: release/demo/baraka-dastur-demo-<versiya+build>-<muddat>.apk va .sha256.
+# Natija: release/demo/baraka-xazinasi-demo-<versiya+build>-<muddat>.apk va .sha256.
 param(
     [int]$Days = 30,
     # Barcha ABI: plaginlarning native kutubxonalari hamma ABI uchun keladi;
@@ -41,7 +41,7 @@ if ($LASTEXITCODE -ne 0) { throw "flutter build apk (demo) yiqildi ($LASTEXITCOD
 
 $out = "release/demo"
 New-Item -ItemType Directory -Force $out | Out-Null
-$apk = "$out/baraka-dastur-demo-$version-$until.apk"
+$apk = "$out/baraka-xazinasi-demo-$version-$until.apk"
 Copy-Item build/app/outputs/flutter-apk/app-release.apk $apk -Force
 $hash = (Get-FileHash $apk -Algorithm SHA256).Hash.ToLower()
 [IO.File]::WriteAllText((Resolve-Path $out).Path + "\" + (Split-Path $apk -Leaf) + ".sha256", "$hash  $(Split-Path $apk -Leaf)`n")

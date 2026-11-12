@@ -9,7 +9,7 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appTitle => 'Барака Дастур';
+  String get appTitle => 'Барака Хазинаси';
 
   @override
   String get languageName => 'Русский';
@@ -142,7 +142,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get biometricLater => 'Пока не нужно';
 
   @override
-  String get biometricPromptTitle => 'Барака Дастур';
+  String get biometricPromptTitle => 'Барака Хазинаси';
 
   @override
   String get biometricPromptSubtitle => 'Подтвердите, чтобы открыть тетрадь';
@@ -3213,7 +3213,8 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get obWelcome => 'Ассалому алайкум! Добро пожаловать в Барака Дастур';
+  String get obWelcome =>
+      'Ассалому алайкум! Добро пожаловать в Барака Хазинаси';
 
   @override
   String get obLanguage => 'Язык';
@@ -3356,7 +3357,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get backupBadPassword => 'Неверный пароль или файл повреждён.';
 
   @override
-  String get backupBadFormat => 'Это не резервная копия Барака Дастур.';
+  String get backupBadFormat => 'Это не резервная копия Барака Хазинаси.';
 
   @override
   String get backupVersion =>
@@ -4660,7 +4661,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String privacyIntro(String author) {
-    return 'Baraka Dastur — офлайн-дневник личных и семейных финансов (автор: $author). Эта политика объясняет, с какими данными работает приложение.';
+    return 'Baraka Xazinasi — офлайн-дневник личных и семейных финансов (автор: $author). Эта политика объясняет, с какими данными работает приложение.';
   }
 
   @override

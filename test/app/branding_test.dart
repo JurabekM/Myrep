@@ -6,19 +6,19 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/pump_app.dart';
 
-/// «Baraka Dastur» nomi va nishoni (`tools/make_icon.py`).
+/// «Baraka Xazinasi» nomi va nishoni (`tools/make_icon.py`).
 void main() {
   testWidgets('qulf ekranida nishon va yangi nom', (tester) async {
     await pumpBarakaApp(tester, unlock: false);
     expect(find.byKey(const Key('brand-logo')), findsOneWidget);
-    expect(find.text('Baraka Dastur'), findsOneWidget);
+    expect(find.text('Baraka Xazinasi'), findsOneWidget);
   });
 
   testWidgets('onboardingning birinchi sahifasida nishon', (tester) async {
     await pumpBarakaApp(tester, onboarded: false);
     expect(find.byKey(const Key('brand-logo')), findsOneWidget);
     expect(
-      find.textContaining('Baraka Dasturga xush kelibsiz'),
+      find.textContaining('Baraka Xazinasiga xush kelibsiz'),
       findsOneWidget,
     );
   });

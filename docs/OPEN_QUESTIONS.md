@@ -234,6 +234,16 @@
 160. **[Hal qilindi, 2026-10-28] Qoplanishdagi g'alati tiyinlar.** Hisob o'zgarmadi (umumiy vektorlar, desktop bilan bitma-bit). Faqat ekranda oylik qo'shimcha «taxminan» so'zi bilan yaxlitlanadi: 1 000 so'mdan katta bo'lsa 1 000 so'mgacha, kichik bo'lsa butun so'mgacha (Qorovul pul rejasidagi qoida). 5 999 999,20 → «taxminan 6 000 000 so'm». Desktop ham shunday ko'rsatishi kerakmi — desktop sessiyasi qarori.
 161. **[Hal qilindi, 2026-10-28] 8-bob sarlavhasi uslubi.** «8-bob. Bilimingga sarmoya kirit» / «Глава 8. Вкладывай в свои знания» — 1–7-boblar kabi «sen» shaklida. Bob matni avvalgidek «siz» shaklida (1–7-boblarda ham shunday). Sarlavha uslubi kontent testi bilan qotirildi; kontent siyosati testidan o'tdi. Desktop kontentidagi sarlavha alohida (desktop sessiyasi).
 
+## Yangi nom: «Baraka Xazinasi» (2026-11-12)
+
+170. **Play paketi o'zgardi:** `uz.barakaxazinasi.app` (demo — `uz.barakaxazinasi.demo`). Telefonga o'rnatilgan `uz.barakadastur.app` yangi versiyaga yangilanmaydi: yangi ilova alohida o'rnatiladi, ma'lumot zaxira fayli orqali ko'chadi (zaxira formati o'zgarmagan). Play Console'da eski paket bilan ilova yaratilgan bo'lsa, u ishlatilmay qoladi — paket nomini o'zgartirib bo'lmaydi.
+171. **«Baraka» so'zi qoldi.** Play'da moliya toifasida «baraka» nomli boshqa ilova bor — adashtirish va savdo belgisi xavfi «Baraka Dastur» dagidek saqlanadi («Nom va mustaqil kontent» bo'limi). Yurist ko'rigi tavsiya etiladi.
+172. **Ruscha shakl.** Ruscha interfeysda nom kirillcha «Барака Хазинаси» (avvalgi «Барака Дастур» kabi); launcher yorlig'i va Play sarlavhasi lotincha «Baraka Xazinasi». Shu to'g'rimi?
+173. **Ichki nomlar.** Kotlin namespace `uz.barakadaftari.app`, Dart paketi `baraka_daftari` va zaxira formati `baraka-daftari-backup` ilk nomdan qolgan. Foydalanuvchi ularni ko'rmaydi, lekin APK ichida va `adb` da ko'rinadi. Uchinchi tomon brendi izi sifatida ularni ham o'zgartirish kerakmi? Kotlin namespace — o'rtacha ish; Dart paketi — yuzlab importlar; zaxira formati eski zaxiralar bilan moslik uchun o'zgarmasligi kerak.
+174. **Desktop ilova** (`baraka-daftari-v3-70d513` worktree) hali «Baraka Dastur». `docs/DESKTOP_PROMPT.md` yangi nomda — desktop sessiyasi kod, o'rnatuvchi va ikonkani moslashtirishi kerak.
+175. **[Hal qilindi, 2026-11-12] Do'kon materiallari va reliz.** Banner yangi nom bilan qayta chizildi, `uz/07_maxfiylik.png` emulyatorda yangi nom bilan qayta olindi. Yangi nom bilan `1.0.0+7` reliz va demo yig'ildi (RELEASE_CHECKLIST 20). `release/1.0.0+6-signed/` va 1.0.0+6 demo eski nom va paketda qoldi — o'chirish egasining qarori.
+176. **Launcher'da nom kesiladi.** Tor launcher katagida «Baraka Xazinasi» (15 belgi) «Baraka Xaz…» bo'lib ko'rinadi (Pixel launcher, 1080×1920). Android yorlig'i uchun qisqa shakl kerakmi (masalan, «B. Xazinasi» yoki «Xazina»)? Play sarlavhasi va ilova ichidagi nom to'liq qoladi.
+
 ## Play'ga tayyorgarlik va API 36 (2026-10-28)
 
 162. **Kichik ekranda PIN klaviaturasi.** 1080×1920, 420 dpi telefonda (balandligi 731 dp) qulf ekranida «0» tugmasi pastda kesilib turadi — ekranni aylantirsa ko'rinadi. Yaxlitlik ogohlantirishi chiqqanda (root/emulyator) 7–9 qatori ham pastda qoladi. Yangi emas, API 36 bilan bog'liq emas (avvalgi sinovlar 2400 px baland emulyatorda bo'lgan). Tugma o'lchamini ekran balandligiga moslash kerakmi (masalan, past ekranda 72 → 56 dp)?

@@ -52,7 +52,7 @@ void main() {
       AppLanguage.ru,
     );
     expect(find.text('Введите PIN-код'), findsOneWidget);
-    expect(find.text('Барака Дастур'), findsOneWidget);
+    expect(find.text('Барака Хазинаси'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('switch-language')));
     await tester.pumpAndSettle();

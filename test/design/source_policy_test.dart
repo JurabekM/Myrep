@@ -14,9 +14,10 @@ import 'package:flutter_test/flutter_test.dart';
 /// (kichik harf, `ʻ`/`ʼ` → `'`, so'zlar bitta bo'shliq bilan, UTF-8). Yangi
 /// ibora: `python tools/denylist_hash.py "ibora"`.
 const _forbidden = <(int, int, String)>[
-  // Eski nom.
+  // Eski nomlar.
   (2, 14, '36e2b707c13fd046ad4e348e8dea8067f52989c2054bb5810aa6a1e8b7dfff3a'),
   (2, 14, 'dbba997da93464ab49f6910cde58235f741e4f18a49bf8a976735e61bc5cb20e'),
+  (2, 13, 'c6b63d98f4b68f47f705d09da893a0d5165674130a197d39114c90484849e49f'),
   // Personajlar.
   (1, 5, '8cbac8124fafefade933e5d4782fe6b9c8f935a38cab36b1f0683bd98fd00c9d'),
   (1, 4, 'b51f5897ebe3cc38461ac3579292e43dadc9c8cdfa9b2f4c9ace30e15716f12d'),
@@ -146,7 +147,7 @@ void main() {
   });
 
   test('roʻyxat yozuvlari toʻgʻri shaklda', () {
-    expect(_forbidden, hasLength(54));
+    expect(_forbidden, hasLength(55));
     for (final (words, length, digest) in _forbidden) {
       expect(words, inInclusiveRange(1, 6));
       expect(length, greaterThanOrEqualTo(4));
@@ -175,11 +176,11 @@ void main() {
     expect(
       gradle,
       contains(
-        'applicationId = if (isDemo) "uz.barakadastur.demo" '
-        'else "uz.barakadastur.app"',
+        'applicationId = if (isDemo) "uz.barakaxazinasi.demo" '
+        'else "uz.barakaxazinasi.app"',
       ),
     );
-    expect(gradle, contains('else "Baraka Dastur"'));
+    expect(gradle, contains('else "Baraka Xazinasi"'));
     expect(gradle, contains('if (hasReleaseSigning && !isDemo) "release"'));
   });
 

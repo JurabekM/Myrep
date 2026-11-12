@@ -1,4 +1,4 @@
-# Baraka Dastur — AI-dasturchi uchun
+# Baraka Xazinasi — AI-dasturchi uchun
 
 Har sessiya boshida `docs/SPEC.md` ning 3, 4, 5, 6, 12-bo'limlarini va `docs/MVP_PLAN.md` ning 0-bo'limini o'qi. SPEC 4-bo'lim (ADR) qat'iy.
 

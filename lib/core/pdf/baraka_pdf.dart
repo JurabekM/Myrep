@@ -117,7 +117,7 @@ abstract final class BarakaPdf {
     required List<PdfBlock> blocks,
     String? subtitle,
 
-    /// Har sahifa pastida (masalan, «Baraka Dastur · 07.10.2026»).
+    /// Har sahifa pastida (masalan, «Baraka Xazinasi · 07.10.2026»).
     String? footer,
 
     /// Sahifa raqami formati: (joriy, jami) → matn.
@@ -126,8 +126,8 @@ abstract final class BarakaPdf {
     final doc =
         pw.Document(
           title: title,
-          creator: 'Baraka Dastur',
-          producer: 'Baraka Dastur',
+          creator: 'Baraka Xazinasi',
+          producer: 'Baraka Xazinasi',
           theme: pw.ThemeData.withFont(
             base: fonts.regular,
             bold: fonts.bold,

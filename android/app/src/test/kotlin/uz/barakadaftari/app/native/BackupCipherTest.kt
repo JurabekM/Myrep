@@ -6,7 +6,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class BackupCipherTest {
-    private val plain = "Baraka Dastur — zaxira nusxa".toByteArray()
+    private val plain = "Baraka Xazinasi — zaxira nusxa".toByteArray()
 
     @Test
     fun roundTripWithRightPassword() {

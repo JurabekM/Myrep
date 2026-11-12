@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// Ilova nomi
   ///
   /// In uz, this message translates to:
-  /// **'Baraka Dastur'**
+  /// **'Baraka Xazinasi'**
   String get appTitle;
 
   /// Joriy tilning o'z nomi
@@ -335,7 +335,7 @@ abstract class AppLocalizations {
   /// Tizim BiometricPrompt oynasi sarlavhasi
   ///
   /// In uz, this message translates to:
-  /// **'Baraka Dastur'**
+  /// **'Baraka Xazinasi'**
   String get biometricPromptTitle;
 
   /// Tizim BiometricPrompt oynasi izohi
@@ -5518,7 +5518,7 @@ abstract class AppLocalizations {
   /// Sarlavha
   ///
   /// In uz, this message translates to:
-  /// **'Assalomu alaykum! Baraka Dasturga xush kelibsiz'**
+  /// **'Assalomu alaykum! Baraka Xazinasiga xush kelibsiz'**
   String get obWelcome;
 
   /// Sarlavha
@@ -5776,7 +5776,7 @@ abstract class AppLocalizations {
   /// Xato
   ///
   /// In uz, this message translates to:
-  /// **'Bu Baraka Dastur zaxira nusxasi emas.'**
+  /// **'Bu Baraka Xazinasi zaxira nusxasi emas.'**
   String get backupBadFormat;
 
   /// Xato
@@ -8038,7 +8038,7 @@ abstract class AppLocalizations {
   /// Siyosat kirish qismi
   ///
   /// In uz, this message translates to:
-  /// **'Baraka Dastur — internetsiz ishlaydigan shaxsiy va oilaviy moliya daftari (muallif: {author}). Bu siyosat ilova qanday maʼlumotlar bilan ishlashini tushuntiradi.'**
+  /// **'Baraka Xazinasi — internetsiz ishlaydigan shaxsiy va oilaviy moliya daftari (muallif: {author}). Bu siyosat ilova qanday maʼlumotlar bilan ishlashini tushuntiradi.'**
   String privacyIntro(String author);
 
   /// Siyosat: saqlash

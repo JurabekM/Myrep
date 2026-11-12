@@ -47,7 +47,7 @@ const doc = LoanReceiptDoc(
       signedAt: '08.10.2026',
     ),
   ],
-  footer: 'Baraka Dastur · 08.10.2026',
+  footer: 'Baraka Xazinasi · 08.10.2026',
 );
 
 void main() {

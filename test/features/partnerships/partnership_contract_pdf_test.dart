@@ -30,7 +30,7 @@ const doc = PartnershipContractDoc(
     PdfSignature(role: 'Sherik', name: 'Dilnoza'),
     PdfSignature(role: 'Guvoh', name: 'Shoʼba', signedAt: '10.10.2026'),
   ],
-  footer: 'Baraka Dastur · 10.10.2026',
+  footer: 'Baraka Xazinasi · 10.10.2026',
 );
 
 void main() {

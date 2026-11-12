@@ -29,7 +29,7 @@ void main() {
       fonts: fonts,
       title: 'Qarz tilxati',
       subtitle: 'Shaxsiy hisob uchun yozuv',
-      footer: 'Baraka Dastur · 07.10.2026',
+      footer: 'Baraka Xazinasi · 07.10.2026',
       blocks: [
         const PdfHeading('1. Tomonlar'),
         const PdfParagraph(uzbek),
@@ -63,7 +63,7 @@ void main() {
     final raw = String.fromCharCodes(bytes);
     // Shrift PDF ichiga joylangan (tashqi shriftga tayanmaydi).
     expect(raw, contains('/FontFile2'));
-    expect(raw, contains('Baraka Dastur'));
+    expect(raw, contains('Baraka Xazinasi'));
 
     final out = Platform.environment['PDF_SAMPLE_OUT'];
     if (out != null) File(out).writeAsBytesSync(bytes);

@@ -1,4 +1,4 @@
-# Baraka Dastur
+# Baraka Xazinasi
 
 O'zbekiston o'rta qatlami uchun ribosiz shaxsiy moliya Android ilovasi (Flutter + Kotlin).
 To'liq spetsifikatsiya: [docs/SPEC.md](docs/SPEC.md). MVP-1 vazifalari: [docs/MVP1_KICKOFF.md](docs/MVP1_KICKOFF.md).

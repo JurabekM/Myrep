@@ -1,5 +1,21 @@
 # O'zgarishlar jurnali
 
+## [1.0.0+7] «Baraka Xazinasi» nomi bilan reliz va demo — 2026-11-12
+
+- Versiya `1.0.0+7` (`pubspec.yaml`, `AppInfo.build`).
+- `release/1.0.0+7-signed/` — APK'lar upload xeshi bilan, AAB xeshsiz (`uz.barakaxazinasi.app`); demo `release/demo/baraka-xazinasi-demo-1.0.0+7-2026-12-12.apk` (RELEASE_CHECKLIST 20).
+- Emulyatorda (Android 16): launcher yorlig'i, onboarding salomlashuvi, «Ilova haqida», maxfiylik siyosati, ruscha «Барака Хазинаси» — PASS, FATAL/ANR 0. Launcher'da nom «Baraka Xaz…» bo'lib kesiladi (OPEN 176).
+- `uz/07_maxfiylik.png` Play skrinshoti yangi nom bilan qayta olindi (holat qatori demo rejimida).
+
+## [Nom] «Baraka Dastur» → «Baraka Xazinasi» — 2026-11-12
+
+- **Ilova nomi:** Android yorlig'i, `appTitle`, biometrik oyna, onboarding salomlashuvi («Baraka Xazinasiga xush kelibsiz»), zaxira xabari, maxfiylik siyosati, PDF metama'lumoti. Ruscha interfeysda «Барака Хазинаси».
+- **Play paketi:** `uz.barakaxazinasi.app`, demo `uz.barakaxazinasi.demo` (OPEN 170: o'rnatilgan eski ilova yangilanmaydi). Kotlin namespace, Dart paketi va zaxira formati o'zgarmadi (OPEN 173).
+- Ilk nom uchinchi tomon brendi bo'lgani uchun qaytarilmadi (manba prompt, kontent siyosati testi). «Baraka Dastur» ham kontent siyosati testining eski nomlar ro'yxatiga qo'shildi.
+- Logotip («B» + bug'doy boshog'i) o'zgarmadi; Play banneri yangi nom bilan qayta chizildi. Eski nomli `uz/07_maxfiylik.png` skrinshoti olib tashlandi.
+- Hujjatlar: SPEC (nom eslatmasi), MVP_PLAN, MVP1_KICKOFF, DESKTOP_PROMPT, README, CLAUDE.md, LICENSE, PRIVACY_POLICY, PLAY_LISTING, PLAY_CONSOLE. Tarixiy yozuvlar (CHANGELOG, RELEASE_CHECKLIST, OPEN_QUESTIONS) o'zgarmadi.
+- Qarz tilxati PDF golden'i yangilandi (pastki yozuv va metama'lumot).
+
 ## [1.0.0+6 demo] 30 kunlik demo API 36 bilan — 2026-10-28
 
 - `release/demo/baraka-dastur-demo-1.0.0+6-2026-11-27.apk` (`tools/build_demo.ps1`, barcha ABI, debug imzo, `uz.barakadastur.demo`, `targetSdk 36`). Tekshiruv — `aapt2`, `apksigner`, 16 KB tekislash, muddat (RELEASE_CHECKLIST 19); qurilmada sinalmadi (AVD o'chirilgan).

@@ -1,8 +1,9 @@
-# LOYIHA PROMPTI — «BARAKA DASTUR»
+# LOYIHA PROMPTI — «BARAKA XAZINASI»
 ### O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillaridagi) shaxsiy moliya Android ilovasi
 
 > Versiya: v1.1 (2026-10-27, 8-qonun qo'shildi) · Mustaqil kontent (pastdagi qarorga qarang).
-> **Mustaqillik qarori (2026-10-23).** «Baraka Dastur» ilovalari halol moliyaning sakkiz tamoyili ma'no-mazmunidan ilhomlangan mustaqil asar. Tashqi mualliflarning qissalari, personajlari, iqtiboslari va bob nomlari ilovalarda ishlatilmaydi; barcha kontent va matnlarni loyiha jamoasi yozadi. Ilovadagi murabbiy obrazi — nomsiz «Maslahatchi». Hujjatdagi foydalanuvchi segmentlari va misollar shartli ismlar bilan berilgan.
+> **Mustaqillik qarori (2026-10-23).** «Baraka Xazinasi» ilovalari halol moliyaning sakkiz tamoyili ma'no-mazmunidan ilhomlangan mustaqil asar. Tashqi mualliflarning qissalari, personajlari, iqtiboslari va bob nomlari ilovalarda ishlatilmaydi; barcha kontent va matnlarni loyiha jamoasi yozadi. Ilovadagi murabbiy obrazi — nomsiz «Maslahatchi». Hujjatdagi foydalanuvchi segmentlari va misollar shartli ismlar bilan berilgan.
+> **Nom (2026-11-12).** Ilova nomi «Baraka Xazinasi», Play paketi `uz.barakaxazinasi.app` (avval «Baraka Dastur», `uz.barakadastur.app`). Uchinchi tomon brendi bo'lgan ilk nom ishlatilmaydi (kontent siyosati testi).
 > Bu prompt AI-dasturchi (Claude Code va h.k.) uchun yozilgan. Har bir yangi matndan keyin yangilanadi.
 
 ---
@@ -11,7 +12,7 @@
 Sen — senior mobil va backend dasturchisan, FinTech, xavfsizlik va Android platformasi bo'yicha chuqur tajribaga egasan. Kodni production-sifatda, testlar bilan, xavfsizlikni birinchi o'ringa qo'ygan holda yozasan.
 
 ## 1. MAHSULOT MOHIYATI
-**«Baraka Dastur»** — bu ta'lim va amaliyotni birlashtirgan ilova. Foydalanuvchi qisqa boblar orqali **halol moliyaning 8 tamoyili**ni («qonun») o'rganadi va har birini shu haftaning o'zida ilovadagi vositalar bilan amalda bajaradi.
+**«Baraka Xazinasi»** — bu ta'lim va amaliyotni birlashtirgan ilova. Foydalanuvchi qisqa boblar orqali **halol moliyaning 8 tamoyili**ni («qonun») o'rganadi va har birini shu haftaning o'zida ilovadagi vositalar bilan amalda bajaradi.
 
 - **Asosiy muammo:** odamlar halol va ko'p ishlaydi, lekin oy oxirida pul qolmaydi. Sababi daromad kamligida emas. Xarajatlar hisobi yuritilmaydi va «o'zingga to'lash» odati yo'q.
 - **Falsafa:** ribo (foiz) yo'q. Boylik jamg'arish, xarajatni jilovlash, qarzdan qochish, sherikchilik (mudoraba/mushoraka) va zakot orqali keladi.
@@ -699,7 +700,7 @@ Dasturchi uchun bobning asosiy saboqlari:
 ## 7. REGULYATIV CHEKLOVLAR (O'zbekiston)
 - Shaxsiy ma'lumotlar O'zbekiston hududidagi serverlarda saqlanadi.
 - MVP **haqiqiy pulni saqlamaydi va o'tkazmaydi**: «Kelajagim» virtual jamg'arma sifatida ishlaydi. Shu sababli Markaziy bank litsenziyasi kerak emas. Haqiqiy alohida karta yoki hamyon keyinchalik faqat litsenziyali bank yoki to'lov tashkiloti bilan hamkorlikda qo'shiladi.
-- Kontent, matnlar va «Baraka Dastur» brendi loyihaga tegishli; tashqi muallif matnlari ishlatilmaydi (mustaqillik qarori, 2026-10-23).
+- Kontent, matnlar va «Baraka Xazinasi» brendi loyihaga tegishli; tashqi muallif matnlari ishlatilmaydi (mustaqillik qarori, 2026-10-23).
 
 ## 8. INTEGRATSIYALAR
 _[keyingi matnlardan to'ldiriladi]_ — ehtimoliy: bank kartasi orqali avtomatik ajratish (hamkor bank), UzCard/HUMO tranzaksiya importi.

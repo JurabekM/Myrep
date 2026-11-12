@@ -1,6 +1,6 @@
 {
   "@@locale": "uz",
-  "appTitle": "Baraka Dastur",
+  "appTitle": "Baraka Xazinasi",
   "@appTitle": {
     "description": "Ilova nomi"
   },
@@ -179,7 +179,7 @@
   "@biometricLater": {
     "description": "Biometriyani yoqmaslik tugmasi"
   },
-  "biometricPromptTitle": "Baraka Dastur",
+  "biometricPromptTitle": "Baraka Xazinasi",
   "@biometricPromptTitle": {
     "description": "Tizim BiometricPrompt oynasi sarlavhasi"
   },
@@ -4656,7 +4656,7 @@
       }
     }
   },
-  "obWelcome": "Assalomu alaykum! Baraka Dasturga xush kelibsiz",
+  "obWelcome": "Assalomu alaykum! Baraka Xazinasiga xush kelibsiz",
   "@obWelcome": {
     "description": "Sarlavha"
   },
@@ -4841,7 +4841,7 @@
   "@backupBadPassword": {
     "description": "Xato"
   },
-  "backupBadFormat": "Bu Baraka Dastur zaxira nusxasi emas.",
+  "backupBadFormat": "Bu Baraka Xazinasi zaxira nusxasi emas.",
   "@backupBadFormat": {
     "description": "Xato"
   },
@@ -6563,7 +6563,7 @@
   "@privacyUpdated": {
     "description": "Siyosat sanasi"
   },
-  "privacyIntro": "Baraka Dastur — internetsiz ishlaydigan shaxsiy va oilaviy moliya daftari (muallif: {author}). Bu siyosat ilova qanday maʼlumotlar bilan ishlashini tushuntiradi.",
+  "privacyIntro": "Baraka Xazinasi — internetsiz ishlaydigan shaxsiy va oilaviy moliya daftari (muallif: {author}). Bu siyosat ilova qanday maʼlumotlar bilan ishlashini tushuntiradi.",
   "@privacyIntro": {
     "description": "Siyosat kirish qismi",
     "placeholders": {

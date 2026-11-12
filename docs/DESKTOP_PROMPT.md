@@ -1,4 +1,4 @@
-# «BARAKA DASTUR DESKTOP» — UMUMIY LOYIHA PROMPTI
+# «BARAKA XAZINASI DESKTOP» — UMUMIY LOYIHA PROMPTI
 ### Tauri 2 + Rust + React · Windows birinchi navbatda · Mobil ilova bilan test vektorlari orqali mos
 
 > Versiya: v1.3 (8-qonun qo'shildi) · AI-dasturchi (Claude Code va h.k.) uchun.
@@ -11,7 +11,7 @@
 Sen — senior Rust + TypeScript dasturchisan. Desktop ilovalar, amaliy kriptografiya va moliyaviy dasturiy ta'minot bo'yicha tajribang bor. Kodni production-sifatda, testlar bilan yozasan, xavfsizlik va **pul hisobining aniqligi** birinchi o'rinda turadi.
 
 ## 1. MAHSULOT VA DESKTOPNING O'RNI
-- **«Baraka Dastur»** — O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillari asosidagi) shaxsiy va oilaviy moliya ilovasi.
+- **«Baraka Xazinasi»** — O'zbekiston o'rta qatlami uchun ribosiz (islom moliyasi tamoyillari asosidagi) shaxsiy va oilaviy moliya ilovasi.
 - U ta'lim va amaliyotni birlashtiradi: 8 ta bob orqali **halol moliyaning 8 tamoyili** («qonun») o'rgatiladi va har biri ilovadagi vositalar bilan amalda bajariladi. Hozircha 1–8-qonunlar spetsifikatsiya qilingan. Ularning batafsil tavsifi `docs/SPEC.md` ning 1, 2, 2B–2H bo'limlarida.
 - Mobil ilova (Flutter + Kotlin) kundalik tez kiritish uchun mo'ljallangan. **Desktop esa uning nusxasi emas, «Oila kengashi va biznes stoli»**:
   - katta ekranda oylik audit va oila kengashi (havas chegarasi, marosim stsenariylari);
@@ -377,7 +377,7 @@ Har bir case `schedule` massivini ham saqlaydi (`month, interest, principal, ext
 
 ### Umumiy kirish (har bir sessiya boshiga qo'yiladi)
 ```
-Sen «Baraka Dastur Desktop» loyihasining senior Rust + TypeScript dasturchisisan.
+Sen «Baraka Xazinasi Desktop» loyihasining senior Rust + TypeScript dasturchisisan.
 Avval docs/DESKTOP_PROMPT.md (2–6, 8, 10-bo'limlar) va docs/SPEC.md dagi tegishli bo'limni o'qi.
 2-bo'lim (ADR) qat'iy. Pul hisobi faqat Rust `money`/`domain` crate'larida; frontend hisoblamaydi.
 Yangi pul funksiyasi — avval spec/test-vectors ga vektor, keyin kod.

@@ -22,7 +22,7 @@ va o'zbekcha matn keyin qo'shiladi. Inglizcha (`en-US`) — boshqa tildagi foyda
 
 ### Nom
 ```text
-Baraka Dastur
+Baraka Xazinasi
 ```
 
 ### Qisqa tavsif
@@ -32,7 +32,7 @@ Ribosiz shaxsiy va oilaviy moliya daftari: internetsiz, shifrlangan.
 
 ### To'liq tavsif
 ```text
-Baraka Dastur — ribosiz shaxsiy va oilaviy moliya daftari. Ilova internetga ulanmaydi: barcha yozuvlar faqat telefoningizda, shifrlangan holda saqlanadi.
+Baraka Xazinasi — ribosiz shaxsiy va oilaviy moliya daftari. Ilova internetga ulanmaydi: barcha yozuvlar faqat telefoningizda, shifrlangan holda saqlanadi.
 
 Asosiy imkoniyatlar
 • Daromad va xarajatni tez yozish. Bosh ekran daromad turingizga moslashadi: kunlik naqd, buyurtma boʻyicha yoki oylik maosh.
@@ -70,7 +70,7 @@ Birinchi nashr: daromad va xarajatlar, «Kelajagim», oylik audit, qarzlar, keli
 
 ### Название
 ```text
-Baraka Dastur
+Baraka Xazinasi
 ```
 
 ### Краткое описание
@@ -80,7 +80,7 @@ Baraka Dastur
 
 ### Полное описание
 ```text
-Baraka Dastur — дневник личных и семейных финансов без рибы. Приложение не подключается к интернету: все записи хранятся только на вашем телефоне в зашифрованном виде.
+Baraka Xazinasi — дневник личных и семейных финансов без рибы. Приложение не подключается к интернету: все записи хранятся только на вашем телефоне в зашифрованном виде.
 
 Основные возможности
 • Быстрый учёт доходов и расходов. Главный экран подстраивается под ваш тип дохода: ежедневная наличность, работа на заказ или ежемесячная зарплата.
@@ -118,7 +118,7 @@ Baraka Dastur — дневник личных и семейных финансо
 
 ### Title
 ```text
-Baraka Dastur
+Baraka Xazinasi
 ```
 
 ### Short description
@@ -128,7 +128,7 @@ Riba-free personal and family finance notebook. Works offline, data encrypted.
 
 ### Full description
 ```text
-Baraka Dastur is a riba-free (interest-free) notebook for personal and family finances. The app never connects to the internet: every record stays on your phone, encrypted.
+Baraka Xazinasi is a riba-free (interest-free) notebook for personal and family finances. The app never connects to the internet: every record stays on your phone, encrypted.
 
 Main features
 • Quick income and expense entry. The home screen adapts to how you earn: daily cash, paid-per-order work or a monthly salary.

@@ -1,14 +1,16 @@
 # Google Play Console: yuklash yo'riqnomasi
 
-Holat: 2026-10-28. Ilova `uz.barakadastur.app`, versiya `1.0.0+6`, `targetSdk 36` (Android 16).
+Holat: 2026-11-12. Ilova «Baraka Xazinasi», paket `uz.barakaxazinasi.app`, `targetSdk 36` (Android 16).
+Joriy reliz: `release/1.0.0+7-signed/` (RELEASE_CHECKLIST 20). `release/1.0.0+6-signed/` eski nom va paketda
+(`uz.barakadastur.app`) — uni Play'ga yuklamang.
 Play qoidalari tez-tez o'zgaradi — har bosqichdan oldin Console'dagi ogohlantirishlarni o'qing.
 
 Tayyor fayllar:
 
 | Narsa | Joyi |
 |---|---|
-| Play uchun AAB | `release/1.0.0+6-signed/app-release.aab` (upload kaliti bilan imzolangan, ilova ichidagi imzo xeshi bo'sh) |
-| To'g'ridan-to'g'ri APK'lar | `release/1.0.0+6-signed/app-*-release.apk` (imzo xeshi = upload kaliti) |
+| Play uchun AAB | `release/<versiya>-signed/app-release.aab` (upload kaliti bilan imzolangan, ilova ichidagi imzo xeshi bo'sh) |
+| To'g'ridan-to'g'ri APK'lar | `release/<versiya>-signed/app-*-release.apk` (imzo xeshi = upload kaliti) |
 | Ikonka 512×512 | `tools/store/play_icon_512.png` |
 | Banner 1024×500 | `tools/store/feature_graphic_1024x500.png` |
 | Telefon skrinshotlari | `tools/store/screenshots/uz/` (7) va `ru/` (5), 1080×1920 |
@@ -45,13 +47,13 @@ deklaratsiyalarni tasdiqlash. Kalit paroli va `key.properties` hech kimga berilm
 
 | Maydon | Qiymat |
 |---|---|
-| App name | `Baraka Dastur` |
+| App name | `Baraka Xazinasi` |
 | Default language | o'zbekcha (ro'yxatda bo'lsa), aks holda `Russian – ru-RU` |
 | App or game | App |
 | Free or paid | Free (keyin pullikka o'tkazib bo'lmaydi) |
 | Declarations | Developer Program Policies va US export laws — o'qib, egasi belgilaydi |
 
-Paket nomi birinchi AAB yuklanganda qotadi: `uz.barakadastur.app` (o'zgartirib bo'lmaydi).
+Paket nomi birinchi AAB yuklanganda qotadi: `uz.barakaxazinasi.app` (o'zgartirib bo'lmaydi).
 
 ## 3. App content (Policy → App content)
 
@@ -108,20 +110,20 @@ yo'q. Agar Console baribir so'rasa: ilova foreground service ishlatmaydi, ruxsat
 2. **App integrity:** *Use Google-generated key* (Play App Signing). `C:\keys\baraka` dagi kalit shundan
    keyin **upload kaliti** bo'ladi; Play foydalanuvchilarga Google saqlaydigan app signing kaliti bilan
    imzolangan ilovani yetkazadi.
-3. `release/1.0.0+6-signed/app-release.aab` ni yuklang. R8 mapping va native belgilar AAB ichida
+3. `release/<versiya>-signed/app-release.aab` ni yuklang. R8 mapping va native belgilar AAB ichida
    (`BUNDLE-METADATA`) — alohida yuklash shart emas. Release notes — `docs/PLAY_LISTING.md`, «What's new».
 4. Testerlar: email ro'yxati (100 tagacha), havola orqali qo'shiladi. Ichki test deyarli ko'riksiz.
 5. **Test and release → App integrity → App signing** sahifasidan **App signing key certificate →
    SHA-256** ni ko'chiring.
 6. Keyingi Play yig'ishi shu xesh bilan (ilova ichidagi imzo tekshiruvi Play nusxasida ham ishlashi uchun):
-   versiyani oshiring (`pubspec.yaml` `1.0.0+7`, `AppInfo.build`), keyin
+   versiyani oshiring (`pubspec.yaml` `version:` va `AppInfo.build`), keyin
    ```
    powershell -File tools/build_release.ps1 -SigningProperties C:\keys\baraka\key.properties -ExpectedSignatureSha256 <Play SHA-256> -NoApk
    ```
    To'g'ridan-to'g'ri tarqatiladigan APK'lar avvalgidek upload xeshi bilan (`-NoBundle`).
-   Agar App signing sahifasi xeshni birinchi yuklashdan **oldin** ko'rsatsa, `1.0.0+6` AAB'ni shu xesh
+   Agar App signing sahifasi xeshni birinchi yuklashdan **oldin** ko'rsatsa, birinchi AAB'ni shu xesh
    bilan qayta yig'ib yuklang.
-7. Har yuklashda `versionCode` oshadi (6 → 7 → 8…). Bir xil kod bilan qayta yuklab bo'lmaydi.
+7. Har yuklashda `versionCode` oshadi (7 → 8 → 9…). Bir xil kod bilan qayta yuklab bo'lmaydi.
 
 ## 6. Yopiq test (shaxsiy akkaunt uchun majburiy)
 
