@@ -1,11 +1,26 @@
-scripts/icon_preview.png
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+/.venv/
+/.pytest_cache/
+/.ruff_cache/
+/dist/
+*.egg-info/
+
+# Rust / Tauri
 /target/
 **/node_modules/
-__pycache__/
-*.pyc
 
-# Auditorga beriladigan paket (yig'iladi, repo'ga kirmaydi)
+# Tashqi binarlar (caddy.exe, mosquitto va h.k.) gitga kirmaydi
+/tools/*
+!/tools/README.md
+
+# Mahalliy ma'lumotlar va sirlar
+/.srv1-data/
+*.token
+.env
+
+# TAMGA: auditorga beriladigan paket va yig'ilgan o'rnatuvchilar (repo'ga kirmaydi)
 /audit-package/
-
-# Yig'ilgan o'rnatuvchilar (repo'ga kirmaydi)
-/dist/
+scripts/icon_preview.png
