@@ -12,7 +12,7 @@
 | 7 | `data` | ✅ tugadi | 2026-11-11 |
 | 8 | `electronics` | ✅ tugadi | 2026-11-11 |
 | 9 | `itops` | ✅ tugadi | 2026-11-11 |
-| 10 | Yakun | ✅ tugadi (xizmat o'rnatilishi va haqiqiy tunnel sinalmagan) | 2026-11-12 |
+| 10 | Yakun | ✅ tugadi (xizmat o'rnatilishi sinalmagan) | 2026-11-12 |
 
 ## 0-bosqich — Skelet
 
@@ -620,9 +620,11 @@ Tafsilot: [ornatish.md](ornatish.md), [qollanma.md](qollanma.md),
 | venv ishga tushirgichlari (2 ta) | 7,8 MB |
 | **jami** | **262,0 MB** (chegaraning 75 %) |
 
-Ochiq tunnel bo'sh holatga kirmaydi (standart holatda yo'q). Haqiqiy
-cloudflared jarayonining xotirasi **o'lchanmagan** (tunnel ochilmagan);
-limiti 192 MB. NSSM'ning o'zi (xizmat ustidan qo'shimcha jarayon) ham o'lchanmagan.
+Ochiq tunnel bo'sh holatga kirmaydi (standart holatda yo'q). Bitta haqiqiy
+tunnel ochiq turganda cloudflared 35,4 MB oladi (bitta o'lchov, tunnel
+ochilgandan taxminan 1,5 daqiqa keyin; limiti 192 MB) — ya'ni bitta tunnel
+bilan jami taxminan 297 MB (hisob: 262,0 + 35,4), ikkitasi bilan chegaraga
+yaqinlashadi. NSSM'ning o'zi (xizmat ustidan qo'shimcha jarayon) o'lchanmagan.
 
 **Yo'lda topilgan va tuzatilgan**
 
@@ -642,8 +644,10 @@ limiti 192 MB. NSSM'ning o'zi (xizmat ustidan qo'shimcha jarayon) ham o'lchanmag
 - **Xizmat biror marta ham o'rnatilmagan** (administrator huquqi yo'q):
   `service.ps1 install`, avtostart, yiqilgandan keyin qayta ko'tarilish,
   xizmat hisobidagi `PATH` va COM portlar sinalmagan.
-- **Haqiqiy tunnel biror marta ham ochilmagan** (saytni internetga chiqaradi —
-  egasining ruxsati bilan qilinadi). Soxta cloudflared bilan sinalgan.
+- Haqiqiy tunnel faqat **bir marta, qo'lda** sinalgan (statik sinov sayti;
+  natijalar [hosting.md](hosting.md#internetga-ochish-cloudflared) da): ishladi,
+  lekin manzil chiqqandan keyin tashqaridan ochilguncha taxminan bir daqiqa
+  o'tdi. Avtomatik testlar soxta cloudflared bilan.
 - O'z domeni bilan doimiy (nomli) Cloudflare tunneli qilinmagan.
 - O'rnatuvchi tashqi dasturlarni yuklab olmaydi va `uv` ni o'rnatmaydi.
 - Bu «joyida o'rnatish»: loyiha papkasi doimiy joyda turadi, plaginlar va
@@ -660,7 +664,7 @@ tushirishdan oldin shu ro'yxat bo'yicha o'zingiz sinab ko'ring.
 | Nima | Nega sinalmagan | Qanday sinash |
 |------|-----------------|---------------|
 | Windows xizmatini o'rnatish va avtostart | administrator huquqi yo'q | administrator oynasida `install\service.ps1 -Action install`, so'ng qayta yuklash |
-| Haqiqiy cloudflared tunneli | saytni internetga chiqaradi | panelda sinov sayti uchun «Internetga ochish» |
+| Tunnel: uxlayotgan loyihani uyg'otish, Python/Node loyiha, uzoq ishlash | haqiqiy tunnel faqat bir marta, statik sayt bilan ochilgan | panelda «Internetga ochish» |
 | 4 GB RAM li mashina | ishlab chiqish mashinasida 24 GB | nishon mashinada «Xotira» sahifasi |
 | Haqiqiy plataga proshivka, COM monitor, «port band» | COM port va plata yo'q | ESP32/Arduino ulab, `electronics` paneli |
 | Haqiqiy Mosquitto broker | `mosquitto.org` ochilmadi | `tools/mosquitto/` ga qo'yib, `pytest tests/test_iot_plugin.py` |

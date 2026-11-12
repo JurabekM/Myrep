@@ -126,11 +126,25 @@ va faollik hisoblanadi.
 O'z domeningiz bilan doimiy (nomli) tunnel **qilinmagan**: u Cloudflare
 akkaunti va tunnel tokenini (sir) talab qiladi.
 
+**Manzil darhol ishlamasligi mumkin.** Manzil bir necha soniyada chiqadi,
+lekin tashqaridan ochilishi uchun yana bir daqiqagacha vaqt ketishi mumkin
+(quyidagi o'lchovga qarang) — shu orada brauzer «ulanib bo'lmadi» deydi.
+
 **Sinalgani:** butun oqim soxta cloudflared bilan (argumentlar, manzilni
-o'qish, chegara, yopilish, xatolar); haqiqiy `cloudflared.exe` ishga tushishi
-va bayroqlarni bilishi. **Haqiqiy tunnel biror marta ham ochilmagan** — u
-saytni internetga chiqaradi, buni faqat egasi qiladi. Demak Cloudflare tomoni,
-haqiqiy manzil formati va haqiqiy cloudflared'ning RAM sarfi tekshirilmagan.
+o'qish, chegara, yopilish, xatolar) — bular avtomatik testlar. Bundan tashqari
+**haqiqiy tunnel bir marta qo'lda ochib ko'rilgan** (2026-11-12, egasining
+ruxsati bilan, namunaviy sahifali sinov sayti, bitta yugurish):
+
+| Nima | Natija |
+|------|--------|
+| manzil kelishi | 5,1 s |
+| tashqaridan birinchi muvaffaqiyatli javob | taxminan 1–1,5 daqiqadan keyin (20 urinish ulanmadi, 21-si 200); sababi aniqlanmagan, ehtimol DNS |
+| ochilgan sahifa | bizning sayt (Caddy orqali, `Host` almashtirilgan) |
+| cloudflared xotirasi | 35,4 MB (Working Set), 64,4 MB (private) |
+| yopilgandan keyin | cloudflared jarayoni yo'q; manzil 502 qaytaradi |
+
+Sinalmagan: tunnel orqali uxlayotgan loyihani uyg'otish, Python/Node loyiha,
+uzoq ishlash (soatlar), ikki tunnel birga, tarmoq uzilganda qayta ulanish.
 
 ## API
 

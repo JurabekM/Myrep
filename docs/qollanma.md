@@ -120,7 +120,8 @@ o'zi uyg'onadi.
 «Hosting» sahifasida loyihani tanlab, **«Internetga ochish»** ni bosing va
 tasdiqlang. Bir necha soniyadan keyin «Internetdagi manzil» ustunida
 `https://<tasodifiy-so'zlar>.trycloudflare.com` ko'rinadi — uni istalgan
-joydan ochish mumkin. Buning uchun `tools\cloudflared.exe` kerak; Cloudflare
+joydan ochish mumkin. Manzil chiqqandan keyin ishlab ketishi uchun bir
+daqiqagacha kuting: shu orada brauzer «ulanib bo'lmadi» deyishi mumkin. Buning uchun `tools\cloudflared.exe` kerak; Cloudflare
 akkaunti kerak emas.
 
 Bilib qo'ying:
