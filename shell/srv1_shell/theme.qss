@@ -1,0 +1,84 @@
+/* SRV_1 shell — yagona uslub fayli (to'q mavzu).
+   Diqqat: `QWidget { background }` yozilmaydi — u har bir ichki vidjetga meros
+   bo'lib o'tib, to'q "qutilar" hosil qiladi. Fon faqat aniq konteynerlarga beriladi. */
+
+QMainWindow, QDialog, QWidget#Root, QWidget#PageHost { background: #14171c; }
+QWidget#Sidebar { background: #191d23; border-right: 1px solid #2b323c; }
+QWidget#Header { background: #191d23; border-bottom: 1px solid #2b323c; }
+
+QLabel { color: #e6e9ee; background: transparent; }
+QLabel#AppTitle { font-size: 15pt; font-weight: 600; }
+QLabel#PageTitle { font-size: 14pt; font-weight: 600; }
+QLabel#Muted, QLabel#CardTitle { color: #8b95a5; }
+QLabel#CardValue { font-size: 20pt; font-weight: 600; }
+QLabel#SectionTitle { font-size: 11pt; font-weight: 600; color: #c5ccd6; }
+QLabel#ErrorText { color: #f85149; }
+QLabel#ResultText { color: #8b95a5; }
+QLabel#ConnOk { color: #3fb950; font-weight: 600; }
+QLabel#ConnBad { color: #f85149; font-weight: 600; }
+
+QFrame#Card { background: #1c2128; border: 1px solid #2b323c; border-radius: 8px; }
+
+QListWidget#Nav { background: transparent; border: none; outline: none; color: #c5ccd6; }
+QListWidget#Nav::item { padding: 9px 14px; border-radius: 6px; margin: 1px 8px; }
+QListWidget#Nav::item:hover { background: #222831; }
+QListWidget#Nav::item:selected { background: #24344d; color: #ffffff; }
+
+QPushButton {
+    background: #26303c; color: #e6e9ee; border: 1px solid #364150;
+    border-radius: 6px; padding: 6px 14px; min-height: 18px;
+}
+QPushButton:hover { background: #2e3a48; }
+QPushButton:pressed { background: #223047; }
+QPushButton:disabled { color: #6b7482; background: #1c2128; }
+QPushButton#Primary { background: #2f6fd6; border-color: #2f6fd6; color: #ffffff; }
+QPushButton#Primary:hover { background: #3b7be0; }
+QPushButton#Danger { background: #5a2327; border-color: #7d2d33; }
+QPushButton#Danger:hover { background: #6c2a2f; }
+
+QLineEdit, QComboBox, QPlainTextEdit {
+    background: #10131a; color: #e6e9ee; border: 1px solid #2b323c;
+    border-radius: 6px; padding: 5px 8px; selection-background-color: #2f6fd6;
+}
+QLineEdit:focus, QComboBox:focus { border-color: #4c9aff; }
+QComboBox::drop-down { border: none; width: 22px; }
+QComboBox QAbstractItemView {
+    background: #1c2128; color: #e6e9ee; border: 1px solid #2b323c;
+    selection-background-color: #24344d;
+}
+QCheckBox { color: #e6e9ee; background: transparent; spacing: 7px; }
+
+QTableWidget {
+    background: #1c2128; alternate-background-color: #1f252d; color: #e6e9ee;
+    border: 1px solid #2b323c; border-radius: 8px; gridline-color: #2b323c;
+}
+QTableWidget::item { padding: 4px 8px; }
+QTableWidget::item:selected { background: #24344d; color: #ffffff; }
+QHeaderView { background: #191d23; border: none; }
+QHeaderView::section {
+    background: #191d23; color: #8b95a5; border: none;
+    border-bottom: 1px solid #2b323c; padding: 7px 8px; font-weight: 600;
+}
+QTableCornerButton::section { background: #191d23; border: none; }
+
+QProgressBar {
+    background: #10131a; border: 1px solid #2b323c; border-radius: 5px;
+    color: #e6e9ee; text-align: center; min-height: 16px;
+}
+QProgressBar::chunk { background: #2f6fd6; border-radius: 4px; }
+QProgressBar[level="warn"]::chunk { background: #d29922; }
+QProgressBar[level="bad"]::chunk { background: #f85149; }
+
+QScrollArea { background: transparent; border: none; }
+QScrollArea > QWidget > QWidget { background: transparent; }
+QScrollBar:vertical { background: transparent; width: 10px; margin: 2px; }
+QScrollBar::handle:vertical { background: #364150; border-radius: 4px; min-height: 24px; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+QScrollBar:horizontal { background: transparent; height: 10px; margin: 2px; }
+QScrollBar::handle:horizontal { background: #364150; border-radius: 4px; min-width: 24px; }
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; }
+QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
+
+QSplitter::handle { background: #2b323c; width: 1px; }
+QToolTip { background: #1c2128; color: #e6e9ee; border: 1px solid #364150; padding: 4px; }
+QMessageBox QLabel, QInputDialog QLabel { color: #e6e9ee; }

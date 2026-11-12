@@ -1,3 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+/.venv/
+/.pytest_cache/
+/.ruff_cache/
+/dist/
+*.egg-info/
+
+# Tashqi binarlar (caddy.exe, mosquitto va h.k.) gitga kirmaydi
+/tools/*
+!/tools/README.md
+
+# Mahalliy ma'lumotlar va sirlar
+/.srv1-data/
+*.token
+.env
+# ROSTOR-2 skriptlari tools/ da manba sifatida turadi (SRV_1 binarlari esa yuqoridagi qoida bilan chetda)
+!/tools/*.py
+!/tools/*.ps1
+!/tools/rostor_db/
+!/tools/rostor_report/
+!/tools/store/
+!/tools/testapks/
+
+# ===== ROSTOR-2 =====
 # Yig'ilgan APK'lar gitga kirmaydi (release/ ga qo'lda ko'chiriladi)
 release/*.apk
 *.apk

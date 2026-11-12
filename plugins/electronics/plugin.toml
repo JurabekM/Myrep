@@ -1,0 +1,15 @@
+name = "electronics"
+version = "0.1.0"
+description = "Elektronika: serial monitor, plata aniqlash, ESP va AVR (Arduino) proshivkasini yozish."
+mode = "inprocess"
+heavy = false
+
+[permissions]
+# Proshivka fayllari olinadigan qo'shimcha papkalar (mutlaq yo'l). Plaginning
+# o'z `firmware` papkasi har doim ruxsat etilgan.
+paths = []
+ports = []
+# Ochish va proshivka yozishga ruxsat etilgan portlar, masalan: serial = ["COM3", "COM4"]
+serial = []
+# esptool va avrdude'ni ishga tushirish uchun.
+spawn = true
