@@ -7,8 +7,8 @@ Tashqi binarlar shu yerga qo'yiladi va **gitga kirmaydi** (`.gitignore`).
 | `caddy.exe` | 5 (`hosting`) | reverse proxy, admin API `127.0.0.1:2019` | 2.11.9 |
 | `mosquitto/` | 6 (`iot`) | MQTT broker | sinalmagan (quyiga qarang) |
 | `avrdude/` | 8 (`electronics`) | AVR (Arduino) proshivkasi | 8.3 |
-| `nssm.exe` | 10 | Windows xizmati | — |
-| `cloudflared.exe` | 10 | tunnel | — |
+| `nssm.exe` | 10 | Windows xizmati | 2.24 (64-bit) |
+| `cloudflared.exe` | 10 (`hosting`) | internetga ochish (tunnel) | 2026.10.7 |
 
 ## Caddy
 
@@ -37,6 +37,37 @@ sahifasidagi qiymat bilan solishtiring:
 
 Boshqa joy: `SRV1_AVRDUDE_EXE`. `esptool` alohida yuklanmaydi — u Python
 paketi (`uv sync` o'rnatadi).
+
+## NSSM
+
+Rasmiy manba: <https://nssm.cc/download> → `nssm-2.24.zip` (oxirgi barqaror
+reliz, 2014-yil; loyiha shundan beri yangilanmagan). Arxivdan
+`win64\nssm.exe` ni shu papkaga chiqaring. Sahifada SHA-1 berilgan:
+
+```powershell
+(Get-FileHash nssm-2.24.zip -Algorithm SHA1).Hash.ToLower()
+# be7b3577c6e3a280e5106a9e9db5b3775931cefc
+(Get-FileHash nssm.exe -Algorithm SHA256).Hash.ToLower()   # win64\nssm.exe
+# f689ee9af94b00e9e3f0bb072b34caaf207f32dcb4f5782fc9ca351df9a06c97
+```
+
+`nssm.exe` ni konsolsiz yoki administratorsiz to'g'ridan-to'g'ri chaqirmang —
+u xabar oynasi ochadi. `install\service.ps1` dan foydalaning.
+
+## cloudflared
+
+Rasmiy manba: <https://github.com/cloudflare/cloudflared/releases> →
+`cloudflared-windows-amd64.exe`; `cloudflared.exe` deb nomlab shu papkaga
+qo'ying. SHA-256 reliz sahifasida; fayl «Cloudflare, Inc.» imzosi bilan:
+
+```powershell
+(Get-FileHash cloudflared.exe -Algorithm SHA256).Hash.ToLower()
+# 2026.10.7: 2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343
+(Get-AuthenticodeSignature cloudflared.exe).Status   # Valid
+```
+
+Boshqa joy: `SRV1_CLOUDFLARED_EXE`. Plagin uni `--no-autoupdate` bilan ishga
+tushiradi — yangilash qo'lda.
 
 ## Mosquitto
 

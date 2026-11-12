@@ -15,6 +15,15 @@ Kind = Literal["static", "python", "node"]
 State = Literal["stopped", "starting", "running", "sleeping", "failed"]
 
 
+class HostingError(Exception):
+    """Amal bajarilmadi; `status` — klientga qaytadigan HTTP kodi."""
+
+    def __init__(self, status: int, detail: str) -> None:
+        super().__init__(detail)
+        self.status = status
+        self.detail = detail
+
+
 class _Model(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -38,6 +47,11 @@ class HostingConfig(_Model):
     allow_non_loopback: bool = False
     ready_timeout_s: float = Field(default=20.0, ge=1, le=300)
     idle_check_s: float = Field(default=10.0, ge=0.2, le=600)
+    # Bir vaqtda ochiq tunnellar soni (har biri alohida cloudflared jarayoni).
+    tunnel_max: int = Field(default=2, ge=0, le=8)
+    tunnel_timeout_s: float = Field(default=30.0, ge=1, le=300)
+    # cloudflared buyrug'ining boshi; bo'sh bo'lsa `tools/cloudflared.exe`.
+    tunnel_command: tuple[str, ...] = ()
 
     @model_validator(mode="after")
     def _loopback_by_default(self) -> Self:

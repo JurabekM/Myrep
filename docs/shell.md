@@ -19,6 +19,10 @@ o'qiladi. Fayl topilmasa, tokenni qo'lda kiritish oynasi chiqadi (saqlanmaydi).
 Sozlamalar `%APPDATA%\SRV_1\shell.json` da (`SRV1_SHELL_CONFIG` bilan
 o'zgartiriladi): `language`, `host`, `port`. Token u yerga yozilmaydi.
 
+Oyna va yorliq belgisi (server shkafi) kodda chiziladi:
+`shell/srv1_shell/icon.py`; `srv1.ico` — `uv run python -m srv1_shell.icon`.
+O'rnatilgan tizimda shell «SRV_1» yorlig'idan ochiladi ([ornatish.md](ornatish.md)).
+
 ## Tillar
 
 O'zbekcha, ruscha, inglizcha. Yuqori o'ng burchakdagi ro'yxatdan

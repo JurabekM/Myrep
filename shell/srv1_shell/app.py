@@ -14,6 +14,7 @@ from srv1_shell.config import (
     save_config,
 )
 from srv1_shell.i18n import I18n
+from srv1_shell.icon import app_icon
 from srv1_shell.main_window import MainWindow
 
 THEME_FILE = Path(__file__).with_name("theme.qss")
@@ -44,6 +45,7 @@ def ask_token(config: ShellConfig, token_file: Path) -> str | None:
 def main(argv: list[str] | None = None) -> int:
     app = QApplication(sys.argv if argv is None else argv)
     app.setApplicationName("SRV_1")
+    app.setWindowIcon(app_icon())
     apply_theme(app)
     config = load_config()
     token_file = default_token_file()

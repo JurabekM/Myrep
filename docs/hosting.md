@@ -5,6 +5,9 @@ ishlaydi; Caddy va har loyiha — alohida jarayon, Job Object ichida.
 
 ![Hosting paneli](img/shell-hosting-uz.png)
 
+(Skrinshotdagi internet manzili — sinov uchun soxta cloudflared'niki; haqiqiy
+tunnelda u tasodifiy so'zlardan iborat bo'ladi.)
+
 ## Tez boshlash
 
 1. `tools/caddy.exe` bo'lishi kerak ([tools/README.md](../tools/README.md)).
@@ -87,12 +90,47 @@ Foydalanuvchi uchun bu birinchi so'rovning sekinroq ochilishi, xolos.
 
 Sozlama: `<ma'lumotlar>/plugins/hosting/data/hosting.json` → `config`
 (`listen_host`, `listen_port`, `admin_port`, `wake_port`, `port_first`,
-`port_last`, `domain`, `ready_timeout_s`). Portlar manifestdagi
+`port_last`, `domain`, `ready_timeout_s`, `tunnel_max`, `tunnel_timeout_s`). Portlar manifestdagi
 `permissions.ports` ichida bo'lishi shart.
 
 **Standart holatda saytlar faqat shu kompyuterdan ochiladi.** Mahalliy
 tarmoqqa ochish uchun `listen_host` ni o'zgartirib, `allow_non_loopback: true`
 qo'shing; busiz plagin ishga tushmaydi.
+
+## Internetga ochish (cloudflared)
+
+Standart holatda hech narsa tashqariga ochilmaydi. «Internetga ochish»
+(`POST /tunnel/open {name}`) shu loyiha uchun `cloudflared` ni ishga tushiradi:
+
+```
+cloudflared tunnel --no-autoupdate --url http://127.0.0.1:8080 --http-host-header <nom>.localhost
+```
+
+Bu Cloudflare'ning akkauntsiz «quick tunnel»i: cloudflared tashqariga
+**chiquvchi** ulanish ochadi va `https://<tasodifiy>.trycloudflare.com`
+manzilini beradi (jurnalidan o'qiladi, 30 s kutiladi). Mashinada hech qanday
+port tashqariga ochilmaydi, `listen_host` loopback'ligicha qoladi. So'rovlar
+Caddy orqali o'tadi, shuning uchun uxlayotgan loyiha tunnel orqali ham uyg'onadi
+va faollik hisoblanadi.
+
+- **Parol yo'q:** manzilni bilgan har kim ochadi. Panelda tasdiq so'raladi.
+- Tunnel **saqlanmaydi**: yadro yoki plagin qayta ishga tushsa, hammasi yopiq.
+- Loyiha to'xtatilsa yoki ro'yxatdan chiqarilsa, tunneli yopiladi; uxlatilsa — yo'q.
+- Bir vaqtda ko'pi bilan `tunnel_max` (standart 2) ta; har biri alohida
+  cloudflared jarayoni, 192 MB limit bilan.
+- Faqat `running` yoki `sleeping` loyiha ochiladi (aks holda 409).
+- `tools/cloudflared.exe` yo'q bo'lsa — 503, `GET /status` da `cloudflared: missing`.
+- Auditga yoziladi: `hosting.tunnel_open` (muvaffaqiyatsizi ham, sababi bilan),
+  `hosting.tunnel_close` (sababi bilan), cloudflared'ning o'zi — `process.spawn`.
+
+O'z domeningiz bilan doimiy (nomli) tunnel **qilinmagan**: u Cloudflare
+akkaunti va tunnel tokenini (sir) talab qiladi.
+
+**Sinalgani:** butun oqim soxta cloudflared bilan (argumentlar, manzilni
+o'qish, chegara, yopilish, xatolar); haqiqiy `cloudflared.exe` ishga tushishi
+va bayroqlarni bilishi. **Haqiqiy tunnel biror marta ham ochilmagan** — u
+saytni internetga chiqaradi, buni faqat egasi qiladi. Demak Cloudflare tomoni,
+haqiqiy manzil formati va haqiqiy cloudflared'ning RAM sarfi tekshirilmagan.
 
 ## API
 
@@ -105,12 +143,14 @@ Hammasi `/api/v1/plugins/hosting/api` ostida.
 | `POST /projects` | yangi loyiha (`name`, `kind`, `command`, `root`, `idle_minutes`, `memory_limit_mb`, `autostart`, `start`) |
 | `POST /start`, `/stop`, `/restart` `{name}` | boshqaruv |
 | `POST /remove` `{name}` | ro'yxatdan chiqarish — **fayllar o'chirilmaydi** |
+| `POST /tunnel/open`, `/tunnel/close` `{name}` | internetga ochish va yopish; javobda `public_url` |
 | `GET /log?name=&tail=` | loyiha chiqishining oxirgi satrlari |
 
 Loglar: `<ma'lumotlar>/plugins/hosting/data/logs/<nom>.log` (1 MB dan oshsa
 `.log.1` ga aylanadi).
 
-Hodisa: `plugin.hosting.state` `{name, state, error}`.
+Hodisalar: `plugin.hosting.state` `{name, state, error}`,
+`plugin.hosting.tunnel` `{name, url}` (`url = null` — yopildi).
 
 Audit (`actor = plugin:hosting`): `process.spawn` (Caddy va har loyiha
 ishga tushishi, to'liq buyruq bilan), `hosting.project_create`,
@@ -126,8 +166,8 @@ ishga tushishi, to'liq buyruq bilan), `hosting.project_create`,
 
 ## Cheklovlar
 
-- HTTPS yo'q (faqat `http://`); tashqi domen va sertifikatlar 10-bosqichda
-  (`cloudflared`).
+- Mahalliy manzillarda HTTPS yo'q (faqat `http://`). Tunnel manzili HTTPS,
+  lekin tasodifiy va vaqtinchalik; o'z domeni bilan doimiy tunnel qilinmagan.
 - Loyiha o'rnatish (`pip install`, `npm install`) avtomatlashtirilmagan —
   bog'liqliklarni o'zingiz o'rnatasiz.
 - Panelda holat va tur nomlari tarjimasiz (`running`, `static`).

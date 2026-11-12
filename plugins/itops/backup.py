@@ -124,6 +124,8 @@ def create_backup(root: Path, destination: Path, options: BackupOptions) -> Back
         with zipfile.ZipFile(partial, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
             for path in iter_files(root, options):
                 name = path.relative_to(root).as_posix()
+                if name == MANIFEST_NAME:
+                    continue  # tiklangan papkada qolgan eski tavsif; yangisi pastda yoziladi
                 try:
                     if is_sqlite(path):
                         _snapshot_sqlite(path, scratch)

@@ -36,6 +36,11 @@ def build_panel() -> PanelSpec:
                 label=_t("Uxlayapti", "Спит", "Sleeping"), source="/status", field="sleeping"
             ),
             ValueWidget(label=_t("Xato", "Сбой", "Failed"), source="/status", field="failed"),
+            ValueWidget(
+                label=_t("Ochiq tunnellar", "Открытые туннели", "Open tunnels"),
+                source="/status",
+                field="tunnels",
+            ),
             TableWidget(
                 label=_t("Loyihalar", "Проекты", "Projects"),
                 source="/projects",
@@ -45,6 +50,10 @@ def build_panel() -> PanelSpec:
                     TableColumn(key="kind", title=_t("Turi", "Тип", "Type")),
                     TableColumn(key="state", title=_t("Holat", "Состояние", "State")),
                     TableColumn(key="url", title=_t("Manzil", "Адрес", "Address")),
+                    TableColumn(
+                        key="public_url",
+                        title=_t("Internetdagi manzil", "Адрес в интернете", "Public address"),
+                    ),
                     TableColumn(key="port", title=_t("Port", "Порт", "Port")),
                     TableColumn(key="memory", title="RAM", format="size"),
                     TableColumn(key="error", title=_t("Xato", "Ошибка", "Error")),
@@ -53,6 +62,14 @@ def build_panel() -> PanelSpec:
                     _action("Ishga tushirish", "Запустить", "Start", "/start"),
                     _action("Toʻxtatish", "Остановить", "Stop", "/stop"),
                     _action("Qayta ishga tushirish", "Перезапустить", "Restart", "/restart"),
+                    _action(
+                        "Internetga ochish",
+                        "Открыть в интернет",
+                        "Open to internet",
+                        "/tunnel/open",
+                        confirm=True,
+                    ),
+                    _action("Tunnelni yopish", "Закрыть туннель", "Close tunnel", "/tunnel/close"),
                     _action(
                         "Roʻyxatdan chiqarish",
                         "Убрать из списка",
@@ -70,6 +87,16 @@ def build_panel() -> PanelSpec:
                     "выделенным портом; программа также получает переменную PORT.",
                     "Project files: <data>/projects/<name>/. In the command {port} is replaced "
                     "with the allocated port; the program also receives the PORT variable.",
+                )
+            ),
+            LabelWidget(
+                text=_t(
+                    "«Internetga ochish» loyihani trycloudflare.com dagi tasodifiy manzilda "
+                    "HAMMAGA ochadi (parolsiz). Yadro qayta ishga tushsa, tunnellar yopiladi.",
+                    "«Открыть в интернет» делает проект доступным ВСЕМ по случайному адресу "
+                    "trycloudflare.com (без пароля). После перезапуска ядра туннели закрыты.",
+                    "“Open to internet” exposes the project to EVERYONE at a random "
+                    "trycloudflare.com address (no password). A core restart closes all tunnels.",
                 )
             ),
             FormWidget(

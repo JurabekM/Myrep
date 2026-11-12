@@ -16,7 +16,18 @@ from srv1_sdk.pathsafe import PathTraversalError, safe_join
 from srv1_sdk.process import ManagedProcess
 
 from .caddy import Caddy, Route, message_route, proxy_route, static_route
-from .models import STORE_FILE, ProjectConfig, State, Store, load_store, save_store
+from .models import (
+    STORE_FILE,
+    HostingError,
+    ProjectConfig,
+    State,
+    Store,
+    load_store,
+    save_store,
+)
+from .tunnel import TunnelManager
+
+__all__ = ["LOG_LINES", "HostingError", "HostingService", "Project"]
 
 LOG_LINES = 500
 LOG_FILE_MAX_BYTES = 1024 * 1024
@@ -28,15 +39,6 @@ PLACEHOLDER_PAGE = """<!doctype html>
 <h1>{name}</h1>
 <p>SRV_1 statik sayti. Fayllarni shu papkaga joylang.</p>
 """
-
-
-class HostingError(Exception):
-    """Amal bajarilmadi; `status` — klientga qaytadigan HTTP kodi."""
-
-    def __init__(self, status: int, detail: str) -> None:
-        super().__init__(detail)
-        self.status = status
-        self.detail = detail
 
 
 class Project:
@@ -109,6 +111,7 @@ class HostingService:
         self.projects: dict[str, Project] = {}
         self.caddy: Caddy | None = None
         self.caddy_error: str | None = None
+        self.tunnels = TunnelManager(ctx, self.store.config)
         self._wake_server: asyncio.Server | None = None
         self._idle_task: asyncio.Task[None] | None = None
 
@@ -119,6 +122,7 @@ class HostingService:
         self.ctx.projects_dir.mkdir(parents=True, exist_ok=True)
         self.store = load_store(self._store_file)
         cfg = self.store.config
+        self.tunnels = TunnelManager(self.ctx, cfg)
         for port in (cfg.listen_port, cfg.admin_port, cfg.wake_port, cfg.port_first, cfg.port_last):
             self.ctx.check_port(port)
         for config in self.store.projects:
@@ -153,6 +157,7 @@ class HostingService:
         if self._idle_task is not None:
             self._idle_task.cancel()
             await asyncio.gather(self._idle_task, return_exceptions=True)
+        await self.tunnels.close_all()
         if self._wake_server is not None:
             self._wake_server.close()
             await self._wake_server.wait_closed()
@@ -223,6 +228,7 @@ class HostingService:
             "kind": config.kind,
             "state": project.state,
             "url": self.url_of(config.name),
+            "public_url": self.tunnels.url_of(config.name),
             "port": config.port,
             "pid": process.pid if process is not None and process.running else None,
             "memory": process.memory_bytes() if process is not None else None,
@@ -251,6 +257,9 @@ class HostingService:
             "caddy_pid": caddy.pid if caddy is not None else None,
             "caddy_memory": await asyncio.to_thread(caddy.memory_bytes) if caddy and running else 0,
             "caddy_error": self.caddy_error,
+            "cloudflared": "available" if self.tunnels.available else "missing",
+            "tunnels": len(self.tunnels.active()),
+            "tunnel_memory": await asyncio.to_thread(self.tunnels.memory_bytes),
             "listen": f"{self.store.config.listen_host}:{self.store.config.listen_port}",
             "projects": len(states),
             "running": states.count("running"),
@@ -289,6 +298,7 @@ class HostingService:
     async def remove(self, name: str) -> dict[str, Any]:
         """Loyihani ro'yxatdan chiqaradi. Papkasi va fayllari o'chirilmaydi."""
         project = self._project(name)
+        await self._close_tunnel(name, "loyiha ro'yxatdan chiqarildi")
         async with project.lock:
             await self._kill(project)
             project.close_log()
@@ -437,6 +447,8 @@ class HostingService:
             project.flush_log()
             await self._sync()
         if not sleep:
+            # Uxlayotgan loyiha tunnel orqali ham uyg'onadi; to'xtatilgani esa yopiladi.
+            await self._close_tunnel(name, "loyiha to'xtatildi")
             await self.ctx.audit("hosting.project_stop", name)
         self.ctx.publish("state", {"name": name, "state": project.state, "error": None})
         return self.describe(project)
@@ -444,6 +456,46 @@ class HostingService:
     async def restart_project(self, name: str) -> dict[str, Any]:
         await self.stop_project(name)
         return await self.start_project(name)
+
+    # --- tunnel (cloudflared) -------------------------------------------------
+    async def open_tunnel(self, name: str) -> dict[str, Any]:
+        """Loyihani internetga ochadi. Faqat ishlayotgan yoki uxlayotgan loyiha uchun."""
+        project = self._project(name)
+        if self.tunnels.get(name) is not None:
+            return self.describe(project)  # allaqachon ochiq — yangi jarayon ham, audit ham yo'q
+        try:
+            if project.state not in ("running", "sleeping"):
+                raise HostingError(409, f"avval loyihani ishga tushiring (holati: {project.state})")
+            if self.caddy is None or not self.caddy.running:
+                raise HostingError(503, "Caddy ishlamayapti; tunnel ochib bo'lmaydi")
+            cfg = self.store.config
+            origin = f"http://{cfg.listen_host}:{cfg.listen_port}"
+            tunnel = await self.tunnels.open(name, origin, self.host_of(name))
+        except HostingError as exc:
+            await self.ctx.audit(
+                "hosting.tunnel_open", name, ok=False, detail={"error": exc.detail}
+            )
+            raise
+        await self.ctx.audit("hosting.tunnel_open", name, detail={"url": tunnel.url})
+        project.write(f"[srv1] internetga ochildi: {tunnel.url}")
+        self.ctx.publish("tunnel", {"name": name, "url": tunnel.url})
+        return self.describe(project)
+
+    async def close_tunnel(self, name: str) -> dict[str, Any]:
+        project = self._project(name)
+        if not await self._close_tunnel(name, "qo'lda yopildi"):
+            raise HostingError(409, f"{name} uchun ochiq tunnel yo'q")
+        return self.describe(project)
+
+    async def _close_tunnel(self, name: str, reason: str) -> bool:
+        if not await self.tunnels.close(name):
+            return False
+        await self.ctx.audit("hosting.tunnel_close", name, detail={"reason": reason})
+        project = self.projects.get(name)
+        if project is not None:
+            project.write(f"[srv1] tunnel yopildi: {reason}")
+        self.ctx.publish("tunnel", {"name": name, "url": None})
+        return True
 
     def log_tail(self, name: str, tail: int) -> list[str]:
         lines = list(self._project(name).lines)

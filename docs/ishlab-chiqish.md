@@ -18,6 +18,9 @@ uv run python -m srv1_core   # yadro: http://127.0.0.1:8710
 uv run python -m srv1_shell  # shell (boshqa oynada; SRV1_DATA_DIR bir xil bo'lsin)
 ```
 
+O'rnatish skriptlari (`install/`) va Windows xizmati: [ornatish.md](ornatish.md).
+Foydalanuvchi qo'llanmasi: [qollanma.md](qollanma.md).
+
 ## Paketlar joylashuvi
 
 Bitta `uv` loyihasi (`srv1`), uch paket turli papkalarda:

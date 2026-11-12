@@ -117,8 +117,14 @@ Avtomatik tiklash yo'q — ataylab: u ishlab turgan tizimning ustidan yozadi.
 4. Yadroni ishga tushiring: `auth.token` arxivda yo'q — yangi token yaratiladi,
    shell uni o'zi o'qiydi.
 
-Tiklash faqat qisman sinalgan: testda arxiv ochilib, bazalar butunligi
-tekshirilgan, lekin tiklangan papka ustida yadro ishga tushirib ko'rilmagan.
+Arxivdan chiqqan `backup.json` (arxiv tavsifi) ma'lumotlar papkasida qoladi —
+zararsiz, o'chirsa ham bo'ladi; keyingi zaxiraga u kirmaydi.
+
+Tiklash testda shu tartibda bajariladi: arxiv bo'sh papkaga ochiladi, yadro
+uning ustida ishga tushadi, eski token rad etiladi, plagin o'z sozlamasi bilan
+ishlaydi, eski audit tarixi joyida va tizim yana zaxira oladi
+(`test_core_starts_on_restored_backup`). Haqiqiy `%PROGRAMDATA%` papkasida va
+`projects/` bilan birga tiklash sinalmagan.
 
 ## API
 
@@ -148,7 +154,7 @@ zaxira vaqti o'lchanmagan.
 
 ## Sinalgan va sinalmagan
 
-**Sinalgan** (`tests/test_itops_plugin.py`, 12 test + shell testi):
+**Sinalgan** (`tests/test_itops_plugin.py`, 13 test + shell testi):
 
 - jarayonlar ro'yxati; yadroga qarindosh bo'lmagan haqiqiy jarayonni to'xtatish;
   himoyalangan jarayonlar va eskirgan PID rad etilishi;
@@ -157,7 +163,8 @@ zaxira vaqti o'lchanmagan.
   bekor qilish;
 - zaxira tarkibi, token sizib chiqmasligi, ishlab turgan bazaning izchil
   nusxasi, saqlash muddati, boshqa papka, o'chirish;
-- **cron bo'yicha haqiqiy ishga tushish** (har daqiqalik jadval bilan).
+- **cron bo'yicha haqiqiy ishga tushish** (har daqiqalik jadval bilan);
+- **tiklash**: arxivdan tiklangan papkada yadro ishga tushadi (10-bosqichda qo'shildi).
 
 **Sinalmagan:**
 
@@ -165,5 +172,5 @@ zaxira vaqti o'lchanmagan.
   tegmaydi, mashinada administrator huquqi ham yo'q;
 - **haqiqiy mahalliy tarmoqni skanerlash** va ARP orqali topish (ARP jadvalini
   o'qish sinalgan, lekin skaner bilan birga emas);
-- katta ma'lumotlar papkasida zaxira; tiklangan papkada yadroni ishga tushirish;
+- katta ma'lumotlar papkasida zaxira;
 - administrator nomidan ishlaganda xatti-harakat.

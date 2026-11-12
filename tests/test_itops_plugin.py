@@ -378,6 +378,42 @@ async def test_backup_contents_secrets_and_databases(paths: DataPaths, plugin_ro
         ) in (ops.audit())
 
 
+async def test_core_starts_on_restored_backup(paths: DataPaths, plugin_root: Path) -> None:
+    """Qo'llanmadagi tiklash tartibi: arxivni bo'sh papkaga ochib, yadroni ishga tushirish."""
+    async with _ops(paths, plugin_root, backup_keep=3) as ops:
+        _seed(paths)
+        old_token = paths.token_file.read_text(encoding="ascii").strip()
+        last = await ops.backup()
+    restored = DataPaths(paths.root.parent / "tiklangan")
+    with _archive(paths, last["name"]) as archive:
+        archive.extractall(restored.root)
+    assert not restored.token_file.exists()
+
+    async with serve_app(restored) as served, served.client() as client:
+        assert (await client.get("/api/v1/health")).status_code == 200
+        # Token arxivda yo'q edi: yangisi yaratiladi, eskisi endi yaramaydi.
+        assert served.token != old_token
+        stale = {"Authorization": f"Bearer {old_token}"}
+        assert (await client.get("/api/v1/system", headers=stale)).status_code == 401
+        # Plagin o'z sozlamasi bilan ishlayapti, eski audit tarixi joyida.
+        assert (await client.get("/api/v1/plugins/itops")).json()["status"] == "running"
+        status = (await client.get(f"{API}/status")).json()
+        assert status["backup_keep"] == 3
+        restored_ops = Ops(client, served, restored)
+        with closing(sqlite3.connect(restored.db_file)) as conn:
+            created = conn.execute(
+                "SELECT count(*) FROM audit_log WHERE action = 'auth.token_created'"
+            ).fetchone()[0]
+        assert created == 2  # eski tizimniki va tiklangandan keyingisi
+        notes = restored.plugin_data_dir("hello") / "notes.txt"
+        assert notes.read_text(encoding="utf-8") == "muhim yozuv\n"
+        # Tiklangan tizim yana zaxira ola oladi.
+        again = await restored_ops.backup()
+        assert again["databases"] == 2
+        with _archive(restored, again["name"]) as archive:
+            assert archive.namelist().count("backup.json") == 1
+
+
 async def test_backup_options_retention_and_removal(paths: DataPaths, plugin_root: Path) -> None:
     async with _ops(
         paths, plugin_root, backup_keep=2, backup_projects=True, backup_logs=True

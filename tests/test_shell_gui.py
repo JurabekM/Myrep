@@ -22,7 +22,13 @@ from PyQt6.QtWidgets import QApplication, QCheckBox, QComboBox, QLineEdit, QWidg
 from conftest import free_port, write_plugin
 from data_helpers import SALES_CSV, install_data
 from electronics_helpers import install_electronics
-from hosting_helpers import CADDY_EXE, HostingPorts, install_hosting
+from hosting_helpers import (
+    CADDY_EXE,
+    FAKE_TUNNEL_URL,
+    HostingPorts,
+    install_hosting,
+    write_fake_cloudflared,
+)
 from iot_helpers import install_iot
 from srv1_core.paths import DataPaths
 from srv1_core.plugins.registry import BUILTIN_DIR
@@ -143,7 +149,11 @@ def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
         shutil.copytree(
             BUILTIN_DIR / name, plugin_root / name, ignore=shutil.ignore_patterns("__pycache__")
         )
-    hosting = install_hosting(plugin_root, data_dir / "plugins" / "hosting" / "data")
+    hosting = install_hosting(
+        plugin_root,
+        data_dir / "plugins" / "hosting" / "data",
+        tunnel_command=write_fake_cloudflared(data_dir.parent / "soxta-cloudflared"),
+    )
     install_iot(plugin_root, data_dir / "plugins" / "iot" / "data", mqtt={"enabled": False})
     firmware = install_electronics(plugin_root, data_dir / "plugins" / "electronics" / "data")
     (firmware / "blink.bin").write_bytes(bytes(2048))
@@ -495,8 +505,32 @@ def test_hosting_panel_create_stop_start_and_log(
     start.click()
     pump(lambda: table.rows[0]["state"] == "running", what="qayta ishga tushirish")
 
+    # internetga ochish: tasdiq so'raladi; rad etilsa hech narsa bo'lmaydi
+    asked: list[str] = []
+    answer = [False]
+
+    def confirm(action: str) -> bool:
+        asked.append(action)
+        return answer[0]
+
+    monkeypatch.setattr(page, "confirm", confirm)
+    open_tunnel = table.action_buttons["POST /tunnel/open"]
+    assert open_tunnel.text() == "Internetga ochish"
+    table.table.selectRow(0)
+    open_tunnel.click()
+    wait(500)
+    assert asked == ["Internetga ochish"]
+    assert table.rows[0]["public_url"] is None
+    answer[0] = True
+    table.table.selectRow(0)
+    open_tunnel.click()
+    pump(lambda: table.rows[0]["public_url"] == FAKE_TUNNEL_URL, what="tunnel manzili")
+    pump(lambda: page.values["tunnels"].value.text() == "1", what="ochiq tunnellar soni")
+    table.table.selectRow(0)
+    table.action_buttons["POST /tunnel/close"].click()
+    pump(lambda: table.rows[0]["public_url"] is None, what="tunnel yopilishi")
+
     # tasdiqli amal: ro'yxatdan chiqarish (fayllar qoladi)
-    monkeypatch.setattr(page, "confirm", lambda _action: True)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
     table.table.selectRow(0)
     table.action_buttons["POST /remove"].click()
     pump(lambda: table.rows == [], what="ro'yxatdan chiqarish")

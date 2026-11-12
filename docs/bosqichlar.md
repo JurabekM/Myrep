@@ -12,7 +12,7 @@
 | 7 | `data` | ✅ tugadi | 2026-11-11 |
 | 8 | `electronics` | ✅ tugadi | 2026-11-11 |
 | 9 | `itops` | ✅ tugadi | 2026-11-11 |
-| 10 | Yakun | — | — |
+| 10 | Yakun | ✅ tugadi (xizmat o'rnatilishi va haqiqiy tunnel sinalmagan) | 2026-11-12 |
 
 ## 0-bosqich — Skelet
 
@@ -579,3 +579,96 @@ Tafsilot: [itops.md](itops.md).
 - Katta ma'lumotlar papkasida zaxira vaqti va xotirasi o'lchanmagan.
 - Panel jadvallari past (5 qator ko'rinadi, qolgani aylantiriladi).
 - SSH yo'q (reja ro'yxatida ham yo'q edi; kutubxona kerak bo'lardi).
+
+## 10-bosqich — Yakun
+
+Tafsilot: [ornatish.md](ornatish.md), [qollanma.md](qollanma.md),
+[hosting.md](hosting.md#internetga-ochish-cloudflared).
+
+**Qilindi**
+
+- **Windows xizmati:** `install/service.ps1` (NSSM) — o'rnatish, olib tashlash,
+  boshqarish, `plan` (nima qilinishini ko'rsatadi). Xizmat foydalanuvchi
+  hisobidan ishlaydi, kechiktirilgan avtostart, yiqilsa qayta ko'tariladi,
+  sozlama xatosida (kod 2) qayta urinmaydi, to'xtashda Ctrl+C yuboriladi.
+- **cloudflared:** `hosting` ga «Internetga ochish» — loyiha uchun akkauntsiz
+  tezkor tunnel (`plugins/hosting/tunnel.py`): tasdiq, chegara (2 ta), audit,
+  loyiha to'xtasa yopiladi, qayta ishga tushishda saqlanmaydi.
+- **O'rnatuvchi:** `install/install.ps1` (administratorsiz) — `uv sync`,
+  `tools/` tekshiruvi, ma'lumotlar papkasi (ruxsatlari cheklangan), yorliqlar;
+  `install/uninstall.ps1`.
+- **Ilova belgisi** (server shkafi): oyna va yorliq uchun, kodda chiziladi.
+- **Foydalanuvchi qo'llanmasi:** [qollanma.md](qollanma.md).
+- `tools/` ga `nssm.exe` 2.24 va `cloudflared.exe` 2026.10.7 qo'yildi
+  (yig'indilari rasmiy qiymatlarga mos; [tools/README.md](../tools/README.md)).
+  Yangi Python kutubxonasi yo'q.
+
+**Tekshiruv natijasi (2026-11-12)**
+
+- `uv run pytest` — 362 passed (≈ 248 s).
+- `uv run ruff check .`, `ruff format --check .` — toza; `uv run pyright` — 0 xato.
+- Hosting paneli tunnel bilan skrinshotda ko'zdan kechirildi; belgi 256 va 32
+  pikselda ko'rildi.
+
+**O'lchangan** (55 s bo'sh holat, bitta yugurish, tunnel ochilmagan)
+
+| Jarayon | Working Set |
+|---------|-------------|
+| yadro (6 plagin ishlayapti, `data` o'chiq) | 102,3 MB |
+| Caddy | 33,4 MB |
+| shell | 118,5 MB |
+| venv ishga tushirgichlari (2 ta) | 7,8 MB |
+| **jami** | **262,0 MB** (chegaraning 75 %) |
+
+Ochiq tunnel bo'sh holatga kirmaydi (standart holatda yo'q). Haqiqiy
+cloudflared jarayonining xotirasi **o'lchanmagan** (tunnel ochilmagan);
+limiti 192 MB. NSSM'ning o'zi (xizmat ustidan qo'shimcha jarayon) ham o'lchanmagan.
+
+**Yo'lda topilgan va tuzatilgan**
+
+- Ctrl+C bilan to'xtaganda yadro tartibli yopilar, lekin oxirida
+  `KeyboardInterrupt` izi bilan xato kodi qaytarardi — xizmat jurnalida har
+  to'xtashda «xato» ko'rinardi. Endi kod 0. Shu bilan 1- va 2-bosqichdan
+  qolgan «toza to'xtatish haqiqiy jarayonda sinalmagan» bandi yopildi.
+- Tiklangan tizim yana zaxira olganda arxivga `backup.json` ikki marta
+  tushardi (tiklash testi ushladi). 9-bosqichdan qolgan «tiklangan papkada
+  yadro ishga tushirib ko'rilmagan» bandi yopildi.
+- Tunnel qayta ochilganda (allaqachon ochiq) auditga ortiqcha yozuv tushardi.
+- NSSM konsolsiz chaqirilsa xabar oynasi ochib osilib qoladi — skript huquq
+  va faylni oldindan tekshiradi.
+
+**Qilinmadi / ma'lum kamchiliklar**
+
+- **Xizmat biror marta ham o'rnatilmagan** (administrator huquqi yo'q):
+  `service.ps1 install`, avtostart, yiqilgandan keyin qayta ko'tarilish,
+  xizmat hisobidagi `PATH` va COM portlar sinalmagan.
+- **Haqiqiy tunnel biror marta ham ochilmagan** (saytni internetga chiqaradi —
+  egasining ruxsati bilan qilinadi). Soxta cloudflared bilan sinalgan.
+- O'z domeni bilan doimiy (nomli) Cloudflare tunneli qilinmagan.
+- O'rnatuvchi tashqi dasturlarni yuklab olmaydi va `uv` ni o'rnatmaydi.
+- Bu «joyida o'rnatish»: loyiha papkasi doimiy joyda turadi, plaginlar va
+  `.venv` o'sha yerda. Alohida o'rnatish paketi (MSI, `Program Files`) yo'q;
+  papka ko'chirilsa, yorliq va xizmat qayta o'rnatiladi.
+- `uv sync --no-dev` bilan toza mashinada o'rnatish sinalmagan.
+- Qo'llanma faqat o'zbekcha (interfeys uch tilda).
+
+## Sinalmaganlar (butun loyiha bo'yicha, bitta joyda)
+
+Kod yozilgan, lekin haqiqiy sharoitda tekshirilmagan narsalar. Ishga
+tushirishdan oldin shu ro'yxat bo'yicha o'zingiz sinab ko'ring.
+
+| Nima | Nega sinalmagan | Qanday sinash |
+|------|-----------------|---------------|
+| Windows xizmatini o'rnatish va avtostart | administrator huquqi yo'q | administrator oynasida `install\service.ps1 -Action install`, so'ng qayta yuklash |
+| Haqiqiy cloudflared tunneli | saytni internetga chiqaradi | panelda sinov sayti uchun «Internetga ochish» |
+| 4 GB RAM li mashina | ishlab chiqish mashinasida 24 GB | nishon mashinada «Xotira» sahifasi |
+| Haqiqiy plataga proshivka, COM monitor, «port band» | COM port va plata yo'q | ESP32/Arduino ulab, `electronics` paneli |
+| Haqiqiy Mosquitto broker | `mosquitto.org` ochilmadi | `tools/mosquitto/` ga qo'yib, `pytest tests/test_iot_plugin.py` |
+| Haqiqiy Modbus/serial qurilma | uskuna yo'q | `iot` paneli |
+| `itops`: xizmatni ishga tushirish/to'xtatish | administrator huquqi yo'q | yadro administrator nomidan |
+| `itops`: haqiqiy mahalliy tarmoqni skanerlash, ARP | so'ralmasdan tarmoq skanerlanmadi | panelda «Skanerlash» |
+| Katta hajmlar: 20 000+ fayl, katta zaxira, yuqori MQTT oqimi, saytga yuk | o'lchanmagan | — |
+| Haqiqiy brauzerda `*.localhost` | testlar `Host` sarlavhasi bilan | brauzerda `http://<nom>.localhost:8080/` |
+| Shell'ni haqiqiy ekranda sichqoncha bilan | GUI testlari ko'rinmas oynada | qo'lda |
+| Toza mashinada `install.ps1` (`uv sync`) | muhit allaqachon bor edi | yangi mashinada |
+| Simvolik havolalar, tarmoq disklari (`files`) | maxsus huquq/uskuna | — |

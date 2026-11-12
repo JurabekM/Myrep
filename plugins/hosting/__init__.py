@@ -1,7 +1,8 @@
 """`hosting` plagini: statik sayt, Python va Node loyihalari Caddy ortida.
 
 Har loyiha `<ma'lumotlar>/projects/<nom>/` papkasida va `http://<nom>.localhost:8080/`
-manzilida. Jarayonlar `shell`siz, Job Object ichida (RAM limiti bilan) ishga
+manzilida; xohlasa cloudflared tunneli orqali vaqtincha internetga ochiladi.
+Jarayonlar `shell`siz, Job Object ichida (RAM limiti bilan) ishga
 tushadi; so'rov kelmasa uxlatiladi va keyingi so'rovda o'zi uyg'onadi.
 """
 
@@ -96,6 +97,14 @@ def srv1_router(ctx: PluginContext) -> APIRouter:
     @router.post("/remove")
     async def remove(body: NameIn) -> dict[str, Any]:  # pyright: ignore[reportUnusedFunction]
         return await _run(service.remove(body.name))
+
+    @router.post("/tunnel/open")
+    async def tunnel_open(body: NameIn) -> dict[str, Any]:  # pyright: ignore[reportUnusedFunction]
+        return await _run(service.open_tunnel(body.name))
+
+    @router.post("/tunnel/close")
+    async def tunnel_close(body: NameIn) -> dict[str, Any]:  # pyright: ignore[reportUnusedFunction]
+        return await _run(service.close_tunnel(body.name))
 
     @router.get("/log")
     async def log(  # pyright: ignore[reportUnusedFunction]

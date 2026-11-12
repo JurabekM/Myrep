@@ -2,6 +2,7 @@
 
 import json
 import shutil
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -61,6 +62,38 @@ http.createServer((req, res) => {
   res.end(JSON.stringify({runtime: "node", pid: process.pid, path: req.url}));
 }).listen(port, "127.0.0.1");
 """
+
+FAKE_TUNNEL_URL = "https://sinov-soxta-tunnel.trycloudflare.com"
+# Soxta cloudflared: argumentlarini yozib oladi va manzilni jurnalga chiqaradi.
+# Rejim yonidagi `mode.txt` dan o'qiladi: ok | die | silent.
+FAKE_CLOUDFLARED = f"""
+import json
+import os
+import sys
+import time
+from pathlib import Path
+
+here = Path(__file__).parent
+mode = (here / "mode.txt").read_text(encoding="utf-8").strip()
+with (here / "calls.jsonl").open("a", encoding="utf-8") as fh:
+    fh.write(json.dumps({{"pid": os.getpid(), "argv": sys.argv[1:]}}) + "\\n")
+print("INF Requesting new quick Tunnel on trycloudflare.com...", file=sys.stderr, flush=True)
+if mode == "die":
+    print("ERR failed to request quick Tunnel: sinov xatosi", file=sys.stderr, flush=True)
+    sys.exit(1)
+if mode == "ok":
+    print("INF |  {FAKE_TUNNEL_URL}  |", file=sys.stderr, flush=True)
+time.sleep(600)
+"""
+
+
+def write_fake_cloudflared(directory: Path, mode: str = "ok") -> list[str]:
+    """Soxta cloudflared'ni yozadi; qaytgani — `tunnel_command` sozlamasi uchun buyruq."""
+    directory.mkdir(parents=True, exist_ok=True)
+    script = directory / "fake_cloudflared.py"
+    script.write_text(FAKE_CLOUDFLARED, encoding="utf-8")
+    (directory / "mode.txt").write_text(mode, encoding="utf-8")
+    return [sys.executable, str(script)]
 
 
 @dataclass(frozen=True)

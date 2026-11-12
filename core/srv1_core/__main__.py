@@ -2,6 +2,7 @@
 
 import asyncio
 import sys
+from contextlib import suppress
 
 import uvicorn
 from pydantic import ValidationError
@@ -31,7 +32,9 @@ def main() -> int:
     )
     server = uvicorn.Server(config)
     # Proactor: asyncio.subprocess Windows'da faqat shu loop bilan ishlaydi.
-    asyncio.run(server.serve(), loop_factory=asyncio.ProactorEventLoop)
+    # Ctrl+C (yoki xizmat to'xtashi): uvicorn tartibli yopilgach signalni qayta ko'taradi.
+    with suppress(KeyboardInterrupt):
+        asyncio.run(server.serve(), loop_factory=asyncio.ProactorEventLoop)
     return 0
 
 
