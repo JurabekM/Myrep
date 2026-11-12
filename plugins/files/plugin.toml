@@ -1,0 +1,12 @@
+name = "files"
+version = "0.1.0"
+description = "Fayllar: papka kuzatuvi, indeks, nom bo'yicha qidiruv, asosiy amallar va savat."
+mode = "inprocess"
+heavy = false
+
+[permissions]
+# Kuzatiladigan papkalar (mutlaq yo'llar). Plaginning o'z "library" papkasi har doim bor.
+# Misol: paths = ["D:/Hujjatlar", "C:/Users/men/Downloads"]
+paths = []
+ports = []
+serial = []
