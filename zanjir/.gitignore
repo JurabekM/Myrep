@@ -1,0 +1,29 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+pubspec_overrides.yaml
+coverage/
+*.iml
+.idea/
+
+# Python
+.ruff_cache/
+
+# Maxfiy ma'lumotlar — hech qachon commit qilinmaydi
+.env
+.env.*
+!.env.example
+key.properties
+*.jks
+*.keystore
+*.pem
+
+# Python qamrov hisobotlari
+.coverage
+.coverage.*
+
+# Deploy: muhit fayllari, staging zaxira kaliti, zaxiralar — commit qilinmaydi
+deploy/environments/*.env
+deploy/environments/*.env.tmp
+deploy/environments/*.age-key
+deploy/backups/

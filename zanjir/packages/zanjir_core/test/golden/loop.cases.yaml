@@ -1,0 +1,386 @@
+# "Faza-nol" sirtmog'i. Zs_max = k_corr · U0 / (k_egri · In) · (1 − margin)
+
+- name: LOOP-TN-FINAL — C16, Zs 0,84 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 0.84 }
+  expect: PASS
+  norm: LOOP-TN-FINAL
+
+- name: LOOP-TN-FINAL — C16, aynan Zs_max 1,375 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 1.375 }
+  expect: PASS
+  norm: LOOP-TN-FINAL
+
+- name: LOOP-TN-FINAL — C16, 1,5 Ω, UZO yo'q → FAIL
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 1.5 }
+  expect: FAIL
+  norm: LOOP-TN-FINAL
+  reason: zs_exceeded
+
+- name: LOOP-TN-FINAL — B16, aynan 2,75 Ω
+  node: CAB2
+  type: LOOP_IMPEDANCE
+  values: { pair: L2-PE, zs_ohm: 2.75 }
+  expect: PASS
+  norm: LOOP-TN-FINAL
+
+- name: LOOP-TN-FINAL — B16, 2,8 Ω → FAIL
+  node: CAB2
+  type: LOOP_IMPEDANCE
+  values: { pair: L2-PE, zs_ohm: 2.8 }
+  expect: FAIL
+  norm: LOOP-TN-FINAL
+
+- name: LOOP-TN-FINAL — D10, 1,2 Ω > 1,1 → FAIL
+  node: CAB3
+  type: LOOP_IMPEDANCE
+  values: { pair: L3-PE, zs_ohm: 1.2 }
+  expect: FAIL
+  norm: LOOP-TN-FINAL
+
+- name: yuqorida UZO bor, Zs oshgan → NEEDS_REVIEW
+  node: SOCK4
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 2.0 }
+  expect: NEEDS_REVIEW
+  norm: LOOP-TN-FINAL
+  reason: zs_exceeded_rcd_present
+
+- name: UZO bor, Zs normada → PASS
+  node: SOCK4
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 0.9 }
+  expect: PASS
+  norm: LOOP-TN-FINAL
+
+- name: RCBO C16 — Zs normada
+  node: CAB5
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 1.0 }
+  expect: PASS
+  norm: LOOP-TN-FINAL
+
+- name: RCBO C16 — Zs oshgan → NEEDS_REVIEW (RCBO ichida UZO)
+  node: CAB5
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 3.0 }
+  expect: NEEDS_REVIEW
+  reason: zs_exceeded_rcd_present
+
+- name: saqlagich (FUSE) → NEEDS_REVIEW
+  node: CAB6
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: fuse_protection
+
+- name: avtomatda egri chiziq yo'q → NEEDS_REVIEW
+  node: CAB9
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: device_attrs_missing
+
+- name: avtomatda In yo'q → NEEDS_REVIEW
+  node: CAB1
+  type: LOOP_IMPEDANCE
+  attrs: { QF1: { in_a: null } }
+  values: { pair: L1-PE, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: device_attrs_missing
+
+- name: noma'lum egri chiziq (K) → NEEDS_REVIEW
+  node: CAB1
+  type: LOOP_IMPEDANCE
+  attrs: { QF1: { curve: K } }
+  values: { pair: L1-PE, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: curve_unknown
+
+- name: himoya apparatisiz yo'l → NEEDS_REVIEW
+  node: CAB10
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 0.1 }
+  expect: NEEDS_REVIEW
+  reason: unprotected_path
+
+- name: manbaga ulanmagan tugun → himoya apparati topilmadi
+  node: CAB1
+  type: LOOP_IMPEDANCE
+  remove_edges: [[BUS1, QF1]]
+  values: { pair: L1-PE, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: no_protective_device
+
+- name: ikki kirish (C16 va B16) — ikkalasidan ham kichik → PASS
+  node: CAB12
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 1.0 }
+  expect: PASS
+  norm: LOOP-TN-FINAL
+
+- name: ikki kirish — C16 dan katta, B16 dan kichik → NEEDS_REVIEW
+  node: CAB12
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 2.0 }
+  expect: NEEDS_REVIEW
+  reason: zs_ambiguous_multiple_feeds
+
+- name: ikki kirish — ikkalasidan ham katta → FAIL
+  node: CAB12
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 3.0 }
+  expect: FAIL
+  reason: zs_exceeded
+
+- name: L-N juftligi → NEEDS_REVIEW
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-N, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: loop_pair_not_pe
+
+- name: TN-C da L-PEN qabul qilinadi
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { earthing_system: TN-C }
+  values: { pair: L1-PEN, zs_ohm: 0.5 }
+  expect: PASS
+  norm: LOOP-TN-FINAL
+
+- name: juftlik ko'rsatilmagan → NEEDS_REVIEW
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  values: { zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: value_missing
+
+- name: zs_ohm yo'q → NEEDS_REVIEW
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE }
+  expect: NEEDS_REVIEW
+  reason: value_missing
+
+- name: zs_ohm satr → NEEDS_REVIEW
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: "0.5" }
+  expect: NEEDS_REVIEW
+  reason: invalid_value
+
+- name: circuit_role yo'q → normani aniqlab bo'lmaydi
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  attrs: { SOCK1: { circuit_role: null } }
+  values: { pair: L1-PE, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: norm_applicability_unknown
+
+- name: obyekt U0 kiritilmagan → normani aniqlab bo'lmaydi
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: null }
+  values: { pair: L1-PE, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: norm_applicability_unknown
+
+- name: yerga ulash tizimi kiritilmagan → normani aniqlab bo'lmaydi
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { earthing_system: null }
+  values: { pair: L1-PE, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: norm_applicability_unknown
+
+- name: TT tizimi — sirtmoq normasi yo'q
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { earthing_system: TT }
+  values: { pair: L1-PE, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: no_matching_norm
+
+# U0 = 220–230 V — AI ko'rigi M1 (2026-10-30, muhandis tasdiqlashi kerak): IEC 60038 / ГОСТ Р 50571.3 jadval 41.1. C16: Zs_max = 230/160.
+- name: U0 = 230 V — LOOP-TN-FINAL, aynan 1,4375 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 230 }
+  values: { pair: L1-PE, zs_ohm: 1.4375 }
+  expect: PASS
+  norm: LOOP-TN-FINAL
+
+- name: U0 = 230 V — 1,45 Ω → FAIL
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 230 }
+  values: { pair: L1-PE, zs_ohm: 1.45 }
+  expect: FAIL
+  norm: LOOP-TN-FINAL
+
+- name: U0 = 231 V — hech bir diapazonda yo'q
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 231 }
+  values: { pair: L1-PE, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: no_matching_norm
+
+- name: k_corr 0,8 — Zs_max 1,1 Ω, 1,2 → FAIL
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  settings: { k_corr: 0.8 }
+  values: { pair: L1-PE, zs_ohm: 1.2 }
+  expect: FAIL
+  norm: LOOP-TN-FINAL
+
+- name: margin_pct 20 — Zs_max 1,1 Ω, aynan chegarada → PASS
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  norm_set: { margin_pct: 20 }
+  values: { pair: L1-PE, zs_ohm: 1.1 }
+  expect: PASS
+  norm: LOOP-TN-FINAL
+
+- name: LOOP-TN-DIST — C63, 0,2 Ω
+  node: CABD
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 0.2 }
+  expect: PASS
+  norm: LOOP-TN-DIST
+
+- name: LOOP-TN-DIST — aynan 220/630 Ω (suzuvchi nuqta)
+  node: CABD
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 0.349206349206349 }
+  expect: PASS
+  norm: LOOP-TN-DIST
+
+- name: LOOP-TN-DIST — 0,4 Ω → FAIL
+  node: CABD
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 0.4 }
+  expect: FAIL
+  norm: LOOP-TN-DIST
+
+- name: LOOP-TN-DIST — shina orqali C63 topiladi
+  node: CABP
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 0.3 }
+  expect: PASS
+  norm: LOOP-TN-DIST
+
+- name: LOOP-TN-OTHER-U0-127 — 0,7 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 127 }
+  values: { pair: L1-PE, zs_ohm: 0.7 }
+  expect: PASS
+  norm: LOOP-TN-OTHER-U0-127
+
+- name: LOOP-TN-OTHER-U0-127 — aynan 0,79375 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 127 }
+  values: { pair: L1-PE, zs_ohm: 0.79375 }
+  expect: PASS
+  norm: LOOP-TN-OTHER-U0-127
+
+- name: LOOP-TN-OTHER-U0-127 — 0,8 Ω → FAIL
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 127 }
+  values: { pair: L1-PE, zs_ohm: 0.8 }
+  expect: FAIL
+  norm: LOOP-TN-OTHER-U0-127
+
+- name: LOOP-TN-OTHER-U0-380 — 2,0 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 380 }
+  values: { pair: L1-PE, zs_ohm: 2.0 }
+  expect: PASS
+  norm: LOOP-TN-OTHER-U0-380
+
+- name: LOOP-TN-OTHER-U0-380 — aynan 2,375 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 380 }
+  values: { pair: L1-PE, zs_ohm: 2.375 }
+  expect: PASS
+  norm: LOOP-TN-OTHER-U0-380
+
+- name: LOOP-TN-OTHER-U0-380 — 2,4 Ω → FAIL
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 380 }
+  values: { pair: L1-PE, zs_ohm: 2.4 }
+  expect: FAIL
+  norm: LOOP-TN-OTHER-U0-380
+
+- name: LOOP-TN-OTHER-U0-380 — U0 400 (380–400 V), aynan 2,5 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 400 }
+  values: { pair: L1-PE, zs_ohm: 2.5 }
+  expect: PASS
+  norm: LOOP-TN-OTHER-U0-380
+
+- name: LOOP-TN-OTHER-U0-380 — U0 400, 2,6 Ω → FAIL
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 400 }
+  values: { pair: L1-PE, zs_ohm: 2.6 }
+  expect: FAIL
+  norm: LOOP-TN-OTHER-U0-380
+
+- name: LOOP-TN-OTHER-U0-GT380 — U0 415, 1,0 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 415 }
+  values: { pair: L1-PE, zs_ohm: 1.0 }
+  expect: PASS
+  norm: LOOP-TN-OTHER-U0-GT380
+
+- name: LOOP-TN-OTHER-U0-GT380 — U0 415, aynan 2,59375 Ω
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 415 }
+  values: { pair: L1-PE, zs_ohm: 2.59375 }
+  expect: PASS
+  norm: LOOP-TN-OTHER-U0-GT380
+
+- name: LOOP-TN-OTHER-U0-GT380 — U0 415, 2,6 Ω → FAIL
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 415 }
+  values: { pair: L1-PE, zs_ohm: 2.6 }
+  expect: FAIL
+  norm: LOOP-TN-OTHER-U0-GT380
+
+- name: U0 = 400,5 V — diapazonlar orasida (oraliq) → NEEDS_REVIEW
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  site: { u0_volts: 400.5 }
+  values: { pair: L1-PE, zs_ohm: 1.0 }
+  expect: NEEDS_REVIEW
+  reason: no_matching_norm
+
+- name: juftlik satr emas → NEEDS_REVIEW
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  values: { pair: 1, zs_ohm: 0.5 }
+  expect: NEEDS_REVIEW
+  reason: invalid_value
+
+- name: Zs = 0 Ω (fizik jihatdan mumkin emas) → NEEDS_REVIEW, PASS emas
+  node: SOCK1
+  type: LOOP_IMPEDANCE
+  values: { pair: L1-PE, zs_ohm: 0 }
+  expect: NEEDS_REVIEW
+  reason: invalid_value

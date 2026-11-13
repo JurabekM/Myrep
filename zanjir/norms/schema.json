@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zanjir.uz/schemas/norm_set.json",
+  "title": "ZANJIR norm_set",
+  "description": "Normalar to'plami. Barcha chegaraviy qiymatlar faqat shu yerda saqlanadi (CLAUDE.md, 4-qoida).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "version", "reviewed_by", "reviewed_at", "margin_pct", "trip_multipliers", "norms"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "reviewed_by": {
+      "description": "Litsenziyali muhandis F.I.Sh. va guvohnoma raqami. Claude hech qachon to'ldirmaydi.",
+      "type": "string"
+    },
+    "reviewed_at": {
+      "description": "Tekshiruv sanasi (YYYY-MM-DD) yoki bo'sh.",
+      "type": "string",
+      "pattern": "^$|^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "margin_pct": {
+      "description": "Chegaraga xavfsizlik zaxirasi, % (standart 0). Chegara qat'iylashtiriladi.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 50
+    },
+    "trip_multipliers": {
+      "description": "Elektromagnit ajratgich zonasi: Ia = k · In (ADR-0002, S2).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["B", "C", "D", "source", "status"],
+      "properties": {
+        "B": { "type": "number", "exclusiveMinimum": 0 },
+        "C": { "type": "number", "exclusiveMinimum": 0 },
+        "D": { "type": "number", "exclusiveMinimum": 0 },
+        "source": { "$ref": "#/$defs/source" },
+        "status": { "$ref": "#/$defs/status" }
+      }
+    },
+    "norms": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/norm" }
+    }
+  },
+  "$defs": {
+    "status": { "enum": ["source_seen", "needs_verification"] },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["doc", "clause"],
+      "properties": {
+        "doc": { "type": "string", "minLength": 1 },
+        "clause": { "type": "string", "minLength": 1 },
+        "note": { "type": "string" }
+      }
+    },
+    "node_kind": {
+      "enum": [
+        "SRC_GRID", "SRC_TRANSFORMER", "SRC_GENERATOR", "SRC_PV_INVERTER", "SRC_UPS", "SRC_BATTERY", "SRC_CAPACITOR",
+        "BREAKER", "RCD", "RCBO", "FUSE", "SWITCH", "ATS", "CONTACTOR",
+        "BUSBAR", "PANEL", "CABLE", "LOAD", "SOCKET_GROUP", "EARTH_ELECTRODE", "PE_BAR"
+      ]
+    },
+    "earthing_system": { "enum": ["TN-C", "TN-S", "TN-C-S", "TT", "IT"] },
+    "measurement_type": {
+      "enum": ["INSULATION", "LOOP_IMPEDANCE", "RCD_TRIP", "EARTH_RESISTANCE", "CONTINUITY_BONDING"]
+    },
+    "closed_range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" }
+      }
+    },
+    "applies_to": {
+      "description": "Qo'llanish sharti. Ko'rsatilmagan maydon = cheklov yo'q. `attrs` / `values` dagi kalit tugunda yoki o'lchovda bo'lmasa — natija NEEDS_REVIEW.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node_kinds"],
+      "properties": {
+        "node_kinds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/node_kind" } },
+        "earthing_systems": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/earthing_system" } },
+        "u0_volts": { "$ref": "#/$defs/closed_range" },
+        "attrs": {
+          "description": "Tugun (yoki yuqoridagi apparat) atributlari: kalit → ruxsat etilgan qiymatlar.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": ["string", "number", "boolean"] }
+          }
+        },
+        "values": {
+          "description": "O'lchov qiymatlari bo'yicha shart (masalan, RCD `multiplier`, yerga ulash `scope`).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": ["string", "number", "boolean"] }
+          }
+        }
+      }
+    },
+    "rule": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type": { "enum": ["min", "max", "max_time_ms"] },
+            "value": { "type": "number", "minimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "min", "max"],
+          "properties": {
+            "type": { "const": "range" },
+            "min": { "type": "number", "minimum": 0 },
+            "max": { "type": "number", "minimum": 0 },
+            "min_inclusive": { "type": "boolean", "default": true },
+            "max_inclusive": { "type": "boolean", "default": true },
+            "relative_to": {
+              "description": "Chegaralar shu kattalikka ko'paytiriladi (masalan, `idn_ma` — UZO nominal differensial toki).",
+              "enum": ["idn_ma"]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value", "factor"],
+          "properties": {
+            "type": { "const": "max_product" },
+            "value": { "type": "number", "exclusiveMinimum": 0 },
+            "factor": {
+              "description": "O'lchangan qiymat ko'paytiriladigan kattalik (ADR-0002, S7).",
+              "enum": ["upstream_rcd_idn_a"]
+            }
+          }
+        }
+      ]
+    },
+    "norm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "measurement_type", "applies_to", "rule", "unit", "source", "status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Z0-9]+(-[A-Z0-9]+)*$" },
+        "title": { "type": "string", "minLength": 1 },
+        "measurement_type": { "$ref": "#/$defs/measurement_type" },
+        "applies_to": { "$ref": "#/$defs/applies_to" },
+        "test_voltage_v": { "type": "number", "exclusiveMinimum": 0 },
+        "rule": { "$ref": "#/$defs/rule" },
+        "unit": { "enum": ["MOhm", "Ohm", "ms", "mA", "V"] },
+        "source": { "$ref": "#/$defs/source" },
+        "status": { "$ref": "#/$defs/status" }
+      }
+    }
+  }
+}

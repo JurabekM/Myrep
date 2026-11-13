@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Myrep dark tokeni `paper`: oyna ochilganda oq "chaqnash" bo'lmasligi uchun -->
+    <color name="zanjir_paper">#262624</color>
+</resources>

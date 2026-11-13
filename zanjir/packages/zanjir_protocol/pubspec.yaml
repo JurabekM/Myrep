@@ -1,0 +1,17 @@
+name: zanjir_protocol
+description: ZANJIR protokoli — payload, deterministik PDF (QR bilan). Sof Dart.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  barcode: ^2.2.9
+  meta: ^1.19.0
+  pdf: ^3.13.1
+  zanjir_core:
+    path: ../zanjir_core
+dev_dependencies:
+  lints: ^6.1.0
+  test: ^1.33.0

@@ -1,0 +1,3996 @@
+{
+  "_meta": {
+    "description": "This file contains a serialized version of schema entities for drift.",
+    "version": "1.3.0"
+  },
+  "options": {
+    "store_date_time_values_as_text": true
+  },
+  "entities": [
+    {
+      "id": 0,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "organization",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "deleted",
+            "getter_name": "deleted",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"deleted\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"deleted\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "name",
+            "getter_name": "name",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "license_no",
+            "getter_name": "licenseNo",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "license_valid_until",
+            "getter_name": "licenseValidUntil",
+            "moor_type": "dateTime",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "references": [
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "site",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "deleted",
+            "getter_name": "deleted",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"deleted\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"deleted\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "name",
+            "getter_name": "name",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "address",
+            "getter_name": "address",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "customer",
+            "getter_name": "customer",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "earthing_system",
+            "getter_name": "earthingSystem",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "earthingConverter",
+              "dart_type_name": "EarthingSystem"
+            }
+          },
+          {
+            "name": "u0_volts",
+            "getter_name": "u0Volts",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "references": [
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "app_user",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "deleted",
+            "getter_name": "deleted",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"deleted\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"deleted\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "full_name",
+            "getter_name": "fullName",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "phone",
+            "getter_name": "phone",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "role",
+            "getter_name": "role",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "check": {
+                  "dart_expression": {
+                    "elements": [
+                      {
+                        "lexeme": "role",
+                        "tag": "role"
+                      },
+                      ".isIn(const ['ADMIN','LEAD','ENGINEER','VIEWER'])"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "safety_group",
+            "getter_name": "safetyGroup",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "check": {
+                  "dart_expression": {
+                    "elements": [
+                      {
+                        "lexeme": "safetyGroup",
+                        "tag": "safetyGroup"
+                      },
+                      ".isIn(const ['I','II','III','IV','V'])"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "references": [
+        0,
+        1,
+        2
+      ],
+      "type": "table",
+      "data": {
+        "name": "measurement_session",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "deleted",
+            "getter_name": "deleted",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"deleted\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"deleted\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "site_id",
+            "getter_name": "siteId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES site (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES site (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "site",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "kind",
+            "getter_name": "kind",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "sessionKindConverter",
+              "dart_type_name": "SessionKind"
+            }
+          },
+          {
+            "name": "engineer_id",
+            "getter_name": "engineerId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES app_user (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES app_user (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "app_user",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "ambient_temp_c",
+            "getter_name": "ambientTempC",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "humidity_pct",
+            "getter_name": "humidityPct",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "started_at",
+            "getter_name": "startedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "closed_at",
+            "getter_name": "closedAt",
+            "moor_type": "dateTime",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "references": [
+        0,
+        1
+      ],
+      "type": "table",
+      "data": {
+        "name": "node",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "deleted",
+            "getter_name": "deleted",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"deleted\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"deleted\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "site_id",
+            "getter_name": "siteId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES site (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES site (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "site",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "kind",
+            "getter_name": "kind",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "nodeKindConverter",
+              "dart_type_name": "NodeKind"
+            }
+          },
+          {
+            "name": "label",
+            "getter_name": "label",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "panel_id",
+            "getter_name": "panelId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES node (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES node (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "node",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "state",
+            "getter_name": "state",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "switchStateConverter",
+              "dart_type_name": "SwitchState"
+            }
+          },
+          {
+            "name": "attrs",
+            "getter_name": "attrs",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('\\'{}\\'')",
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "const JsonMapConverter()",
+              "dart_type_name": "Map<String, Object?>"
+            }
+          },
+          {
+            "name": "verified",
+            "getter_name": "verified",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"verified\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"verified\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "x",
+            "getter_name": "x",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "y",
+            "getter_name": "y",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "references": [
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "instrument",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "deleted",
+            "getter_name": "deleted",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"deleted\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"deleted\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "kind",
+            "getter_name": "kind",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "model",
+            "getter_name": "model",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "serial_no",
+            "getter_name": "serialNo",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "verification_cert_no",
+            "getter_name": "verificationCertNo",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "verified_until",
+            "getter_name": "verifiedUntil",
+            "moor_type": "dateTime",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "references": [
+        0,
+        3,
+        4,
+        5
+      ],
+      "type": "table",
+      "data": {
+        "name": "measurement",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "session_id",
+            "getter_name": "sessionId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES measurement_session (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES measurement_session (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "measurement_session",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "node_id",
+            "getter_name": "nodeId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES node (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES node (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "node",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "type",
+            "getter_name": "type",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "measurementTypeConverter",
+              "dart_type_name": "MeasurementType"
+            }
+          },
+          {
+            "name": "instrument_id",
+            "getter_name": "instrumentId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES instrument (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES instrument (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "instrument",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "values",
+            "getter_name": "values",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "const JsonMapConverter()",
+              "dart_type_name": "Map<String, Object?>"
+            }
+          },
+          {
+            "name": "entered_via",
+            "getter_name": "enteredVia",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "enteredViaConverter",
+              "dart_type_name": "EnteredVia"
+            }
+          },
+          {
+            "name": "verdict",
+            "getter_name": "verdict",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "verdictConverter",
+              "dart_type_name": "Verdict"
+            }
+          },
+          {
+            "name": "norm_id",
+            "getter_name": "normId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "norm_set_version",
+            "getter_name": "normSetVersion",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "eval_detail",
+            "getter_name": "evalDetail",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "const JsonMapConverter()",
+              "dart_type_name": "Map<String, Object?>"
+            }
+          },
+          {
+            "name": "supersedes_id",
+            "getter_name": "supersedesId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "defaultConstraints": "UNIQUE REFERENCES measurement (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "UNIQUE REFERENCES measurement (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "unique",
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "measurement",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "references": [
+        6
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 6,
+        "references_in_body": [
+          6
+        ],
+        "name": "measurement_append_only_update",
+        "sql": "CREATE TRIGGER measurement_append_only_update BEFORE UPDATE ON measurement\nBEGIN SELECT RAISE(ABORT, 'append_only: measurement'); END;"
+      }
+    },
+    {
+      "id": 8,
+      "references": [
+        6
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 6,
+        "references_in_body": [
+          6
+        ],
+        "name": "measurement_append_only_delete",
+        "sql": "CREATE TRIGGER measurement_append_only_delete BEFORE DELETE ON measurement\nBEGIN SELECT RAISE(ABORT, 'append_only: measurement'); END;"
+      }
+    },
+    {
+      "id": 9,
+      "references": [
+        0,
+        2
+      ],
+      "type": "table",
+      "data": {
+        "name": "device",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "deleted",
+            "getter_name": "deleted",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"deleted\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"deleted\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "user_id",
+            "getter_name": "userId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES app_user (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES app_user (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "app_user",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "public_key_ed25519",
+            "getter_name": "publicKeyEd25519",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "sig_alg",
+            "getter_name": "sigAlg",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "registered_at",
+            "getter_name": "registeredAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "revoked_at",
+            "getter_name": "revokedAt",
+            "moor_type": "dateTime",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "references": [
+        0,
+        3,
+        2,
+        9
+      ],
+      "type": "table",
+      "data": {
+        "name": "protocol",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "session_id",
+            "getter_name": "sessionId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES measurement_session (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES measurement_session (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "measurement_session",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "number",
+            "getter_name": "number",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "payload_sha256",
+            "getter_name": "payloadSha256",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "pdf_sha256",
+            "getter_name": "pdfSha256",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "signed_by",
+            "getter_name": "signedBy",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES app_user (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES app_user (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "app_user",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "device_id",
+            "getter_name": "deviceId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES device (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES device (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "device",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "signature",
+            "getter_name": "signature",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "sig_alg",
+            "getter_name": "sigAlg",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "qr_token",
+            "getter_name": "qrToken",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "UNIQUE",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "UNIQUE"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "unique"
+            ]
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ],
+        "unique_keys": [
+          [
+            "org_id",
+            "number"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "references": [
+        10
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 10,
+        "references_in_body": [
+          10
+        ],
+        "name": "protocol_append_only_update",
+        "sql": "CREATE TRIGGER protocol_append_only_update BEFORE UPDATE ON protocol\nBEGIN SELECT RAISE(ABORT, 'append_only: protocol'); END;"
+      }
+    },
+    {
+      "id": 12,
+      "references": [
+        10
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 10,
+        "references_in_body": [
+          10
+        ],
+        "name": "protocol_append_only_delete",
+        "sql": "CREATE TRIGGER protocol_append_only_delete BEFORE DELETE ON protocol\nBEGIN SELECT RAISE(ABORT, 'append_only: protocol'); END;"
+      }
+    },
+    {
+      "id": 13,
+      "references": [
+        0,
+        10
+      ],
+      "type": "table",
+      "data": {
+        "name": "protocol_document",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "protocol_id",
+            "getter_name": "protocolId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "UNIQUE REFERENCES protocol (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "UNIQUE REFERENCES protocol (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "unique",
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "protocol",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "payload_json",
+            "getter_name": "payloadJson",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "pdf",
+            "getter_name": "pdf",
+            "moor_type": "blob",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "references": [
+        13
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 13,
+        "references_in_body": [
+          13
+        ],
+        "name": "protocol_document_append_only_update",
+        "sql": "CREATE TRIGGER protocol_document_append_only_update BEFORE UPDATE ON protocol_document\nBEGIN SELECT RAISE(ABORT, 'append_only: protocol_document'); END;"
+      }
+    },
+    {
+      "id": 15,
+      "references": [
+        13
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 13,
+        "references_in_body": [
+          13
+        ],
+        "name": "protocol_document_append_only_delete",
+        "sql": "CREATE TRIGGER protocol_document_append_only_delete BEFORE DELETE ON protocol_document\nBEGIN SELECT RAISE(ABORT, 'append_only: protocol_document'); END;"
+      }
+    },
+    {
+      "id": 16,
+      "references": [
+        0,
+        9,
+        2
+      ],
+      "type": "table",
+      "data": {
+        "name": "audit_event",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "device_id",
+            "getter_name": "deviceId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES device (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES device (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "device",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "seq",
+            "getter_name": "seq",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "prev_hash",
+            "getter_name": "prevHash",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "event_hash",
+            "getter_name": "eventHash",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "UNIQUE",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "UNIQUE"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "unique"
+            ]
+          },
+          {
+            "name": "actor_id",
+            "getter_name": "actorId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES app_user (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES app_user (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "app_user",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "event_type",
+            "getter_name": "eventType",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "entity_id",
+            "getter_name": "entityId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "payload_hash",
+            "getter_name": "payloadHash",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "device_sig",
+            "getter_name": "deviceSig",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "sig_alg",
+            "getter_name": "sigAlg",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "event_at",
+            "getter_name": "eventAt",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ],
+        "unique_keys": [
+          [
+            "device_id",
+            "seq"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "references": [
+        16
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 16,
+        "references_in_body": [
+          16
+        ],
+        "name": "audit_event_append_only_update",
+        "sql": "CREATE TRIGGER audit_event_append_only_update BEFORE UPDATE ON audit_event\nBEGIN SELECT RAISE(ABORT, 'append_only: audit_event'); END;"
+      }
+    },
+    {
+      "id": 18,
+      "references": [
+        16
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 16,
+        "references_in_body": [
+          16
+        ],
+        "name": "audit_event_append_only_delete",
+        "sql": "CREATE TRIGGER audit_event_append_only_delete BEFORE DELETE ON audit_event\nBEGIN SELECT RAISE(ABORT, 'append_only: audit_event'); END;"
+      }
+    },
+    {
+      "id": 19,
+      "references": [
+        4
+      ],
+      "type": "index",
+      "data": {
+        "on": 4,
+        "name": "node_site_idx",
+        "sql": "CREATE INDEX node_site_idx ON node (site_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 20,
+      "references": [
+        0,
+        1,
+        4
+      ],
+      "type": "table",
+      "data": {
+        "name": "edge",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "deleted",
+            "getter_name": "deleted",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"deleted\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"deleted\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "site_id",
+            "getter_name": "siteId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES site (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES site (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "site",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "a_node_id",
+            "getter_name": "aNodeId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES node (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES node (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "node",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "b_node_id",
+            "getter_name": "bNodeId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES node (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES node (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "node",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "conductors",
+            "getter_name": "conductors",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "references": [
+        20
+      ],
+      "type": "index",
+      "data": {
+        "on": 20,
+        "name": "edge_site_idx",
+        "sql": "CREATE INDEX edge_site_idx ON edge (site_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 22,
+      "references": [
+        6
+      ],
+      "type": "index",
+      "data": {
+        "on": 6,
+        "name": "measurement_session_idx",
+        "sql": "CREATE INDEX measurement_session_idx ON measurement (session_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 23,
+      "references": [
+        16
+      ],
+      "type": "index",
+      "data": {
+        "on": 16,
+        "name": "audit_event_entity_idx",
+        "sql": "CREATE INDEX audit_event_entity_idx ON audit_event (entity_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 24,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "local_pref",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "key",
+            "getter_name": "key",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "value",
+            "getter_name": "value",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "key"
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "sync_outbox",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "PRIMARY KEY AUTOINCREMENT",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "PRIMARY KEY AUTOINCREMENT"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "auto-increment"
+            ]
+          },
+          {
+            "name": "table_name",
+            "getter_name": "tableName_",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "row_id",
+            "getter_name": "rowId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "op_id",
+            "getter_name": "opId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "unique_keys": [
+          [
+            "table_name",
+            "row_id"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "references": [
+        0,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 0,
+        "references_in_body": [
+          0,
+          24,
+          25
+        ],
+        "name": "organization_outbox_ins",
+        "sql": "CREATE TRIGGER organization_outbox_ins AFTER INSERT ON organization\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('organization', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 27,
+      "references": [
+        0,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 0,
+        "references_in_body": [
+          0,
+          24,
+          25
+        ],
+        "name": "organization_outbox_upd",
+        "sql": "CREATE TRIGGER organization_outbox_upd AFTER UPDATE ON organization\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('organization', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 28,
+      "references": [
+        5,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 5,
+        "references_in_body": [
+          5,
+          24,
+          25
+        ],
+        "name": "instrument_outbox_ins",
+        "sql": "CREATE TRIGGER instrument_outbox_ins AFTER INSERT ON instrument\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('instrument', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 29,
+      "references": [
+        5,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 5,
+        "references_in_body": [
+          5,
+          24,
+          25
+        ],
+        "name": "instrument_outbox_upd",
+        "sql": "CREATE TRIGGER instrument_outbox_upd AFTER UPDATE ON instrument\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('instrument', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 30,
+      "references": [
+        1,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 1,
+        "references_in_body": [
+          1,
+          24,
+          25
+        ],
+        "name": "site_outbox_ins",
+        "sql": "CREATE TRIGGER site_outbox_ins AFTER INSERT ON site\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('site', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 31,
+      "references": [
+        1,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 1,
+        "references_in_body": [
+          1,
+          24,
+          25
+        ],
+        "name": "site_outbox_upd",
+        "sql": "CREATE TRIGGER site_outbox_upd AFTER UPDATE ON site\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('site', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 32,
+      "references": [
+        4,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 4,
+        "references_in_body": [
+          4,
+          24,
+          25
+        ],
+        "name": "node_outbox_ins",
+        "sql": "CREATE TRIGGER node_outbox_ins AFTER INSERT ON node\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('node', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 33,
+      "references": [
+        4,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 4,
+        "references_in_body": [
+          4,
+          24,
+          25
+        ],
+        "name": "node_outbox_upd",
+        "sql": "CREATE TRIGGER node_outbox_upd AFTER UPDATE ON node\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('node', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 34,
+      "references": [
+        20,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 20,
+        "references_in_body": [
+          20,
+          24,
+          25
+        ],
+        "name": "edge_outbox_ins",
+        "sql": "CREATE TRIGGER edge_outbox_ins AFTER INSERT ON edge\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('edge', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 35,
+      "references": [
+        20,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 20,
+        "references_in_body": [
+          20,
+          24,
+          25
+        ],
+        "name": "edge_outbox_upd",
+        "sql": "CREATE TRIGGER edge_outbox_upd AFTER UPDATE ON edge\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('edge', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 36,
+      "references": [
+        3,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 3,
+        "references_in_body": [
+          3,
+          24,
+          25
+        ],
+        "name": "measurement_session_outbox_ins",
+        "sql": "CREATE TRIGGER measurement_session_outbox_ins AFTER INSERT ON measurement_session\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('measurement_session', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 37,
+      "references": [
+        3,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 3,
+        "references_in_body": [
+          3,
+          24,
+          25
+        ],
+        "name": "measurement_session_outbox_upd",
+        "sql": "CREATE TRIGGER measurement_session_outbox_upd AFTER UPDATE ON measurement_session\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('measurement_session', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 38,
+      "references": [
+        6,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 6,
+        "references_in_body": [
+          6,
+          24,
+          25
+        ],
+        "name": "measurement_outbox_ins",
+        "sql": "CREATE TRIGGER measurement_outbox_ins AFTER INSERT ON measurement\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('measurement', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 39,
+      "references": [
+        10,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 10,
+        "references_in_body": [
+          10,
+          24,
+          25
+        ],
+        "name": "protocol_outbox_ins",
+        "sql": "CREATE TRIGGER protocol_outbox_ins AFTER INSERT ON protocol\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('protocol', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 40,
+      "references": [
+        13,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 13,
+        "references_in_body": [
+          13,
+          24,
+          25
+        ],
+        "name": "protocol_document_outbox_ins",
+        "sql": "CREATE TRIGGER protocol_document_outbox_ins AFTER INSERT ON protocol_document\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('protocol_document', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 41,
+      "references": [
+        16,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 16,
+        "references_in_body": [
+          16,
+          24,
+          25
+        ],
+        "name": "audit_event_outbox_ins",
+        "sql": "CREATE TRIGGER audit_event_outbox_ins AFTER INSERT ON audit_event\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('audit_event', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 42,
+      "references": [
+        0,
+        1,
+        2
+      ],
+      "type": "table",
+      "data": {
+        "name": "isolation_plan",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "deleted",
+            "getter_name": "deleted",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"deleted\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"deleted\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "site_id",
+            "getter_name": "siteId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES site (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES site (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "site",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "target_node_ids",
+            "getter_name": "targetNodeIds",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "const JsonListConverter()",
+              "dart_type_name": "List<Object?>"
+            }
+          },
+          {
+            "name": "solver_version",
+            "getter_name": "solverVersion",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "graph_snapshot_hash",
+            "getter_name": "graphSnapshotHash",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "steps",
+            "getter_name": "steps",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "const JsonListConverter()",
+              "dart_type_name": "List<Object?>"
+            }
+          },
+          {
+            "name": "warnings",
+            "getter_name": "warnings",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "const JsonListConverter()",
+              "dart_type_name": "List<Object?>"
+            }
+          },
+          {
+            "name": "status",
+            "getter_name": "status",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "check": {
+                  "dart_expression": {
+                    "elements": [
+                      {
+                        "lexeme": "status",
+                        "tag": "status"
+                      },
+                      ".isIn(const ['DRAFT','APPROVED','EXECUTED','CANCELLED','STALE'])"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "approved_by",
+            "getter_name": "approvedBy",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES app_user (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES app_user (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "app_user",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 43,
+      "references": [
+        42,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 42,
+        "references_in_body": [
+          42,
+          24,
+          25
+        ],
+        "name": "isolation_plan_outbox_ins",
+        "sql": "CREATE TRIGGER isolation_plan_outbox_ins AFTER INSERT ON isolation_plan\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('isolation_plan', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 44,
+      "references": [
+        42,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 42,
+        "references_in_body": [
+          42,
+          24,
+          25
+        ],
+        "name": "isolation_plan_outbox_upd",
+        "sql": "CREATE TRIGGER isolation_plan_outbox_upd AFTER UPDATE ON isolation_plan\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('isolation_plan', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 45,
+      "references": [
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "norm_set",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "deleted",
+            "getter_name": "deleted",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"deleted\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"deleted\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "version",
+            "getter_name": "version",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "sha256",
+            "getter_name": "sha256",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "yaml",
+            "getter_name": "yaml",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "reviewed_by",
+            "getter_name": "reviewedBy",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "reviewed_at",
+            "getter_name": "reviewedAt",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ],
+        "unique_keys": [
+          [
+            "org_id",
+            "version"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 46,
+      "references": [
+        45,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 45,
+        "references_in_body": [
+          45,
+          24,
+          25
+        ],
+        "name": "norm_set_outbox_ins",
+        "sql": "CREATE TRIGGER norm_set_outbox_ins AFTER INSERT ON norm_set\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('norm_set', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 47,
+      "references": [
+        45,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 45,
+        "references_in_body": [
+          45,
+          24,
+          25
+        ],
+        "name": "norm_set_outbox_upd",
+        "sql": "CREATE TRIGGER norm_set_outbox_upd AFTER UPDATE ON norm_set\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('norm_set', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 48,
+      "references": [
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "org_setting",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "dateTime",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rev",
+            "getter_name": "rev",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "org_id",
+            "getter_name": "orgId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES organization (id)",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES organization (id)"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "organization",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "k_corr",
+            "getter_name": "kCorr",
+            "moor_type": "double",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('1.0')",
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "check": {
+                  "dart_expression": {
+                    "elements": [
+                      {
+                        "lexeme": "ComparableExpr",
+                        "import_uri": "package:drift/src/runtime/query_builder/query_builder.dart"
+                      },
+                      "(",
+                      {
+                        "lexeme": "kCorr",
+                        "tag": "kCorr"
+                      },
+                      ").isBiggerThanValue(0) & ",
+                      {
+                        "lexeme": "ComparableExpr",
+                        "import_uri": "package:drift/src/runtime/query_builder/query_builder.dart"
+                      },
+                      "(",
+                      {
+                        "lexeme": "kCorr",
+                        "tag": "kCorr"
+                      },
+                      ").isSmallerOrEqualValue(1)"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "margin_pct",
+            "getter_name": "marginPct",
+            "moor_type": "double",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('0.0')",
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "check": {
+                  "dart_expression": {
+                    "elements": [
+                      {
+                        "lexeme": "ComparableExpr",
+                        "import_uri": "package:drift/src/runtime/query_builder/query_builder.dart"
+                      },
+                      "(",
+                      {
+                        "lexeme": "marginPct",
+                        "tag": "marginPct"
+                      },
+                      ").isBetweenValues(0,50)"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "active_norm_set_version",
+            "getter_name": "activeNormSetVersion",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ],
+        "unique_keys": [
+          [
+            "org_id"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 49,
+      "references": [
+        48,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 48,
+        "references_in_body": [
+          48,
+          24,
+          25
+        ],
+        "name": "org_setting_outbox_ins",
+        "sql": "CREATE TRIGGER org_setting_outbox_ins AFTER INSERT ON org_setting\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('org_setting', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    },
+    {
+      "id": 50,
+      "references": [
+        48,
+        24,
+        25
+      ],
+      "type": "trigger",
+      "data": {
+        "on": 48,
+        "references_in_body": [
+          48,
+          24,
+          25
+        ],
+        "name": "org_setting_outbox_upd",
+        "sql": "CREATE TRIGGER org_setting_outbox_upd AFTER UPDATE ON org_setting\nWHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying')\nBEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('org_setting', NEW.id, lower(hex(randomblob(16)))); END;"
+      }
+    }
+  ],
+  "fixed_sql": [
+    {
+      "name": "organization",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"organization\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted\" IN (0, 1)), \"name\" TEXT NOT NULL, \"license_no\" TEXT NULL, \"license_valid_until\" TEXT NULL, PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "site",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"site\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted\" IN (0, 1)), \"name\" TEXT NOT NULL, \"address\" TEXT NULL, \"customer\" TEXT NULL, \"earthing_system\" TEXT NULL, \"u0_volts\" REAL NULL, PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "app_user",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"app_user\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted\" IN (0, 1)), \"full_name\" TEXT NOT NULL, \"phone\" TEXT NOT NULL, \"role\" TEXT NOT NULL CHECK(\"role\" IN ('ADMIN', 'LEAD', 'ENGINEER', 'VIEWER')), \"safety_group\" TEXT NULL CHECK(\"safety_group\" IN ('I', 'II', 'III', 'IV', 'V')), PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "measurement_session",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"measurement_session\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted\" IN (0, 1)), \"site_id\" TEXT NOT NULL REFERENCES site (id), \"kind\" TEXT NOT NULL, \"engineer_id\" TEXT NOT NULL REFERENCES app_user (id), \"ambient_temp_c\" REAL NULL, \"humidity_pct\" REAL NULL, \"started_at\" TEXT NOT NULL, \"closed_at\" TEXT NULL, PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "node",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"node\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted\" IN (0, 1)), \"site_id\" TEXT NOT NULL REFERENCES site (id), \"kind\" TEXT NOT NULL, \"label\" TEXT NOT NULL, \"panel_id\" TEXT NULL REFERENCES node (id), \"state\" TEXT NULL, \"attrs\" TEXT NOT NULL DEFAULT '{}', \"verified\" INTEGER NOT NULL DEFAULT 0 CHECK (\"verified\" IN (0, 1)), \"x\" REAL NULL, \"y\" REAL NULL, PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "instrument",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"instrument\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted\" IN (0, 1)), \"kind\" TEXT NOT NULL, \"model\" TEXT NOT NULL, \"serial_no\" TEXT NOT NULL, \"verification_cert_no\" TEXT NULL, \"verified_until\" TEXT NULL, PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "measurement",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"measurement\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"session_id\" TEXT NOT NULL REFERENCES measurement_session (id), \"node_id\" TEXT NOT NULL REFERENCES node (id), \"type\" TEXT NOT NULL, \"instrument_id\" TEXT NOT NULL REFERENCES instrument (id), \"values\" TEXT NOT NULL, \"entered_via\" TEXT NOT NULL, \"verdict\" TEXT NOT NULL, \"norm_id\" TEXT NULL, \"norm_set_version\" TEXT NOT NULL, \"eval_detail\" TEXT NOT NULL, \"supersedes_id\" TEXT NULL UNIQUE REFERENCES measurement (id), PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "measurement_append_only_update",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER measurement_append_only_update BEFORE UPDATE ON measurement BEGIN SELECT RAISE (ABORT, 'append_only: measurement');END"
+        }
+      ]
+    },
+    {
+      "name": "measurement_append_only_delete",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER measurement_append_only_delete BEFORE DELETE ON measurement BEGIN SELECT RAISE (ABORT, 'append_only: measurement');END"
+        }
+      ]
+    },
+    {
+      "name": "device",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"device\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted\" IN (0, 1)), \"user_id\" TEXT NOT NULL REFERENCES app_user (id), \"public_key_ed25519\" TEXT NOT NULL, \"sig_alg\" TEXT NOT NULL, \"registered_at\" TEXT NOT NULL, \"revoked_at\" TEXT NULL, PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "protocol",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"protocol\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"session_id\" TEXT NOT NULL REFERENCES measurement_session (id), \"number\" TEXT NOT NULL, \"payload_sha256\" TEXT NOT NULL, \"pdf_sha256\" TEXT NOT NULL, \"signed_by\" TEXT NOT NULL REFERENCES app_user (id), \"device_id\" TEXT NOT NULL REFERENCES device (id), \"signature\" TEXT NOT NULL, \"sig_alg\" TEXT NOT NULL, \"qr_token\" TEXT NOT NULL UNIQUE, PRIMARY KEY (\"id\"), UNIQUE (\"org_id\", \"number\"));"
+        }
+      ]
+    },
+    {
+      "name": "protocol_append_only_update",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER protocol_append_only_update BEFORE UPDATE ON protocol BEGIN SELECT RAISE (ABORT, 'append_only: protocol');END"
+        }
+      ]
+    },
+    {
+      "name": "protocol_append_only_delete",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER protocol_append_only_delete BEFORE DELETE ON protocol BEGIN SELECT RAISE (ABORT, 'append_only: protocol');END"
+        }
+      ]
+    },
+    {
+      "name": "protocol_document",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"protocol_document\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"protocol_id\" TEXT NOT NULL UNIQUE REFERENCES protocol (id), \"payload_json\" TEXT NOT NULL, \"pdf\" BLOB NOT NULL, PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "protocol_document_append_only_update",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER protocol_document_append_only_update BEFORE UPDATE ON protocol_document BEGIN SELECT RAISE (ABORT, 'append_only: protocol_document');END"
+        }
+      ]
+    },
+    {
+      "name": "protocol_document_append_only_delete",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER protocol_document_append_only_delete BEFORE DELETE ON protocol_document BEGIN SELECT RAISE (ABORT, 'append_only: protocol_document');END"
+        }
+      ]
+    },
+    {
+      "name": "audit_event",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"audit_event\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"device_id\" TEXT NOT NULL REFERENCES device (id), \"seq\" INTEGER NOT NULL, \"prev_hash\" TEXT NOT NULL, \"event_hash\" TEXT NOT NULL UNIQUE, \"actor_id\" TEXT NOT NULL REFERENCES app_user (id), \"event_type\" TEXT NOT NULL, \"entity_id\" TEXT NULL, \"payload_hash\" TEXT NOT NULL, \"device_sig\" TEXT NOT NULL, \"sig_alg\" TEXT NOT NULL, \"event_at\" TEXT NOT NULL, PRIMARY KEY (\"id\"), UNIQUE (\"device_id\", \"seq\"));"
+        }
+      ]
+    },
+    {
+      "name": "audit_event_append_only_update",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER audit_event_append_only_update BEFORE UPDATE ON audit_event BEGIN SELECT RAISE (ABORT, 'append_only: audit_event');END"
+        }
+      ]
+    },
+    {
+      "name": "audit_event_append_only_delete",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER audit_event_append_only_delete BEFORE DELETE ON audit_event BEGIN SELECT RAISE (ABORT, 'append_only: audit_event');END"
+        }
+      ]
+    },
+    {
+      "name": "node_site_idx",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX node_site_idx ON node (site_id)"
+        }
+      ]
+    },
+    {
+      "name": "edge",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"edge\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted\" IN (0, 1)), \"site_id\" TEXT NOT NULL REFERENCES site (id), \"a_node_id\" TEXT NOT NULL REFERENCES node (id), \"b_node_id\" TEXT NOT NULL REFERENCES node (id), \"conductors\" TEXT NOT NULL, PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "edge_site_idx",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX edge_site_idx ON edge (site_id)"
+        }
+      ]
+    },
+    {
+      "name": "measurement_session_idx",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX measurement_session_idx ON measurement (session_id)"
+        }
+      ]
+    },
+    {
+      "name": "audit_event_entity_idx",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX audit_event_entity_idx ON audit_event (entity_id)"
+        }
+      ]
+    },
+    {
+      "name": "local_pref",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"local_pref\" (\"key\" TEXT NOT NULL, \"value\" TEXT NOT NULL, PRIMARY KEY (\"key\"));"
+        }
+      ]
+    },
+    {
+      "name": "sync_outbox",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"sync_outbox\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"table_name\" TEXT NOT NULL, \"row_id\" TEXT NOT NULL, \"op_id\" TEXT NOT NULL, UNIQUE (\"table_name\", \"row_id\"));"
+        }
+      ]
+    },
+    {
+      "name": "organization_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER organization_outbox_ins AFTER INSERT ON organization WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('organization', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "organization_outbox_upd",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER organization_outbox_upd AFTER UPDATE ON organization WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('organization', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "instrument_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER instrument_outbox_ins AFTER INSERT ON instrument WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('instrument', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "instrument_outbox_upd",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER instrument_outbox_upd AFTER UPDATE ON instrument WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('instrument', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "site_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER site_outbox_ins AFTER INSERT ON site WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('site', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "site_outbox_upd",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER site_outbox_upd AFTER UPDATE ON site WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('site', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "node_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER node_outbox_ins AFTER INSERT ON node WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('node', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "node_outbox_upd",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER node_outbox_upd AFTER UPDATE ON node WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('node', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "edge_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER edge_outbox_ins AFTER INSERT ON edge WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('edge', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "edge_outbox_upd",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER edge_outbox_upd AFTER UPDATE ON edge WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('edge', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "measurement_session_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER measurement_session_outbox_ins AFTER INSERT ON measurement_session WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('measurement_session', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "measurement_session_outbox_upd",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER measurement_session_outbox_upd AFTER UPDATE ON measurement_session WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('measurement_session', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "measurement_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER measurement_outbox_ins AFTER INSERT ON measurement WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('measurement', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "protocol_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER protocol_outbox_ins AFTER INSERT ON protocol WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('protocol', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "protocol_document_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER protocol_document_outbox_ins AFTER INSERT ON protocol_document WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('protocol_document', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "audit_event_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER audit_event_outbox_ins AFTER INSERT ON audit_event WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('audit_event', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "isolation_plan",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"isolation_plan\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted\" IN (0, 1)), \"site_id\" TEXT NOT NULL REFERENCES site (id), \"target_node_ids\" TEXT NOT NULL, \"solver_version\" TEXT NOT NULL, \"graph_snapshot_hash\" TEXT NOT NULL, \"steps\" TEXT NOT NULL, \"warnings\" TEXT NOT NULL, \"status\" TEXT NOT NULL CHECK(\"status\" IN ('DRAFT', 'APPROVED', 'EXECUTED', 'CANCELLED', 'STALE')), \"approved_by\" TEXT NULL REFERENCES app_user (id), PRIMARY KEY (\"id\"));"
+        }
+      ]
+    },
+    {
+      "name": "isolation_plan_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER isolation_plan_outbox_ins AFTER INSERT ON isolation_plan WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('isolation_plan', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "isolation_plan_outbox_upd",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER isolation_plan_outbox_upd AFTER UPDATE ON isolation_plan WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('isolation_plan', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "norm_set",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"norm_set\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted\" IN (0, 1)), \"version\" TEXT NOT NULL, \"sha256\" TEXT NOT NULL, \"yaml\" TEXT NOT NULL, \"reviewed_by\" TEXT NULL, \"reviewed_at\" TEXT NULL, PRIMARY KEY (\"id\"), UNIQUE (\"org_id\", \"version\"));"
+        }
+      ]
+    },
+    {
+      "name": "norm_set_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER norm_set_outbox_ins AFTER INSERT ON norm_set WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('norm_set', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "norm_set_outbox_upd",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER norm_set_outbox_upd AFTER UPDATE ON norm_set WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('norm_set', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "org_setting",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"org_setting\" (\"id\" TEXT NOT NULL, \"created_at\" TEXT NOT NULL, \"updated_at\" TEXT NOT NULL, \"rev\" INTEGER NOT NULL DEFAULT 1, \"org_id\" TEXT NOT NULL REFERENCES organization (id), \"k_corr\" REAL NOT NULL DEFAULT 1.0 CHECK(\"k_corr\" > 0.0 AND \"k_corr\" <= 1.0), \"margin_pct\" REAL NOT NULL DEFAULT 0.0 CHECK(\"margin_pct\" BETWEEN 0.0 AND 50.0), \"active_norm_set_version\" TEXT NULL, PRIMARY KEY (\"id\"), UNIQUE (\"org_id\"));"
+        }
+      ]
+    },
+    {
+      "name": "org_setting_outbox_ins",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER org_setting_outbox_ins AFTER INSERT ON org_setting WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('org_setting', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    },
+    {
+      "name": "org_setting_outbox_upd",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TRIGGER org_setting_outbox_upd AFTER UPDATE ON org_setting WHEN NOT EXISTS (SELECT 1 FROM local_pref WHERE \"key\" = 'sync.applying') BEGIN INSERT OR REPLACE INTO sync_outbox (table_name, row_id, op_id) VALUES ('org_setting', NEW.id, lower(hex(randomblob(16))));END"
+        }
+      ]
+    }
+  ]
+}

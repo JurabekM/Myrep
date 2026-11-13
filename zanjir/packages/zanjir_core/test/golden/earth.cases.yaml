@@ -1,0 +1,192 @@
+# Yerga ulash qarshiligi: R = r_ohm · season_coeff. GZ1 — neytral, GZ2 — takroriy (tn), GZ_T — TT.
+
+- name: EARTH-NEUTRAL-380 — 3,1 Ω
+  node: GZ1
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 3.1, method: 3-wire, season_coeff: 1.0 }
+  expect: PASS
+  norm: EARTH-NEUTRAL-380
+
+- name: EARTH-NEUTRAL-380 — 2,5 · 1,6 = 4,0 Ω (aynan chegarada)
+  node: GZ1
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 2.5, method: 3-wire, season_coeff: 1.6 }
+  expect: PASS
+  norm: EARTH-NEUTRAL-380
+
+- name: EARTH-NEUTRAL-380 — 3 · 1,5 = 4,5 Ω → FAIL
+  node: GZ1
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 3.0, method: 3-wire, season_coeff: 1.5 }
+  expect: FAIL
+  norm: EARTH-NEUTRAL-380
+  reason: out_of_limit
+
+- name: EARTH-NEUTRAL-380 — U0 230 V (400/230 V), 3 · 1,5 = 4,5 Ω → FAIL
+  node: GZ1
+  type: EARTH_RESISTANCE
+  site: { u0_volts: 230 }
+  values: { r_ohm: 3.0, method: 3-wire, season_coeff: 1.5 }
+  expect: FAIL
+  norm: EARTH-NEUTRAL-380
+  reason: out_of_limit
+
+- name: U0 240 V — yerga ulash normasi yo'q → NEEDS_REVIEW
+  node: GZ1
+  type: EARTH_RESISTANCE
+  site: { u0_volts: 240 }
+  values: { r_ohm: 1.0, method: 3-wire, season_coeff: 1.0 }
+  expect: NEEDS_REVIEW
+  reason: no_matching_norm
+
+- name: mavsum koeffitsienti kiritilmagan → NEEDS_REVIEW
+  node: GZ1
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 1.0, method: 3-wire }
+  expect: NEEDS_REVIEW
+  reason: season_coeff_missing
+
+- name: mavsum koeffitsienti < 1 → NEEDS_REVIEW
+  node: GZ1
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 1.0, method: 3-wire, season_coeff: 0.8 }
+  expect: NEEDS_REVIEW
+  reason: season_coeff_below_1
+
+- name: mavsum koeffitsienti satr → NEEDS_REVIEW
+  node: GZ1
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 1.0, method: 3-wire, season_coeff: "1.2" }
+  expect: NEEDS_REVIEW
+  reason: invalid_value
+
+- name: r_ohm kiritilmagan → NEEDS_REVIEW
+  node: GZ1
+  type: EARTH_RESISTANCE
+  values: { method: 3-wire, season_coeff: 1.0 }
+  expect: NEEDS_REVIEW
+  reason: value_missing
+
+- name: role yo'q yerga ulagich → normani aniqlab bo'lmaydi
+  node: GZ1
+  type: EARTH_RESISTANCE
+  attrs: { GZ1: { role: null } }
+  values: { r_ohm: 1.0, season_coeff: 1.0 }
+  expect: NEEDS_REVIEW
+  reason: norm_applicability_unknown
+
+- name: EARTH-REPEAT-380-TOTAL — 8 Ω
+  node: GZ2
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 8.0, season_coeff: 1.0, scope: total }
+  expect: PASS
+  norm: EARTH-REPEAT-380-TOTAL
+
+- name: EARTH-REPEAT-380-TOTAL — aynan 10 Ω
+  node: GZ2
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 5.0, season_coeff: 2.0, scope: total }
+  expect: PASS
+  norm: EARTH-REPEAT-380-TOTAL
+
+- name: EARTH-REPEAT-380-TOTAL — 12 Ω → FAIL
+  node: GZ2
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 12.0, season_coeff: 1.0, scope: total }
+  expect: FAIL
+  norm: EARTH-REPEAT-380-TOTAL
+
+- name: EARTH-REPEAT-380-SINGLE — 25 Ω
+  node: GZ2
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 25.0, season_coeff: 1.0, scope: single }
+  expect: PASS
+  norm: EARTH-REPEAT-380-SINGLE
+
+- name: EARTH-REPEAT-380-SINGLE — aynan 30 Ω
+  node: GZ2
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 20.0, season_coeff: 1.5, scope: single }
+  expect: PASS
+  norm: EARTH-REPEAT-380-SINGLE
+
+- name: EARTH-REPEAT-380-SINGLE — 31 Ω → FAIL
+  node: GZ2
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 31.0, season_coeff: 1.0, scope: single }
+  expect: FAIL
+  norm: EARTH-REPEAT-380-SINGLE
+
+- name: takroriy — scope kiritilmagan → normani aniqlab bo'lmaydi
+  node: GZ2
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 5.0, season_coeff: 1.0 }
+  expect: NEEDS_REVIEW
+  reason: norm_applicability_unknown
+
+- name: TN obyektida role=tt — normasi yo'q
+  node: GZ3
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 5.0, season_coeff: 1.0 }
+  expect: NEEDS_REVIEW
+  reason: no_matching_norm
+
+- name: EARTH-TT — 400 · 1,2 · 0,1 A = 48 V
+  graph: tt
+  node: GZ_T
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 400.0, season_coeff: 1.2 }
+  expect: PASS
+  norm: EARTH-TT
+
+- name: EARTH-TT — 500 · 1,0 · 0,1 A = 50 V (aynan chegarada)
+  graph: tt
+  node: GZ_T
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 500.0, season_coeff: 1.0 }
+  expect: PASS
+  norm: EARTH-TT
+
+- name: EARTH-TT — 450 · 1,2 · 0,1 A = 54 V → FAIL
+  graph: tt
+  node: GZ_T
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 450.0, season_coeff: 1.2 }
+  expect: FAIL
+  norm: EARTH-TT
+  reason: out_of_limit
+
+- name: EARTH-TT — eng katta IΔn olinadi (30 mA emas, 100 mA)
+  graph: tt
+  node: GZ_T
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 600.0, season_coeff: 1.0 }
+  expect: FAIL
+  norm: EARTH-TT
+
+- name: EARTH-TT — UZO topilmadi → NEEDS_REVIEW
+  graph: tt_norcd
+  node: GZ_T
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 10.0, season_coeff: 1.0 }
+  expect: NEEDS_REVIEW
+  norm: EARTH-TT
+  reason: no_upstream_rcd
+
+- name: EARTH-TT — UZO'da idn_ma yo'q → NEEDS_REVIEW
+  graph: tt
+  node: GZ_T
+  type: EARTH_RESISTANCE
+  attrs: { QD_T2: { idn_ma: null } }
+  values: { r_ohm: 10.0, season_coeff: 1.0 }
+  expect: NEEDS_REVIEW
+  norm: EARTH-TT
+  reason: rcd_idn_missing
+
+- name: R = 0 Ω → NEEDS_REVIEW, PASS emas
+  node: GZ1
+  type: EARTH_RESISTANCE
+  values: { r_ohm: 0, season_coeff: 1.0 }
+  expect: NEEDS_REVIEW
+  norm: EARTH-NEUTRAL-380
+  reason: invalid_value

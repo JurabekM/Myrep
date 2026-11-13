@@ -1,0 +1,244 @@
+# Izolyatsiya qarshiligi. Standart: graph tn, ambient_temp_c 20, k_corr 1.0.
+# Maydonlar: name, graph, node, type, values, [session], [site], [attrs], [norm_set], [settings]
+# Kutilgan: expect (verdict), [norm] (hal qiluvchi norma), [reason], [checks: {norm_id: verdict}]
+
+- name: INS-WIRING — barcha juftliklar normada
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 120.0 }, { pair: L1-N, mohm: 50.0 }] }
+  expect: PASS
+  norm: INS-WIRING
+
+- name: INS-WIRING — aynan chegarada (0,5 MΩ) PASS
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 0.5 }] }
+  expect: PASS
+  norm: INS-WIRING
+
+- name: INS-WIRING — bitta juftlik pastda → FAIL
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 120.0 }, { pair: L2-PE, mohm: 0.49 }] }
+  expect: FAIL
+  norm: INS-WIRING
+  reason: out_of_limit
+
+- name: INS-WIRING — asbob kuchlanishi past (500 V) → NEEDS_REVIEW
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 500, pairs: [{ pair: L1-PE, mohm: 120.0 }] }
+  expect: NEEDS_REVIEW
+  norm: INS-WIRING
+  reason: test_voltage_below_norm
+
+- name: INS-WIRING — yuqoriroq kuchlanish (2500 V) qabul qilinadi
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 2500, pairs: [{ pair: L1-PE, mohm: 20.0 }] }
+  expect: PASS
+  norm: INS-WIRING
+
+- name: harorat kiritilmagan → NEEDS_REVIEW
+  node: CAB1
+  type: INSULATION
+  session: { ambient_temp_c: null }
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 120.0 }] }
+  expect: NEEDS_REVIEW
+  reason: missing_ambient_temp
+
+- name: harorat bor, lekin juftlik qiymati yo'q → NEEDS_REVIEW
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE }] }
+  expect: NEEDS_REVIEW
+  norm: INS-WIRING
+  reason: value_missing
+
+- name: bitta juftlik FAIL, boshqasi yo'q — FAIL ustun
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 0.1 }, { pair: L2-PE }] }
+  expect: FAIL
+  norm: INS-WIRING
+  reason: out_of_limit
+
+- name: manfiy qiymat → NEEDS_REVIEW
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: -1 }] }
+  expect: NEEDS_REVIEW
+  reason: invalid_value
+
+- name: juftlik nomi yo'q → NEEDS_REVIEW
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ mohm: 100 }] }
+  expect: NEEDS_REVIEW
+  reason: value_missing
+
+- name: juftliklar bo'sh → NEEDS_REVIEW
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [] }
+  expect: NEEDS_REVIEW
+  reason: no_pairs
+
+- name: juftliklar ro'yxat emas → NEEDS_REVIEW
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: { pair: L1-PE, mohm: 100 } }
+  expect: NEEDS_REVIEW
+  reason: no_pairs
+
+- name: juftlik elementi xarita emas → NEEDS_REVIEW
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [100] }
+  expect: NEEDS_REVIEW
+  reason: value_missing
+
+- name: test_voltage_v yo'q → NEEDS_REVIEW
+  node: CAB1
+  type: INSULATION
+  values: { pairs: [{ pair: L1-PE, mohm: 120.0 }] }
+  expect: NEEDS_REVIEW
+  reason: value_missing
+
+- name: circuit_class yo'q kabel → normani aniqlab bo'lmaydi
+  node: CAB1
+  type: INSULATION
+  attrs: { CAB1: { circuit_class: null } }
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 120.0 }] }
+  expect: NEEDS_REVIEW
+  reason: norm_applicability_unknown
+
+- name: izolyatsiya normasi yo'q tugun (yerga ulagich) → NEEDS_REVIEW
+  node: GZ1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 120.0 }] }
+  expect: NEEDS_REVIEW
+  reason: no_matching_norm
+
+- name: margin_pct 10 — 0,54 < 0,55 → FAIL
+  node: CAB1
+  type: INSULATION
+  norm_set: { margin_pct: 10 }
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 0.54 }] }
+  expect: FAIL
+  norm: INS-WIRING
+
+- name: margin_pct 10 — aynan 0,55 → PASS
+  node: CAB1
+  type: INSULATION
+  norm_set: { margin_pct: 10 }
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 0.55 }] }
+  expect: PASS
+  norm: INS-WIRING
+
+# INS-SWGR ≥ 1,0 MΩ — qabul va ekspluatatsiya uchun bir xil (K1, ADR-0019).
+- name: INS-SWGR — shit 1,2 MΩ
+  node: SHR1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 1.2 }] }
+  expect: PASS
+  norm: INS-SWGR
+
+- name: INS-SWGR — aynan 1,0 MΩ
+  node: BUS1
+  type: INSULATION
+  values: { test_voltage_v: 2500, pairs: [{ pair: L1-PE, mohm: 1.0 }] }
+  expect: PASS
+  norm: INS-SWGR
+
+- name: INS-SWGR — 0,6 MΩ (avvalgi 0,5 chegaradan yuqori) → FAIL
+  node: SHR1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 0.6 }] }
+  expect: FAIL
+  norm: INS-SWGR
+
+- name: INS-SWGR — 0,3 MΩ → FAIL
+  node: SHR1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-L2, mohm: 0.3 }] }
+  expect: FAIL
+  norm: INS-SWGR
+
+- name: INS-SECONDARY — 1,2 MΩ
+  node: CAB8
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L-PE, mohm: 1.2 }] }
+  expect: PASS
+  norm: INS-SECONDARY
+
+- name: INS-SECONDARY — aynan 1,0 MΩ
+  node: CAB8
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L-PE, mohm: 1.0 }] }
+  expect: PASS
+  norm: INS-SECONDARY
+
+- name: INS-SECONDARY — 0,9 MΩ → FAIL (simlar normasidan qat'iyroq)
+  node: CAB8
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L-PE, mohm: 0.9 }] }
+  expect: FAIL
+  norm: INS-SECONDARY
+
+- name: INS-CABLE-LV — 2500 V, 10 MΩ
+  node: CABP
+  type: INSULATION
+  values: { test_voltage_v: 2500, pairs: [{ pair: L1-PE, mohm: 10.0 }] }
+  expect: PASS
+  norm: INS-CABLE-LV
+
+- name: INS-CABLE-LV — aynan 0,5 MΩ
+  node: CABP
+  type: INSULATION
+  values: { test_voltage_v: 2500, pairs: [{ pair: L1-PE, mohm: 0.5 }] }
+  expect: PASS
+  norm: INS-CABLE-LV
+
+- name: INS-CABLE-LV — 0,4 MΩ → FAIL
+  node: CABP
+  type: INSULATION
+  values: { test_voltage_v: 2500, pairs: [{ pair: L1-PE, mohm: 0.4 }] }
+  expect: FAIL
+  norm: INS-CABLE-LV
+
+- name: INS-CABLE-LV — 1000 V bilan o'lchangan → NEEDS_REVIEW
+  node: CABP
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 100.0 }] }
+  expect: NEEDS_REVIEW
+  norm: INS-CABLE-LV
+  reason: test_voltage_below_norm
+
+- name: qo'llanilmaydi deb belgilangan
+  node: CAB1
+  type: INSULATION
+  values: { not_applicable_reason: "Kabel demontaj qilingan" }
+  expect: NOT_APPLICABLE
+  reason: marked_not_applicable
+
+- name: not_applicable_reason bo'sh → NEEDS_REVIEW
+  node: CAB1
+  type: INSULATION
+  values: { not_applicable_reason: "", test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 120.0 }] }
+  expect: NEEDS_REVIEW
+  reason: invalid_value
+
+- name: test_voltage_v = 0 → NEEDS_REVIEW
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 0, pairs: [{ pair: L1-PE, mohm: 120.0 }] }
+  expect: NEEDS_REVIEW
+  reason: invalid_value
+
+- name: izolyatsiya 0 MΩ (qisqa tutashuv) → FAIL
+  node: CAB1
+  type: INSULATION
+  values: { test_voltage_v: 1000, pairs: [{ pair: L1-PE, mohm: 0 }] }
+  expect: FAIL
+  norm: INS-WIRING
