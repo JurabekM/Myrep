@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+firmware/test_parity
+firmware/*.o
+firmware/build/
+runs/
+*.jsonl
+firmware/bench_host
+firmware/m33/*.elf
+firmware/third_party/
+firmware/pq_m33/*.elf
