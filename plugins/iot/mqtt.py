@@ -40,8 +40,8 @@ def find_mosquitto() -> Path:
 def password_line(username: str, password: str) -> str:
     """Mosquitto `password_file` satri: `user:$7$<iter>$<tuz>$<xesh>` (PBKDF2-SHA512).
 
-    Diqqat: format hujjat bo'yicha yozilgan, haqiqiy Mosquitto bilan sinalmagan.
-    Noto'g'ri bo'lsa broker hech kimni kiritmaydi (ochiq qolmaydi).
+    Mosquitto 2.1.2 bilan sinalgan (`tests/test_iot_mosquitto.py`). Format mos kelmasa
+    broker hech kimni kiritmaydi (ochiq qolmaydi).
     """
     salt = secrets.token_bytes(12)
     digest = hashlib.pbkdf2_hmac("sha512", password.encode("utf-8"), salt, _PBKDF2_ITERATIONS, 64)
