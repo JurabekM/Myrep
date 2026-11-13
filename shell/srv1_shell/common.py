@@ -2,12 +2,16 @@
 
 from dataclasses import dataclass
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtGui import QResizeEvent
+from PyQt6.QtWidgets import QFrame, QGridLayout, QLabel, QVBoxLayout, QWidget
 
 from srv1_shell.api import Api, Reply
 from srv1_shell.events import EventStream
 from srv1_shell.i18n import I18n
+
+CARD_MIN_WIDTH = 190
+CARD_SPACING = 12
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,11 +71,61 @@ class Card(QFrame):
         for label in (self.title, self.value, self.detail):
             self.body.addWidget(label)
         self.body.addStretch(1)
-        self.setMinimumWidth(190)
+        self.setMinimumWidth(CARD_MIN_WIDTH)
 
     def set(self, value: str, detail: str = "") -> None:
         self.value.setText(value)
         self.detail.setText(detail)
+
+
+class CardRow(QWidget):
+    """Kartochkalar qatori: kenglik yetmasa, teng bo'lingan bir necha qatorga o'tadi.
+
+    Oyna toraysa kartochkalar siqilmaydi va gorizontal aylantirish chiqmaydi.
+    """
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._cards: list[QWidget] = []
+        self._columns = 0
+        self._grid = QGridLayout(self)
+        self._grid.setContentsMargins(0, 0, 0, 0)
+        self._grid.setSpacing(CARD_SPACING)
+
+    def add(self, card: QWidget) -> None:
+        self._cards.append(card)
+        self._arrange(self.columns_for(self.width()) if self.isVisible() else len(self._cards))
+
+    def columns(self) -> int:
+        return self._columns
+
+    def columns_for(self, width: int) -> int:
+        """Shu kenglikka sig'adigan ustunlar soni; qatorlar imkon qadar teng to'ladi."""
+        count = len(self._cards)
+        if count == 0:
+            return 0
+        fits = max(1, (width + CARD_SPACING) // (CARD_MIN_WIDTH + CARD_SPACING))
+        rows = -(-count // min(count, fits))
+        return -(-count // rows)
+
+    def _arrange(self, columns: int) -> None:
+        if columns == self._columns and self._grid.count() == len(self._cards):
+            return
+        for card in self._cards:
+            self._grid.removeWidget(card)
+        for index, card in enumerate(self._cards):
+            self._grid.addWidget(card, index // columns, index % columns)
+        for column in range(max(columns, self._columns)):
+            self._grid.setColumnStretch(column, 1 if column < columns else 0)
+        self._columns = columns
+
+    def resizeEvent(self, a0: QResizeEvent | None) -> None:
+        super().resizeEvent(a0)
+        self._arrange(self.columns_for(self.width()))
+
+    def minimumSizeHint(self) -> QSize:
+        # Bitta kartochka kengligi: ota-joylashuv qatorni bundan torroq qila olmaydi.
+        return QSize(CARD_MIN_WIDTH, super().minimumSizeHint().height())
 
 
 def section_title(text: str) -> QLabel:

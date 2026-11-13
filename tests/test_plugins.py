@@ -3,7 +3,6 @@
 import asyncio
 import json
 import os
-import shutil
 import sqlite3
 import subprocess
 import sys
@@ -18,8 +17,8 @@ import pytest
 from websockets.asyncio.client import connect
 
 from conftest import Served, free_port, serve_app, until, write_plugin
+from monitor_helpers import install_monitor
 from srv1_core.paths import DataPaths
-from srv1_core.plugins.registry import BUILTIN_DIR
 
 MODES = ["inprocess", "subprocess"]
 API = "/api/v1/plugins"
@@ -28,14 +27,6 @@ API = "/api/v1/plugins"
 def _audit_rows(paths: DataPaths) -> list[tuple[str, str, int]]:
     with closing(sqlite3.connect(paths.db_file)) as conn:
         return conn.execute("SELECT actor, action, ok FROM audit_log ORDER BY id").fetchall()
-
-
-def _copy_hello(root: Path, mode: str) -> None:
-    target = root / "hello"
-    shutil.copytree(BUILTIN_DIR / "hello", target, ignore=shutil.ignore_patterns("__pycache__"))
-    manifest = target / "plugin.toml"
-    text = manifest.read_text(encoding="utf-8").replace('mode = "inprocess"', f'mode = "{mode}"')
-    manifest.write_text(text, encoding="utf-8")
 
 
 async def _info(client: httpx.AsyncClient, name: str) -> dict[str, Any]:
@@ -55,15 +46,44 @@ async def _status_is(client: httpx.AsyncClient, name: str, status: str) -> dict[
     pytest.fail(f"{name}: {status!r} kutildi, hozir {info['status']!r} ({info['error']})")
 
 
-# --- namuna plagin, ikkala rejimda bir xil kod -----------------------------------
+# --- haqiqiy plagin (`monitor`), ikkala rejimda bir xil kod ---------------------------
+DIE_PLUGIN = """
+    import os
+    from fastapi import APIRouter
+    from srv1_sdk.hookspec import hookimpl
+
+    @hookimpl
+    def srv1_router(ctx):
+        router = APIRouter()
+
+        @router.post("/die")
+        async def die():
+            os._exit(3)
+
+        return router
+"""
+
+
+async def _alerts(client: httpx.AsyncClient, count: int) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for _ in range(500):
+        rows = (await client.get(f"{API}/monitor/api/alerts")).json()
+        if len(rows) >= count:
+            return rows
+        await asyncio.sleep(0.01)
+    pytest.fail(f"{count} ta ogohlantirish kutildi, bor: {rows}")
+
+
 @pytest.mark.parametrize("mode", MODES)
-async def test_hello_full_cycle(paths: DataPaths, plugin_root: Path, mode: str) -> None:
-    _copy_hello(plugin_root, mode)
+async def test_monitor_full_cycle(paths: DataPaths, plugin_root: Path, mode: str) -> None:
+    install_monitor(plugin_root, paths.plugin_data_dir("monitor"), mode)
+    write_plugin(plugin_root, "victim", DIE_PLUGIN, 'mode = "subprocess"')
+    base = f"{API}/monitor/api"
     async with serve_app(paths) as served, served.client() as client:
-        info = await _info(client, "hello")
+        info = await _info(client, "monitor")
         assert (info["status"], info["enabled"], info["mode"]) == ("running", True, mode)
-        assert info["jobs"] == ["hello:tick"]
-        assert info["subscriptions"] == ["plugin.hello.tick"]
+        assert info["jobs"] == ["monitor:sample", "monitor:purge"]
+        assert info["subscriptions"] == ["plugins.state"]
         assert info["has_panel"] is True
         if mode == "subprocess":
             assert info["pid"] != os.getpid()
@@ -71,67 +91,117 @@ async def test_hello_full_cycle(paths: DataPaths, plugin_root: Path, mode: str) 
         else:
             assert info["pid"] is None
 
-        # API: so'rov parametri, JSON tana, validatsiya xatosi
-        greet = await client.get(f"{API}/hello/api/greet", params={"name": "Ali"})
-        assert greet.json() == {"message": "Salom, Ali!"}
-        note = await client.post(f"{API}/hello/api/notes", json={"text": "birinchi"})
-        assert (note.status_code, note.json()["notes"]) == (201, 1)
-        assert (await client.post(f"{API}/hello/api/notes", json={"text": ""})).status_code == 422
-        assert (await client.get(f"{API}/hello/api/yoq")).status_code == 404
-        notes_file = paths.plugin_data_dir("hello") / "notes.txt"
-        assert notes_file.read_text(encoding="utf-8") == "birinchi\n"
+        # ishga tushishda bitta o'lchov bor; qiymatlar haqiqiy
+        status = (await client.get(f"{base}/status")).json()
+        assert (status["samples"], status["active_alerts"]) == (1, 0)
+        assert 0 <= status["cpu_percent"] <= 100 and 0 < status["memory_percent"] <= 100
+        # SRV_1 daraxti: kamida shu test jarayoni (yadro shu yerda ishlaydi)
+        assert status["srv1_mb"] > 20
+        assert status["disk_free_gb"] > 0
+        disks = (await client.get(f"{base}/disks")).json()
+        assert disks and all(0 < d["free"] <= d["total"] for d in disks)
 
-        # hodisa: plagin nashr qiladi -> WebSocket klient va plaginning o'z obunasi oladi
-        url = served.ws_url("?topics=plugin.hello.*")
+        # API: JSON tana, validatsiya xatosi, noma'lum yo'l; sozlama faylga yoziladi
+        too_big = await client.post(f"{base}/thresholds", json={"memory_percent": 250})
+        assert too_big.status_code == 422
+        assert (await client.post(f"{base}/thresholds", json={"yoq": 1})).status_code == 422
+        changed = await client.post(f"{base}/thresholds", json={"memory_percent": 1})
+        assert changed.json() == {
+            "memory_percent": 1.0,
+            "cpu_percent": 0.0,
+            "cpu_minutes": 0.0,
+            "disk_free_gb": 0.0,
+        }
+        assert (await client.get(f"{base}/yoq")).status_code == 404
+        store_file = paths.plugin_data_dir("monitor") / "monitor.json"
+        saved = json.loads(store_file.read_text(encoding="utf-8"))
+        assert saved["config"]["thresholds"]["memory_percent"] == 1.0
+
+        # hodisa: o'lchov va ogohlantirish WebSocket klientga yetadi
+        url = served.ws_url("?topics=plugin.monitor.*")
         async with connect(url, additional_headers=served.headers) as ws:
-            await until(lambda: served.core.bus.has_subscribers("plugin.hello.x"))
-            assert (await client.post(f"{API}/hello/api/tick")).json()["ticks"] == 1
-            event = json.loads(await ws.recv())
-        assert (event["topic"], event["data"]) == ("plugin.hello.tick", {"n": 1})
-        for _ in range(300):
-            if (await client.get(f"{API}/hello/api/stats")).json()["ticks_seen"] == 1:
-                break
-            await asyncio.sleep(0.01)
-        else:
-            pytest.fail("plagin o'z hodisasini olmadi")
+            await until(lambda: served.core.bus.has_subscribers("plugin.monitor.x"))
+            assert (await client.post(f"{base}/sample")).json()["samples"] == 2
+            first, second = json.loads(await ws.recv()), json.loads(await ws.recv())
+        assert first["topic"] == "plugin.monitor.sample"
+        assert set(first["data"]) == {"ts", "cpu", "memory", "srv1_mb"}
+        assert second["topic"] == "plugin.monitor.alert"
+        assert (second["data"]["key"], second["data"]["state"]) == ("memory", "raised")
+        assert second["data"]["limit"] == 1.0
+
+        # takror yozuv yo'q: qoida faol turganda keyingi o'lchov jim
+        assert (await client.post(f"{base}/sample")).json()["active_alerts"] == 1
+        assert [(a["key"], a["state"]) for a in await _alerts(client, 1)] == [("memory", "raised")]
+        rules = {rule["key"]: rule for rule in (await client.get(f"{base}/rules")).json()}
+        assert (rules["memory"]["state"], rules["memory"]["limit"]) == ("alert", "≥ 1 %")
+        assert rules["cpu"]["state"] == "off"
+        history = (await client.get(f"{base}/history", params={"limit": 2})).json()
+        assert len(history) == 2 and history[0]["ts"] < history[1]["ts"]
+
+        # obuna: boshqa plagin yiqilsa (yadro hodisasi), ogohlantirish yoziladi
+        assert (await client.post(f"{API}/victim/api/die")).status_code == 502
+        newest = (await _alerts(client, 2))[0]
+        assert (newest["key"], newest["state"]) == ("plugin:victim", "raised")
+        assert "kod 3" in newest["note"]
+        assert (await client.get(f"{base}/status")).json()["active_alerts"] == 2
+        await client.post(f"{API}/victim/disable")
+        assert (await _alerts(client, 3))[0]["state"] == "cleared"
+
+        # qoida o'chirilsa, ogohlantirish yopiladi
+        await client.post(f"{base}/thresholds", json={"memory_percent": 0})
+        assert (await client.post(f"{base}/sample")).json()["active_alerts"] == 0
+        latest = (await _alerts(client, 4))[0]
+        assert (latest["key"], latest["state"]) == ("memory", "cleared")
 
         # panel va audit
-        panel = (await client.get(f"{API}/hello/panel")).json()
-        assert panel["title"] == {"uz": "Salom", "ru": "Привет", "en": "Hello"}
-        assert {widget["type"] for widget in panel["widgets"]} >= {"label", "value", "form"}
-        assert (await client.delete(f"{API}/hello/api/notes")).json()["notes"] == 0
-        assert not notes_file.exists()
+        panel = (await client.get(f"{API}/monitor/panel")).json()
+        assert panel["title"] == {"uz": "Kuzatuv", "ru": "Наблюдение", "en": "Monitoring"}
+        kinds = {widget["type"] for widget in panel["widgets"]}
+        assert kinds == {"label", "value", "chart", "button", "table", "form"}
+        assert (await client.delete(f"{base}/history")).json() == {"samples": 4, "alerts": 4}
+        assert (await client.get(f"{base}/status")).json()["samples"] == 0
+        assert (await client.get(f"{base}/alerts")).json() == []
+        await client.post(f"{base}/thresholds", json={"memory_percent": 2})
 
         # o'chirish: API 409, jarayon yo'qoladi
         pid = info["pid"]
-        disabled = (await client.post(f"{API}/hello/disable")).json()
+        disabled = (await client.post(f"{API}/monitor/disable")).json()
         assert (disabled["status"], disabled["enabled"], disabled["pid"]) == (
             "stopped",
             False,
             None,
         )
         assert disabled["jobs"] == []
-        assert (await client.get(f"{API}/hello/api/greet")).status_code == 409
-        assert (await client.get(f"{API}/hello/panel")).status_code == 409
+        assert (await client.get(f"{base}/status")).status_code == 409
+        assert (await client.get(f"{API}/monitor/panel")).status_code == 409
         if pid is not None:
             assert not psutil.pid_exists(pid)
-        assert not served.core.bus.has_subscribers("plugin.hello.tick")
+        assert not served.core.bus.has_subscribers("plugins.state")
 
-    # holat qayta ishga tushgandan keyin saqlanadi
+    # holat va sozlama qayta ishga tushgandan keyin saqlanadi
     async with serve_app(paths) as served, served.client() as client:
-        assert (await _info(client, "hello"))["status"] == "stopped"
-        enabled = (await client.post(f"{API}/hello/enable")).json()
+        assert (await _info(client, "monitor"))["status"] == "stopped"
+        enabled = (await client.post(f"{API}/monitor/enable")).json()
         assert (enabled["status"], enabled["enabled"]) == ("running", True)
-        assert (await client.get(f"{API}/hello/api/stats")).json()["ticks"] == 0
+        assert (await client.get(f"{base}/thresholds")).json()["memory_percent"] == 2.0
+        # tozalangan tarixdan keyin: faqat shu ishga tushishdagi o'lchov va uning ogohlantirishi
+        status = (await client.get(f"{base}/status")).json()
+        assert (status["samples"], status["active_alerts"]) == (1, 1)
+
+    # yana bir qayta ishga tushish: faol holat bazadan tiklanadi, takror yozuv chiqmaydi
+    async with serve_app(paths) as served, served.client() as client:
+        status = (await client.get(f"{base}/status")).json()
+        assert (status["samples"], status["active_alerts"]) == (2, 1)
+        assert len((await client.get(f"{base}/alerts")).json()) == 1
 
     rows = _audit_rows(paths)
-    assert ("plugin:hello", "file.delete", 1) in rows
+    assert ("plugin:monitor", "monitor.history_clear", 1) in rows
     assert ("core", "plugin.disable", 1) in rows
     assert ("core", "plugin.enable", 1) in rows
-    assert (("core", "process.spawn", 1) in rows) is (mode == "subprocess")
+    assert ("core", "process.spawn", 1) in rows
 
 
-async def test_builtin_hello_is_discovered(
+async def test_builtin_plugins_are_discovered(
     paths: DataPaths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("SRV1_PLUGINS__LOAD_BUILTIN", "true")
@@ -141,10 +211,10 @@ async def test_builtin_hello_is_discovered(
         ("data", "builtin"),
         ("electronics", "builtin"),
         ("files", "builtin"),
-        ("hello", "builtin"),
         ("hosting", "builtin"),
         ("iot", "builtin"),
         ("itops", "builtin"),
+        ("monitor", "builtin"),
     ]
     # hosting standart portlarga (8080, 2019, 9099) bog'lanadi; ular band bo'lsa bu yerda
     # tekshirilmaydi — plaginning o'z testlari bo'sh portlar bilan ishlaydi.
@@ -193,8 +263,8 @@ async def test_token_not_forwarded_and_body_limit(
 async def test_plugin_api_requires_token_and_valid_name(served: Served) -> None:
     async with served.client(authorized=False) as anonymous:
         assert (await anonymous.get(API)).status_code == 401
-        assert (await anonymous.get(f"{API}/hello/api/greet")).status_code == 401
-        assert (await anonymous.post(f"{API}/hello/enable")).status_code == 401
+        assert (await anonymous.get(f"{API}/monitor/api/status")).status_code == 401
+        assert (await anonymous.post(f"{API}/monitor/enable")).status_code == 401
     async with served.client() as client:
         assert (await client.get(API)).json() == []
         assert (await client.get(f"{API}/yoq_plagin")).status_code == 404

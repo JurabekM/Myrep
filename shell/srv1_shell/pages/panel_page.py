@@ -3,7 +3,7 @@
 import json
 from collections.abc import Callable
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import (
@@ -35,7 +35,7 @@ from srv1_sdk.panel import (
 )
 from srv1_shell.api import Reply
 from srv1_shell.charts import LineChart
-from srv1_shell.common import AppContext, Card, Page, section_title
+from srv1_shell.common import AppContext, Card, CardRow, Page, section_title
 from srv1_shell.pages.data_table import DataTable, ErrorSink, make_editor
 from srv1_shell.pages.log_view import LogView
 from srv1_shell.pages.query_view import QueryView
@@ -130,6 +130,7 @@ class PanelPage(Page):
         self._intervals: dict[str, float] = {}
         self._timers: list[QTimer] = []
         self._charts: list[tuple[str, str, LineChart]] = []
+        self._histories: list[tuple[ChartWidget, LineChart]] = []
         self.values: dict[str, Card] = {}
         self.buttons: dict[str, QPushButton] = {}
         self.forms: dict[str, _Form] = {}
@@ -137,6 +138,7 @@ class PanelPage(Page):
         self.logs: dict[str, LogView] = {}
         self.queries: dict[str, QueryView] = {}
         self.charts: dict[str, LineChart] = {}
+        self.value_rows: list[CardRow] = []
 
         self.add_title(ctx.i18n.pick(spec.title))
         self.result = QLabel("")
@@ -147,7 +149,7 @@ class PanelPage(Page):
         self._content = QVBoxLayout(content)
         self._content.setContentsMargins(0, 0, 8, 0)
         self._content.setSpacing(12)
-        self._value_row: QHBoxLayout | None = None
+        self._value_row: CardRow | None = None
         self._button_row: QHBoxLayout | None = None
         for widget in spec.widgets:
             self._add(widget)
@@ -202,12 +204,12 @@ class PanelPage(Page):
 
     def _add_value(self, widget: ValueWidget) -> None:
         if self._value_row is None:
-            self._value_row = QHBoxLayout()
-            self._value_row.setSpacing(12)
-            self._content.addLayout(self._value_row)
+            self._value_row = CardRow()
+            self.value_rows.append(self._value_row)
+            self._content.addWidget(self._value_row)
         card = Card(self.ctx.i18n.pick(widget.label))
         self.values[widget.field] = card
-        self._value_row.addWidget(card, 1)
+        self._value_row.add(card)
 
         def show(data: Any) -> None:  # noqa: ANN401
             value = data.get(widget.field) if isinstance(data, dict) else None  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
@@ -235,15 +237,33 @@ class PanelPage(Page):
     def _add_chart(self, widget: ChartWidget) -> None:
         label = self.ctx.i18n.pick(widget.label)
         self._content.addWidget(section_title(label))
-        chart = LineChart([label], window=widget.window)
+        y_range = None
+        if widget.y_min is not None and widget.y_max is not None:
+            y_range = (widget.y_min, widget.y_max)
+        chart = LineChart([label], window=widget.window, y_range=y_range)
         chart.setFixedHeight(CHART_HEIGHT)
-        self.charts[widget.topic] = chart
+        self.charts[f"{widget.topic}:{widget.field}"] = chart
         self._charts.append((self._topic_prefix + widget.topic, widget.field, chart))
+        if widget.history is not None:
+            self._histories.append((widget, chart))
         self._content.addWidget(chart)
+
+    def _load_history(self, widget: ChartWidget, chart: LineChart) -> None:
+        def show(data: Any) -> None:  # noqa: ANN401
+            if not isinstance(data, list):
+                return
+            rows = cast(list[Any], data)
+            points = [cast(dict[str, Any], row).get(widget.field) for row in rows]
+            chart.replace([float(p) for p in points if isinstance(p, int | float)])
+
+        if widget.history is not None:
+            self.fetch(widget.history, {"limit": widget.window}, show)
 
     # --- ma'lumot -------------------------------------------------------------
     def activate(self) -> None:
         self.refresh_sources()
+        for widget, chart in self._histories:
+            self._load_history(widget, chart)
         for timer in self._timers:
             timer.start()
         for table in self.tables.values():
