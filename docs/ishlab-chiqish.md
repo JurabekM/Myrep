@@ -22,6 +22,14 @@ Testlarni **PowerShell'dan** yuriting. Git Bash ostida
 `test_service_stop.py` yiqiladi: bola jarayon «Ctrl+C ni e'tiborsiz qoldirish»
 bayrog'ini meros oladi va yadro to'xtash signalini olmaydi (kod xatosi emas).
 
+Reliz o'rnatuvchisi (`release\SRV_1-Setup-<versiya>.exe`; Inno Setup 6 kerak):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File packaging\build.ps1
+```
+
+Tafsiloti: [reliz.md](reliz.md).
+
 O'rnatish skriptlari (`install/`) va Windows xizmati: [ornatish.md](ornatish.md).
 Foydalanuvchi qo'llanmasi: [qollanma.md](qollanma.md).
 
