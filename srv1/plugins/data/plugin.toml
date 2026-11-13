@@ -1,0 +1,14 @@
+name = "data"
+version = "0.1.0"
+description = "Ma'lumotlar tahlili: CSV/Parquet/Excel import, DuckDB so'rovlari, hisobot va eksport."
+mode = "subprocess"
+# Og'ir plagin: standart holatda o'chiq, kerak bo'lganda yoqiladi, RAM limiti bilan.
+heavy = true
+memory_limit_mb = 700
+
+[permissions]
+# Import qilinadigan fayllar turgan papkalar (mutlaq yo'llar). Plaginning o'z "inbox"
+# papkasi har doim bor. Misol: paths = ["D:/Hisobotlar"]
+paths = []
+ports = []
+serial = []

@@ -1,0 +1,94 @@
+[project]
+name = "srv1"
+version = "0.0.1"
+description = "SRV_1 — Windows 10 uchun universal modulli server (yadro + plaginlar + GUI shell)"
+requires-python = ">=3.12,<3.13"
+# Bog'liqliklar bosqichma-bosqich qo'shiladi (qarang: docs/bosqichlar.md).
+# Ro'yxatda yo'q kutubxona faqat loyiha egasining roziligi bilan qo'shiladi.
+dependencies = [
+    "aiosqlite>=0.22.1",
+    "apscheduler>=3.10,<4",
+    "duckdb>=2.0.0",
+    "esptool>=5.6.0",
+    "fastapi>=0.162.4",
+    "fastexcel>=0.21.0",
+    "httpx>=0.28.1",
+    "paho-mqtt>=2.2.0",
+    "pluggy>=1.7.0",
+    "polars>=2.1.0",
+    "psutil>=7.2.2",
+    "pydantic>=2.14.3",
+    "pydantic-settings>=2.16.2",
+    "pymodbus>=3.16.2",
+    "pyqt6>=6.12.0",
+    "pyqtgraph>=0.14.0",
+    "pyserial>=3.5",
+    "pywin32>=312",
+    "sqlalchemy[asyncio]>=2.1.8",
+    "structlog>=26.1.0",
+    "uvicorn>=0.54.0",
+    "watchdog>=7.1.0",
+    "websockets>=17.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.8",
+    "pyright>=1.1.390",
+    "httpx>=0.28.1",
+    "types-psutil>=7.2.2.20260906",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["core/srv1_core", "sdk/srv1_sdk", "shell/srv1_shell"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+# --- ruff -------------------------------------------------------------------
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["core", "sdk", "shell", "plugins", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F",   # pycodestyle, pyflakes
+    "I",             # import tartibi
+    "UP",            # zamonaviy sintaksis
+    "B",             # bugbear
+    "S",             # xavfsizlik: S602 (shell=True), S104 (0.0.0.0) va h.k.
+    "ASYNC",         # asyncio xatolari
+    "ANN",           # hamma joyda type hint
+    "SIM", "PTH", "RUF",
+]
+ignore = [
+    "RUF001", "RUF002", "RUF003",  # o'zbekcha matndagi belgilar (ʻ, ʼ)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S603", "S608", "ASYNC110", "ASYNC240"]
+
+# --- pyright ----------------------------------------------------------------
+[tool.pyright]
+include = ["core", "sdk", "shell", "plugins", "tests"]
+extraPaths = ["core", "sdk", "shell", "tests"]
+pythonVersion = "3.12"
+pythonPlatform = "Windows"
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+
+# --- pytest -----------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra --strict-markers"
+cache_dir = ".pytest_cache"

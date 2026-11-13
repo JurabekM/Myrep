@@ -1,0 +1,940 @@
+"""Shell GUI testlari: haqiqiy yadro jarayoni + `offscreen` rejimidagi haqiqiy oyna.
+
+Har boshqaruv haqiqatan bosiladi (`click()`), natija esa yadrodan qaytgan
+ma'lumot bo'yicha tekshiriladi.
+"""
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass
+from pathlib import Path
+
+import httpx
+import pytest
+from PyQt6.QtCore import QEventLoop, Qt, QTimer
+from PyQt6.QtWidgets import QApplication, QCheckBox, QComboBox, QLineEdit, QWidget
+
+from conftest import free_port, write_plugin
+from data_helpers import SALES_CSV, install_data
+from electronics_helpers import install_electronics
+from hosting_helpers import (
+    CADDY_EXE,
+    FAKE_TUNNEL_URL,
+    HostingPorts,
+    install_hosting,
+    write_fake_cloudflared,
+)
+from iot_helpers import install_iot
+from srv1_core.paths import DataPaths
+from srv1_core.plugins.registry import BUILTIN_DIR
+from srv1_shell.app import apply_theme
+from srv1_shell.config import ShellConfig
+from srv1_shell.main_window import MainWindow
+from srv1_shell.pages.logs_page import LogsPage
+from srv1_shell.pages.memory_page import MemoryPage
+from srv1_shell.pages.panel_page import PanelPage
+from srv1_shell.pages.plugins_page import PluginsPage
+from srv1_shell.pages.system_page import SystemPage
+from test_itops_plugin import install_itops
+
+INVENTORY_PLUGIN = """
+    from fastapi import APIRouter
+    from pydantic import BaseModel
+    from srv1_sdk.hookspec import hookimpl
+
+    KINDS = ["passiv", "aktiv"]
+    items = [{"name": "rezistor", "qty": 10, "kind": "passiv", "urgent": False}]
+
+    class Item(BaseModel):
+        name: str
+        qty: int
+        kind: str
+        urgent: bool
+
+    @hookimpl
+    def srv1_router(ctx):
+        router = APIRouter()
+
+        @router.get("/items")
+        async def list_items():
+            return items
+
+        @router.post("/items")
+        async def add_item(item: Item):
+            items.append(item.model_dump())
+            return {"count": len(items)}
+
+        return router
+
+    @hookimpl
+    def srv1_panel(ctx):
+        return {
+            "title": "Ombor",
+            "widgets": [
+                {
+                    "type": "table",
+                    "label": "Qismlar",
+                    "source": "/items",
+                    "refresh_s": 1,
+                    "columns": [{"key": "name", "title": "Nom"}, {"key": "qty", "title": "Soni"}],
+                },
+                {
+                    "type": "form",
+                    "label": "Qism qo'shish",
+                    "path": "/items",
+                    "fields": [
+                        {"name": "name", "label": "Nom"},
+                        {"name": "qty", "label": "Soni", "kind": "number"},
+                        {"name": "kind", "label": "Turi", "kind": "choice", "choices": KINDS},
+                        {"name": "urgent", "label": "Shoshilinch", "kind": "bool"},
+                    ],
+                },
+            ],
+        }
+"""
+
+
+@dataclass(frozen=True)
+class Core:
+    port: int
+    token: str
+    data_dir: Path
+    hosting: HostingPorts
+
+    @property
+    def config(self) -> ShellConfig:
+        return ShellConfig(language="uz", host="127.0.0.1", port=self.port)
+
+    def get(self, path: str) -> httpx.Response:
+        headers = {"Authorization": f"Bearer {self.token}"}
+        return httpx.get(f"http://127.0.0.1:{self.port}{path}", headers=headers, timeout=5.0)
+
+
+def wait(ms: int) -> None:
+    """Qt hodisalar halqasini `ms` millisoniya aylantiradi."""
+    loop = QEventLoop()
+    QTimer.singleShot(ms, loop.quit)
+    loop.exec()
+
+
+def pump(condition: Callable[[], bool], timeout_s: float = 8.0, what: str = "") -> None:
+    """Qt hodisalarini haqiqiy vaqt bilan aylantiradi (taymerlar ham ishlaydi)."""
+    deadline = time.monotonic() + timeout_s
+    while not condition():
+        if time.monotonic() > deadline:
+            pytest.fail(f"kutilgan holat yuz bermadi: {what or condition}")
+        wait(20)
+
+
+@pytest.fixture(scope="module")
+def qapp() -> QApplication:
+    existing = QApplication.instance()
+    app = existing if isinstance(existing, QApplication) else QApplication([])
+    apply_theme(app)
+    return app
+
+
+@pytest.fixture(scope="module")
+def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
+    data_dir = tmp_path_factory.mktemp("shell-core")
+    plugin_root = tmp_path_factory.mktemp("shell-plugins")
+    write_plugin(plugin_root, "inventory", INVENTORY_PLUGIN)
+    # Builtin plaginlar nusxa qilinadi: hosting standart portlar o'rniga bo'sh portlarni oladi.
+    for name in ("hello", "files"):
+        shutil.copytree(
+            BUILTIN_DIR / name, plugin_root / name, ignore=shutil.ignore_patterns("__pycache__")
+        )
+    hosting = install_hosting(
+        plugin_root,
+        data_dir / "plugins" / "hosting" / "data",
+        tunnel_command=write_fake_cloudflared(data_dir.parent / "soxta-cloudflared"),
+    )
+    install_iot(plugin_root, data_dir / "plugins" / "iot" / "data", mqtt={"enabled": False})
+    firmware = install_electronics(plugin_root, data_dir / "plugins" / "electronics" / "data")
+    (firmware / "blink.bin").write_bytes(bytes(2048))
+    install_itops(plugin_root, DataPaths(root=data_dir))
+    inbox = install_data(plugin_root, data_dir / "plugins" / "data" / "data")
+    (inbox / "sotuvlar.csv").write_text(SALES_CSV, encoding="utf-8", newline="")
+    port = free_port()
+    env = {key: value for key, value in os.environ.items() if not key.startswith("SRV1_")}
+    env |= {
+        "SRV1_DATA_DIR": str(data_dir),
+        "SRV1_SERVER__PORT": str(port),
+        "SRV1_EVENTS__STATS_INTERVAL_S": "0.5",
+        "SRV1_PLUGINS__DIRS": json.dumps([str(plugin_root)]),
+        "SRV1_PLUGINS__LOAD_BUILTIN": "false",
+        "SRV1_CADDY_EXE": str(CADDY_EXE),
+    }
+    process = subprocess.Popen(
+        [sys.executable, "-m", "srv1_core"], env=env, stderr=subprocess.DEVNULL
+    )
+    try:
+        deadline = time.monotonic() + 30
+        while True:
+            try:
+                httpx.get(f"http://127.0.0.1:{port}/api/v1/health", timeout=1.0).raise_for_status()
+                break
+            except httpx.HTTPError:
+                assert time.monotonic() < deadline, "yadro ishga tushmadi"
+                assert process.poll() is None, "yadro o'ldi"
+                time.sleep(0.1)
+        token = (data_dir / "auth.token").read_text(encoding="ascii").strip()
+        yield Core(port=port, token=token, data_dir=data_dir, hosting=hosting)
+    finally:
+        process.kill()
+        process.wait(timeout=10)
+
+
+@pytest.fixture
+def window(qapp: QApplication, core: Core) -> Iterator[MainWindow]:
+    main = MainWindow(core.config, core.token)
+    main.show()
+    pump(lambda: main.events.connected, what="WebSocket ulanishi")
+    wanted = {"panel:files", "panel:hello", "panel:hosting", "panel:inventory", "panel:iot"}
+    wanted |= {"panel:electronics", "panel:itops"}
+    pump(lambda: wanted <= set(main.page_keys()), what="panellar")
+    yield main
+    main.shutdown()
+    main.close()
+    main.deleteLater()
+    wait(20)
+
+
+def _nav_labels(main: MainWindow) -> list[str]:
+    labels: list[str] = []
+    for row in range(main.nav.count()):
+        item = main.nav.item(row)
+        assert item is not None
+        labels.append(item.text())
+    return labels
+
+
+def _page[T](main: MainWindow, key: str, kind: type[T]) -> T:
+    main.select(key)
+    page = main.page(key)
+    assert isinstance(page, kind)
+    assert main.stack.currentWidget() is page
+    return page
+
+
+# --- ulanish va tizim sahifasi ---------------------------------------------------
+def test_connects_and_shows_system(window: MainWindow) -> None:
+    assert window.connection.objectName() == "ConnOk"
+    assert "Ulangan" in window.connection.text()
+    page = _page(window, "system", SystemPage)
+    pump(lambda: page.cpu.value.text() != "—", what="tizim holati")
+    assert page.memory.value.text().endswith("%")
+    assert page.core.value.text().endswith("MB")
+    assert "PID" in page.core.detail.text()
+    assert page.error.text() == ""
+    points = page.chart.point_count()
+    pump(lambda: page.chart.point_count() >= points + 2, what="system.stats hodisalari")
+    disk_labels = [detail.text() for _bar, detail in page._disk_rows.values()]  # pyright: ignore[reportPrivateUsage]
+    assert disk_labels
+    assert all("GB" in text for text in disk_labels)
+
+
+def test_navigation_lists_fixed_pages_and_panels(window: MainWindow) -> None:
+    labels = _nav_labels(window)
+    assert labels[:4] == ["Tizim", "Plaginlar", "Jurnal", "Xotira"]
+    assert sorted(labels[4:]) == [
+        "Elektronika",
+        "Fayllar",
+        "Hosting",
+        "IT boshqaruvi",
+        "IoT",
+        "Ombor",
+        "Salom",
+    ]
+    assert window.windowTitle() == "SRV_1 boshqaruvi"
+
+
+# --- plaginlar: yoqish/o'chirish tugmasi --------------------------------------------
+def test_plugin_toggle_button(window: MainWindow, core: Core) -> None:
+    page = _page(window, "plugins", PluginsPage)
+    pump(lambda: page.table.rowCount() == 8, what="plaginlar ro'yxati")
+    row = next(i for i, plugin in enumerate(page.plugins) if plugin["name"] == "hello")
+
+    def status_text() -> str:
+        item = page.table.item(row, 3)
+        return item.text() if item is not None else ""
+
+    assert status_text() == "Ishlayapti"
+    assert page.buttons["hello"].text() == "Oʻchirish"
+
+    page.buttons["hello"].click()
+    pump(lambda: status_text() == "Toʻxtagan", what="plagin to'xtashi")
+    assert core.get("/api/v1/plugins/hello").json()["status"] == "stopped"
+    assert page.buttons["hello"].text() == "Yoqish"
+    pump(lambda: "panel:hello" not in window.page_keys(), what="panel yopilishi")
+    assert "Salom" not in _nav_labels(window)
+
+    page.buttons["hello"].click()
+    pump(lambda: status_text() == "Ishlayapti", what="plagin qayta yonishi")
+    assert core.get("/api/v1/plugins/hello").json()["status"] == "running"
+    pump(lambda: "panel:hello" in window.page_keys(), what="panel qayta ochilishi")
+
+
+# --- plagin paneli: har vidjet turi ----------------------------------------------------
+def test_hello_panel_values_button_chart_and_forms(
+    window: MainWindow, core: Core, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    page = _page(window, "panel:hello", PanelPage)
+    ticks, notes = page.values["ticks"], page.values["notes"]
+    pump(lambda: ticks.value.text() != "—", what="qiymat vidjeti")
+    assert ticks.title.text() == "Ticklar"
+    before = int(ticks.value.text())
+
+    # tugma: POST /tick -> qiymat oshadi, hodisa grafikka tushadi
+    page.buttons["POST /tick"].click()
+    pump(lambda: int(ticks.value.text()) == before + 1, what="tick tugmasi")
+    assert core.get("/api/v1/plugins/hello/api/stats").json()["ticks"] == before + 1
+    pump(lambda: page.charts["tick"].last_value() == before + 1, what="grafikdagi hodisa")
+    assert "Bajarildi" in page.result.text()
+
+    # GET forma: ixtiyoriy maydon to'ldirilgan va bo'sh holda
+    greet = page.forms["/greet"]
+    name = greet.inputs["name"]
+    assert isinstance(name, QLineEdit)
+    name.setText("Ali")
+    greet.submit.click()
+    pump(lambda: "Salom, Ali!" in page.result.text(), what="salomlashish formasi")
+    name.clear()
+    greet.submit.click()
+    pump(lambda: "Salom, dunyo!" in page.result.text(), what="bo'sh ixtiyoriy maydon")
+
+    # POST forma: majburiy maydon bo'sh bo'lsa so'rov ketmaydi
+    note_form = page.forms["/notes"]
+    note_form.submit.click()
+    assert page.result.text() == "«Matn» toʻldirilishi shart"
+    assert page.result.objectName() == "ErrorText"
+    text = note_form.inputs["text"]
+    assert isinstance(text, QLineEdit)
+    text.setText("skrinshot uchun eslatma")
+    note_form.submit.click()
+    pump(lambda: notes.value.text() == "1", what="eslatma qo'shish")
+
+    # tasdiqli tugma: "Yo'q" — hech narsa o'zgarmaydi, "Ha" — o'chiriladi
+    delete = page.buttons["DELETE /notes"]
+    asked: list[str] = []
+
+    def decline(action: str) -> bool:
+        asked.append(action)
+        return False
+
+    monkeypatch.setattr(page, "confirm", decline)
+    delete.click()
+    wait(300)
+    assert asked == ["Eslatmalarni o'chirish"]
+    assert core.get("/api/v1/plugins/hello/api/stats").json()["notes"] == 1
+
+    def accept(action: str) -> bool:
+        return True
+
+    monkeypatch.setattr(page, "confirm", accept)
+    delete.click()
+    pump(lambda: notes.value.text() == "0", what="eslatmalarni o'chirish")
+
+
+def test_table_and_typed_form_fields(window: MainWindow, core: Core) -> None:
+    page = _page(window, "panel:inventory", PanelPage)
+    table = page.tables["/items"].table
+    pump(lambda: table.rowCount() >= 1, what="jadval vidjeti")
+    first = table.item(0, 0)
+    assert first is not None
+    assert first.text() == "rezistor"
+    rows = table.rowCount()
+
+    form = page.forms["/items"]
+    name, qty, kind, urgent = (form.inputs[key] for key in ("name", "qty", "kind", "urgent"))
+    assert isinstance(name, QLineEdit)
+    assert isinstance(qty, QLineEdit)
+    assert isinstance(kind, QComboBox)
+    assert isinstance(urgent, QCheckBox)
+    name.setText("ESP32")
+    qty.setText("olti")
+    form.submit.click()
+    assert page.result.text() == "«Soni» son boʻlishi kerak"
+    qty.setText("6")
+    kind.setCurrentText("aktiv")
+    urgent.setChecked(True)
+    form.submit.click()
+    pump(lambda: table.rowCount() == rows + 1, what="yangi qator")
+    assert core.get("/api/v1/plugins/inventory/api/items").json()[-1] == {
+        "name": "ESP32",
+        "qty": 6,
+        "kind": "aktiv",
+        "urgent": True,
+    }
+
+
+# --- fayllar paneli: filtrli jadval va qator amallari ----------------------------------
+def test_files_panel_search_trash_and_restore(
+    window: MainWindow, core: Core, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    library = core.data_dir / "plugins" / "files" / "data" / "library"
+    target = library / "gui_sinov_hisobot.txt"
+    target.write_text("matn", encoding="utf-8")
+    (library / "boshqa.bin").write_bytes(b"0" * 2048)
+
+    page = _page(window, "panel:files", PanelPage)
+    monkeypatch.setattr(page, "confirm", lambda _action: True)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
+    search, trash = page.tables["/search"], page.tables["/trash"]
+    roots = page.tables["/roots"]
+    pump(lambda: roots.table.rowCount() == 1, what="ildizlar jadvali")
+    pump(lambda: page.values["files"].value.text() == "2", what="kuzatuv indeksi")
+
+    # filtr: nom bo'yicha qidirish, Enter bilan ham ishlaydi
+    name_filter = search.filters["q"]
+    assert isinstance(name_filter, QLineEdit)
+    name_filter.setText("gui_sinov")
+    search.search_button.click()
+    pump(lambda: [row["name"] for row in search.rows] == ["gui_sinov_hisobot.txt"], what="qidiruv")
+    cell = search.table.item(0, 3)
+    assert cell is not None
+    assert cell.text() == "4 B"
+    name_filter.setText("boshqa")
+    name_filter.returnPressed.emit()
+    pump(lambda: [row["name"] for row in search.rows] == ["boshqa.bin"], what="Enter bilan qidiruv")
+    size_cell = search.table.item(0, 3)
+    assert size_cell is not None
+    assert size_cell.text() == "2 KB"
+
+    # qator amali: tanlanmaguncha tugma o'chiq
+    delete = search.action_buttons["POST /delete"]
+    assert delete.text() == "Savatga"
+    assert not delete.isEnabled()
+    name_filter.setText("gui_sinov")
+    search.search_button.click()
+    pump(lambda: [row["name"] for row in search.rows] == ["gui_sinov_hisobot.txt"], what="qidiruv")
+    search.table.selectRow(0)
+    assert delete.isEnabled()
+    delete.click()
+    pump(lambda: not target.exists(), what="savatga ko'chirish")
+    pump(lambda: search.rows == [], what="natija yo'qolishi")
+    pump(
+        lambda: [row["name"] for row in trash.rows] == ["gui_sinov_hisobot.txt"],
+        what="savat jadvali",
+    )
+    assert not delete.isEnabled()
+
+    # savatdan tiklash
+    restore = trash.action_buttons["POST /trash/restore"]
+    assert not restore.isEnabled()
+    trash.table.selectRow(0)
+    restore.click()
+    pump(lambda: target.exists(), what="tiklash")
+    assert target.read_text(encoding="utf-8") == "matn"
+    pump(lambda: trash.rows == [], what="savat bo'shashi")
+
+    # forma + son maydoni: papka yaratish
+    form = page.forms["/mkdir"]
+    root_input, path_input = form.inputs["root"], form.inputs["path"]
+    assert isinstance(root_input, QLineEdit)
+    assert isinstance(path_input, QLineEdit)
+    root_input.setText("0")
+    path_input.setText("gui_papka")
+    form.submit.click()
+    pump(lambda: (library / "gui_papka").is_dir(), what="papka yaratish")
+    path_input.setText("../tashqari")
+    form.submit.click()
+    pump(lambda: page.result.objectName() == "ErrorText", what="rad etilgan yo'l")
+    assert "403" in page.result.text()
+    assert not (library.parent / "tashqari").exists()
+
+
+# --- hosting paneli: forma, qator amallari, log vidjeti -----------------------------------
+def test_hosting_panel_create_stop_start_and_log(
+    window: MainWindow, core: Core, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project_dir = core.data_dir / "projects" / "gui-api"
+    project_dir.mkdir(parents=True)
+    script = "import os, http.server as h; print('gui ilova tayyor', flush=True); "
+    script += "h.ThreadingHTTPServer(('127.0.0.1', int(os.environ['PORT'])), "
+    script += "h.SimpleHTTPRequestHandler).serve_forever()"
+    (project_dir / "app.py").write_text(script, encoding="utf-8")
+
+    page = _page(window, "panel:hosting", PanelPage)
+    table = page.tables["/projects"]
+    pump(lambda: page.values["caddy"].value.text() == "running", what="Caddy holati")
+
+    # forma: tanlov maydoni + ixtiyoriy son maydoni
+    form = page.forms["/projects"]
+    name, kind, command, idle = (
+        form.inputs[key] for key in ("name", "kind", "command", "idle_minutes")
+    )
+    assert isinstance(name, QLineEdit)
+    assert isinstance(kind, QComboBox)
+    assert isinstance(command, QLineEdit)
+    assert isinstance(idle, QLineEdit)
+    name.setText("gui-api")
+    kind.setCurrentText("python")
+    command.setText("python app.py")
+    idle.setText("0")
+    form.submit.click()
+    pump(lambda: [row["name"] for row in table.rows] == ["gui-api"], what="loyiha qatori")
+    pump(lambda: table.rows[0]["state"] == "running", what="loyiha ishga tushishi")
+    site = httpx.get(core.hosting.site_url(), headers=core.hosting.host_header("gui-api"))
+    assert site.status_code == 200
+    assert page.values["running"].value.text() in ("0", "1")
+
+    # log vidjeti: majburiy filtr bo'sh bo'lsa so'rov ketmaydi
+    log = page.logs["/log"]
+    assert log.view.toPlainText() == ""
+    log_name = log.filters["name"]
+    assert isinstance(log_name, QLineEdit)
+    log_name.setText("gui-api")
+    log.show_button.click()
+    pump(lambda: "gui ilova tayyor" in log.view.toPlainText(), what="loyiha jurnali")
+
+    # qator amallari: to'xtatish va qayta ishga tushirish
+    stop, start = table.action_buttons["POST /stop"], table.action_buttons["POST /start"]
+    assert (stop.text(), start.text()) == ("Toʻxtatish", "Ishga tushirish")
+    table.table.selectRow(0)
+    stop.click()
+    pump(lambda: table.rows[0]["state"] == "stopped", what="to'xtatish")
+    stopped = httpx.get(core.hosting.site_url(), headers=core.hosting.host_header("gui-api"))
+    assert stopped.status_code == 404
+    pump(lambda: "to'xtatildi" in log.view.toPlainText(), what="jurnalda to'xtatish")
+    table.table.selectRow(0)
+    start.click()
+    pump(lambda: table.rows[0]["state"] == "running", what="qayta ishga tushirish")
+
+    # internetga ochish: tasdiq so'raladi; rad etilsa hech narsa bo'lmaydi
+    asked: list[str] = []
+    answer = [False]
+
+    def confirm(action: str) -> bool:
+        asked.append(action)
+        return answer[0]
+
+    monkeypatch.setattr(page, "confirm", confirm)
+    open_tunnel = table.action_buttons["POST /tunnel/open"]
+    assert open_tunnel.text() == "Internetga ochish"
+    table.table.selectRow(0)
+    open_tunnel.click()
+    wait(500)
+    assert asked == ["Internetga ochish"]
+    assert table.rows[0]["public_url"] is None
+    answer[0] = True
+    table.table.selectRow(0)
+    open_tunnel.click()
+    pump(lambda: table.rows[0]["public_url"] == FAKE_TUNNEL_URL, what="tunnel manzili")
+    pump(lambda: page.values["tunnels"].value.text() == "1", what="ochiq tunnellar soni")
+    table.table.selectRow(0)
+    table.action_buttons["POST /tunnel/close"].click()
+    pump(lambda: table.rows[0]["public_url"] is None, what="tunnel yopilishi")
+
+    # tasdiqli amal: ro'yxatdan chiqarish (fayllar qoladi)
+    table.table.selectRow(0)
+    table.action_buttons["POST /remove"].click()
+    pump(lambda: table.rows == [], what="ro'yxatdan chiqarish")
+    assert (project_dir / "app.py").is_file()
+
+
+# --- IoT paneli: qo'lda yozuv, filtrli jadval, serial monitor --------------------------
+def test_iot_panel_record_filter_and_serial_monitor(window: MainWindow, core: Core) -> None:
+    page = _page(window, "panel:iot", PanelPage)
+    pump(lambda: page.values["mqtt_state"].value.text() == "disabled", what="MQTT holati")
+
+    # qo'lda yozuv: matn + son maydonlari
+    record = page.forms["/telemetry/record"]
+    for name, text in (("source", "gui"), ("key", "harorat"), ("value", "21,5")):
+        editor = record.inputs[name]
+        assert isinstance(editor, QLineEdit)
+        editor.setText(text)
+    record.submit.click()
+    latest = page.tables["/telemetry/latest"]
+    pump(
+        lambda: (
+            [(r["source"], r["key"], r["value"]) for r in latest.rows]
+            == [("manual:gui", "harorat", 21.5)]
+        ),
+        what="oxirgi qiymatlar jadvali",
+    )
+    stored = core.get("/api/v1/plugins/iot/api/telemetry/latest").json()
+    assert (stored[0]["source"], stored[0]["value"]) == ("manual:gui", 21.5)
+
+    # jadval filtri: manba boshi bo'yicha
+    source = latest.filters["source"]
+    assert isinstance(source, QLineEdit)
+    source.setText("modbus:")
+    latest.search_button.click()
+    pump(lambda: latest.rows == [], what="filtrlangan jadval")
+    source.clear()
+    latest.search_button.click()
+    pump(lambda: len(latest.rows) == 1, what="filtrsiz jadval")
+
+    # serial: halqa portni forma orqali ochish, yozish, monitorda ko'rish
+    open_form = page.forms["/serial/open"]
+    port = open_form.inputs["port"]
+    assert isinstance(port, QLineEdit)
+    port.setText("loop://")
+    open_form.submit.click()
+    ports = page.tables["/serial/ports"]
+    pump(
+        lambda: any(row["port"] == "loop://" and row["open"] for row in ports.rows),
+        what="ochiq port",
+    )
+
+    write_form = page.forms["/serial/write"]
+    for name, text in (("port", "loop://"), ("text", "volt=3.3")):
+        editor = write_form.inputs[name]
+        assert isinstance(editor, QLineEdit)
+        editor.setText(text)
+    write_form.submit.click()
+    monitor = page.logs["/serial/lines"]
+    monitor_port = monitor.filters["port"]
+    assert isinstance(monitor_port, QLineEdit)
+    monitor_port.setText("loop://")
+    monitor.show_button.click()
+    pump(lambda: "volt=3.3" in monitor.view.toPlainText(), what="serial monitor")
+    pump(lambda: len(latest.rows) == 2, what="serial qiymati jadvalda")
+
+    # qator amali: portni yopish
+    row = next(i for i, item in enumerate(ports.rows) if item["port"] == "loop://")
+    ports.table.selectRow(row)
+    ports.action_buttons["POST /serial/close"].click()
+    pump(lambda: not any(item["open"] for item in ports.rows), what="portni yopish")
+
+    # ruxsat etilmagan port: xato ko'rsatiladi
+    port.setText("COM9")
+    open_form.submit.click()
+    pump(lambda: page.result.objectName() == "ErrorText", what="rad etilgan port")
+    assert "403" in page.result.text()
+
+
+# --- data paneli: og'ir plaginni yoqish, import, SQL so'rov vidjeti ---------------------
+def _fill(inputs: dict[str, QWidget], **texts: str) -> None:
+    for name, text in texts.items():
+        editor = inputs[name]
+        assert isinstance(editor, QLineEdit)
+        editor.setText(text)
+
+
+def test_electronics_panel_monitor_and_confirmed_flash(
+    window: MainWindow, core: Core, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pump(lambda: "panel:electronics" in window.page_keys(), what="elektronika paneli")
+    page = _page(window, "panel:electronics", PanelPage)
+    pump(lambda: page.values["flash_state"].value.text() == "idle", what="proshivka holati")
+    assert page.values["esptool"].value.text()[0].isdigit()
+    files = page.tables["/firmware"]
+    pump(lambda: [row["name"] for row in files.rows] == ["blink.bin"], what="proshivka fayllari")
+    size_cell = files.table.item(0, 1)
+    assert size_cell is not None and size_cell.text() == "2 KB"
+
+    # monitor: halqa portni ochish, yozish, ko'rish
+    open_form = page.forms["/monitor/open"]
+    _fill(open_form.inputs, port="loop://")
+    open_form.submit.click()
+    ports = page.tables["/ports"]
+    pump(
+        lambda: any(row["port"] == "loop://" and row["monitor"] for row in ports.rows),
+        what="ochiq monitor",
+    )
+    write_form = page.forms["/monitor/write"]
+    _fill(write_form.inputs, port="loop://", text="salom plata")
+    write_form.submit.click()
+    monitor = page.logs["/monitor/lines"]
+    monitor_port = monitor.filters["port"]
+    assert isinstance(monitor_port, QLineEdit)
+    monitor_port.setText("loop://")
+    monitor.show_button.click()
+    pump(lambda: "salom plata" in monitor.view.toPlainText(), what="serial monitor")
+
+    # proshivka formasi xavfli: tasdiqsiz hech narsa yuborilmaydi
+    flash = page.forms["/flash"]
+    assert flash.submit.objectName() == "Danger"
+    _fill(flash.inputs, port="COM9", file="blink.bin")
+    board = flash.inputs["board"]
+    assert isinstance(board, QComboBox)
+    board.setCurrentText("esp32")
+    asked: list[str] = []
+
+    def decline(action: str) -> bool:
+        asked.append(action)
+        return False
+
+    monkeypatch.setattr(page, "confirm", decline)
+    flash.submit.click()
+    wait(300)
+    assert asked == ["Proshivka yozish"]
+    api = "/api/v1/plugins/electronics/api"
+    assert core.get(f"{api}/flash").json() == {"state": "idle"}
+
+    # tasdiqlansa yuboriladi; COM9 manifestda yo'q — yadro rad etadi va xato ko'rinadi
+    monkeypatch.setattr(page, "confirm", lambda _action: True)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
+    flash.submit.click()
+    pump(lambda: page.result.objectName() == "ErrorText", what="rad etilgan proshivka")
+    assert "403" in page.result.text()
+    assert core.get(f"{api}/flash/history").json() == []
+
+
+def test_itops_panel_processes_services_and_backup(
+    window: MainWindow, core: Core, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    page = _page(window, "panel:itops", PanelPage)
+    processes = page.tables["/processes"]
+    pump(lambda: len(processes.rows) > 10, what="jarayonlar jadvali")
+    _fill(processes.filters, search="python")
+    processes.search_button.click()
+    pump(
+        lambda: bool(processes.rows) and all("python" in r["name"].lower() for r in processes.rows),
+        what="jarayonlar qidiruvi",
+    )
+    memory_cell = processes.table.item(0, 4)
+    assert memory_cell is not None and memory_cell.text().endswith(("MB", "KB", "GB"))
+
+    services = page.tables["/services"]
+    pump(lambda: len(services.rows) > 20, timeout_s=20, what="xizmatlar jadvali")
+    state = services.filters["state"]
+    assert isinstance(state, QComboBox)
+    state.setCurrentText("running")
+    services.search_button.click()
+    pump(
+        lambda: bool(services.rows) and all(r["state"] == "running" for r in services.rows),
+        timeout_s=20,
+        what="xizmatlar filtri",
+    )
+
+    # zaxira: tugma -> arxiv jadvalda -> tasdiq bilan o'chirish
+    backups = page.tables["/backups"]
+    pump(lambda: page.values["backup_state"].value.text() == "idle", what="zaxira holati")
+    assert backups.rows == []
+    page.buttons["POST /backups/run"].click()
+    pump(lambda: len(backups.rows) == 1, timeout_s=20, what="zaxira arxivi")
+    pump(lambda: page.values["backup_state"].value.text() == "done", what="zaxira tugashi")
+    name = backups.rows[0]["name"]
+    assert (core.data_dir / "plugins" / "itops" / "data" / "backups" / name).is_file()
+    monkeypatch.setattr(page, "confirm", lambda _action: True)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
+    backups.table.selectRow(0)
+    backups.action_buttons["POST /backups/remove"].click()
+    pump(lambda: backups.rows == [], what="zaxirani o'chirish")
+    assert list((core.data_dir / "plugins" / "itops" / "data" / "backups").iterdir()) == []
+
+
+def test_data_panel_enable_import_and_sql_query(window: MainWindow, core: Core) -> None:
+    plugins = _page(window, "plugins", PluginsPage)
+    pump(lambda: "data" in plugins.buttons, what="plaginlar ro'yxati")
+    assert "panel:data" not in window.page_keys(), "og'ir plagin standart holatda o'chiq"
+    assert plugins.buttons["data"].text() == "Yoqish"
+    plugins.buttons["data"].click()
+    pump(lambda: "panel:data" in window.page_keys(), timeout_s=30, what="data paneli")
+
+    page = _page(window, "panel:data", PanelPage)
+    inbox, datasets = page.tables["/inbox"], page.tables["/datasets"]
+    pump(lambda: [row["path"] for row in inbox.rows] == ["sotuvlar.csv"], what="inbox jadvali")
+
+    # qator amali: inbox'dagi faylni import qilish
+    inbox.table.selectRow(0)
+    inbox.action_buttons["POST /import"].click()
+    pump(
+        lambda: (
+            [(row["name"], row["state"], row["rows"]) for row in datasets.rows]
+            == [("sotuvlar", "ready", 6)]
+        ),
+        timeout_s=30,
+        what="import tugashi",
+    )
+    pump(lambda: page.values["rows"].value.text() == "6", what="qatorlar soni")
+
+    # SQL so'rov: ustunlar javobdan olinadi
+    query = page.queries["/query"]
+    assert query.run_button.text() == "Bajarish (Ctrl+Enter)"
+    query.run_button.click()
+    assert query.status.text() == "", "bo'sh so'rov yuborilmaydi"
+    query.editor.setPlainText(
+        "SELECT mahsulot, sum(soni) AS jami, avg(narx) AS ortacha\n"
+        "FROM sotuvlar GROUP BY mahsulot ORDER BY jami DESC"
+    )
+    query.run_button.click()
+    pump(lambda: len(query.rows) == 3, timeout_s=30, what="so'rov natijasi")
+    assert query.columns == ["mahsulot", "jami", "ortacha"]
+    assert query.rows[0][:2] == ["non", 20]
+    headers = [query.table.horizontalHeaderItem(i) for i in range(3)]
+    assert [item.text() for item in headers if item is not None] == query.columns
+    assert headers[1] is not None
+    assert headers[1].toolTip() == "HUGEINT"
+    first, third = query.table.item(0, 0), query.table.item(2, 2)
+    assert first is not None
+    assert third is not None
+    assert (first.text(), third.text()) == ("non", "12,6667")
+    assert query.status.text().startswith("3 qator, ")
+    assert query.status.objectName() == "ResultText"
+
+    # hisobot (SUMMARIZE) va katta natijaning kesilishi
+    query.editor.setPlainText("SUMMARIZE sotuvlar")
+    query.run_button.click()
+    pump(lambda: len(query.rows) == 4 and "column_name" in query.columns, what="hisobot")
+    query.editor.setPlainText("SELECT i FROM range(5000) t(i)")
+    query.run_button.click()
+    pump(lambda: len(query.rows) == 200, what="kesilgan natija")
+    assert query.status.text().startswith("Birinchi 200 qator koʻrsatildi")
+
+    # xato so'rov: sabab vidjetning o'zida, tugma qayta yoqiladi
+    query.editor.setPlainText("DROP VIEW sotuvlar")
+    query.run_button.click()
+    pump(lambda: query.status.objectName() == "ErrorText", what="rad etilgan so'rov")
+    assert "403" in query.status.text()
+    assert "faqat SELECT" in query.status.text()
+    assert query.run_button.isEnabled()
+    query.editor.setPlainText("SELECT count(*) FROM sotuvlar")
+    query.run_button.click()
+    pump(lambda: query.rows == [[6]], what="to'plam joyida")
+
+    # plaginni o'chirish: panel yo'qoladi
+    plugins = _page(window, "plugins", PluginsPage)
+    pump(lambda: plugins.buttons["data"].text() == "Oʻchirish", what="plagin holati")
+    plugins.buttons["data"].click()
+    pump(lambda: "panel:data" not in window.page_keys(), timeout_s=30, what="panel yopilishi")
+    assert core.get("/api/v1/plugins/data").json()["status"] == "stopped"
+
+
+# --- jurnal ------------------------------------------------------------------------------
+def test_logs_page_tail_live_and_filter(window: MainWindow) -> None:
+    page = _page(window, "logs", LogsPage)
+    pump(lambda: "core_started" in page.view.toPlainText(), what="oxirgi log yozuvlari")
+    lines_before = page.view.blockCount()
+
+    plugins = window.page("plugins")
+    assert isinstance(plugins, PluginsPage)
+    assert "target=inventory" not in page.view.toPlainText()
+    plugins.toggle("inventory", "disable")
+    pump(lambda: "target=inventory" in page.view.toPlainText(), what="jonli log")
+    assert "action=plugin.disable" in page.view.toPlainText().splitlines()[-1]
+    assert page.view.blockCount() > lines_before
+
+    page.level.setCurrentIndex(page.level.findData("error"))
+    assert "core_started" not in page.view.toPlainText()
+    page.level.setCurrentIndex(0)
+    assert "core_started" in page.view.toPlainText()
+
+    page.pause.setChecked(True)
+    shown = page.view.blockCount()
+    plugins.toggle("inventory", "enable")
+    pump(
+        lambda: any(
+            e.get("action") == "plugin.enable" and e.get("target") == "inventory"
+            for e in page.entries
+        ),
+        what="log hodisasi",
+    )
+    assert page.view.blockCount() == shown, "pauza paytida ko'rinish o'zgarmasligi kerak"
+    page.pause.setChecked(False)
+
+    page.clear_button.click()
+    assert page.view.toPlainText() == ""
+    pump(lambda: "panel:inventory" in window.page_keys(), what="panel qayta ochilishi")
+
+
+# --- xotira ------------------------------------------------------------------------------
+def test_memory_page_lists_core_and_shell(window: MainWindow) -> None:
+    page = _page(window, "memory", MemoryPage)
+    pump(lambda: page.table.rowCount() >= 2, what="jarayonlar jadvali")
+    kinds = [row["kind"] for row in page.rows]
+    assert kinds == ["core", "shell"]
+    assert page.rows[-1]["pid"] == os.getpid()
+    labels = [page.table.item(row, 0) for row in range(page.table.rowCount())]
+    assert [item.text() for item in labels if item is not None] == ["Yadro", "Shell (shu oyna)"]
+    assert "chegara 350,0 MB" in page.total.text()
+    assert 0 < page.bar.value() <= 100
+    total = sum(int(row["rss"]) for row in page.rows)
+    assert page.bar.value() == round(100 * total / (350 * 1024 * 1024)) or page.bar.value() == 100
+
+
+# --- til ----------------------------------------------------------------------------------
+def test_language_switch_rebuilds_everything(core: Core, qapp: QApplication) -> None:
+    saved: list[str] = []
+    main = MainWindow(core.config, core.token, on_language_changed=saved.append)
+    main.show()
+    try:
+        pump(lambda: "panel:hello" in main.page_keys(), what="panel")
+        main.select("panel:hello")
+
+        main.language.setCurrentIndex(main.language.findData("ru"))
+        russian = _nav_labels(main)
+        assert russian[:4] == ["Система", "Плагины", "Журнал", "Память"]
+        assert {"Привет", "Файлы"} <= set(russian)
+        assert main.windowTitle() == "Управление SRV_1"
+        assert main.current_key() == "panel:hello", "tanlangan sahifa saqlanishi kerak"
+        panel = main.page("panel:hello")
+        assert isinstance(panel, PanelPage)
+        assert panel.values["ticks"].title.text() == "Тики"
+        assert panel.buttons["POST /tick"].text() == "Тик сейчас"
+        pump(lambda: "Подключено" in main.connection.text(), what="ulanish matni")
+        pump(
+            lambda: panel.values["ticks"].value.text() != "—", what="qayta qurilgan panel ma'lumoti"
+        )
+
+        main.set_language("en")
+        english = _nav_labels(main)
+        assert english[:4] == ["System", "Plugins", "Log", "Memory"]
+        assert {"Hello", "Files"} <= set(english)
+        memory = _page(main, "memory", MemoryPage)
+        pump(lambda: memory.table.rowCount() >= 2, what="xotira jadvali")
+        assert "limit 350.0 MB" in memory.total.text()
+        plugins = _page(main, "plugins", PluginsPage)
+        pump(lambda: plugins.table.rowCount() == 8, what="plaginlar")
+        header = plugins.table.horizontalHeaderItem(3)
+        assert header is not None
+        assert header.text() == "Status"
+
+        main.set_language("en")  # o'zgarmasa qayta qurilmaydi
+        assert saved == ["ru", "en"]
+        assert main.config.language == "en"
+    finally:
+        main.shutdown()
+        main.close()
+        main.deleteLater()
+
+
+# --- xato holatlari --------------------------------------------------------------------------
+def test_core_unreachable_is_shown(qapp: QApplication) -> None:
+    config = ShellConfig(language="uz", host="127.0.0.1", port=free_port())
+    main = MainWindow(config, "x" * 43)
+    main.show()
+    try:
+        page = _page(main, "system", SystemPage)
+        pump(lambda: page.error.text() != "", what="ulanish xatosi")
+        assert page.error.text() == "Yadroga ulanib boʻlmadi"
+        assert main.connection.objectName() == "ConnBad"
+        assert "Ulanmagan" in main.connection.text()
+        assert _nav_labels(main) == ["Tizim", "Plaginlar", "Jurnal", "Xotira"]
+    finally:
+        main.shutdown()
+        main.close()
+        main.deleteLater()
+
+
+def test_wrong_token_is_shown(core: Core, qapp: QApplication) -> None:
+    main = MainWindow(core.config, "x" * 43)
+    main.show()
+    try:
+        page = _page(main, "system", SystemPage)
+        pump(lambda: page.error.text() != "", what="token xatosi")
+        assert page.error.text() == "Token notoʻgʻri"
+        assert not main.events.connected
+    finally:
+        main.shutdown()
+        main.close()
+        main.deleteLater()
+
+
+def test_window_is_usable_at_minimum_size(window: MainWindow) -> None:
+    """Kichik oynada ham boshqaruvlar siqilib yo'qolmaydi (kesilmaydi, nol o'lchamga tushmaydi)."""
+    window.resize(window.minimumSize())
+    wait(50)
+    page = _page(window, "panel:hello", PanelPage)
+    pump(lambda: page.values["ticks"].value.text() != "—", what="panel")
+    for button in [*page.buttons.values(), *(form.submit for form in page.forms.values())]:
+        assert button.width() >= button.sizeHint().width() - 2, button.text()
+        assert button.height() >= 24
+    assert window.nav.width() >= 170
+    assert window.language.isVisible()
+    assert window.windowState() & Qt.WindowState.WindowMinimized == Qt.WindowState.WindowNoState
