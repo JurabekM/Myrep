@@ -120,7 +120,7 @@ async def test_managed_broker_with_password(paths: DataPaths, plugin_root: Path)
 
 
 async def test_broker_restart_reconnects(paths: DataPaths, plugin_root: Path) -> None:
-    """Broker o'ldirilsa plagin holatni ko'rsatadi; yadro qayta ishga tushganda hammasi tiklanadi."""
+    """Broker o'ldirilsa holat ko'rinadi; yadro qayta ishga tushganda hammasi tiklanadi."""
     port = free_port()
     install_iot(plugin_root, paths.plugin_data_dir("iot"), mqtt={"port": port})
     async with serve_app(paths) as served, served.client() as client:
