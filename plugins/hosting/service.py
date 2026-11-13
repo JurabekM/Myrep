@@ -181,14 +181,19 @@ class HostingService:
 
     def _routes(self) -> list[Route]:
         routes: list[Route] = []
+        limits = self.store.config
         for project in self.projects.values():
             host, config = self.host_of(project.config.name), project.config
             if project.state == "running" and config.kind == "static":
                 routes.append(static_route(host, self._static_root(project)))
             elif project.state == "running" and config.port is not None:
-                routes.append(proxy_route(host, config.port))
+                routes.append(proxy_route(host, config.port, limits.response_timeout_s))
             elif project.state in ("sleeping", "starting"):
-                routes.append(proxy_route(host, self.store.config.wake_port))
+                # Uyg'otuvchi loyiha tayyor bo'lguncha javob bermaydi: chegara qisqa bo'lmasin.
+                wake_timeout = limits.response_timeout_s and max(
+                    limits.response_timeout_s, limits.ready_timeout_s + 10
+                )
+                routes.append(proxy_route(host, limits.wake_port, wake_timeout))
             elif project.state == "failed":
                 routes.append(message_route(503, "SRV_1: loyiha ishga tushmadi.\n", host))
         return routes

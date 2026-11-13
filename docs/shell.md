@@ -98,6 +98,15 @@ maydon bo'sh yoki son maydonida matn bo'lsa, so'rov yuborilmaydi.
 
 Oyna sarlavhasi ham to'q (Windows 10 2004 va undan yangi; eskisida tizimniki qoladi).
 
+## Bildirishnomalar
+
+Shell ochiq turganda tizim tepsisida SRV_1 belgisi turadi. Plagin `ctx.notify` chaqirsa
+(`plugin.<nom>.notify` hodisasi), shell uni Windows bildirishnomasi qilib ko'rsatadi:
+sarlavha `SRV_1 · <plagin>: <sarlavha>`, joriy tilda. Aynan bir xil xabar 30 s ichida
+takror ko'rsatilmaydi. Belgi yoki bildirishnoma bosilsa, oyna oldinga chiqadi. Qachon
+va nima haqida xabar berishni plagin hal qiladi — shell'da bu haqda mantiq yo'q
+(`srv1_shell/notifier.py`).
+
 ## Xotira
 
 Shell `numpy` ni faqat `pyqtgraph` uchun yuklaydi. `srv1_shell/__init__.py`

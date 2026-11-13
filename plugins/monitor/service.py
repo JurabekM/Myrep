@@ -22,6 +22,7 @@ from .models import (
     load_store,
     save_store,
 )
+from .notices import notice
 from .probe import measure
 from .store import History
 
@@ -108,6 +109,8 @@ class MonitorService:
                 "note": alert.note,
             },
         )
+        title, message = notice(alert)
+        self.ctx.notify(title, message, level=level)
 
     async def on_plugin_state(self, data: Mapping[str, Any]) -> None:
         """Yadroning `plugins.state` hodisasi: boshqa plagin yiqilsa ogohlantirish yoziladi."""

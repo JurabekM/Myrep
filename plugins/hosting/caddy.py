@@ -46,8 +46,12 @@ PROXY_TRY_DURATION = "2s"
 PROXY_TRY_INTERVAL = "50ms"
 
 
-def proxy_route(host: str, port: int) -> Route:
-    proxy = {
+def proxy_route(host: str, port: int, response_timeout_s: float = 0) -> Route:
+    """`response_timeout_s` > 0 bo'lsa, javob SARLAVHALARI shu muddatda kelishi shart.
+
+    Sarlavhalar kelgandan keyingi oqim (uzoq yuklab olish, SSE, WebSocket) cheklanmaydi.
+    """
+    proxy: dict[str, Any] = {
         "handler": "reverse_proxy",
         "upstreams": [{"dial": f"127.0.0.1:{port}"}],
         "load_balancing": {
@@ -55,6 +59,11 @@ def proxy_route(host: str, port: int) -> Route:
             "try_interval": PROXY_TRY_INTERVAL,
         },
     }
+    if response_timeout_s > 0:
+        proxy["transport"] = {
+            "protocol": "http",
+            "response_header_timeout": f"{round(response_timeout_s * 1000)}ms",
+        }
     return {"match": [{"host": [host]}], "handle": [proxy], "terminal": True}
 
 

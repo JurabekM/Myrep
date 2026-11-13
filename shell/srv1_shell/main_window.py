@@ -30,6 +30,8 @@ from srv1_shell.common import AppContext, Page, dark_title_bar
 from srv1_shell.config import ShellConfig
 from srv1_shell.events import EventStream
 from srv1_shell.i18n import I18n
+from srv1_shell.icon import app_icon
+from srv1_shell.notifier import Notifier
 from srv1_shell.pages.logs_page import LogsPage
 from srv1_shell.pages.memory_page import MemoryPage
 from srv1_shell.pages.panel_page import PanelPage
@@ -65,6 +67,7 @@ class MainWindow(QMainWindow):
         self._panel_specs: dict[str, PanelSpec] = {}
         self._current: Page | None = None
         self._closed = False
+        self.notifier = Notifier(app_icon(), lambda: self.ctx.i18n, self._raise_window, self)
 
         self.resize(1180, 760)
         self.setMinimumSize(900, 560)
@@ -218,9 +221,17 @@ class MainWindow(QMainWindow):
         page.activate()
 
     # --- plagin panellari ---------------------------------------------------------
-    def _on_event(self, topic: str, _data: dict[str, Any]) -> None:
+    def _on_event(self, topic: str, data: dict[str, Any]) -> None:
         if topic == STATE_TOPIC:
             self._refresh_plugins()
+        else:
+            self.notifier.handle(topic, data)
+
+    def _raise_window(self) -> None:
+        """Bildirishnoma yoki tepsi belgisi bosilganda oynani oldinga chiqaradi."""
+        self.showNormal()
+        self.raise_()
+        self.activateWindow()
 
     def _refresh_plugins(self) -> None:
         self.api.get("/api/v1/plugins", self._on_plugins, owner=self)
@@ -296,6 +307,7 @@ class MainWindow(QMainWindow):
         self._closed = True
         if self._current is not None:
             self._current.deactivate()
+        self.notifier.close()
         self.events.stop()
         self.api.shutdown()
 

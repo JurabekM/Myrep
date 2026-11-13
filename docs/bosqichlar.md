@@ -14,7 +14,8 @@
 | 9 | `itops` | ✅ tugadi | 2026-11-11 |
 | 10 | Yakun | ✅ tugadi (xizmat 2026-11-13 da o'rnatildi; avtostart sinalmagan) | 2026-11-12 |
 | 11 | `monitor` plagini (`hello` o'rniga) | ✅ tugadi | 2026-11-13 |
-| 12 | Reliz o'rnatuvchisi (`SRV_1-Setup-1.0.0.exe`, [reliz.md](reliz.md)) | ✅ tugadi (administrator rejimi va toza mashina sinalmagan) | 2026-11-13 |
+| 12 | Reliz o'rnatuvchisi (`SRV_1-Setup-1.0.1.exe`, [reliz.md](reliz.md)) | ✅ tugadi (administrator rejimi va toza mashina sinalmagan) | 2026-11-13 |
+| — | Uch kamchilik tuzatildi, reliz 1.0.1: javob vaqt chegarasi ([hosting.md](hosting.md)), Mosquitto'ni qayta ko'tarish ([iot.md](iot.md)), Windows bildirishnomasi ([monitor.md](monitor.md)) | ✅ (bildirishnomaning ekranda ko'rinishi avtomatik sinalmagan) | 2026-11-13 |
 | — | Keng sinov ([sinov-2026-11-13.md](sinov-2026-11-13.md)) | ✅ o'tkazildi (5 kamchilik topildi va tuzatildi) | 2026-11-13 |
 
 ## 0-bosqich — Skelet
