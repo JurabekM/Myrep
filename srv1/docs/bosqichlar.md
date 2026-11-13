@@ -12,7 +12,7 @@
 | 7 | `data` | ✅ tugadi | 2026-11-11 |
 | 8 | `electronics` | ✅ tugadi | 2026-11-11 |
 | 9 | `itops` | ✅ tugadi | 2026-11-11 |
-| 10 | Yakun | ✅ tugadi (xizmat o'rnatilishi sinalmagan) | 2026-11-12 |
+| 10 | Yakun | ✅ tugadi (xizmat 2026-11-13 da o'rnatildi; avtostart sinalmagan) | 2026-11-12 |
 | 11 | `monitor` plagini (`hello` o'rniga) | ✅ tugadi | 2026-11-13 |
 | — | Keng sinov ([sinov-2026-11-13.md](sinov-2026-11-13.md)) | ✅ o'tkazildi (5 kamchilik topildi va tuzatildi) | 2026-11-13 |
 
@@ -751,7 +751,7 @@ narsalar qoldi.
 
 | Nima | Nega sinalmagan | Qanday sinash |
 |------|-----------------|---------------|
-| Windows xizmatini o'rnatish va avtostart | administrator huquqi yo'q | administrator oynasida `install\service.ps1 -Action install`, so'ng qayta yuklash |
+| Xizmatning qayta yuklashdan keyingi avtostarti | o'rnatish 2026-11-13 da sinaldi ([ornatish.md](ornatish.md)), qayta yuklash qilinmagan | kompyuterni qayta yuklab, `install\service.ps1 -Action status` |
 | 4 GB RAM li mashina | bunday mashina yo'q; o'rniga 350 MB li qattiq chegara ostida ishlatib ko'rildi (cho'qqi 227,5 MB) | nishon mashinada «Xotira» va «Kuzatuv» sahifalari |
 | Haqiqiy plataga proshivka, COM monitor, «port band» | COM port va plata yo'q | ESP32/Arduino ulab, `electronics` paneli |
 | Haqiqiy Mosquitto broker, yuqori MQTT oqimi | Mosquitto o'rnatilmagan | `tools/mosquitto/` ga qo'yib, `pytest tests/test_iot_plugin.py` |

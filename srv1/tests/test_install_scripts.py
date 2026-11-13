@@ -70,10 +70,31 @@ def test_service_plan_changes_nothing(tmp_path: Path) -> None:
     assert "nssm set SRV_1 Start SERVICE_DELAYED_AUTO_START" in lines
     assert "nssm set SRV_1 AppExit Default Restart" in lines
     assert "nssm set SRV_1 AppStopMethodConsole 20000" in lines
-    assert "nssm set SRV_1 AppKillProcessTree 1" in lines
     # Parol rejaga hech qachon tushmaydi.
     assert "nssm set SRV_1 ObjectName PC\\ali <parol so'raladi>" in lines
     assert not data.exists()
+
+
+# NSSM 2.24 (tools/ dagi barqaror versiya) qabul qiladigan parametrlar — uning o'z xabaridan.
+# 2026-11-13: `AppKillProcessTree` (faqat 2.25 sinov yig'ilishida bor) o'rnatishni yiqitgan.
+NSSM_224_PARAMETERS = frozenset(
+    """Application AppParameters AppDirectory AppExit AppAffinity AppEnvironment
+    AppEnvironmentExtra AppNoConsole AppPriority AppRestartDelay AppStdin AppStdinShareMode
+    AppStdinCreationDisposition AppStdinFlagsAndAttributes AppStdout AppStdoutShareMode
+    AppStdoutCreationDisposition AppStdoutFlagsAndAttributes AppStderr AppStderrShareMode
+    AppStderrCreationDisposition AppStderrFlagsAndAttributes AppStopMethodSkip
+    AppStopMethodConsole AppStopMethodWindow AppStopMethodThreads AppThrottle AppRotateFiles
+    AppRotateOnline AppRotateSeconds AppRotateBytes AppRotateBytesHigh DependOnGroup
+    DependOnService Description DisplayName ImagePath ObjectName Name Start Type""".split()  # noqa: SIM905
+)
+
+
+def test_service_plan_uses_only_nssm_224_parameters(tmp_path: Path) -> None:
+    result = _script("service.ps1", "-Action", "plan", "-DataDir", str(tmp_path / "data"))
+    assert result.returncode == 0, result.stderr
+    used = {line.split()[3] for line in result.stdout.splitlines() if line.startswith("nssm set ")}
+    assert len(used) > 10
+    assert used <= NSSM_224_PARAMETERS, sorted(used - NSSM_224_PARAMETERS)
 
 
 def test_service_status_without_service() -> None:
