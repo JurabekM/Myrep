@@ -19,7 +19,7 @@ from srv1_sdk.pathsafe import PathTraversalError, check_component, safe_join
 from srv1_sdk.types import PermissionDenied
 
 from .index import Entry, FileIndex
-from .scanner import entry_for, iter_entries
+from .scanner import entry_for, is_link, iter_entries
 
 SCAN_BATCH = 2000
 FLUSH_DELAY_S = 0.5
@@ -256,18 +256,36 @@ class FilesService:
     async def list_dir(self, root_id: int, relpath: str) -> list[dict[str, Any]]:
         path, relative = self.resolve(root_id, relpath)
 
-        def read() -> list[Entry]:
+        def read() -> tuple[list[Entry], list[str]]:
             if not path.is_dir():
                 raise FileOpError(404, f"papka topilmadi: {relpath}")
+            children = sorted(path.iterdir(), key=lambda child: child.name)
+            links = [child.name for child in children if is_link(child)]
             found = (
-                entry_for(root_id, self.roots[root_id], f"{relative}/{name}".lstrip("/"))
-                for name in sorted(p.name for p in path.iterdir())
+                entry_for(root_id, self.roots[root_id], f"{relative}/{child.name}".lstrip("/"))
+                for child in children
             )
-            return [entry for entry in found if entry is not None]
+            return [entry for entry in found if entry is not None], links
 
-        entries = await asyncio.to_thread(read)
+        entries, links = await asyncio.to_thread(read)
         entries.sort(key=lambda entry: (not entry.is_dir, entry.name.lower()))
-        return [entry.as_dict() for entry in entries]
+        rows = [entry.as_dict() | {"link": False} for entry in entries]
+        # Havolalar ichiga kirilmaydi va indeksga tushmaydi; faqat borligi ko'rsatiladi.
+        for name in links:
+            rows.append(
+                {
+                    "root": root_id,
+                    "path": f"{relative}/{name}".lstrip("/"),
+                    "name": name,
+                    "folder": relative,
+                    "ext": "",
+                    "size": None,
+                    "mtime": None,
+                    "is_dir": False,
+                    "link": True,
+                }
+            )
+        return rows
 
     async def search(self, query: str, **filters: Any) -> list[dict[str, Any]]:  # noqa: ANN401
         entries = await self._db(partial(self.index.search, query, **filters))
@@ -374,6 +392,39 @@ class FilesService:
         await self.ctx.audit("file.trash", str(path), detail={"trash_id": trash_id})
         await self.reindex(root_id, relative)
         return {"id": trash_id}
+
+    async def unlink(self, root_id: int, relpath: str) -> dict[str, Any]:
+        """Simvolik havola yoki junction'ning O'ZINI olib tashlaydi; nishoniga tegilmaydi.
+
+        Savatga tushmaydi (havolani ko'chirish nishonni ko'chirib yuborishi mumkin).
+        """
+        parts = [part for part in relpath.replace("\\", "/").split("/") if part]
+        if not parts:
+            raise FileOpError(400, "havola yo'li berilmagan")
+        # Ota papka odatdagidek tekshiriladi (ildiz ichida, o'zi havola orqali emas);
+        # oxirgi bo'lak esa ochilmaydi — aynan havolaning o'zi kerak.
+        parent, parent_rel = self.resolve(root_id, "/".join(parts[:-1]))
+        name = parts[-1]
+        if name in (".", "..") or any(sep in name for sep in ("/", "\\", ":")):
+            raise FileOpError(400, f"yaroqsiz nom: {name}")
+        link = parent / name
+        relative = f"{parent_rel}/{name}".lstrip("/")
+
+        def remove() -> None:
+            if not is_link(link):
+                raise FileOpError(400, f"bu havola emas: {relative}")
+            try:
+                link.unlink()
+            except (PermissionError, IsADirectoryError):
+                link.rmdir()  # papka havolasi va junction: faqat havola yozuvi ketadi
+
+        try:
+            await asyncio.to_thread(remove)
+        except OSError as exc:
+            await self.ctx.audit("file.unlink", str(link), ok=False, detail={"error": str(exc)})
+            raise FileOpError(500, f"havolani olib tashlab bo'lmadi: {exc}") from exc
+        await self.ctx.audit("file.unlink", str(link))
+        return {"path": relative, "removed": True}
 
     async def list_trash(self) -> list[dict[str, Any]]:
         return [item.as_dict() for item in await self._db(self.index.trash_list)]

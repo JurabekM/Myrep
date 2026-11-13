@@ -142,6 +142,11 @@ def srv1_router(ctx: PluginContext) -> APIRouter:
         """Savatga ko'chiradi (tiklash mumkin)."""
         return await _run(service.trash(body.root, body.path))
 
+    @router.post("/unlink")
+    async def unlink(body: PathIn) -> dict[str, Any]:  # pyright: ignore[reportUnusedFunction]
+        """Simvolik havola yoki junction'ning o'zini olib tashlaydi (nishon qoladi)."""
+        return await _run(service.unlink(body.root, body.path))
+
     @router.get("/trash")
     async def trash() -> list[dict[str, Any]]:  # pyright: ignore[reportUnusedFunction]
         return await _run(service.list_trash())

@@ -145,6 +145,11 @@ Hodisalar: `plugin.itops.scan`, `plugin.itops.backup`.
 | So'rov | Vaqt |
 |--------|------|
 | `GET /processes` (birinchi / keyingi) | 0,50 s / 0,26 s |
+
+Jarayonlar ro'yxati so'ralganda har jarayon uchun bittadan handle ochiq turadi
+(CPU foizini oldingi chaqiruvga nisbatan hisoblash uchun; o'lchangan: +220 atrofida).
+Ro'yxat 60 soniya so'ralmasa, ular bo'shatiladi; keyingi birinchi chaqiruvda CPU
+ustuni 0 ko'rsatadi.
 | `GET /services` | 0,15 s |
 | zaxira (9 fayl, 3 baza, 14 KB) | 0,05–0,09 s |
 

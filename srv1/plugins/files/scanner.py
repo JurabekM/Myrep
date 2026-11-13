@@ -24,6 +24,14 @@ def make_entry(root_id: int, relpath: str, name: str, stat: os.stat_result, is_d
     )
 
 
+def is_link(path: Path) -> bool:
+    """Simvolik havola yoki junction (nishoniga qaralmaydi)."""
+    try:
+        return path.is_symlink() or path.is_junction()
+    except OSError:
+        return False
+
+
 def entry_for(root_id: int, root: Path, relpath: str) -> Entry | None:
     """Bitta yo'l uchun yozuv; yo'q, havola yoki o'qib bo'lmasa `None`."""
     path = root / relpath

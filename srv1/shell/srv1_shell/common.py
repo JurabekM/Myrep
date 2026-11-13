@@ -1,5 +1,7 @@
 """Sahifalar uchun umumiy narsalar: kontekst, bazaviy sahifa, kartochka."""
 
+import ctypes
+import sys
 from dataclasses import dataclass
 
 from PyQt6.QtCore import QSize, Qt
@@ -126,6 +128,21 @@ class CardRow(QWidget):
     def minimumSizeHint(self) -> QSize:
         # Bitta kartochka kengligi: ota-joylashuv qatorni bundan torroq qila olmaydi.
         return QSize(CARD_MIN_WIDTH, super().minimumSizeHint().height())
+
+
+def dark_title_bar(hwnd: int) -> bool:
+    """Oyna sarlavhasini to'q qiladi (Windows 10 2004+ / 11). Bo'lmasa jim o'tadi."""
+    if sys.platform != "win32":
+        return False
+    value = ctypes.c_int(1)
+    # 20 — DWMWA_USE_IMMERSIVE_DARK_MODE; eski Windows 10 yig'ilishlarida 19 edi.
+    for attribute in (20, 19):
+        result = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+            ctypes.c_void_p(hwnd), attribute, ctypes.byref(value), ctypes.sizeof(value)
+        )
+        if result == 0:
+            return True
+    return False
 
 
 def section_title(text: str) -> QLabel:

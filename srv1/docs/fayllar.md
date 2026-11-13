@@ -31,7 +31,9 @@ nisbatan, `/` bilan). Ildizdan tashqariga chiqadigan har qanday yo'l
 - Qidiruv nom ichidan, katta-kichik harf farqsiz, har qanday alifboda:
   `sobot` → `Hisobot_2026.pdf`, `ноябрь` → `Отчёт за ноябрь.docx`.
 - 3 belgidan qisqa so'rov oddiy `LIKE` bilan bajariladi (sekinroq, lekin ishlaydi).
-- Simvolik havola va junction'larga kirilmaydi.
+- Simvolik havola va junction'larga kirilmaydi: ular indeksga tushmaydi, ular orqali
+  hech bir amal bajarilmaydi (403). `GET /list` da `link: true` belgisi bilan
+  ko'rinadi; havolaning **o'zini** `POST /unlink` olib tashlaydi (nishon qoladi).
 
 Indeks uch yo'l bilan yangilanadi:
 
@@ -54,6 +56,7 @@ Hammasi `/api/v1/plugins/files/api` ostida.
 | `POST /rename` `{root, path, new_name}` | nomini o'zgartirish |
 | `POST /move`, `POST /copy` `{root, path, dest_root, dest_path}` | `dest_path` papkasi ichiga |
 | `POST /delete` `{root, path}` | savatga ko'chirish |
+| `POST /unlink` `{root, path}` | simvolik havola yoki junction'ning o'zini olib tashlash; nishonga tegilmaydi, savatga tushmaydi; auditda `file.unlink` |
 | `GET /trash` | savat |
 | `POST /trash/restore` `{id}` | asl joyiga tiklash |
 | `POST /trash/purge` `{id}`, `DELETE /trash` | butunlay o'chirish (qaytarib bo'lmaydi) |
@@ -86,6 +89,8 @@ o'zi tozalanmaydi; `DELETE /trash` yoki paneldagi tugma bilan bo'shatiladi.
 | qidiruv: 1000 natija | 30 ms |
 | qidiruv: 2 belgi (`LIKE`) | 12 ms |
 | `index.db` hajmi | 5,0 MB |
+
+100 000 fayl bilan o'lchov (yadro ichida, 2026-11-13): [sinov-2026-11-13.md](sinov-2026-11-13.md#katta-hajmlar).
 
 Vaqtlar API orqali o'lchangan. O'lchov paytida plagin alohida jarayonda edi
 (52 MB); 5-bosqichda yadro ichiga ko'chirildi — vaqtlar qayta o'lchanmagan,
