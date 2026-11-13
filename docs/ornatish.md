@@ -79,11 +79,25 @@ va faylni NSSM'dan **oldin** tekshiradi, testlar esa NSSM'ni umuman chaqirmaydi.
   NSSM kabi (`AttachConsole` + `GenerateConsoleCtrlEvent`) Ctrl+C yuboradi —
   yadro 20 s ichida kod 0 bilan chiqadi, Caddy va loyiha jarayoni qolmaydi.
 
+**Haqiqiy o'rnatish (2026-11-13, foydalanuvchi administrator oynasida yugurdi):**
+
+- xizmat foydalanuvchi hisobidan o'rnatildi va ishga tushdi; yadro `127.0.0.1:8710`
+  da javob beradi, oddiy foydalanuvchi tokenni o'qiy oladi, Caddy ko'tarildi;
+- `remove` ishlayotgan xizmatni toza to'xtatdi: NSSM STOP dan 1 s o'tib yadro
+  `core_stopped` yozdi, chiqish kodi 0;
+- xizmat daraxti (nssm + python + caddy + 2 conhost) private xotirasi: 151,7 MB
+  (shell'siz, ishga tushgandan bir necha daqiqa o'tib, bir marta o'lchangan);
+- ikki xato topildi va tuzatildi: `AppKillProcessTree` (yuqorida) va `nssm start`
+  ning yolg'on xatosi. NSSM dastur `AppThrottle` (10 s) ishlagandan keyingina
+  `running` deydi, `nssm start` esa undan oldin «Unexpected status
+  SERVICE_START_PENDING» bilan 1 kod qaytaradi — xizmat esa ishga tushgan bo'ladi.
+  Skript endi chiqish kodiga emas, 40 s ichida `running` holatiga qaraydi.
+  **Tuzatilgan skriptning o'zi hali administrator bilan qayta yugurilmagan.**
+
 **Sinalmagan:**
 
-- **xizmatni haqiqatan o'rnatish, ishga tushirish, qayta yuklashdan keyingi
-  avtostart, yiqilgandan keyin qayta ko'tarilish** — administrator huquqi yo'q.
-  `service.ps1 install` biror marta ham oxirigacha yugurmagan;
+- qayta yuklashdan keyingi avtostart, yiqilgandan keyin qayta ko'tarilish,
+  `start`/`stop`/`restart` amallari;
 - `uv sync --no-dev` bilan toza mashinada o'rnatish (ishlab chiqish mashinasida
   muhit allaqachon bor edi; `-SkipSync` bilan sinalgan);
 - standart `%PROGRAMDATA%\SRV_1` papkasini yaratish (test vaqtinchalik papkada);
