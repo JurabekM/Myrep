@@ -14,7 +14,7 @@
 | 9 | `itops` | ✅ tugadi | 2026-11-11 |
 | 10 | Yakun | ✅ tugadi (xizmat o'rnatilishi sinalmagan) | 2026-11-12 |
 | 11 | `monitor` plagini (`hello` o'rniga) | ✅ tugadi | 2026-11-13 |
-| — | Keng sinov ([sinov-2026-11-13.md](sinov-2026-11-13.md)) | ✅ o'tkazildi (5 kamchilik topildi, tuzatilmagan) | 2026-11-13 |
+| — | Keng sinov ([sinov-2026-11-13.md](sinov-2026-11-13.md)) | ✅ o'tkazildi (5 kamchilik topildi va tuzatildi) | 2026-11-13 |
 
 ## 0-bosqich — Skelet
 

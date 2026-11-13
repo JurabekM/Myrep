@@ -4,6 +4,8 @@ import asyncio
 import json
 import shutil
 import sqlite3
+import sys
+import threading
 from collections.abc import Awaitable, Callable
 from contextlib import closing
 from pathlib import Path
@@ -16,6 +18,7 @@ import pytest
 from conftest import Served, serve_app
 from hosting_helpers import CADDY_EXE, HostingPorts, install_hosting, write_app
 from srv1_core.paths import DataPaths
+from srv1_core.plugins.registry import BUILTIN_DIR
 
 API = "/api/v1/plugins/hosting/api"
 
@@ -449,6 +452,17 @@ async def test_missing_caddy_is_reported(
         )
         direct = await hosting.web.get(f"http://127.0.0.1:{created.json()['port']}/")
         assert direct.status_code == 200, "Caddy'siz ham loyiha o'z portida ishlaydi"
+        # ...lekin sayt manzili ochilmaydi: holat `running` deb ko'rsatilmaydi
+        (paths.projects_dir / "sayt").mkdir()
+        (paths.projects_dir / "sayt" / "index.html").write_text("x", encoding="utf-8")
+        static = (await hosting.post("/projects", name="sayt", kind="static")).json()
+        assert (static["state"], static["url"]) == ("unreachable", None)
+        assert "caddy.exe topilmadi" in static["error"]
+        listed = {p["name"]: p for p in (await client.get(f"{API}/projects")).json()}
+        assert listed["yakka"]["state"] == "unreachable"
+        assert listed["yakka"]["pid"] is not None, "jarayonning o'zi ishlayapti"
+        status = (await client.get(f"{API}/status")).json()
+        assert (status["running"], status["unreachable"], status["failed"]) == (0, 2, 0)
 
 
 async def _plugin_status(served: Served, client: httpx.AsyncClient) -> dict[str, Any]:
@@ -467,3 +481,59 @@ async def test_non_loopback_listen_needs_explicit_flag(
         assert "loopback emas" in info["error"]
         assert (await client.get("/api/v1/health")).status_code == 200
         assert (await client.get(f"{API}/status")).status_code == 409
+
+
+def test_proxy_route_retries_refused_connections() -> None:
+    sys.path.insert(0, str(BUILTIN_DIR.parent))
+    try:
+        from plugins.hosting import caddy
+    finally:
+        sys.path.pop(0)
+    route = caddy.proxy_route("api.localhost", 9001)
+    handler = route["handle"][0]
+    assert handler["upstreams"] == [{"dial": "127.0.0.1:9001"}]
+    assert handler["load_balancing"] == {"try_duration": "2s", "try_interval": "50ms"}
+
+
+def _burst(url: str, headers: dict[str, str], total: int, parallel: int) -> dict[str, int]:
+    """Oqimli klientlar bilan parallel yuk; javob kodlari bo'yicha sanoq."""
+    codes: dict[str, int] = {}
+    lock = threading.Lock()
+    counter = iter(range(total))
+
+    def worker() -> None:
+        with httpx.Client(headers=headers, timeout=30) as web:
+            while True:
+                with lock:
+                    if next(counter, None) is None:
+                        return
+                try:
+                    code = str(web.get(url).status_code)
+                except httpx.HTTPError as exc:
+                    code = type(exc).__name__
+                with lock:
+                    codes[code] = codes.get(code, 0) + 1
+
+    threads = [threading.Thread(target=worker) for _ in range(parallel)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    return codes
+
+
+async def test_parallel_burst_gets_no_bad_gateway(paths: DataPaths, ports: HostingPorts) -> None:
+    """Loyiha ulanishni rad etsa, Caddy qayta urinadi: klient 502 olmaydi.
+
+    Qayta urinishsiz shu yukda so'rovlarning ~1 % i 502 bo'lardi (o'lchangan).
+    """
+    write_app(paths.projects_dir, "api")
+    async with serve_app(paths) as served, served.client() as client:
+        hosting = Hosting(client, ports)
+        created = await hosting.post(
+            "/projects", name="api", kind="python", command="python app.py", idle_minutes=0
+        )
+        assert created.status_code == 201, created.text
+        url = f"http://127.0.0.1:{ports.listen}/"
+        codes = await asyncio.to_thread(_burst, url, ports.host_header("api"), 2000, 50)
+        assert codes == {"200": 2000}

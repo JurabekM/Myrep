@@ -1,8 +1,10 @@
 """`files` plagini: haqiqiy yadro, haqiqiy bola jarayon, diskdagi haqiqiy fayllar."""
 
 import asyncio
+import os
 import shutil
 import sqlite3
+import subprocess
 from collections.abc import Awaitable, Callable
 from contextlib import closing
 from pathlib import Path
@@ -385,3 +387,82 @@ async def test_scan_of_two_thousand_files(paths: DataPaths, watched: Path) -> No
         assert status["last_scan_seconds"] < 20
         assert await _names(client, q="qism_07_042") == ["qism_07_042.bin"]
         assert len(await _names(client, q="qism_07", limit=1000)) == 100
+
+
+async def _status(client: httpx.AsyncClient) -> dict[str, Any]:
+    return (await client.get(f"{API}/status")).json()
+
+
+# --- simvolik havola va junction ---------------------------------------------------------------
+def _make_links(watched: Path, outside: Path) -> bool:
+    """Haqiqiy havolalar; huquq yetmasa (Developer Mode o'chiq) `False`."""
+    outside.mkdir()
+    (outside / "sir.txt").write_text("MAXFIY", encoding="utf-8")
+    (watched / "oddiy.txt").write_text("oddiy", encoding="utf-8")
+    try:
+        (watched / "fayl_havola.txt").symlink_to(outside / "sir.txt")
+        (watched / "papka_havola").symlink_to(outside, target_is_directory=True)
+    except OSError:
+        return False
+    shell = os.environ.get("COMSPEC", "cmd.exe")
+    command = [shell, "/c", "mklink", "/J", str(watched / "junction"), str(outside)]
+    made = subprocess.run(command, capture_output=True, check=False)
+    return made.returncode == 0
+
+
+async def test_links_are_listed_not_followed_and_can_be_removed(
+    paths: DataPaths, watched: Path, tmp_path: Path
+) -> None:
+    outside = tmp_path / "tashqari"
+    if not _make_links(watched, outside):
+        pytest.skip("simvolik havola yaratishga huquq yo'q")
+    async with serve_app(paths) as served, served.client() as client:
+        await _eventually(
+            lambda: _status(client), lambda s: s["last_scan"] is not None, "skanerlash"
+        )
+        # indeksga faqat haqiqiy fayl tushadi
+        found = (await client.get(f"{API}/search", params={"q": ""})).json()
+        names = {row["name"] for row in found}
+        assert "oddiy.txt" in names
+        assert not names & {"sir.txt", "fayl_havola.txt", "papka_havola", "junction"}
+        # ro'yxatda havolalar ko'rinadi, lekin belgilangan va hajmsiz
+        listing = (await client.get(f"{API}/list", params={"root": WATCHED})).json()
+        links = {row["name"] for row in listing if row["link"]}
+        assert links == {"fayl_havola.txt", "junction", "papka_havola"}
+        assert {row["name"]: row["link"] for row in listing}["oddiy.txt"] is False
+        assert all(row["size"] is None for row in listing if row["link"])
+
+        # havola orqali hech narsa qilib bo'lmaydi
+        body = {"root": WATCHED, "path": "papka_havola/sir.txt"}
+        assert (await client.post(f"{API}/delete", json=body)).status_code == 403
+        inside = {"root": WATCHED, "path": "junction"}
+        assert (await client.get(f"{API}/list", params=inside)).status_code == 403
+        copy = {"root": WATCHED, "path": "fayl_havola.txt", "dest_root": 0, "dest_path": ""}
+        assert (await client.post(f"{API}/copy", json=copy)).status_code == 403
+
+        # unlink: oddiy fayl, yo'q narsa, havola ichidagi yo'l va ildiz rad etiladi
+        for path, code in (
+            ("oddiy.txt", 400),
+            ("yoq.txt", 400),
+            ("papka_havola/sir.txt", 403),
+            ("", 400),
+        ):
+            reply = await client.post(f"{API}/unlink", json={"root": WATCHED, "path": path})
+            assert reply.status_code == code, (path, reply.text)
+        assert (watched / "oddiy.txt").is_file()
+
+        # havolaning o'zi olib tashlanadi; nishon joyida qoladi
+        for name in ("fayl_havola.txt", "papka_havola", "junction"):
+            reply = await client.post(f"{API}/unlink", json={"root": WATCHED, "path": name})
+            assert reply.json() == {"path": name, "removed": True}, reply.text
+            assert not os.path.lexists(watched / name)
+        assert (outside / "sir.txt").read_text(encoding="utf-8") == "MAXFIY"
+        assert sorted(p.name for p in outside.iterdir()) == ["sir.txt"]
+        listing = (await client.get(f"{API}/list", params={"root": WATCHED})).json()
+        assert not [row["name"] for row in listing if row["link"]]
+        assert "oddiy.txt" in {row["name"] for row in listing}
+    with closing(sqlite3.connect(paths.db_file)) as conn:
+        rows = conn.execute(
+            "SELECT action, ok FROM audit_log WHERE action = 'file.unlink' ORDER BY id"
+        ).fetchall()
+    assert rows == [("file.unlink", 1)] * 3

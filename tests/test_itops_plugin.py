@@ -469,3 +469,26 @@ async def test_backup_runs_on_cron_schedule(paths: DataPaths, plugin_root: Path)
         rows = await _eventually(lambda: ops.get("/backups"), lambda r: len(r) >= 1, "cron", 70)
         with _archive(paths, rows[0]["name"]) as archive:
             assert "srv1.db" in archive.namelist()
+
+
+def test_process_cache_release_frees_handles() -> None:
+    """Jarayonlar ro'yxati har jarayonga handle ochadi; `release_cache` ularni qaytaradi."""
+    sys.path.insert(0, str(BUILTIN_DIR.parent))
+    try:
+        from plugins.itops import processes
+    finally:
+        sys.path.pop(0)
+    me = psutil.Process()
+    processes.release_cache()
+    before = me.num_handles()
+    rows = processes.list_processes("", "memory", 1000)
+    assert len(rows) > 20
+    held = me.num_handles()
+    processes.list_processes("", "cpu", 1000)
+    assert me.num_handles() <= held + 20, "takror chaqiruv handle sonini oshirmasligi kerak"
+    processes.release_cache()
+    after = me.num_handles()
+    # Kesh haqiqatan handle ushlab turgan bo'lsa, bo'shatilgach deyarli boshiga qaytadi.
+    assert after <= before + 20, (before, held, after)
+    if held - before > 50:
+        assert held - after > (held - before) // 2, (before, held, after)

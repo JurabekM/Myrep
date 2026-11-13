@@ -84,6 +84,16 @@ def list_processes(search: str, sort: Sort, limit: int) -> list[dict[str, Any]]:
     return rows[:limit]
 
 
+def release_cache() -> None:
+    """`psutil.process_iter` keshini bo'shatadi.
+
+    Kesh har jarayon uchun bittadan ochiq handle ushlab turadi (CPU foizini oldingi
+    chaqiruvga nisbatan hisoblash uchun kerak). Ro'yxat so'ralmay qo'ygach bo'shatiladi;
+    keyingi birinchi chaqiruvda CPU ustuni 0 ko'rsatadi.
+    """
+    psutil.process_iter.cache_clear()
+
+
 def kill_process(pid: int, started: float | None) -> dict[str, Any]:
     """Jarayonni to'xtatadi. `started` berilsa, PID qayta ishlatilmaganini tekshiradi."""
     try:
