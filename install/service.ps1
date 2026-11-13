@@ -54,8 +54,9 @@ function Get-ServicePlan {
         , @('set', $Name, 'AppRestartDelay', '5000')
         , @('set', $Name, 'AppThrottle', '10000')
         # To'xtatish: avval Ctrl+C (yadro plaginlar va loyihalarni o'zi yopadi), 20 s kutadi.
+        # Yopilmasa NSSM butun jarayon daraxtini o'ldiradi. Bu NSSM 2.24 da doimiy xatti-harakat;
+        # 'AppKillProcessTree' parametri faqat 2.25 sinov yig'ilishlarida bor, shuning uchun qo'yilmaydi.
         , @('set', $Name, 'AppStopMethodConsole', '20000')
-        , @('set', $Name, 'AppKillProcessTree', '1')
     )
 }
 
@@ -111,7 +112,15 @@ switch ($Action) {
         Write-Step "Xizmat $Account nomidan ishlaydi. Windows parolingizni kiriting."
         $credential = Get-Credential -UserName $Account -Message "SRV_1 xizmati uchun Windows paroli"
         if ($null -eq $credential) { Write-Problem "Bekor qilindi."; exit 1 }
-        foreach ($arguments in Get-ServicePlan) { Invoke-Nssm $arguments }
+        try {
+            foreach ($arguments in Get-ServicePlan) { Invoke-Nssm $arguments }
+        }
+        catch {
+            # Yarim sozlangan xizmat qolmasin: u LocalSystem nomidan va avtostart bilan qolardi.
+            & $Nssm remove $Name confirm | Out-Null
+            Write-Problem "Xizmatni sozlab bo'lmadi ($($_.Exception.Message)); xizmat olib tashlandi."
+            exit 1
+        }
         try {
             # NSSM hisobga 'xizmat sifatida kirish' huquqini ham beradi.
             Invoke-Nssm @('set', $Name, 'ObjectName', $credential.UserName,

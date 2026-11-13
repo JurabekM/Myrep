@@ -43,7 +43,14 @@ o'qiydi (test buni qo'riqlaydi).
 | `AppExit Default` | `Restart`, 5 s kechikish | yiqilsa qayta ko'tariladi |
 | `AppExit 2` | `Exit` | sozlama xatosida cheksiz qayta urinmaydi |
 | `AppStopMethodConsole` | 20000 ms | Ctrl+C — yadro plagin va loyihalarni o'zi yopadi |
-| `AppKillProcessTree` | 1 | 20 s da yopilmasa, butun daraxt o'ldiriladi |
+
+20 s da yopilmasa, NSSM butun jarayon daraxtini o'ldiradi. NSSM 2.24 da bu doimiy
+xatti-harakat; `AppKillProcessTree` parametri faqat 2.25 sinov yig'ilishlarida bor va
+2.24 uni rad etadi, shuning uchun skript uni qo'ymaydi (2026-11-13 dagi birinchi haqiqiy
+o'rnatish aynan shu parametrda yiqilgan).
+
+Sozlash yarim yo'lda yiqilsa, skript xizmatni olib tashlaydi — `LocalSystem` nomidan
+avtostartli yarim xizmat qolmaydi.
 
 Nega `LocalSystem` emas: yadro `auth.token` ni faqat o'z egasiga ochadi;
 xizmat `SYSTEM` bo'lsa, oddiy foydalanuvchining shell'i tokenni o'qiy olmaydi.
