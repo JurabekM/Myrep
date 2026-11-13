@@ -39,12 +39,23 @@ def static_route(host: str, root: Path) -> Route:
     }
 
 
+# Loyiha ulanishni rad etsa (navbati to'lgan yoki endi ishga tushyapti), Caddy shu muddat
+# ichida qayta ulanib ko'radi. Faqat ulanish o'rnatilmagan so'rov qayta yuboriladi, shuning
+# uchun POST ikki marta bajarilib qolmaydi.
+PROXY_TRY_DURATION = "2s"
+PROXY_TRY_INTERVAL = "50ms"
+
+
 def proxy_route(host: str, port: int) -> Route:
-    return {
-        "match": [{"host": [host]}],
-        "handle": [{"handler": "reverse_proxy", "upstreams": [{"dial": f"127.0.0.1:{port}"}]}],
-        "terminal": True,
+    proxy = {
+        "handler": "reverse_proxy",
+        "upstreams": [{"dial": f"127.0.0.1:{port}"}],
+        "load_balancing": {
+            "try_duration": PROXY_TRY_DURATION,
+            "try_interval": PROXY_TRY_INTERVAL,
+        },
     }
+    return {"match": [{"host": [host]}], "handle": [proxy], "terminal": True}
 
 
 def message_route(status: int, body: str, host: str | None = None) -> Route:

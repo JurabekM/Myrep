@@ -92,7 +92,8 @@ def test_console_ctrl_c_stops_core_and_children(
             ) as client:
                 body = {"name": "ilova", "kind": "python", "command": "python app.py"}
                 created = client.post(f"{API}/projects", json=body)
-                assert created.status_code == 201, created.text
+                plugin = client.get("/api/v1/plugins/hosting").json()
+                assert created.status_code == 201, (created.text, plugin.get("error"))
                 caddy_pid = client.get(f"{API}/status").json()["caddy_pid"]
                 project_pid = created.json()["pid"]
             assert psutil.pid_exists(caddy_pid)

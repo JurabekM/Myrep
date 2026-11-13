@@ -60,8 +60,13 @@ Buyruq qoidalari:
 | `stopped` | qo'lda to'xtatilgan | 404 |
 | `failed` | ishga tushmadi yoki yiqildi; `error` da sabab | 503 |
 | `starting` | ishga tushmoqda | kutadi |
+| `unreachable` | Caddy ishlamayapti (masalan `caddy.exe` yo'q): sayt manzili ochilmaydi, `error` da sabab. Jarayonli loyiha o'z portida ishlayveradi | — |
 
 Yiqilgan loyiha o'zi qayta ishga tushmaydi — sababini ko'rib, «Ishga tushirish»ni bosing.
+
+Loyiha ulanishni rad etsa (navbati to'lgan yoki endi ishga tushyapti), Caddy 2 soniya
+davomida har 50 ms da qayta ulanib ko'radi; shundan keyingina klient 502 oladi. Faqat
+ulanish o'rnatilmagan so'rov qayta yuboriladi, ya'ni `POST` ikki marta bajarilmaydi.
 
 ## Uxlatish va uyg'otish
 
@@ -143,8 +148,11 @@ ruxsati bilan, namunaviy sahifali sinov sayti, bitta yugurish):
 | cloudflared xotirasi | 35,4 MB (Working Set), 64,4 MB (private) |
 | yopilgandan keyin | cloudflared jarayoni yo'q; manzil 502 qaytaradi |
 
-Sinalmagan: tunnel orqali uxlayotgan loyihani uyg'otish, Python/Node loyiha,
-uzoq ishlash (soatlar), ikki tunnel birga, tarmoq uzilganda qayta ulanish.
+2026-11-13 da qo'shimcha sinaldi ([sinov-2026-11-13.md](sinov-2026-11-13.md#tunnel-haqiqiy-cloudflared-egasining-ruxsati-bilan)):
+uxlagan Python loyihani tashqaridan uyg'otish, Node loyiha, ikki tunnel birga
+5 daqiqa — hammasi ishladi.
+
+Sinalmagan: soatlab ishlash, tarmoq uzilganda qayta ulanish.
 
 ## API
 

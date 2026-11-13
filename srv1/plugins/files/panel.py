@@ -75,6 +75,12 @@ def build_panel() -> PanelSpec:
                 fields=(_ROOT, _PATH),
             ),
             FormWidget(
+                label=_t("Havolani olib tashlash", "Убрать ссылку", "Remove a link"),
+                path="/unlink",
+                fields=(_ROOT, _PATH),
+                confirm=True,
+            ),
+            FormWidget(
                 label=_t("Nomini oʻzgartirish", "Переименовать", "Rename"),
                 path="/rename",
                 fields=(

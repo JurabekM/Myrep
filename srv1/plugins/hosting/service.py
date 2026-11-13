@@ -220,14 +220,30 @@ class HostingService:
         self.store.projects = [project.config for project in self.projects.values()]
         save_store(self._store_file, self.store)
 
+    def _shown(self, project: Project) -> tuple[str, str | None]:
+        """Foydalanuvchiga ko'rsatiladigan (holat, xato).
+
+        Caddy ishlamasa, sayt manzili ochilmaydi: ichki holat `running`/`sleeping` bo'lsa
+        ham tashqariga `unreachable` va sababi beriladi. Ichki holat o'zgarmaydi — jarayonli
+        loyiha o'z portida ishlayveradi, Caddy qaytsa hammasi o'z holida davom etadi.
+        """
+        if not self._caddy_up() and project.state in ("running", "sleeping", "starting"):
+            reason = self.caddy_error or "Caddy ishlamayapti"
+            return "unreachable", f"sayt manzili ochilmaydi: {reason}"
+        return project.state, project.error
+
+    def _caddy_up(self) -> bool:
+        return self.caddy is not None and self.caddy.running
+
     def describe(self, project: Project) -> dict[str, Any]:
         config = project.config
         process = project.process
+        state, error = self._shown(project)
         return {
             "name": config.name,
             "kind": config.kind,
-            "state": project.state,
-            "url": self.url_of(config.name),
+            "state": state,
+            "url": self.url_of(config.name) if self._caddy_up() else None,
             "public_url": self.tunnels.url_of(config.name),
             "port": config.port,
             "pid": process.pid if process is not None and process.running else None,
@@ -236,7 +252,7 @@ class HostingService:
             "idle_minutes": config.idle_minutes,
             "autostart": config.autostart,
             "command": " ".join(config.command),
-            "error": project.error,
+            "error": error,
             "last_activity": project.last_activity,
         }
 
@@ -247,7 +263,7 @@ class HostingService:
     async def status(self) -> dict[str, Any]:
         caddy = self.caddy
         running = caddy is not None and caddy.running
-        states = [project.state for project in self.projects.values()]
+        states = [self._shown(project)[0] for project in self.projects.values()]
         return {
             "caddy": "running"
             if running
@@ -265,6 +281,7 @@ class HostingService:
             "running": states.count("running"),
             "sleeping": states.count("sleeping"),
             "failed": states.count("failed"),
+            "unreachable": states.count("unreachable"),
         }
 
     async def create(self, config: ProjectConfig, *, start: bool) -> dict[str, Any]:
