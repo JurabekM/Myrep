@@ -5,7 +5,7 @@ Tashqi binarlar shu yerga qo'yiladi va **gitga kirmaydi** (`.gitignore`).
 | Fayl | Kerak bo'lgan bosqich | Vazifa | Sinalgan versiya |
 |------|----------------------|--------|------------------|
 | `caddy.exe` | 5 (`hosting`) | reverse proxy, admin API `127.0.0.1:2019` | 2.11.9 |
-| `mosquitto/` | 6 (`iot`) | MQTT broker | sinalmagan (quyiga qarang) |
+| `mosquitto/` | 6 (`iot`) | MQTT broker | 2.1.2 |
 | `avrdude/` | 8 (`electronics`) | AVR (Arduino) proshivkasi | 8.3 |
 | `nssm.exe` | 10 | Windows xizmati | 2.24 (64-bit) |
 | `cloudflared.exe` | 10 (`hosting`) | internetga ochish (tunnel) | 2026.10.7 |
@@ -71,14 +71,25 @@ tushiradi — yangilash qo'lda.
 
 ## Mosquitto
 
-Rasmiy manba: <https://mosquitto.org/download/> (Windows x64 o'rnatuvchisi).
-Ikki yo'ldan biri:
+Rasmiy manba: <https://mosquitto.org/download/> →
+`mosquitto-<versiya>-install-windows-x64.exe`. Ikki yo'ldan biri:
 
-- o'rnatuvchini ishga tushiring — plagin `C:\Program Files\mosquitto\mosquitto.exe`
-  ni o'zi topadi (Mosquitto'ning Windows xizmatini yoqmang: brokerni plagin boshqaradi);
-- yoki `mosquitto.exe` va yonidagi DLL'larni `tools/mosquitto/` ga nusxalang.
+- o'rnatuvchini ishga tushiring (administrator kerak) — plagin
+  `C:\Program Files\mosquitto\mosquitto.exe` ni o'zi topadi (Mosquitto'ning Windows
+  xizmatini yoqmang: brokerni plagin boshqaradi);
+- yoki o'rnatuvchini **ishga tushirmasdan** 7-Zip bilan oching va `*.exe`, `*.dll`
+  fayllarni (`vc_redist.x64.exe` dan tashqari) `tools/mosquitto/` ga nusxalang:
 
-Boshqa joy: `SRV1_MOSQUITTO_EXE`. 6-bosqich yozilgan paytda `mosquitto.org`
-ishlab chiqish mashinasidan ochilmadi, shuning uchun plagin haqiqiy Mosquitto
-bilan sinalmagan. Mosquitto paydo bo'lgach `uv run pytest tests/test_iot_plugin.py`
-ni qayta yugurtiring va panelda `Broker: running` ko'rinishini tekshiring.
+```powershell
+& 'C:\Program Files\7-Zip\7z.exe' x mosquitto-2.1.2-install-windows-x64.exe -ox
+(Get-FileHash mosquitto-2.1.2-install-windows-x64.exe -Algorithm SHA256).Hash.ToLower()
+# 2.1.2 (2026-11-13 da yuklangan): 58008ad7a22ada0b4073afa415801746e027c5f583e4fa52d0f4e9193b98d6aa
+```
+
+**Diqqat:** Windows o'rnatuvchisi ham, ichidagi `mosquitto.exe` ham **imzolanmagan**, va
+rasmiy saytda Windows fayli uchun nazorat yig'indisi e'lon qilinmagan (GPG imzo faqat
+manba arxivida). Yuqoridagi xesh — biz yuklagan faylniki, ya'ni mustaqil tasdiq emas;
+ishonch faqat `https://mosquitto.org` ning o'ziga tayanadi.
+
+Boshqa joy: `SRV1_MOSQUITTO_EXE`. Tekshirish: `uv run pytest tests/test_iot_mosquitto.py`
+(Mosquitto bo'lmasa testlar o'tkazib yuboriladi) va panelda `Broker: running`.
