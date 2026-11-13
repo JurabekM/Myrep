@@ -18,6 +18,10 @@ uv run python -m srv1_core   # yadro: http://127.0.0.1:8710
 uv run python -m srv1_shell  # shell (boshqa oynada; SRV1_DATA_DIR bir xil bo'lsin)
 ```
 
+Testlarni **PowerShell'dan** yuriting. Git Bash ostida
+`test_service_stop.py` yiqiladi: bola jarayon «Ctrl+C ni e'tiborsiz qoldirish»
+bayrog'ini meros oladi va yadro to'xtash signalini olmaydi (kod xatosi emas).
+
 O'rnatish skriptlari (`install/`) va Windows xizmati: [ornatish.md](ornatish.md).
 Foydalanuvchi qo'llanmasi: [qollanma.md](qollanma.md).
 

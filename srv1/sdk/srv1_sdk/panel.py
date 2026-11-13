@@ -4,9 +4,9 @@
 `/api/v1/plugins/<nom>/api/stats`. `topic` — `plugin.<nom>.` dan keyingi qism.
 """
 
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, Self
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
 _PATH = Field(pattern=r"^/[A-Za-z0-9_\-./]*$", max_length=200)
 LANGUAGES = ("uz", "ru", "en")
@@ -142,13 +142,30 @@ class QueryWidget(_Widget):
 
 
 class ChartWidget(_Widget):
-    """`plugin.<nom>.<topic>` hodisasidagi `field` qiymatining jonli grafigi."""
+    """`plugin.<nom>.<topic>` hodisasidagi `field` qiymatining jonli grafigi.
+
+    `history` berilsa, panel ochilganda `GET <history>?limit=<window>` chaqiriladi:
+    javob — obyektlar ro'yxati (eskidan yangiga), har biridan `field` olinadi.
+    Busiz grafik faqat panel ochiq turgan paytdagi hodisalarni ko'rsatadi.
+    """
 
     type: Literal["chart"] = "chart"
     label: LocalizedText
     topic: str = Field(pattern=r"^[a-z0-9_.-]{1,64}$")
     field: str
     window: int = Field(default=120, ge=10, le=5000)
+    history: Annotated[str, _PATH] | None = None
+    # Ikkalasi berilsa, Y o'qi shu oraliqda qotiriladi (masalan foiz uchun 0–100).
+    y_min: float | None = None
+    y_max: float | None = None
+
+    @model_validator(mode="after")
+    def _y_range(self) -> Self:
+        if (self.y_min is None) != (self.y_max is None):
+            raise ValueError("y_min va y_max birga beriladi")
+        if self.y_min is not None and self.y_max is not None and self.y_max <= self.y_min:
+            raise ValueError("y_max y_min dan katta bo'lishi kerak")
+        return self
 
 
 Widget = Annotated[

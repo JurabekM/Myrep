@@ -99,6 +99,7 @@ ishlaydi; ish tugagach o'chirib qo'ying.
 | `data` | CSV/Parquet/Excel import, SQL so'rovlar, hisobot | [data.md](data.md) |
 | `electronics` | serial monitor, ESP va Arduino'ga proshivka yozish | [elektronika.md](elektronika.md) |
 | `itops` | jarayonlar, Windows xizmatlari, tarmoq skaneri, zaxira | [itops.md](itops.md) |
+| `monitor` | CPU, RAM va disk tarixi, chegaradan oshsa ogohlantirish | [monitor.md](monitor.md) |
 
 Plagin faqat o'z manifestida (`plugins\<nom>\plugin.toml`) ruxsat etilgan
 papka, port va COM portlarga tegadi. Masalan, `files` yangi papkani kuzatishi

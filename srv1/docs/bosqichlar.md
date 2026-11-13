@@ -13,6 +13,7 @@
 | 8 | `electronics` | ✅ tugadi | 2026-11-11 |
 | 9 | `itops` | ✅ tugadi | 2026-11-11 |
 | 10 | Yakun | ✅ tugadi (xizmat o'rnatilishi sinalmagan) | 2026-11-12 |
+| 11 | `monitor` plagini (`hello` o'rniga) | ✅ tugadi | 2026-11-13 |
 
 ## 0-bosqich — Skelet
 
@@ -656,6 +657,90 @@ yaqinlashadi. NSSM'ning o'zi (xizmat ustidan qo'shimcha jarayon) o'lchanmagan.
 - `uv sync --no-dev` bilan toza mashinada o'rnatish sinalmagan.
 - Qo'llanma faqat o'zbekcha (interfeys uch tilda).
 
+## 11-bosqich — `monitor` plagini (`hello` o'rniga)
+
+Tafsilot: [monitor.md](monitor.md).
+
+**Qilindi**
+
+- **`plugins/monitor`** («Kuzatuv»): har 15 soniyada CPU, RAM, har qattiq
+  diskdagi bo'sh joy va SRV_1 jarayonlar daraxtining xotirasini o'lchab,
+  o'z SQLite bazasiga yozadi (7 kun saqlanadi). Qoidalar: RAM ≥ 90 %, CPU ≥ 90 %
+  5 daqiqa uzluksiz, diskda < 10 GB, boshqa plagin yiqilishi. Holat
+  o'zgarganda bitta yozuv va `plugin.monitor.alert` hodisasi; takror yozuv
+  yo'q (gisterezis), faol holat qayta ishga tushganda tiklanadi.
+- **`plugins/hello` butunlay o'chirildi.** Unga tayangan testlar `monitor` ga
+  ko'chirildi; yuklovchining to'liq sikli endi haqiqiy plaginda, ikkala
+  rejimda (`inprocess`, `subprocess`) tekshiriladi. Yuqoridagi 2–6-bosqich
+  yozuvlaridagi `hello` — o'sha paytdagi holat, tuzatilmagan. `CLAUDE.md`
+  dagi 2-bosqich qatoriga tegilmagan.
+- **SDK:** `ChartWidget` ga `history` (panel ochilganda saqlangan nuqtalarni
+  yuklash) va `y_min`/`y_max` qo'shildi. Oldin grafik faqat panel ochiq
+  turgandagi hodisalarni ko'rsatardi.
+- **Shell:** qiymat kartochkalari qatori (`CardRow`) endi kenglikka qarab
+  bir necha qatorga bo'linadi. Oldin 4–5 kartochkali panellar (`hosting`,
+  `iot`, `itops`) eng kichik oynada gorizontal aylantirish chiqarardi —
+  bu `monitor` panelini ko'zdan kechirishda topildi.
+- Yangi kutubxona qo'shilmadi.
+
+**Tekshiruv natijasi (2026-11-13)**
+
+- `uv run pytest` — **375 passed** (≈291 s), PowerShell'dan. Git Bash'dan
+  yuritilganda `test_service_stop.py` yiqiladi: bola jarayon «Ctrl+C ni
+  e'tiborsiz qoldirish» bayrog'ini meros oladi (muhit xususiyati, kod xatosi
+  emas; [ishlab-chiqish.md](ishlab-chiqish.md) ga yozildi).
+- `ruff check`, `ruff format --check` — toza; `pyright` — 0 xato.
+- Panel uch tilda va eng kichik oyna o'lchamida skrinshot bilan ko'zdan
+  kechirildi; grafik oyna ochilishidan oldingi tarixni ko'rsatdi (53 nuqta).
+
+**O'lchangan RAM** (bitta yugurish, bo'sh holat 55 s, 10-bosqichdagi usul bilan)
+
+| Jarayon | Working Set, MB | Private, MB |
+|---------|-----------------|-------------|
+| yadro (`electronics`, `files`, `hosting`, `iot`, `itops`, `monitor`) | 103,0 | 88,1 |
+| Caddy | 32,3 | 58,1 |
+| shell | 119,4 | 74,7 |
+| venv ishga tushirgichlari (2 ta) | 7,8 | 1,6 |
+| **Jami** | **262,7** | **222,4** |
+
+10-bosqichda 262,0 MB edi (yadro 102,3): farq +0,7 MB, bitta yugurishlar
+orasidagi tebranish doirasida — `monitor` va `hello` orasidagi farqni bu
+o'lchov ajrata olmaydi.
+
+**Oldingi hisobotlardagi kamchilik topildi.** `monitor` yadro daraxtini
+144,5 MB deb ko'rsatdi, jadvaldagi yadro + Caddy esa ≈ 134 MB. Tekshirildi
+(alohida yugurish): farq — Caddy'ning `conhost.exe` jarayoni, **10,8 MB**.
+U 5–10-bosqichlarning hech bir RAM jadvaliga kirmagan. Uni qo'shganda bo'sh
+holat taxminan **273,5 MB** (hisob: 262,7 + 10,8; ikki xil yugurishdan),
+chegaraning 78 %. Chegara buzilmagan, lekin oldingi «262,0 MB» raqami shu
+miqdorga kam ko'rsatilgan.
+
+**Tarix hajmi** (o'lchangan, sun'iy to'ldirish: 40 320 o'lchov = 7 kun, 3 disk):
+fayl 7,5 MB (WAL bilan vaqtincha 11,4 MB gacha), bitta yozuv 0,04 ms,
+oxirgi 240 tasini o'qish 0,4 ms.
+
+**Qilinmadi / ma'lum kamchiliklar**
+
+- Ogohlantirish faqat hodisa va jadval yozuvi: Windows bildirishnomasi,
+  tovush, email yo'q. Shell oynasi yopiq bo'lsa, ogohlantirishni hech kim
+  ko'rmaydi (jurnal va bazada qoladi).
+- Jadvallarda qoida nomi va holat tarjimasiz (`memory`, `raised`, `alert`);
+  qoidalar jadvalidagi sonlar nuqta bilan, disklar jadvalidagi hajmlar esa
+  til bo'yicha (vergul bilan) — bir panelda ikki xil ko'rinish.
+- Grafikning gorizontal o'qi — o'lchov tartib raqami, vaqt emas.
+- Alohida jarayonlar bo'yicha tarix yo'q; disklar tarixi yoziladi, lekin
+  ko'rsatilmaydi.
+- `interval_s` va `retention_days` paneldan o'zgartirilmaydi (faylda).
+- Sinalmagan: kunlab uzluksiz ishlash; soatlik tozalash vazifasining o'zi
+  (tozalash faqat ishga tushishda va to'g'ridan-to'g'ri chaqiruvda
+  tekshirilgan); haqiqiy yuklamada RAM/CPU chegarasining buzilishi (testlarda
+  chegara pasaytirilgan, CPU qoidasi faqat sun'iy o'lchovlar bilan); disk
+  uzilishi (faqat mantiq testi); soat orqaga surilishi.
+- Caddy'ning `conhost.exe` (10,8 MB) ni yo'qotish mumkin bo'lishi kerak
+  (jarayonni konsol oynasisiz ishga tushirish), lekin sinab ko'rilmadi.
+- `main` va `master` (`srv1/`) dagi nusxalar hali `hello` bilan: bu bosqich
+  faqat ishchi tarmoqda.
+
 ## Sinalmaganlar (butun loyiha bo'yicha, bitta joyda)
 
 Kod yozilgan, lekin haqiqiy sharoitda tekshirilmagan narsalar. Ishga
@@ -676,3 +761,4 @@ tushirishdan oldin shu ro'yxat bo'yicha o'zingiz sinab ko'ring.
 | Shell'ni haqiqiy ekranda sichqoncha bilan | GUI testlari ko'rinmas oynada | qo'lda |
 | Toza mashinada `install.ps1` (`uv sync`) | muhit allaqachon bor edi | yangi mashinada |
 | Simvolik havolalar, tarmoq disklari (`files`) | maxsus huquq/uskuna | — |
+| `monitor`: kunlab ishlash, haqiqiy yuklamada RAM/CPU ogohlantirishi | qisqa yugurishlar, chegara testda pasaytirilgan | bir necha kun yoqiq qoldirib, «Kuzatuv» panelini ko'rish |

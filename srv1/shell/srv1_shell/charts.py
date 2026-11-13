@@ -55,6 +55,13 @@ class LineChart(QWidget):
             data.append(float(value))
             curve.setData(list(data))
 
+    def replace(self, values: Sequence[float], series_index: int = 0) -> None:
+        """Seriyani butunlay almashtiradi (saqlangan tarix); oxirgi `window` tasi qoladi."""
+        data = self._data[series_index]
+        data.clear()
+        data.extend(float(value) for value in values)
+        self._curves[series_index].setData(list(data))
+
     def point_count(self, series_index: int = 0) -> int:
         return len(self._data[series_index])
 
