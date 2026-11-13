@@ -96,6 +96,8 @@ maydon bo'sh yoki son maydonida matn bo'lsa, so'rov yuborilmaydi.
 - Rang darajasi (`ok`/`warn`/`bad`) dinamik xususiyat orqali; 75 % dan sariq,
   90 % dan qizil.
 
+Oyna sarlavhasi ham to'q (Windows 10 2004 va undan yangi; eskisida tizimniki qoladi).
+
 ## Xotira
 
 Shell `numpy` ni faqat `pyqtgraph` uchun yuklaydi. `srv1_shell/__init__.py`

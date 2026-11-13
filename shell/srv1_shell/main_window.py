@@ -10,7 +10,7 @@ from typing import Any
 
 from pydantic import ValidationError
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QCloseEvent
+from PyQt6.QtGui import QCloseEvent, QShowEvent
 from PyQt6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import (
 
 from srv1_sdk.panel import PanelSpec
 from srv1_shell.api import Api, Reply
-from srv1_shell.common import AppContext, Page
+from srv1_shell.common import AppContext, Page, dark_title_bar
 from srv1_shell.config import ShellConfig
 from srv1_shell.events import EventStream
 from srv1_shell.i18n import I18n
@@ -298,6 +298,10 @@ class MainWindow(QMainWindow):
             self._current.deactivate()
         self.events.stop()
         self.api.shutdown()
+
+    def showEvent(self, a0: QShowEvent | None) -> None:
+        super().showEvent(a0)
+        dark_title_bar(int(self.winId()))
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.shutdown()

@@ -13,7 +13,7 @@ from srv1_sdk.context import PluginContext
 from .backup import PREFIX, BackupOptions, create_backup, list_backups, prune
 from .models import STORE_FILE, ItopsError, Store, load_store
 from .netscan import Host, Scanner, allowed_range, local_interfaces, scan_range
-from .processes import Sort, kill_process, list_processes
+from .processes import Sort, kill_process, list_processes, release_cache
 from .services import Action, control_service, list_services
 
 BACKUP_DIR = "backups"
@@ -54,6 +54,10 @@ class BackupState:
     last: dict[str, Any] | None = None
 
 
+# Jarayonlar ro'yxati shuncha vaqt so'ralmasa, psutil keshi (handle'lar) bo'shatiladi.
+PROCESS_CACHE_IDLE_S = 60.0
+
+
 class ItopsService:
     def __init__(self, ctx: PluginContext) -> None:
         self.ctx = ctx
@@ -61,9 +65,13 @@ class ItopsService:
         self.scan: ScanJob | None = None
         self.backup = BackupState()
         self._scan_task: asyncio.Task[None] | None = None
+        self._release_timer: asyncio.TimerHandle | None = None
         self._backup_task: asyncio.Task[None] | None = None
 
     async def stop(self) -> None:
+        if self._release_timer is not None:
+            self._release_timer.cancel()
+            self._release_processes()
         for task in (self._scan_task, self._backup_task):
             if task is not None and not task.done():
                 task.cancel()
@@ -71,7 +79,17 @@ class ItopsService:
 
     # --- jarayonlar ---------------------------------------------------------
     async def processes(self, search: str, sort: Sort, limit: int) -> list[dict[str, Any]]:
-        return await asyncio.to_thread(list_processes, search, sort, limit)
+        rows = await asyncio.to_thread(list_processes, search, sort, limit)
+        # Panel yopilgach (so'rov kelmay qo'ysa) jarayon handle'lari bo'shatiladi.
+        if self._release_timer is not None:
+            self._release_timer.cancel()
+        loop = asyncio.get_running_loop()
+        self._release_timer = loop.call_later(PROCESS_CACHE_IDLE_S, self._release_processes)
+        return rows
+
+    def _release_processes(self) -> None:
+        self._release_timer = None
+        release_cache()
 
     async def kill(self, pid: int, started: float | None) -> dict[str, Any]:
         """Xavfli amal: natijasi (rad etilgani ham) auditga yoziladi."""
