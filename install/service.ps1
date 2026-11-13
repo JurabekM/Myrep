@@ -54,8 +54,9 @@ function Get-ServicePlan {
         , @('set', $Name, 'AppRestartDelay', '5000')
         , @('set', $Name, 'AppThrottle', '10000')
         # To'xtatish: avval Ctrl+C (yadro plaginlar va loyihalarni o'zi yopadi), 20 s kutadi.
+        # Yopilmasa NSSM butun jarayon daraxtini o'ldiradi. Bu NSSM 2.24 da doimiy xatti-harakat;
+        # 'AppKillProcessTree' parametri faqat 2.25 sinov yig'ilishlarida bor, shuning uchun qo'yilmaydi.
         , @('set', $Name, 'AppStopMethodConsole', '20000')
-        , @('set', $Name, 'AppKillProcessTree', '1')
     )
 }
 
@@ -87,6 +88,25 @@ function Get-ServiceState {
     return $service.Status.ToString().ToLower()
 }
 
+function Wait-ServiceState([string]$Wanted, [int]$Seconds = 40) {
+    $deadline = (Get-Date).AddSeconds($Seconds)
+    while ((Get-ServiceState) -ne $Wanted -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 500 }
+    return (Get-ServiceState) -eq $Wanted
+}
+
+# NSSM dastur AppThrottle (10 s) davomida yiqilmay ishlagandan keyingina 'running' deydi;
+# 'nssm start' esa undan oldin "Unexpected status SERVICE_START_PENDING" bilan 1 kod qaytaradi.
+# Shuning uchun chiqish kodiga emas, xizmatning yakuniy holatiga qaraymiz.
+function Start-AndWait([string]$Verb) {
+    # 'Stop' rejimida PowerShell 5.1 yo'naltirilgan stderr satrini xatoga aylantiradi.
+    $ErrorActionPreference = 'Continue'
+    & $Nssm $Verb $Name 2>$null | Out-Null
+    $ErrorActionPreference = 'Stop'
+    if (Wait-ServiceState 'running') { return }
+    Write-Problem "$Name ishga tushmadi (holat: $(Get-ServiceState)). Jurnal: $LogFile"
+    exit 1
+}
+
 switch ($Action) {
     'plan' {
         Write-Step "Xizmat: $Name (hisob: $Account)"
@@ -111,7 +131,15 @@ switch ($Action) {
         Write-Step "Xizmat $Account nomidan ishlaydi. Windows parolingizni kiriting."
         $credential = Get-Credential -UserName $Account -Message "SRV_1 xizmati uchun Windows paroli"
         if ($null -eq $credential) { Write-Problem "Bekor qilindi."; exit 1 }
-        foreach ($arguments in Get-ServicePlan) { Invoke-Nssm $arguments }
+        try {
+            foreach ($arguments in Get-ServicePlan) { Invoke-Nssm $arguments }
+        }
+        catch {
+            # Yarim sozlangan xizmat qolmasin: u LocalSystem nomidan va avtostart bilan qolardi.
+            & $Nssm remove $Name confirm | Out-Null
+            Write-Problem "Xizmatni sozlab bo'lmadi ($($_.Exception.Message)); xizmat olib tashlandi."
+            exit 1
+        }
         try {
             # NSSM hisobga 'xizmat sifatida kirish' huquqini ham beradi.
             Invoke-Nssm @('set', $Name, 'ObjectName', $credential.UserName,
@@ -122,7 +150,8 @@ switch ($Action) {
             Write-Problem "Hisob yoki parol qabul qilinmadi; xizmat olib tashlandi."
             exit 1
         }
-        Invoke-Nssm @('start', $Name)
+        Write-Note "Xizmat ishga tushmoqda (10-15 soniya)..."
+        Start-AndWait 'start'
         Write-Step "Tayyor. Holat: $(Get-ServiceState). Jurnal: $LogFile"
     }
     'remove' {
@@ -134,7 +163,7 @@ switch ($Action) {
     }
     default {
         Assert-Ready
-        Invoke-Nssm @($Action, $Name)
+        if ($Action -eq 'stop') { Invoke-Nssm @('stop', $Name) } else { Start-AndWait $Action }
         Write-Host "$Name`: $(Get-ServiceState)"
     }
 }
