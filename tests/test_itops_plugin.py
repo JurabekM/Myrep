@@ -319,7 +319,7 @@ def test_scan_range_rules() -> None:
 
 # --- zaxira nusxa -------------------------------------------------------------------------
 def _seed(paths: DataPaths) -> None:
-    notes = paths.plugin_data_dir("hello")
+    notes = paths.plugin_data_dir("namuna")
     notes.mkdir(parents=True, exist_ok=True)
     (notes / "notes.txt").write_text("muhim yozuv\n", encoding="utf-8")
     (notes / "yarim.tmp").write_text("x", encoding="utf-8")
@@ -351,21 +351,21 @@ async def test_backup_contents_secrets_and_databases(paths: DataPaths, plugin_ro
 
         with _archive(paths, last["name"]) as archive:
             names = set(archive.namelist())
-            assert {"srv1.db", "backup.json", "plugins/hello/data/notes.txt"} <= names
-            assert {"plugins/hello/data/plagin.db", "plugins/itops/data/itops.json"} <= names
+            assert {"srv1.db", "backup.json", "plugins/namuna/data/notes.txt"} <= names
+            assert {"plugins/namuna/data/plagin.db", "plugins/itops/data/itops.json"} <= names
             leaked = [n for n in names if n.endswith((".token", ".tmp", "-wal", "-shm"))]
             assert leaked == []
             assert not any(n.startswith(("projects/", "logs/")) or "/tmp/" in n for n in names)  # noqa: S108
             assert not any("backups" in n for n in names)
             assert all(token.encode() not in archive.read(n) for n in names)
             manifest = json.loads(archive.read("backup.json"))
-            assert manifest["databases"] == ["srv1.db", "plugins/hello/data/plagin.db"]
+            assert manifest["databases"] == ["srv1.db", "plugins/namuna/data/plagin.db"]
             assert manifest["files"] == len(names) - 1 and manifest["projects"] is False
             restored = paths.root.parent / "tiklangan"
             archive.extractall(restored)
         # bazalar izchil: WAL'dagi yozuv ham, ishlab turgan yadro bazasi ham o'qiladi
         with closing(
-            sqlite3.connect(restored / "plugins" / "hello" / "data" / "plagin.db")
+            sqlite3.connect(restored / "plugins" / "namuna" / "data" / "plagin.db")
         ) as conn:
             assert conn.execute("SELECT v FROM t").fetchall() == [("wal ichidagi yozuv",)]
             assert conn.execute("PRAGMA integrity_check").fetchone() == ("ok",)
@@ -405,7 +405,7 @@ async def test_core_starts_on_restored_backup(paths: DataPaths, plugin_root: Pat
                 "SELECT count(*) FROM audit_log WHERE action = 'auth.token_created'"
             ).fetchone()[0]
         assert created == 2  # eski tizimniki va tiklangandan keyingisi
-        notes = restored.plugin_data_dir("hello") / "notes.txt"
+        notes = restored.plugin_data_dir("namuna") / "notes.txt"
         assert notes.read_text(encoding="utf-8") == "muhim yozuv\n"
         # Tiklangan tizim yana zaxira ola oladi.
         again = await restored_ops.backup()

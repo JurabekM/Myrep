@@ -68,7 +68,7 @@ bilmaydi); qolgan qatorlar yadrodan keladi.
 | `button` | tugma | `confirm` bo'lsa avval so'raydi; so'ng so'rov |
 | `form` | maydonlar + «Yuborish» | `GET` — so'rov parametrlari, boshqasi — JSON; `confirm` bo'lsa tugma qizil va tasdiq so'raladi |
 | `table` | jadval | `source` dagi ro'yxat; ixtiyoriy filtrlar va tanlangan qator amallari |
-| `chart` | chiziqli grafik | `plugin.<nom>.<topic>` hodisalari |
+| `chart` | chiziqli grafik | `plugin.<nom>.<topic>` hodisalari; `history` bo'lsa, sahifa har ochilganda saqlangan tarix qayta yuklanadi |
 | `query` | matn maydoni + natija jadvali | ustunlar javobdan olinadi; Ctrl+Enter — bajarish; xato vidjetning o'zida |
 | `log` | matn oynasi | `source` dagi satrlar; majburiy filtr bo'sh bo'lsa so'rov ketmaydi |
 

@@ -14,7 +14,7 @@ class PermissionDenied(PermissionError):
 
 @dataclass(frozen=True, slots=True)
 class EventHandler:
-    """Hodisa obunasi. `pattern` — to'liq mavzu naqshi: `system.*`, `plugin.hello.tick`."""
+    """Hodisa obunasi. `pattern` — to'liq mavzu naqshi: `system.*`, `plugin.monitor.alert`."""
 
     pattern: str
     handler: EventCallback

@@ -9,15 +9,15 @@ async def test_pattern_matching() -> None:
     bus = EventBus()
     system = bus.subscribe("system.*")
     everything = bus.subscribe()
-    exact = bus.subscribe("audit", "plugin.hello.*")
+    exact = bus.subscribe("audit", "plugin.demo.*")
 
     bus.publish("system.stats", {"cpu": 1})
     bus.publish("audit", {"id": 1})
-    bus.publish("plugin.hello.tick")
+    bus.publish("plugin.demo.tick")
     bus.close()
 
     assert [e.topic for e in [e async for e in system]] == ["system.stats"]
-    assert [e.topic for e in [e async for e in exact]] == ["audit", "plugin.hello.tick"]
+    assert [e.topic for e in [e async for e in exact]] == ["audit", "plugin.demo.tick"]
     received = [e async for e in everything]
     assert [e.seq for e in received] == [1, 2, 3]
     assert received[0].as_dict()["data"] == {"cpu": 1}
