@@ -17,7 +17,15 @@ from pathlib import Path
 import httpx
 import pytest
 from PyQt6.QtCore import QEventLoop, Qt, QTimer
-from PyQt6.QtWidgets import QApplication, QCheckBox, QComboBox, QLineEdit, QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QLineEdit,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
 
 from conftest import free_port, write_plugin
 from data_helpers import SALES_CSV, install_data
@@ -30,9 +38,11 @@ from hosting_helpers import (
     write_fake_cloudflared,
 )
 from iot_helpers import install_iot
+from monitor_helpers import install_monitor
 from srv1_core.paths import DataPaths
 from srv1_core.plugins.registry import BUILTIN_DIR
 from srv1_shell.app import apply_theme
+from srv1_shell.common import CARD_MIN_WIDTH, Card, CardRow
 from srv1_shell.config import ShellConfig
 from srv1_shell.main_window import MainWindow
 from srv1_shell.pages.logs_page import LogsPage
@@ -69,6 +79,10 @@ INVENTORY_PLUGIN = """
             items.append(item.model_dump())
             return {"count": len(items)}
 
+        @router.get("/find")
+        async def find(name: str = ""):
+            return {"topildi": sum(1 for item in items if name in item["name"])}
+
         return router
 
     @hookimpl
@@ -94,6 +108,13 @@ INVENTORY_PLUGIN = """
                         {"name": "urgent", "label": "Shoshilinch", "kind": "bool"},
                     ],
                 },
+                {
+                    "type": "form",
+                    "label": "Qism qidirish",
+                    "method": "GET",
+                    "path": "/find",
+                    "fields": [{"name": "name", "label": "Nom", "required": False}],
+                },
             ],
         }
 """
@@ -113,6 +134,13 @@ class Core:
     def get(self, path: str) -> httpx.Response:
         headers = {"Authorization": f"Bearer {self.token}"}
         return httpx.get(f"http://127.0.0.1:{self.port}{path}", headers=headers, timeout=5.0)
+
+    def post(self, path: str, body: dict[str, object] | None = None) -> httpx.Response:
+        headers = {"Authorization": f"Bearer {self.token}"}
+        url = f"http://127.0.0.1:{self.port}{path}"
+        reply = httpx.post(url, headers=headers, json=body, timeout=5.0)
+        assert reply.status_code == 200, reply.text
+        return reply
 
 
 def wait(ms: int) -> None:
@@ -145,10 +173,13 @@ def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
     plugin_root = tmp_path_factory.mktemp("shell-plugins")
     write_plugin(plugin_root, "inventory", INVENTORY_PLUGIN)
     # Builtin plaginlar nusxa qilinadi: hosting standart portlar o'rniga bo'sh portlarni oladi.
-    for name in ("hello", "files"):
-        shutil.copytree(
-            BUILTIN_DIR / name, plugin_root / name, ignore=shutil.ignore_patterns("__pycache__")
-        )
+    shutil.copytree(
+        BUILTIN_DIR / "files",
+        plugin_root / "files",
+        ignore=shutil.ignore_patterns("__pycache__"),
+    )
+    # Jadval bo'yicha o'lchov yo'q: testlar o'lchovni o'zi so'raydi.
+    install_monitor(plugin_root, data_dir / "plugins" / "monitor" / "data")
     hosting = install_hosting(
         plugin_root,
         data_dir / "plugins" / "hosting" / "data",
@@ -184,7 +215,11 @@ def core(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Core]:
                 assert process.poll() is None, "yadro o'ldi"
                 time.sleep(0.1)
         token = (data_dir / "auth.token").read_text(encoding="ascii").strip()
-        yield Core(port=port, token=token, data_dir=data_dir, hosting=hosting)
+        running = Core(port=port, token=token, data_dir=data_dir, hosting=hosting)
+        # Oyna ochilishidan oldingi tarix: grafik uni hodisadan emas, bazadan olishi kerak.
+        for _ in range(4):
+            running.post("/api/v1/plugins/monitor/api/sample")
+        yield running
     finally:
         process.kill()
         process.wait(timeout=10)
@@ -195,7 +230,7 @@ def window(qapp: QApplication, core: Core) -> Iterator[MainWindow]:
     main = MainWindow(core.config, core.token)
     main.show()
     pump(lambda: main.events.connected, what="WebSocket ulanishi")
-    wanted = {"panel:files", "panel:hello", "panel:hosting", "panel:inventory", "panel:iot"}
+    wanted = {"panel:files", "panel:monitor", "panel:hosting", "panel:inventory", "panel:iot"}
     wanted |= {"panel:electronics", "panel:itops"}
     pump(lambda: wanted <= set(main.page_keys()), what="panellar")
     yield main
@@ -248,8 +283,8 @@ def test_navigation_lists_fixed_pages_and_panels(window: MainWindow) -> None:
         "Hosting",
         "IT boshqaruvi",
         "IoT",
+        "Kuzatuv",
         "Ombor",
-        "Salom",
     ]
     assert window.windowTitle() == "SRV_1 boshqaruvi"
 
@@ -258,69 +293,96 @@ def test_navigation_lists_fixed_pages_and_panels(window: MainWindow) -> None:
 def test_plugin_toggle_button(window: MainWindow, core: Core) -> None:
     page = _page(window, "plugins", PluginsPage)
     pump(lambda: page.table.rowCount() == 8, what="plaginlar ro'yxati")
-    row = next(i for i, plugin in enumerate(page.plugins) if plugin["name"] == "hello")
+    row = next(i for i, plugin in enumerate(page.plugins) if plugin["name"] == "monitor")
 
     def status_text() -> str:
         item = page.table.item(row, 3)
         return item.text() if item is not None else ""
 
     assert status_text() == "Ishlayapti"
-    assert page.buttons["hello"].text() == "Oʻchirish"
+    assert page.buttons["monitor"].text() == "Oʻchirish"
 
-    page.buttons["hello"].click()
+    page.buttons["monitor"].click()
     pump(lambda: status_text() == "Toʻxtagan", what="plagin to'xtashi")
-    assert core.get("/api/v1/plugins/hello").json()["status"] == "stopped"
-    assert page.buttons["hello"].text() == "Yoqish"
-    pump(lambda: "panel:hello" not in window.page_keys(), what="panel yopilishi")
-    assert "Salom" not in _nav_labels(window)
+    assert core.get("/api/v1/plugins/monitor").json()["status"] == "stopped"
+    assert page.buttons["monitor"].text() == "Yoqish"
+    pump(lambda: "panel:monitor" not in window.page_keys(), what="panel yopilishi")
+    assert "Kuzatuv" not in _nav_labels(window)
 
-    page.buttons["hello"].click()
+    page.buttons["monitor"].click()
     pump(lambda: status_text() == "Ishlayapti", what="plagin qayta yonishi")
-    assert core.get("/api/v1/plugins/hello").json()["status"] == "running"
-    pump(lambda: "panel:hello" in window.page_keys(), what="panel qayta ochilishi")
+    assert core.get("/api/v1/plugins/monitor").json()["status"] == "running"
+    pump(lambda: "panel:monitor" in window.page_keys(), what="panel qayta ochilishi")
 
 
 # --- plagin paneli: har vidjet turi ----------------------------------------------------
-def test_hello_panel_values_button_chart_and_forms(
+def test_monitor_panel_values_charts_tables_and_form(
     window: MainWindow, core: Core, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    page = _page(window, "panel:hello", PanelPage)
-    ticks, notes = page.values["ticks"], page.values["notes"]
-    pump(lambda: ticks.value.text() != "—", what="qiymat vidjeti")
-    assert ticks.title.text() == "Ticklar"
-    before = int(ticks.value.text())
+    api = "/api/v1/plugins/monitor/api"
+    stored = len(core.get(f"{api}/history").json())
+    assert stored >= 4, "fixture oyna ochilishidan oldin o'lchov yozgan bo'lishi kerak"
 
-    # tugma: POST /tick -> qiymat oshadi, hodisa grafikka tushadi
-    page.buttons["POST /tick"].click()
-    pump(lambda: int(ticks.value.text()) == before + 1, what="tick tugmasi")
-    assert core.get("/api/v1/plugins/hello/api/stats").json()["ticks"] == before + 1
-    pump(lambda: page.charts["tick"].last_value() == before + 1, what="grafikdagi hodisa")
+    page = _page(window, "panel:monitor", PanelPage)
+    cpu, alerts_card = page.values["cpu_percent"], page.values["active_alerts"]
+    pump(lambda: cpu.value.text() != "—", what="qiymat vidjeti")
+    assert cpu.title.text() == "CPU, %"
+    assert 0 <= float(cpu.value.text()) <= 100
+    assert alerts_card.value.text() == "0"
+
+    # grafik: panel ochilganda saqlangan tarix yuklanadi (bu oyna u hodisalarni ko'rmagan)
+    memory_chart = page.charts["sample:memory"]
+    pump(lambda: memory_chart.point_count() >= stored, what="grafik tarixi")
+    last = core.get(f"{api}/history").json()[-1]
+    assert memory_chart.last_value() == last["memory"]
+    assert page.charts["sample:cpu"].point_count() == memory_chart.point_count()
+
+    # jadvallar: disklar (hajm formati) va qoidalar
+    disks = page.tables["/disks"]
+    pump(lambda: disks.table.rowCount() >= 1, what="disklar jadvali")
+    free_cell = disks.table.item(0, 1)
+    assert free_cell is not None and free_cell.text().endswith(("GB", "TB", "MB"))
+    rules = page.tables["/rules"]
+    pump(lambda: len(rules.rows) >= 2, what="qoidalar jadvali")
+    assert {row["key"]: row["state"] for row in rules.rows}["memory"] == "off"
+
+    # tugma: POST /sample -> yangi o'lchov, hodisa grafikka tushadi
+    points = memory_chart.point_count()
+    page.buttons["POST /sample"].click()
+    pump(lambda: memory_chart.point_count() == points + 1, what="grafikdagi hodisa")
+    assert core.get(f"{api}/status").json()["samples"] == stored + 1
     assert "Bajarildi" in page.result.text()
 
-    # GET forma: ixtiyoriy maydon to'ldirilgan va bo'sh holda
-    greet = page.forms["/greet"]
-    name = greet.inputs["name"]
-    assert isinstance(name, QLineEdit)
-    name.setText("Ali")
-    greet.submit.click()
-    pump(lambda: "Salom, Ali!" in page.result.text(), what="salomlashish formasi")
-    name.clear()
-    greet.submit.click()
-    pump(lambda: "Salom, dunyo!" in page.result.text(), what="bo'sh ixtiyoriy maydon")
-
-    # POST forma: majburiy maydon bo'sh bo'lsa so'rov ketmaydi
-    note_form = page.forms["/notes"]
-    note_form.submit.click()
-    assert page.result.text() == "«Matn» toʻldirilishi shart"
+    # forma: son bo'lmagan qiymat yuborilmaydi; bo'sh maydonlar o'zgarmaydi
+    form = page.forms["/thresholds"]
+    memory, disk = form.inputs["memory_percent"], form.inputs["disk_free_gb"]
+    assert isinstance(memory, QLineEdit)
+    assert isinstance(disk, QLineEdit)
+    memory.setText("koʻp")
+    form.submit.click()
+    assert page.result.text() == "«RAM, %» son boʻlishi kerak"
     assert page.result.objectName() == "ErrorText"
-    text = note_form.inputs["text"]
-    assert isinstance(text, QLineEdit)
-    text.setText("skrinshot uchun eslatma")
-    note_form.submit.click()
-    pump(lambda: notes.value.text() == "1", what="eslatma qo'shish")
+    memory.setText("1")
+    form.submit.click()
+    pump(lambda: {r["key"]: r["state"] for r in rules.rows}["memory"] == "ok", what="chegara")
+    assert core.get(f"{api}/thresholds").json() == {
+        "memory_percent": 1.0,
+        "cpu_percent": 0.0,
+        "cpu_minutes": 0.0,
+        "disk_free_gb": 0.0,
+    }
 
-    # tasdiqli tugma: "Yo'q" — hech narsa o'zgarmaydi, "Ha" — o'chiriladi
-    delete = page.buttons["DELETE /notes"]
+    # chegara buzilgan: keyingi o'lchov ogohlantirish yozadi, u jadval va qiymatda ko'rinadi
+    alerts = page.tables["/alerts"]
+    page.buttons["POST /sample"].click()
+    pump(lambda: alerts_card.value.text() == "1", what="faol ogohlantirish")
+    pump(lambda: len(alerts.rows) == 1, what="ogohlantirishlar jadvali")
+    assert (alerts.rows[0]["key"], alerts.rows[0]["state"]) == ("memory", "raised")
+    assert alerts.rows[0]["limit"] == "1.0 %"
+    pump(lambda: {r["key"]: r["state"] for r in rules.rows}["memory"] == "alert", what="holat")
+
+    # tasdiqli tugma: "Yo'q" — hech narsa o'zgarmaydi, "Ha" — tarix o'chiriladi
+    delete = page.buttons["DELETE /history"]
     asked: list[str] = []
 
     def decline(action: str) -> bool:
@@ -330,15 +392,22 @@ def test_hello_panel_values_button_chart_and_forms(
     monkeypatch.setattr(page, "confirm", decline)
     delete.click()
     wait(300)
-    assert asked == ["Eslatmalarni o'chirish"]
-    assert core.get("/api/v1/plugins/hello/api/stats").json()["notes"] == 1
+    assert asked == ["Tarixni tozalash"]
+    assert core.get(f"{api}/status").json()["samples"] == stored + 2
 
     def accept(action: str) -> bool:
         return True
 
     monkeypatch.setattr(page, "confirm", accept)
     delete.click()
-    pump(lambda: notes.value.text() == "0", what="eslatmalarni o'chirish")
+    pump(lambda: len(alerts.rows) == 0, what="tarixni tozalash")
+    assert core.get(f"{api}/status").json()["samples"] == 0
+    assert cpu.value.text() != "—", "oxirgi o'lchov ko'rinib turishi kerak"
+
+    # keyingi testlar uchun: qoida yana o'chiq, tarixda yangi o'lchovlar bor
+    core.post(f"{api}/thresholds", {"memory_percent": 0})
+    for _ in range(4):
+        core.post(f"{api}/sample")
 
 
 def test_table_and_typed_form_fields(window: MainWindow, core: Core) -> None:
@@ -356,6 +425,28 @@ def test_table_and_typed_form_fields(window: MainWindow, core: Core) -> None:
     assert isinstance(qty, QLineEdit)
     assert isinstance(kind, QComboBox)
     assert isinstance(urgent, QCheckBox)
+
+    # majburiy maydon bo'sh bo'lsa so'rov ketmaydi
+    form.submit.click()
+    assert page.result.text() == "«Nom» toʻldirilishi shart"
+    assert page.result.objectName() == "ErrorText"
+    wait(200)
+    assert len(core.get("/api/v1/plugins/inventory/api/items").json()) == rows
+
+    # GET forma: ixtiyoriy maydon to'ldirilgan va bo'sh holda (so'rov parametri bo'lib ketadi)
+    find = page.forms["/find"]
+    wanted = find.inputs["name"]
+    assert isinstance(wanted, QLineEdit)
+    wanted.setText("rezis")
+    find.submit.click()
+    pump(lambda: '"topildi": 1' in page.result.text(), what="GET forma")
+    wanted.setText("yoq-qism")
+    find.submit.click()
+    pump(lambda: '"topildi": 0' in page.result.text(), what="GET forma, topilmadi")
+    wanted.clear()
+    find.submit.click()
+    pump(lambda: f'"topildi": {rows}' in page.result.text(), what="bo'sh ixtiyoriy maydon")
+
     name.setText("ESP32")
     qty.setText("olti")
     form.submit.click()
@@ -854,28 +945,29 @@ def test_language_switch_rebuilds_everything(core: Core, qapp: QApplication) -> 
     main = MainWindow(core.config, core.token, on_language_changed=saved.append)
     main.show()
     try:
-        pump(lambda: "panel:hello" in main.page_keys(), what="panel")
-        main.select("panel:hello")
+        pump(lambda: "panel:monitor" in main.page_keys(), what="panel")
+        main.select("panel:monitor")
 
         main.language.setCurrentIndex(main.language.findData("ru"))
         russian = _nav_labels(main)
         assert russian[:4] == ["Система", "Плагины", "Журнал", "Память"]
-        assert {"Привет", "Файлы"} <= set(russian)
+        assert {"Наблюдение", "Файлы"} <= set(russian)
         assert main.windowTitle() == "Управление SRV_1"
-        assert main.current_key() == "panel:hello", "tanlangan sahifa saqlanishi kerak"
-        panel = main.page("panel:hello")
+        assert main.current_key() == "panel:monitor", "tanlangan sahifa saqlanishi kerak"
+        panel = main.page("panel:monitor")
         assert isinstance(panel, PanelPage)
-        assert panel.values["ticks"].title.text() == "Тики"
-        assert panel.buttons["POST /tick"].text() == "Тик сейчас"
+        assert panel.values["cpu_percent"].title.text() == "ЦП, %"
+        assert panel.buttons["POST /sample"].text() == "Измерить сейчас"
         pump(lambda: "Подключено" in main.connection.text(), what="ulanish matni")
         pump(
-            lambda: panel.values["ticks"].value.text() != "—", what="qayta qurilgan panel ma'lumoti"
+            lambda: panel.values["cpu_percent"].value.text() != "—",
+            what="qayta qurilgan panel ma'lumoti",
         )
 
         main.set_language("en")
         english = _nav_labels(main)
         assert english[:4] == ["System", "Plugins", "Log", "Memory"]
-        assert {"Hello", "Files"} <= set(english)
+        assert {"Monitoring", "Files"} <= set(english)
         memory = _page(main, "memory", MemoryPage)
         pump(lambda: memory.table.rowCount() >= 2, what="xotira jadvali")
         assert "limit 350.0 MB" in memory.total.text()
@@ -926,12 +1018,66 @@ def test_wrong_token_is_shown(core: Core, qapp: QApplication) -> None:
         main.deleteLater()
 
 
+def test_card_row_reflows_by_width(qapp: QApplication) -> None:
+    row = CardRow()
+    for index in range(5):
+        row.add(Card(f"k{index}"))
+    assert row.columns() == 5, "ko'rsatilmaguncha hammasi bir qatorda"
+    # (kenglik, ustunlar): 5 ta sig'sa bir qator; aks holda qatorlar teng to'ladi
+    for width, columns in (
+        (1300, 5),
+        (998, 5),
+        (997, 3),
+        (600, 3),
+        (594, 3),
+        (593, 2),
+        (392, 2),
+        (391, 1),
+        (50, 1),
+    ):
+        assert row.columns_for(width) == columns, width
+    four = CardRow()
+    for index in range(4):
+        four.add(Card(f"k{index}"))
+    assert [four.columns_for(width) for width in (900, 700, 600, 300)] == [4, 2, 2, 1]
+    assert CardRow().columns_for(500) == 0
+
+    assert row.minimumSizeHint().width() == CARD_MIN_WIDTH
+
+    # Haqiqiy joylashuvda (ota vidjet ichida): toraysa bo'linadi, kengaysa yana bir qator.
+    host = QWidget()
+    layout = QVBoxLayout(host)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.addWidget(row)
+    host.resize(640, 400)
+    host.show()
+    try:
+        pump(lambda: row.columns() == 3, what="tor qator")
+        host.resize(1300, 400)
+        pump(lambda: row.columns() == 5, what="keng qator")
+        host.resize(300, 600)
+        pump(lambda: row.columns() == 1, what="eng tor qator")
+    finally:
+        host.close()
+        host.deleteLater()
+
+
 def test_window_is_usable_at_minimum_size(window: MainWindow) -> None:
     """Kichik oynada ham boshqaruvlar siqilib yo'qolmaydi (kesilmaydi, nol o'lchamga tushmaydi)."""
     window.resize(window.minimumSize())
     wait(50)
-    page = _page(window, "panel:hello", PanelPage)
-    pump(lambda: page.values["ticks"].value.text() != "—", what="panel")
+    page = _page(window, "panel:monitor", PanelPage)
+    pump(lambda: page.values["cpu_percent"].value.text() != "—", what="panel")
+    # Beshta kartochka tor oynada sig'maydi: keyingi qatorga o'tadi, gorizontal aylantirish yo'q.
+    cards = page.value_rows[0]
+    pump(lambda: cards.columns() == 3, what="kartochkalar qatorga bo'linishi")
+    scroll = page.findChild(QScrollArea)
+    assert scroll is not None
+    bar = scroll.horizontalScrollBar()
+    assert bar is not None and bar.maximum() == 0, "gorizontal aylantirish chiqmasligi kerak"
+    for card in page.values.values():
+        assert card.width() >= CARD_MIN_WIDTH
+        assert card.value.width() >= card.value.sizeHint().width(), card.title.text()
     for button in [*page.buttons.values(), *(form.submit for form in page.forms.values())]:
         assert button.width() >= button.sizeHint().width() - 2, button.text()
         assert button.height() >= 24

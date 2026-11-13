@@ -1,0 +1,11 @@
+name = "monitor"
+version = "0.1.0"
+description = "Kuzatuv: CPU, RAM va disk tarixi, chegaradan oshganda ogohlantirish."
+mode = "inprocess"
+heavy = false
+
+[permissions]
+# Faqat o'z papkasiga yozadi (tarix bazasi va sozlama); tizim holatini faqat o'qiydi.
+paths = []
+ports = []
+serial = []

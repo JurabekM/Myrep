@@ -1,6 +1,8 @@
 # Plaginlar
 
-Namuna: [`plugins/hello/`](../plugins/hello/__init__.py) — yangi plagin uchun shundan nusxa oling.
+Andoza: [`plugins/monitor/`](../plugins/monitor/__init__.py) — hook'larning hammasi bor
+(API, davriy vazifa, hodisa nashri va obunasi, audit, panel) va kodi kichik.
+Yangi plagin uchun shundan boshlang. Tavsifi: [monitor.md](monitor.md).
 
 ## Tuzilma
 
@@ -8,7 +10,7 @@ Namuna: [`plugins/hello/`](../plugins/hello/__init__.py) — yangi plagin uchun 
 <plaginlar papkasi>/<nom>/
   plugin.toml     # manifest
   __init__.py     # @hookimpl funksiyalar
-  ...             # ichki modullar (nisbiy import ishlaydi)
+  ...             # ichki modullar: `from .modul import nom` (`from . import modul` ishlamaydi)
 ```
 
 Plaginlar uch joydan qidiriladi; bir xil nomda birinchi topilgani ustun:
@@ -23,7 +25,7 @@ Plaginlar uch joydan qidiriladi; bir xil nomda birinchi topilgani ustun:
 ## Manifest (`plugin.toml`)
 
 ```toml
-name = "hello"                 # papka nomi bilan bir xil; [a-z][a-z0-9_]{1,31}
+name = "monitor"               # papka nomi bilan bir xil; [a-z][a-z0-9_]{1,31}
 version = "0.1.0"
 description = "..."
 mode = "inprocess"             # yoki "subprocess"
@@ -88,7 +90,7 @@ manbadan plagin o'rnatmang.
 | | `inprocess` | `subprocess` |
 |---|---|---|
 | Qayerda ishlaydi | yadro jarayonida | `python -m srv1_sdk.host` bola jarayonida |
-| RAM (o'lchangan, `hello`) | yadroga +3,4 MB | alohida 43,3 MB |
+| RAM (o'lchangan, 2-bosqichdagi namuna plagin) | yadroga +3,4 MB | alohida 43,3 MB |
 | RAM limiti | yo'q | Job Object, `memory_limit_mb` |
 | Plagin yiqilsa | xato logga tushadi; event loop'ni band qilsa yadro qotadi | yadro ishlayveradi, holat `crashed` |
 | Yadro o'lsa | — | bola ham o'ladi (Job Object) |
@@ -101,7 +103,7 @@ plagin bloklovchi ishni `asyncio.to_thread` ga chiqarishi shart; tashqi
 dasturlarni esa `ctx.spawn` bilan alohida jarayonda ishlatadi (`hosting`
 shunday qiladi).
 
-Plagin kodi ikkala rejimda bir xil: `hello` ni `mode = "subprocess"` ga
+Plagin kodi ikkala rejimda bir xil: `monitor` ni `mode = "subprocess"` ga
 o'zgartirish kifoya (testda tekshirilgan).
 
 ### Subprocess cheklovlari
@@ -150,7 +152,7 @@ Audit: `plugin.enable`, `plugin.disable`, `plugin.crashed`, `process.spawn`
 | `button` | `label`, `method`, `path`, `confirm` |
 | `form` | `label`, `method`, `path`, `fields[]` (`name`, `label`, `kind`, `choices`, `required`), `confirm` — xavfli amal: shell yuborishdan oldin tasdiq so'raydi |
 | `table` | `label`, `source`, `columns[]`, `refresh_s`, `auto_refresh`, `filters[]`, `row_actions[]` |
-| `chart` | `label`, `topic`, `field`, `window` |
+| `chart` | `label`, `topic`, `field`, `window`, `history`, `y_min`, `y_max` — `history` berilsa, panel ochilganda `GET <history>?limit=<window>` dan saqlangan nuqtalar yuklanadi (obyektlar ro'yxati, eskidan yangiga); busiz grafik faqat panel ochiq paytdagi hodisalarni ko'rsatadi |
 | `log` | `label`, `source`, `refresh_s`, `filters[]` — `source` satrlar ro'yxatini qaytaradi |
 | `query` | `label`, `path`, `field`, `placeholder` — ko'p qatorli matn `POST {field: matn}` bo'lib ketadi; javob `{columns[], rows[][], truncated, seconds}` |
 
