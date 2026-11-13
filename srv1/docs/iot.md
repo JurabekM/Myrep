@@ -6,8 +6,9 @@ telemetriya omboriga yig'adi. Yadro ichida ishlaydi; bloklovchi kutubxonalar
 
 ![IoT paneli](img/shell-iot-uz.png)
 
-> **Sinov holati.** MQTT klient haqiqiy TCP orqali, lekin testdagi kichik
-> broker bilan sinalgan — **haqiqiy Mosquitto bilan emas**. Serial faqat
+> **Sinov holati.** MQTT haqiqiy Mosquitto 2.1.2 bilan sinalgan (2026-11-13,
+> [quyida](#haqiqiy-mosquitto-bilan-sinov)); qolgan MQTT testlari testdagi kichik
+> broker bilan. Haqiqiy qurilma (ESP32 va h.k.) ulanmagan. Serial faqat
 > `loop://` soxta portida, Modbus faqat `pymodbus` simulyatorida (TCP)
 > sinalgan — **haqiqiy qurilmada emas**. Modbus RTU umuman sinalmagan.
 
@@ -58,8 +59,36 @@ tashqi broker paydo bo'lishini kutib qayta ulanib turadi.
 ```
 
 Bunda broker anonim ulanishni rad etadi. Parol fayli plagin tomonidan yoziladi
-(PBKDF2-SHA512). **Diqqat:** bu fayl formati haqiqiy Mosquitto bilan
-sinalmagan; noto'g'ri bo'lsa broker hech kimni kiritmaydi (ochiq qolmaydi).
+(PBKDF2-SHA512, `$7$` formati). Mosquitto 2.1.2 bu faylni qabul qiladi: to'g'ri
+login kiradi; parolsiz, noto'g'ri parol va begona foydalanuvchi rad etiladi (test bor).
+
+### Haqiqiy Mosquitto bilan sinov
+
+2026-11-13, Mosquitto 2.1.2 (`tools/mosquitto/`), tashqi qurilma o'rnida Mosquitto'ning
+o'z `mosquitto_pub.exe` / `mosquitto_sub.exe` dasturlari. Avtomatik testlar
+(`tests/test_iot_mosquitto.py`; Mosquitto yo'q bo'lsa o'tkazib yuboriladi):
+
+- plagin brokerni o'zi ishga tushiradi; broker faqat `127.0.0.1` da tinglaydi;
+- tashqi klient nashri → telemetriya (oddiy son va JSON); obunada yo'q mavzu kelmaydi;
+- plagin nashri (QoS 1, `retain`) keyin ulangan tashqi klientga yetadi (o'zbekcha matn bilan);
+- parolli broker (yuqoriga qarang);
+- broker o'ldirilsa: holat `disconnected`, plagin ishlayveradi; yadro qayta ishga
+  tushganda broker va ulanish tiklanadi;
+- yadro to'xtaganda broker jarayoni qolmaydi.
+
+O'lchov (bir marta, shu mashinada, tashqi `paho` klient 50 ta mavzuga yozdi):
+
+| Ko'rsatkich | Qiymat |
+|-------------|--------|
+| QoS 0: 20 000 xabar | hammasi yetdi; 5 852 xabar/s (yuborish + telemetriyaga tushish) |
+| QoS 1: 20 000 xabar | hammasi yetdi; 4 478 xabar/s |
+| yo'qolgan xabar | 0 (40 000 dan 40 000 tasi telemetriyada) |
+| broker xotirasi | private 2,5 MB, RSS 7,6 MB — yukdan oldin ham, keyin ham |
+| yadro jarayoni | 87,8 → 110,5 MB (o'lchov shu jarayonda yuk beruvchi klient bilan birga; keyin kamayishi kuzatilmagan) |
+
+**Sinalmagan:** broker o'lgach plagin uni o'zi qayta ko'tarmaydi (yadro yoki plaginni
+qayta ishga tushirish kerak) — bu xatti-harakat, sinov uni faqat qayd etdi; tarmoqqa
+ochiq rejim (`0.0.0.0`) haqiqiy boshqa qurilmadan; soatlab uzluksiz oqim.
 Parol `iot.json` da ochiq matnda turadi — faylni himoya qiling. API va
 jurnallarda parol ko'rinmaydi.
 
