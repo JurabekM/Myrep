@@ -87,6 +87,8 @@ o'zi tozalanmaydi; `DELETE /trash` yoki paneldagi tugma bilan bo'shatiladi.
 | qidiruv: 2 belgi (`LIKE`) | 12 ms |
 | `index.db` hajmi | 5,0 MB |
 
+100 000 fayl bilan o'lchov (yadro ichida, 2026-11-13): [sinov-2026-11-13.md](sinov-2026-11-13.md#katta-hajmlar).
+
 Vaqtlar API orqali o'lchangan. O'lchov paytida plagin alohida jarayonda edi
 (52 MB); 5-bosqichda yadro ichiga ko'chirildi — vaqtlar qayta o'lchanmagan,
 jarayonlararo uzatish yo'qolgani uchun yomonlashmagan bo'lishi kerak.

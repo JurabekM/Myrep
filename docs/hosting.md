@@ -143,8 +143,11 @@ ruxsati bilan, namunaviy sahifali sinov sayti, bitta yugurish):
 | cloudflared xotirasi | 35,4 MB (Working Set), 64,4 MB (private) |
 | yopilgandan keyin | cloudflared jarayoni yo'q; manzil 502 qaytaradi |
 
-Sinalmagan: tunnel orqali uxlayotgan loyihani uyg'otish, Python/Node loyiha,
-uzoq ishlash (soatlar), ikki tunnel birga, tarmoq uzilganda qayta ulanish.
+2026-11-13 da qo'shimcha sinaldi ([sinov-2026-11-13.md](sinov-2026-11-13.md#tunnel-haqiqiy-cloudflared-egasining-ruxsati-bilan)):
+uxlagan Python loyihani tashqaridan uyg'otish, Node loyiha, ikki tunnel birga
+5 daqiqa — hammasi ishladi.
+
+Sinalmagan: soatlab ishlash, tarmoq uzilganda qayta ulanish.
 
 ## API
 

@@ -14,6 +14,7 @@
 | 9 | `itops` | ✅ tugadi | 2026-11-11 |
 | 10 | Yakun | ✅ tugadi (xizmat o'rnatilishi sinalmagan) | 2026-11-12 |
 | 11 | `monitor` plagini (`hello` o'rniga) | ✅ tugadi | 2026-11-13 |
+| — | Keng sinov ([sinov-2026-11-13.md](sinov-2026-11-13.md)) | ✅ o'tkazildi (5 kamchilik topildi, tuzatilmagan) | 2026-11-13 |
 
 ## 0-bosqich — Skelet
 
@@ -743,22 +744,20 @@ oxirgi 240 tasini o'qish 0,4 ms.
 
 ## Sinalmaganlar (butun loyiha bo'yicha, bitta joyda)
 
-Kod yozilgan, lekin haqiqiy sharoitda tekshirilmagan narsalar. Ishga
-tushirishdan oldin shu ro'yxat bo'yicha o'zingiz sinab ko'ring.
+2026-11-13 da bu jadvalning shu mashinada sinash mumkin bo'lgan har bandi
+sinab ko'rildi; natijalar va topilgan kamchiliklar:
+[sinov-2026-11-13.md](sinov-2026-11-13.md). Quyida faqat **hamon sinalmagan**
+narsalar qoldi.
 
 | Nima | Nega sinalmagan | Qanday sinash |
 |------|-----------------|---------------|
 | Windows xizmatini o'rnatish va avtostart | administrator huquqi yo'q | administrator oynasida `install\service.ps1 -Action install`, so'ng qayta yuklash |
-| Tunnel: uxlayotgan loyihani uyg'otish, Python/Node loyiha, uzoq ishlash | haqiqiy tunnel faqat bir marta, statik sayt bilan ochilgan | panelda «Internetga ochish» |
-| 4 GB RAM li mashina | ishlab chiqish mashinasida 24 GB | nishon mashinada «Xotira» sahifasi |
+| 4 GB RAM li mashina | bunday mashina yo'q; o'rniga 350 MB li qattiq chegara ostida ishlatib ko'rildi (cho'qqi 227,5 MB) | nishon mashinada «Xotira» va «Kuzatuv» sahifalari |
 | Haqiqiy plataga proshivka, COM monitor, «port band» | COM port va plata yo'q | ESP32/Arduino ulab, `electronics` paneli |
-| Haqiqiy Mosquitto broker | `mosquitto.org` ochilmadi | `tools/mosquitto/` ga qo'yib, `pytest tests/test_iot_plugin.py` |
+| Haqiqiy Mosquitto broker, yuqori MQTT oqimi | Mosquitto o'rnatilmagan | `tools/mosquitto/` ga qo'yib, `pytest tests/test_iot_plugin.py` |
 | Haqiqiy Modbus/serial qurilma | uskuna yo'q | `iot` paneli |
 | `itops`: xizmatni ishga tushirish/to'xtatish | administrator huquqi yo'q | yadro administrator nomidan |
-| `itops`: haqiqiy mahalliy tarmoqni skanerlash, ARP | so'ralmasdan tarmoq skanerlanmadi | panelda «Skanerlash» |
-| Katta hajmlar: 20 000+ fayl, katta zaxira, yuqori MQTT oqimi, saytga yuk | o'lchanmagan | — |
-| Haqiqiy brauzerda `*.localhost` | testlar `Host` sarlavhasi bilan | brauzerda `http://<nom>.localhost:8080/` |
-| Shell'ni haqiqiy ekranda sichqoncha bilan | GUI testlari ko'rinmas oynada | qo'lda |
-| Toza mashinada `install.ps1` (`uv sync`) | muhit allaqachon bor edi | yangi mashinada |
-| Simvolik havolalar, tarmoq disklari (`files`) | maxsus huquq/uskuna | — |
-| `monitor`: kunlab ishlash, haqiqiy yuklamada RAM/CPU ogohlantirishi | qisqa yugurishlar, chegara testda pasaytirilgan | bir necha kun yoqiq qoldirib, «Kuzatuv» panelini ko'rish |
+| Kunlab uzluksiz ishlash | eng uzun yugurish 50 daqiqa | bir necha kun yoqiq qoldirib, «Kuzatuv» panelini ko'rish |
+| Shell'ni sichqoncha bilan to'liq aylanib chiqish | avtomatik testlar ko'rinmas oynada; haqiqiy ekranda faqat chizilishi tekshirilgan | qo'lda, har sahifa va tugma |
+| Toza mashinada Python va `uv` ni o'rnatish | ular oldindan bor edi (paketlar bo'sh keshdan qayta yuklab tekshirilgan) | yangi mashinada |
+| Haqiqiy foydalanuvchi sayti (framework, bog'liqliklar) | faqat sinov ilovalari | o'z loyihangizni joylab |
