@@ -1,0 +1,68 @@
+name: omborai-backend
+
+on:
+  pull_request:
+    paths: ["omborai/backend/**", "omborai/shared/**", ".github/workflows/omborai-backend.yml"]
+  push:
+    branches: [main, "claude/**"]
+    paths: ["omborai/backend/**", "omborai/shared/**", ".github/workflows/omborai-backend.yml"]
+
+concurrency:
+  group: omborai-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: omborai/backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      OMBORAI_TEST_ADMIN_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: omborai/backend/pyproject.toml
+
+      - name: O'rnatish
+        run: pip install -e ".[dev]"
+
+      - name: Lint (ruff)
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Tip tekshiruvi (mypy)
+        run: mypy app
+
+      - name: Testlar (PostgreSQL bilan)
+        run: pytest -q
+
+      - name: OpenAPI shartnomasi o'zgarmaganmi
+        run: |
+          python scripts/export_openapi.py
+          git diff --exit-code -- ../shared/openapi.json || (echo "openapi.json yangilanmagan: scripts/export_openapi.py ni ishga tushiring" && exit 1)
+
+  image:
+    runs-on: ubuntu-24.04
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker image yig'ish
+        run: docker build -t omborai-backend:ci omborai/backend

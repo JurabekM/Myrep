@@ -33,6 +33,7 @@ uzerp_mobile/android/uzerp-release.keystore
 *.exe
 *.dll
 *.apk
+!omborai/releases/*.apk
 *.aab
 *.dex
 obj/
