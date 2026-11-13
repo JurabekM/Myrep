@@ -14,6 +14,7 @@
 | 9 | `itops` | ✅ tugadi | 2026-11-11 |
 | 10 | Yakun | ✅ tugadi (xizmat 2026-11-13 da o'rnatildi; avtostart sinalmagan) | 2026-11-12 |
 | 11 | `monitor` plagini (`hello` o'rniga) | ✅ tugadi | 2026-11-13 |
+| 12 | Reliz o'rnatuvchisi (`SRV_1-Setup-1.0.0.exe`, [reliz.md](reliz.md)) | ✅ tugadi (administrator rejimi va toza mashina sinalmagan) | 2026-11-13 |
 | — | Keng sinov ([sinov-2026-11-13.md](sinov-2026-11-13.md)) | ✅ o'tkazildi (5 kamchilik topildi va tuzatildi) | 2026-11-13 |
 
 ## 0-bosqich — Skelet
@@ -741,6 +742,32 @@ oxirgi 240 tasini o'qish 0,4 ms.
   (jarayonni konsol oynasisiz ishga tushirish), lekin sinab ko'rilmadi.
 - `main` va `master` (`srv1/`) dagi nusxalar hali `hello` bilan: bu bosqich
   faqat ishchi tarmoqda.
+
+## 12-bosqich — Reliz o'rnatuvchisi
+
+**Qilindi**
+
+- `packaging/build.ps1`: testlar → ko'chma Python 3.12 + `uv.lock` dagi bog'liqliklar
+  (xesh bilan) + SRV_1 + Caddy va NSSM → `.pyc` → Inno Setup. Natija:
+  `release/SRV_1-Setup-1.0.0.exe` (153,2 MB; gitga kirmaydi).
+- `packaging/srv1.iss`: o'zbekcha sehrgar, ikki o'rnatish turi, yorliqlar, ma'lumotlar
+  papkasini tayyorlash, ixtiyoriy xizmat qadami, olib tashlash. Xizmatga faqat u shu
+  nusxaga tegishli bo'lsa tegiladi.
+- `install/common.ps1`: o'rnatilgan nusxada skriptlar `.venv` o'rniga `python\` ni ishlatadi.
+- Versiya 0.0.1 → 1.0.0.
+- `tests/test_packaging.py` (6 test): fayllar ASCII, skript tahlili, versiya mosligi,
+  `.iss` tuzilmasi, tarjima kalitlari Inno'da borligi, ko'chma Python ustunligi.
+
+**O'lchangan RAM** (o'rnatilgan nusxa, bo'sh holat, private, bir marta): yadro 78,4 MB +
+shell 72,4 MB + konsol 6,6 MB = 157,4 MB (Caddy'siz). To'liq jadval va sinov:
+[reliz.md](reliz.md).
+
+**Qilinmadi / sinalmadi**
+
+- O'rnatilgan nusxada `hosting` (portlar asosiy xizmat bilan band edi).
+- Administrator rejimi, sehrgarning qolgan sahifalari, o'rnatuvchi ichidan xizmat,
+  yangilash va xizmatli olib tashlash; toza Windows 10 / 4 GB mashina.
+- Kod imzosi yo'q. PyQt6 GPL v3 ekanini tarqatishda hisobga olish kerak.
 
 ## Sinalmaganlar (butun loyiha bo'yicha, bitta joyda)
 

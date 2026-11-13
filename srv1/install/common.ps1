@@ -21,6 +21,9 @@ function Test-Admin {
 function Get-VenvPython([switch]$Windowless) {
     $name = 'python.exe'
     if ($Windowless) { $name = 'pythonw.exe' }
+    # Setup.exe bilan o'rnatilgan nusxada ko'chma Python bor; repoda esa uv muhiti (.venv).
+    $bundled = Join-Path (Get-RepoRoot) (Join-Path 'python' $name)
+    if (Test-Path -LiteralPath $bundled -PathType Leaf) { return $bundled }
     return (Join-Path (Get-RepoRoot) (Join-Path '.venv\Scripts' $name))
 }
 
