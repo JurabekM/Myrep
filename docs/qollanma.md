@@ -14,6 +14,36 @@ ochiladi (`127.0.0.1`). Tashqariga ochish — faqat siz ataylab yoqsangiz
 
 ## 1. O'rnatish
 
+### Oson yo'l — `SRV_1-Setup-<versiya>.exe`
+
+Kerak: Windows 10 x64 (yoki yangisi), taxminan 0,8 GB bo'sh joy. Python, `uv` va
+boshqa narsa kerak emas — hammasi o'rnatuvchi ichida (Caddy va NSSM ham).
+
+1. `SRV_1-Setup-<versiya>.exe` ni oching. Fayl imzolanmagan, shuning uchun
+   Windows «Noma'lum nashriyotchi» deb ogohlantiradi: «Batafsil» → «Baribir
+   ishga tushirish».
+2. O'rnatish turini tanlang: «Hamma foydalanuvchilar uchun» (administrator
+   huquqi so'raladi, `C:\Program Files\SRV_1`) yoki «Faqat men uchun».
+3. Oxirgi sahifada ikki belgi bor:
+   - **«Windows xizmati sifatida o'rnatish»** — belgilasangiz, administrator
+     oynasi ochiladi va Windows parolingiz so'raladi; yadro kompyuter yonganda
+     o'zi ishga tushadigan bo'ladi ([2-bo'lim](#2-yadroni-ishga-tushirish)).
+   - «SRV_1 ni ochish» — boshqaruv oynasini ochadi.
+4. Xizmatni o'rnatmagan bo'lsangiz, yadroni Bosh menyudagi **«SRV_1 yadro
+   (konsol)»** yorlig'i bilan ishga tushiring (oyna yopilsa, yadro to'xtaydi),
+   keyin «SRV_1» ni oching.
+
+Quyidagi bo'limlardagi `install\service.ps1` kabi buyruqlar o'rnatilgan
+papkadan (`C:\Program Files\SRV_1`) bajariladi; `uv run python` o'rniga
+`python\python.exe` yoziladi.
+
+Olib tashlash: «Dasturlar va komponentlar» → SRV_1. Xizmat ham olib tashlanadi;
+ma'lumotlar papkasi (`C:\ProgramData\SRV_1`) **qoladi** — kerak bo'lmasa, o'zingiz
+o'chirasiz. cloudflared, Mosquitto va avrdude o'rnatuvchiga kirmaydi: kerak
+bo'lsa, `tools\` ga qo'yiladi ([tools/README.md](../tools/README.md)).
+
+### Manba koddan (ishlab chiquvchilar uchun)
+
 Kerak: Windows 10 x64, [uv](https://docs.astral.sh/uv/), taxminan 1 GB bo'sh joy.
 
 1. Loyiha papkasini doimiy joyga qo'ying (masalan `C:\SRV_1`). Keyin

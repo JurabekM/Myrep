@@ -16,7 +16,7 @@ _HIDDEN_KEYS = frozenset({"timestamp", "level", "logger", "event"})
 
 
 def format_entry(entry: dict[str, Any]) -> str:
-    """`12:34:56 INFO    srv1.core  core_started  version=0.0.1`."""
+    """`12:34:56 INFO    srv1.core  core_started  version=1.0.0`."""
     timestamp = str(entry.get("timestamp", ""))
     clock = timestamp[11:19] if len(timestamp) >= 19 else timestamp
     level = str(entry.get("level", "")).upper()
