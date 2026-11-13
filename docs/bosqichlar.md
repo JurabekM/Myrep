@@ -8,7 +8,7 @@
 | 3 | Shell | ✅ tugadi | 2026-11-11 |
 | 4 | `files` | ✅ tugadi | 2026-11-11 |
 | 5 | `hosting` | ✅ tugadi | 2026-11-11 |
-| 6 | `iot` | ✅ tugadi (Mosquitto va temir bilan sinalmagan) | 2026-11-11 |
+| 6 | `iot` | ✅ tugadi (Mosquitto bilan 2026-11-13 da sinaldi; temir bilan sinalmagan) | 2026-11-11 |
 | 7 | `data` | ✅ tugadi | 2026-11-11 |
 | 8 | `electronics` | ✅ tugadi | 2026-11-11 |
 | 9 | `itops` | ✅ tugadi | 2026-11-11 |
@@ -781,7 +781,7 @@ narsalar qoldi.
 | Xizmatning qayta yuklashdan keyingi avtostarti | o'rnatish 2026-11-13 da sinaldi ([ornatish.md](ornatish.md)), qayta yuklash qilinmagan | kompyuterni qayta yuklab, `install\service.ps1 -Action status` |
 | 4 GB RAM li mashina | bunday mashina yo'q; o'rniga 350 MB li qattiq chegara ostida ishlatib ko'rildi (cho'qqi 227,5 MB) | nishon mashinada «Xotira» va «Kuzatuv» sahifalari |
 | Haqiqiy plataga proshivka, COM monitor, «port band» | COM port va plata yo'q | ESP32/Arduino ulab, `electronics` paneli |
-| Haqiqiy Mosquitto broker, yuqori MQTT oqimi | Mosquitto o'rnatilmagan | `tools/mosquitto/` ga qo'yib, `pytest tests/test_iot_plugin.py` |
+| Haqiqiy MQTT qurilmasi (ESP32 va h.k.), tarmoqqa ochiq broker | Mosquitto 2.1.2 bilan broker va oqim 2026-11-13 da sinaldi ([iot.md](iot.md)); qurilma yo'q | qurilmani ulab, `listen_host` ni ochib |
 | Haqiqiy Modbus/serial qurilma | uskuna yo'q | `iot` paneli |
 | `itops`: xizmatni ishga tushirish/to'xtatish | administrator huquqi yo'q | yadro administrator nomidan |
 | Kunlab uzluksiz ishlash | eng uzun yugurish 50 daqiqa | bir necha kun yoqiq qoldirib, «Kuzatuv» panelini ko'rish |
