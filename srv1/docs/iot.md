@@ -86,9 +86,15 @@ O'lchov (bir marta, shu mashinada, tashqi `paho` klient 50 ta mavzuga yozdi):
 | broker xotirasi | private 2,5 MB, RSS 7,6 MB — yukdan oldin ham, keyin ham |
 | yadro jarayoni | 87,8 → 110,5 MB (o'lchov shu jarayonda yuk beruvchi klient bilan birga; keyin kamayishi kuzatilmagan) |
 
-**Sinalmagan:** broker o'lgach plagin uni o'zi qayta ko'tarmaydi (yadro yoki plaginni
-qayta ishga tushirish kerak) — bu xatti-harakat, sinov uni faqat qayd etdi; tarmoqqa
-ochiq rejim (`0.0.0.0`) haqiqiy boshqa qurilmadan; soatlab uzluksiz oqim.
+**Broker o'lsa** (yiqildi yoki o'ldirildi), plagin uni o'zi qayta ko'taradi: har 2 s da
+tekshiradi, urinishlar orasida 2, 5, 15, 30, so'ng 60 s kutadi (broker 60 s ishlab tursa,
+hisob nolga qaytadi). Klient qayta ulanadi va obunalar tiklanadi. Holatda
+`broker_restarts` sanog'i, jurnalda `mosquitto_down` / `mosquitto_restarted`. Test bor
+(o'ldirilgan broker ~4 s da qaytadi). Port band bo'lib qolgani kabi doimiy sababda
+urinishlar har 60 s da davom etadi va `broker_error` sababni ko'rsatadi.
+
+**Sinalmagan:** tarmoqqa ochiq rejim (`0.0.0.0`) haqiqiy boshqa qurilmadan; soatlab
+uzluksiz oqim; ketma-ket yiqilishdagi uzayuvchi kutish (faqat birinchi urinish sinalgan).
 Parol `iot.json` da ochiq matnda turadi — faylni himoya qiling. API va
 jurnallarda parol ko'rinmaydi.
 

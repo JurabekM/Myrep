@@ -15,11 +15,22 @@ if TYPE_CHECKING:
     from srv1_sdk.process import ManagedProcess
 
 LogLevel = Literal["debug", "info", "warning", "error"]
+NotifyLevel = Literal["info", "warning", "error"]
+# Bitta satr yoki `{"uz": ..., "ru": ..., "en": ...}` (panel matnlari kabi).
+Localized = str | Mapping[str, str]
+NOTIFY_TOPIC = "notify"
+_NOTIFY_TITLE_MAX, _NOTIFY_MESSAGE_MAX = 80, 300
 _TOPIC_RE = re.compile(r"[a-z0-9_.-]{1,64}")
 
 
 def plugin_topic_prefix(name: str) -> str:
     return f"plugin.{name}."
+
+
+def _clip(text: Localized, limit: int) -> str | dict[str, str]:
+    if isinstance(text, str):
+        return text[:limit]
+    return {str(language): str(value)[:limit] for language, value in text.items()}
 
 
 class Backend(Protocol):
@@ -145,6 +156,23 @@ class PluginContext:
         if _TOPIC_RE.fullmatch(topic) is None:
             raise ValueError(f"yaroqsiz mavzu: {topic!r}")
         self._backend.publish(plugin_topic_prefix(self.name) + topic, data or {})
+
+    def notify(
+        self, title: Localized, message: Localized = "", *, level: NotifyLevel = "warning"
+    ) -> None:
+        """Foydalanuvchi e'tiborini talab qiladigan xabar (`plugin.<nom>.notify` hodisasi).
+
+        Ochiq turgan shell uni Windows bildirishnomasi qilib ko'rsatadi. Kam va faqat
+        muhim holatda chaqiring; sir yozmang.
+        """
+        self.publish(
+            NOTIFY_TOPIC,
+            {
+                "level": level,
+                "title": _clip(title, _NOTIFY_TITLE_MAX),
+                "message": _clip(message, _NOTIFY_MESSAGE_MAX),
+            },
+        )
 
     async def audit(
         self, action: str, target: str, *, ok: bool = True, detail: Mapping[str, Any] | None = None

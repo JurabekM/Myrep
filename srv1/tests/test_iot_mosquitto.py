@@ -119,20 +119,27 @@ async def test_managed_broker_with_password(paths: DataPaths, plugin_root: Path)
     assert secret not in (paths.logs_dir / "srv1.log").read_text(encoding="utf-8")
 
 
-async def test_broker_restart_reconnects(paths: DataPaths, plugin_root: Path) -> None:
-    """Broker o'ldirilsa holat ko'rinadi; yadro qayta ishga tushganda hammasi tiklanadi."""
+async def test_killed_broker_is_restarted(paths: DataPaths, plugin_root: Path) -> None:
+    """Broker o'ldirilsa, plagin uni o'zi qayta ko'taradi va klient qayta ulanadi."""
     port = free_port()
     install_iot(plugin_root, paths.plugin_data_dir("iot"), mqtt={"port": port})
     async with serve_app(paths) as served, served.client() as client:
         iot = Iot(client)
         status = await iot.status_is("mqtt_state", "connected")
-        psutil.Process(status["broker_pid"]).kill()
-        status = await iot.status_is("mqtt_state", "disconnected")
-        assert status["broker"] != "running"
+        first_pid = status["broker_pid"]
+        assert status["broker_restarts"] == 0
+        psutil.Process(first_pid).kill()
+        await iot.status_is("mqtt_state", "disconnected")
         assert (await client.get("/api/v1/plugins/iot")).json()["status"] == "running"
-    async with serve_app(paths) as served, served.client() as client:
-        iot = Iot(client)
-        status = await iot.status_is("mqtt_state", "connected")
-        assert status["broker"] == "running"
+
+        status = await iot.status_is("broker_restarts", 1)
+        assert (status["broker"], status["broker_error"]) == ("running", None)
+        assert status["broker_pid"] not in (None, first_pid)
+        await iot.status_is("mqtt_state", "connected")
+        # obuna tiklangan: tashqi nashr yana telemetriyaga tushadi
         assert (await _tool(PUB, *_pub(port, "srv1/qayta", "5")))[0] == 0
         await iot.wait_latest(("mqtt:srv1/qayta", "value"), 5.0)
+        second_pid = status["broker_pid"]
+    assert not psutil.pid_exists(second_pid) or psutil.Process(second_pid).name() != "mosquitto.exe"
+    log = (paths.logs_dir / "srv1.log").read_text(encoding="utf-8")
+    assert "mosquitto_down" in log and "mosquitto_restarted" in log

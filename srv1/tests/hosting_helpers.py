@@ -17,6 +17,7 @@ CADDY_EXE = BUILTIN_DIR.parent / "tools" / "caddy.exe"
 APP_PY = """
 import json
 import os
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 hoard = []
@@ -34,6 +35,10 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/die":
             os._exit(7)
+        if self.path == "/hang":
+            time.sleep(60)
+        if self.path == "/slow":
+            time.sleep(0.6)
         if self.path == "/eat":
             try:
                 hoard.append(bytearray(400 * 1024 * 1024))
