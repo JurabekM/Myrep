@@ -106,6 +106,7 @@ if (-not $npcap) {
     '' | & $Exe --config (Join-Path $probe 'config.json') --iface 0
     if ($LASTEXITCODE -ne 3) { throw "Npcap'siz chiqish kodi 3 bo'lishi kerak edi, keldi: $LASTEXITCODE" }
     Write-Note "Npcap'siz holat: 3-kod bilan chiqdi (kutilgan)"
+    $global:LASTEXITCODE = 0  # kutilgan kod skriptning chiqish kodi bo'lib qolmasin
 }
 
 Write-Step 'release\'
@@ -124,3 +125,4 @@ Write-Note "$Final ($sizeMb MB)"
 Write-Note "SHA-256: $hash"
 Write-Note 'Keyingi qadam: packaging\sign.ps1'
 if ($env:GITHUB_OUTPUT) { Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "version=$Version" }
+exit 0
