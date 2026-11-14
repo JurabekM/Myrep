@@ -59,15 +59,23 @@ _SETTINGS_NOTE = _t(
     "Sozlamalar: boʻsh maydon oʻzgarmaydi. Paket matni standart holatda saqlanmaydi — "
     "yoqilsa, har paketning dastlabki 256 belgisi bazaga yoziladi (ichida parol boʻlishi "
     "mumkin). Geolokatsiya tashqi IP manzillarni ip-api.com ga shifrlanmagan soʻrov bilan "
-    "yuboradi. Shubhali portlar — vergul bilan; «-» roʻyxatni boʻshatadi.",
+    "yuboradi. Shubhali portlar — vergul bilan; «-» roʻyxatni boʻshatadi. «Jurnal» sahifasiga "
+    "ushlash paytida davriy xulosa (paketlar soni, tezlik, protokollar) va har bir "
+    "belgilangan paket yoziladi; ular diskdagi jurnal fayliga ham tushadi (IP manzillar "
+    "bilan, paket matnisiz).",
     "Настройки: пустое поле не меняется. Содержимое пакетов по умолчанию не сохраняется — "
     "если включить, первые 256 символов каждого пакета пишутся в базу (там может быть "
     "пароль). Геолокация отправляет внешние IP-адреса на ip-api.com незашифрованным "
-    "запросом. Подозрительные порты — через запятую; «-» очищает список.",
+    "запросом. Подозрительные порты — через запятую; «-» очищает список. На страницу «Журнал» "
+    "во время перехвата пишутся периодическая сводка (число пакетов, скорость, протоколы) "
+    "и каждый помеченный пакет; они попадают и в файл журнала на диске (с IP-адресами, без "
+    "содержимого пакетов).",
     "Settings: an empty field is kept. Packet contents are not stored by default — when "
     "enabled, the first 256 characters of every packet go to the database (they may contain "
     "a password). Geolocation sends external IP addresses to ip-api.com over plain HTTP. "
-    "Suspicious ports are comma separated; “-” empties the list.",
+    "Suspicious ports are comma separated; “-” empties the list. While capturing, the Log page "
+    "gets a periodic summary (packet count, rate, protocols) and every marked packet; they "
+    "also go to the log file on disk (with IP addresses, without packet contents).",
 )
 
 
@@ -92,6 +100,7 @@ def net_widgets() -> tuple[Widget, ...]:
                 _column("npcap", _t("Npcap", "Npcap", "Npcap")),
                 _column("store_payload", _t("Matn saqlash", "Сохранение", "Payload")),
                 _column("geo", _t("Geolokatsiya", "Геолокация", "Geolocation")),
+                _column("journal", _t("Jurnal", "Журнал", "Log")),
                 _column("error", _t("Oxirgi xato", "Последняя ошибка", "Last error")),
             ),
         ),
@@ -231,6 +240,15 @@ def net_widgets() -> tuple[Widget, ...]:
                         "Port skan: nechta port",
                         "Скан портов: сколько портов",
                         "Port scan: how many ports",
+                    ),
+                    "number",
+                ),
+                _optional(
+                    "log_interval_s",
+                    _t(
+                        "Jurnalga xulosa, soniya (0 — oʻchiq)",
+                        "Сводка в журнал, секунд (0 — выкл.)",
+                        "Log summary, seconds (0 = off)",
                     ),
                     "number",
                 ),

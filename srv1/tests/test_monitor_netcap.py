@@ -25,6 +25,7 @@ engine_mod = netcap_module("engine")
 geo = netcap_module("geo")
 net_models = netcap_module("models")
 net_store = netcap_module("store")
+journal_mod = netcap_module("journal")
 ifaces = netcap_module("ifaces")
 
 NPCAP = ifaces.npcap_installed()
@@ -137,6 +138,29 @@ def test_flag_scans_and_suspicious_ports() -> None:
     assert _kinds(detector.check(udp)) == ["port"]
 
 
+def test_every_suspicious_packet_is_marked_even_when_the_alert_is_suppressed() -> None:
+    detector = detect.Detector(detect.Limits(suspicious_ports=frozenset({23}), quiet_s=60))
+    first, second = _syn(100, 23), _syn(101, 23)
+    assert _kinds(detector.check(first)) == ["port"]
+    assert detector.check(second) == []  # signal bostirildi ...
+    assert (first.mark, second.mark) == ("port", "port")  # ... lekin paket belgilandi
+    xmas = _record(sport=1, dport=23, flags="FPU", src="10.0.0.7")
+    detector.check(xmas)
+    assert xmas.mark == "xmas_scan"
+    # sir turi birinchi turadi; bitta paketda bir nechta belgi vergul bilan
+    both = _record(sport=5000, dport=23, flags="S", src="10.0.0.8", payload=b"pwd=1")
+    assert _kinds(detector.check(both)) == ["port", "secret"]
+    assert both.mark == "pwd,port"
+    ordinary = _record(sport=50000, dport=443, flags="PA", payload=b"salom")
+    assert detector.check(ordinary) == [] and ordinary.mark == ""
+    # port skan: belgini chegaraga yetkazgan paket oladi, oldingilari emas
+    scanner = detect.Detector(detect.Limits(scan_ports=3))
+    probes = [_syn(100 + i, 1000 + i) for i in range(3)]
+    for probe in probes:
+        scanner.check(probe)
+    assert [probe.mark for probe in probes] == ["", "", "port_scan"]
+
+
 def test_repeated_alert_is_suppressed_for_quiet_period() -> None:
     detector = detect.Detector(detect.Limits(suspicious_ports=frozenset({23}), quiet_s=60))
     assert len(detector.check(_syn(100, 23))) == 1
@@ -193,6 +217,33 @@ def test_engine_tick_drains_rows_and_reports_rate() -> None:
     assert tick["hosts"][0] == {"ip": "10.0.0.5", "packets": 11, "bytes": 110, "where": ""}
     again = engine.tick(201.0, 1.0)
     assert (again["packets"], again["alerts"], again["pps"]) == ([], [], 0.0)
+
+
+def test_engine_counts_protocols_and_bounds_a_flood_of_marked_packets() -> None:
+    engine = _engine(rows_per_tick=3, suspicious_ports=[23])
+    for index in range(4):
+        engine.handle(_record(proto="UDP", dst="10.0.0.10", sport=1, dport=53 + index))
+    engine.handle(_record(proto="ARP", dst="10.0.0.10"))
+    # 50 ta shubhali paket: hammasi sanaladi, lekin tick cheksiz kattalashmaydi
+    for index in range(50):
+        engine.handle(_syn(100 + index, 23, dst="10.0.0.10"))
+    tick = engine.tick(200.0, 1.0)
+    assert tick["protos"] == {"UDP": 4, "ARP": 1, "TCP": 50}
+    assert (tick["total"], tick["marked"]) == (55, 50)
+    rows = tick["packets"]
+    assert len(rows) == 6  # 3 ta oddiy + 3 ta belgilangan (chegara har biri uchun alohida)
+    assert [row["mark"] for row in rows] == ["", "", "", "port", "port", "port"]
+    assert tick["skipped"] == 55 - 6
+    assert len(tick["alerts"]) == 1  # 49 tasi bostirilgan
+    # hisob yig'iladi (ushlash boshidan), navbat esa bo'shaydi
+    engine.handle(_syn(300, 23, dst="10.0.0.10"))
+    again = engine.tick(301.0, 1.0)
+    assert (again["marked"], again["protos"]["TCP"], len(again["packets"])) == (51, 51, 1)
+    many = _engine()
+    for index in range(engine_mod.MAX_PROTOS + 10):
+        many.handle(_record(proto=f"P{index}", dst="10.0.0.10"))
+    protos = many.tick(1.0, 1.0)["protos"]
+    assert len(protos) == engine_mod.MAX_PROTOS + 1 and protos["other"] == 10
 
 
 def test_payload_is_not_kept_unless_enabled() -> None:
@@ -291,6 +342,165 @@ def test_geo_only_asks_about_public_addresses_and_caches() -> None:
     assert resolver.resolve_one() and asked[-1] == "9.9.9.9"
 
 
+# --- jurnal: xulosa va belgilangan paketlar ------------------------------------------------
+class _Lines:
+    """`ctx.log` o'rniga: yozilgan satrlarni yig'adi."""
+
+    def __init__(self) -> None:
+        self.items: list[tuple[str, str, dict[str, Any]]] = []
+
+    def __call__(self, level: str, event: str, **fields: Any) -> None:  # noqa: ANN401
+        self.items.append((level, event, fields))
+
+    def of(self, event: str) -> list[dict[str, Any]]:
+        return [fields for _level, name, fields in self.items if name == event]
+
+
+def _tick(ts: float, total: int = 0, **extra: Any) -> dict[str, Any]:  # noqa: ANN401
+    return {"t": "tick", "ts": ts, "paused": False, "total": total, "bytes": total * 100} | extra
+
+
+def _marked_row(index: int = 0) -> dict[str, Any]:
+    return {
+        "ts": 1.0,
+        "proto": "TCP",
+        "src": "10.0.0.5",
+        "sport": 40000 + index,
+        "dst": "10.0.0.9",
+        "dport": 4444,
+        "len": 60,
+        "info": "[S]",
+        "mark": "port",
+        "payload": "password=hunter2",
+    }
+
+
+def test_journal_writes_a_summary_per_interval() -> None:
+    lines = _Lines()
+    journal = journal_mod.Journal(lines, 10, "Ethernet")
+    plain = {"ts": 1.0, "proto": "UDP", "src": "10.0.0.5", "dst": "8.8.8.8", "mark": ""}
+    journal.feed(_tick(1000.0, 30, protos={"TCP": 20, "UDP": 10}), [plain], 0)
+    journal.feed(_tick(1005.0, 80, protos={"TCP": 60, "UDP": 15, "DNS": 5}), [plain], 0)
+    assert lines.items == [], "oraliq tugamaguncha hech narsa yozilmaydi; oddiy paket umuman"
+    hosts = [{"ip": "10.0.0.5", "packets": 99, "bytes": 1}, {"ip": "8.8.8.8"}]
+    journal.feed(
+        _tick(1010.0, 110, protos={"TCP": 80, "UDP": 20, "DNS": 10}, hosts=hosts, marked=0), [], 0
+    )
+    assert lines.items == [
+        (
+            "info",
+            "netcap_stats",
+            {
+                "interface": "Ethernet",
+                "seconds": 10,
+                "packets": 110,
+                "pps": 11.0,
+                "kb": 10.7,
+                "total": 110,
+                "tcp": 80,
+                "udp": 20,
+                "dns": 10,
+                "top": "10.0.0.5",
+                "marked": 0,
+                "alerts": 0,
+            },
+        )
+    ]
+    # keyingi oraliq: faqat shu oraliqdagi farq, protokollar kamayish tartibida
+    journal.feed(_tick(1021.0, 150, protos={"TCP": 85, "UDP": 55, "DNS": 10}, hosts=hosts), [], 2)
+    second = lines.of("netcap_stats")[1]
+    assert (second["seconds"], second["packets"], second["total"]) == (11, 40, 150)
+    assert [key for key in second if key in ("tcp", "udp", "dns")] == ["udp", "tcp"]
+    assert (second["udp"], second["tcp"], second["alerts"]) == (35, 5, 2)
+
+
+def test_journal_logs_marked_packets_but_bounds_a_flood() -> None:
+    lines = _Lines()
+    journal = journal_mod.Journal(lines, 10, "Ethernet")
+    journal.feed(_tick(1000.0, 1, marked=1), [_marked_row()], 1)
+    assert lines.items == [
+        (
+            "warning",
+            "netcap_packet",
+            {
+                "proto": "TCP",
+                "src": "10.0.0.5:40000",
+                "dst": "10.0.0.9:4444",
+                "len": 60,
+                "mark": "port",
+                "info": "[S]",
+            },
+        )
+    ]
+    assert "hunter2" not in repr(lines.items), "paket matni jurnalga hech qachon tushmaydi"
+    # toshqin: 500 ta belgilangan paket — oraliqda ko'pi bilan 20 satr, qolgani xulosada
+    flood = [_marked_row(index) for index in range(1, 400)]
+    journal.feed(_tick(1004.0, 500, marked=500), flood, 0)
+    limit = journal_mod.PACKETS_PER_INTERVAL
+    assert len(lines.of("netcap_packet")) == limit
+    journal.feed(_tick(1010.0, 500, marked=500), [], 0)
+    stats = lines.of("netcap_stats")[-1]
+    assert (stats["marked"], stats["unlogged"], stats["alerts"]) == (500, 500 - limit, 1)
+    # yangi oraliqda chegara qaytadan boshlanadi
+    journal.feed(_tick(1011.0, 501, marked=501), [_marked_row(999)], 0)
+    assert len(lines.of("netcap_packet")) == limit + 1
+    arp = {"proto": "ARP", "src": "192.168.1.1", "dst": "192.168.1.2", "mark": "x" * 200}
+    journal.feed(_tick(1012.0, 502, marked=502), [arp], 0)
+    last = lines.of("netcap_packet")[-1]
+    assert "info" not in last, "bo'sh maydon yozilmaydi"
+    assert (last["src"], last["dst"], last["len"], len(last["mark"])) == (
+        "192.168.1.1",
+        "192.168.1.2",
+        0,
+        80,
+    )
+
+
+def test_journal_is_quiet_when_idle_paused_or_disabled() -> None:
+    lines = _Lines()
+    journal = journal_mod.Journal(lines, 5, "lo")
+    for second in range(0, 31):
+        journal.feed(_tick(1000.0 + second, 7), [], 0)
+    stats = lines.of("netcap_stats")
+    # 1-oraliq: 7 paket; 2-oraliq: bo'sh (bir marta yoziladi); keyin sukut
+    assert [entry["packets"] for entry in stats] == [7, 0]
+    journal.feed(_tick(1036.0, 9), [], 0)
+    assert [entry["packets"] for entry in lines.of("netcap_stats")] == [7, 0, 2]
+    # pauza: yozilmaydi va pauzadagi vaqt keyingi xulosaga qo'shilmaydi
+    for second in range(40, 100):
+        journal.feed(_tick(1000.0 + second, 9) | {"paused": True}, [_marked_row()], 0)
+    assert len(lines.items) == 3
+    journal.feed(_tick(1100.0, 9), [], 0)
+    journal.feed(_tick(1105.0, 19), [], 0)
+    resumed = lines.of("netcap_stats")[-1]
+    # hisob oxirgi pauza xabaridan (1099) boshlanadi: 60 s lik pauza emas, 6 s
+    assert (resumed["seconds"], resumed["packets"]) == (6, 10)
+    # o'chirilgan: hech narsa
+    off = _Lines()
+    disabled = journal_mod.Journal(off, 0, "lo")
+    assert not disabled.enabled
+    for second in range(100):
+        disabled.feed(_tick(float(second), second, marked=second), [_marked_row()], 1)
+    assert off.items == []
+    # buzuq xabar jurnalni yiqitmaydi
+    journal.feed({"t": "tick"}, [], 0)
+    journal.feed(_tick(1200.0, 20, protos="buzuq", hosts=["buzuq"], marked=None), [], 0)
+    assert lines.of("netcap_stats")[-1]["packets"] == 1
+
+
+def test_journal_protocol_names_cannot_override_other_fields() -> None:
+    lines = _Lines()
+    journal = journal_mod.Journal(lines, 5, "lo")
+    journal.feed(_tick(0.0, 0), [], 0)
+    protos = {"total": 5, "ICMPv6": 3, "IP-47": 2, "???": 1} | {f"P{i}": 1 for i in range(20)}
+    journal.feed(_tick(5.0, 31, protos=protos), [], 0)
+    stats = lines.of("netcap_stats")[0]
+    assert stats["total"] == 31, "protokol nomi boshqa maydonni almashtirmasligi kerak"
+    assert (stats["icmpv6"], stats["ip_47"]) == (3, 2)
+    extra = set(stats) - {"interface", "seconds", "packets", "pps", "kb", "total"}
+    assert len(extra - {"marked", "alerts"}) == journal_mod.MAX_PROTOS
+
+
 # --- sozlama va ombor -------------------------------------------------------------------
 def test_config_validation(tmp_path: Path) -> None:
     config = net_models.NetConfig(excluded=["10.0.0.1", "10.0.0.1", "2001:DB8::1"])
@@ -303,9 +513,15 @@ def test_config_validation(tmp_path: Path) -> None:
         {"suspicious_ports": [0]},
         {"scan_ports": 1},
         {"nomalum": 1},
+        {"log_interval_s": 3},
+        {"log_interval_s": -1},
+        {"log_interval_s": 3601},
     ):
         with pytest.raises(ValidationError):
             net_models.NetConfig(**bad)
+    assert config.log_interval_s == 10
+    assert net_models.NetConfig(log_interval_s=0).log_interval_s == 0  # o'chiq
+    assert net_models.NetConfig(log_interval_s=5).log_interval_s == 5
     path = tmp_path / "netcap.json"
     net_models.save_config(path, config)
     assert net_models.load_config(path) == config
@@ -400,6 +616,7 @@ async def test_capture_full_cycle_with_fake_worker(
                 "npcap": "ok",
                 "store_payload": "off",
                 "geo": "off",
+                "journal": "10 s",
                 "error": "",
             }
         ]
@@ -482,6 +699,72 @@ async def test_capture_full_cycle_with_fake_worker(
     assert actions.count(("net.capture_start", 1)) == 2
     assert ("net.payload_store", 1) in actions
     assert ("net.capture_stop", 1) in actions and ("net.data_clear", 1) in actions
+
+
+async def _log_entries(client: httpx.AsyncClient, event: str) -> list[dict[str, Any]]:
+    """Jurnal yozuvlari; yadro plagin maydonlariga qo'shadigan `p_` old qo'shimchasisiz."""
+    entries = (await client.get("/api/v1/logs", params={"tail": 500})).json()
+    return [
+        {key.removeprefix("p_"): value for key, value in entry.items()}
+        for entry in entries
+        if entry.get("event") == event
+    ]
+
+
+async def test_journal_page_gets_summary_and_marked_packets(
+    paths: DataPaths, plugin_root: Path, fake_worker: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """To'liq yo'l: ishchi -> plagin -> yadro jurnali (`/api/v1/logs`, «Jurnal» sahifasi manbai)."""
+    monkeypatch.setenv("NETCAP_FAKE_STEP", "3")  # tick'lar orasida 3 s «o'tadi»
+    install_monitor(plugin_root, paths.plugin_data_dir("monitor"))
+    async with serve_app(paths) as served, served.client() as client:
+        name = await _interface(client)
+        started = await client.post(f"{API}/start", json={"name": name}, timeout=30)
+        assert started.status_code == 200, started.text
+        for _ in range(100):
+            if len(await _log_entries(client, "netcap_stats")) >= 2:
+                break
+            await asyncio.sleep(0.05)
+        stats = await _log_entries(client, "netcap_stats")
+        assert len(stats) == 2, stats
+        first = stats[0]
+        assert first["level"] == "info"
+        assert (first["interface"], first["packets"], first["total"]) == (name, 2, 2)
+        assert (first["tcp"], first["udp"], first["top"]) == (1, 1, "10.0.0.5")
+        assert (first["marked"], first["alerts"]) == (1, 1)
+        assert "unlogged" not in first
+        assert stats[1]["packets"] == 0  # jim tarmoq: bitta bo'sh xulosa ...
+        await asyncio.sleep(0.6)  # ... keyin sukut (soxta vaqt bo'yicha yana bir necha oraliq)
+        assert len(await _log_entries(client, "netcap_stats")) == 2
+
+        packets = await _log_entries(client, "netcap_packet")
+        assert len(packets) == 1, "faqat belgilangan paket yoziladi, oddiy UDP paket emas"
+        marked = packets[0]
+        assert marked["level"] == "warning"
+        assert (marked["proto"], marked["src"], marked["dst"]) == (
+            "TCP",
+            "10.0.0.5:50000",
+            "10.0.0.9:80",
+        )
+        assert (marked["mark"], marked["len"], marked["info"]) == ("password", 120, "[PA]")
+        everything = (await client.get("/api/v1/logs", params={"tail": 500})).text
+        assert "password=" not in everything, "paket matni jurnalga tushmasligi kerak"
+
+        # oraliq ushlashni to'xtatmasdan o'zgaradi; noto'g'ri qiymat rad etiladi
+        summary = (await client.get(f"{API}/summary")).json()[0]
+        assert summary["journal"] == "10 s"
+        assert (await client.post(f"{API}/settings", json={"log_interval_s": 3})).status_code == 422
+        off = await client.post(f"{API}/settings", json={"log_interval_s": 0})
+        assert off.status_code == 200 and off.json()["log_interval_s"] == 0
+        status = await _status(client)
+        assert (status["state"], status["log_interval_s"], status["marked"]) == ("running", 0, 1)
+        assert (await client.get(f"{API}/summary")).json()[0]["journal"] == "off"
+        on = await client.post(f"{API}/settings", json={"log_interval_s": 5})
+        assert on.json()["log_interval_s"] == 5
+        assert (await client.get(f"{API}/summary")).json()[0]["journal"] == "5 s"
+        await client.post(f"{API}/stop", timeout=30)
+        actions = _audit(paths)
+    assert actions.count(("process.spawn", 1)) == 1, "jurnal sozlamasi ushlashni qayta boshlamaydi"
 
 
 async def test_worker_failure_is_reported_not_hidden(

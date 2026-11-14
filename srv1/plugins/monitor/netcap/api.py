@@ -41,6 +41,8 @@ class SettingsIn(_In):
     scan_ports: int | None = Field(default=None, ge=3, le=1000)
     scan_window_s: float | None = Field(default=None, ge=1, le=600)
     max_packets: int | None = Field(default=None, ge=100, le=200_000)
+    # 0 — jurnalga yozilmaydi; aks holda 5-3600 soniya (aniq tekshiruv `NetConfig` da).
+    log_interval_s: int | None = Field(default=None, ge=0, le=3600)
 
     def changes(self) -> dict[str, Any]:
         result = self.model_dump(exclude_none=True)
@@ -61,7 +63,9 @@ async def _run[T](operation: Awaitable[T]) -> T:
     except MonitorError as exc:
         raise HTTPException(exc.status, detail=exc.detail) from exc
     except ValidationError as exc:
-        raise HTTPException(422, detail=exc.errors(include_url=False)) from exc
+        # `include_context=False`: o'z tekshiruvimiz xatosidagi istisno obyekti JSON'ga o'tmaydi.
+        detail = exc.errors(include_url=False, include_context=False, include_input=False)
+        raise HTTPException(422, detail=detail) from exc
 
 
 def build_net_router(service: NetService) -> APIRouter:
