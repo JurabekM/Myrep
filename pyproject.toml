@@ -1,6 +1,6 @@
 [project]
 name = "srv1"
-version = "1.0.1"
+version = "1.1.0"
 description = "SRV_1 — Windows 10 uchun universal modulli server (yadro + plaginlar + GUI shell)"
 requires-python = ">=3.12,<3.13"
 # Bog'liqliklar bosqichma-bosqich qo'shiladi (qarang: docs/bosqichlar.md).

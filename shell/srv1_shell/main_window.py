@@ -1,4 +1,4 @@
-"""Asosiy oyna: chapda bo'limlar, o'ngda sahifa, yuqorida til va ulanish holati.
+"""Asosiy oyna: chapda bo'limlar, o'ngda sahifa, yuqorida server tugmasi, til va ulanish holati.
 
 Sahifalar birinchi ochilganda quriladi (xotira tejaladi): ro'yxatda faqat
 nomi turadi, vidjetlar esa kerak bo'lgandagina yaratiladi.
@@ -18,6 +18,8 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QMessageBox,
+    QPushButton,
     QSplitter,
     QStackedWidget,
     QVBoxLayout,
@@ -37,6 +39,7 @@ from srv1_shell.pages.memory_page import MemoryPage
 from srv1_shell.pages.panel_page import PanelPage
 from srv1_shell.pages.plugins_page import STATE_TOPIC, PluginsPage
 from srv1_shell.pages.system_page import SystemPage
+from srv1_shell.server_control import TRANSITIONAL, ServerControl
 from srv1_shell.translations import LANGUAGE_NAMES
 
 PANEL_KEY_PREFIX = "panel:"
@@ -49,16 +52,33 @@ _FIXED_PAGES: tuple[tuple[str, PageFactory], ...] = (
 )
 
 
+def _restyle(widget: QWidget, name: str) -> None:
+    """`objectName` ga bog'langan uslub qayta qo'llanishi uchun."""
+    if widget.objectName() == name:
+        return
+    widget.setObjectName(name)
+    style = widget.style()
+    if style is not None:
+        style.unpolish(widget)
+        style.polish(widget)
+
+
 class MainWindow(QMainWindow):
     def __init__(
         self,
         config: ShellConfig,
         token: str,
         on_language_changed: Callable[[str], None] | None = None,
+        control: ServerControl | None = None,
     ) -> None:
         super().__init__()
         self.config = config
         self._on_language_changed = on_language_changed
+        self._token = token
+        # `control` berilmasa (testlar, eski chaqiruv) server tugmasi ko'rinmaydi.
+        self.control = control
+        self.confirm_stop: Callable[[], bool] = self._ask_stop
+        self._server_state = ""
         self.api = Api(config.http_url, token, self)
         self.events = EventStream(config.ws_url, token, self)
         self.ctx = AppContext(self.api, self.events, I18n(config.language))
@@ -77,6 +97,12 @@ class MainWindow(QMainWindow):
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(0)
         outer.addWidget(self._build_header())
+        self.server_note = QLabel()
+        self.server_note.setObjectName("ServerNote")
+        self.server_note.setWordWrap(True)
+        self.server_note.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.server_note.hide()
+        outer.addWidget(self.server_note)
 
         self.nav = QListWidget()
         self.nav.setObjectName("Nav")
@@ -104,7 +130,12 @@ class MainWindow(QMainWindow):
         self.events.received.connect(self._on_event)
         self._build_nav("system")
         self._show_connection(False)
-        self.events.start()
+        if control is not None:
+            control.changed.connect(self._on_server_changed)
+            control.ready.connect(self.use_token)
+        # Token hali yo'q bo'lsa (yadro endi ishga tushadi), oqim `use_token` da boshlanadi.
+        if token:
+            self.events.start()
 
     # --- sarlavha -----------------------------------------------------------
     def _build_header(self) -> QWidget:
@@ -115,6 +146,9 @@ class MainWindow(QMainWindow):
         self.title = QLabel()
         self.title.setObjectName("AppTitle")
         self.connection = QLabel()
+        self.server_button = QPushButton()
+        self.server_button.clicked.connect(self._toggle_server)
+        self.server_button.setVisible(self.control is not None)
         self.language_label = QLabel()
         self.language_label.setObjectName("Muted")
         self.language = QComboBox()
@@ -125,25 +159,91 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.title)
         layout.addStretch(1)
         layout.addWidget(self.connection)
+        layout.addSpacing(12)
+        layout.addWidget(self.server_button)
         layout.addSpacing(18)
         layout.addWidget(self.language_label)
         layout.addWidget(self.language)
         return header
 
     def _show_connection(self, connected: bool) -> None:
-        t = self.ctx.i18n.t
-        address = t("conn.core", address=f"{self.config.host}:{self.config.port}")
-        state = t("conn.connected" if connected else "conn.disconnected")
-        self.connection.setText(f"● {state} — {address}")
-        self.connection.setObjectName("ConnOk" if connected else "ConnBad")
-        style = self.connection.style()
-        if style is not None:
-            style.unpolish(self.connection)
-            style.polish(self.connection)
+        if self.control is not None:
+            self.control.connection_changed(connected)
+        self._render_status(connected)
         if connected:
             self._refresh_plugins()
             if self._current is not None:
                 self._current.activate()
+
+    def _render_status(self, connected: bool) -> None:
+        """Ulanish yozuvi, server tugmasi va izoh satri (joriy tilda)."""
+        t = self.ctx.i18n.t
+        state = self.control.state if self.control is not None else ""
+        address = t("conn.core", address=f"{self.config.host}:{self.config.port}")
+        if state == "stopping" or (state in TRANSITIONAL and not connected):
+            text, name = t(f"server.state.{state}"), "ConnWait"
+        elif connected:
+            text, name = f"{t('conn.connected')} — {address}", "ConnOk"
+        elif state in ("stopped", "failed"):
+            text, name = t(f"server.state.{state}"), "ConnBad"
+        else:
+            text, name = f"{t('conn.disconnected')} — {address}", "ConnBad"
+        self.connection.setText(f"● {text}")
+        _restyle(self.connection, name)
+        if self.control is None:
+            return
+        can_start = state in ("stopped", "failed", "checking", "starting") and not connected
+        self.server_button.setText(t("server.start" if can_start else "server.stop"))
+        self.server_button.setEnabled(not self.control.busy and state not in TRANSITIONAL)
+        _restyle(self.server_button, "Primary" if can_start else "Danger")
+        reason = self.control.reason
+        note = t(f"server.reason.{reason}", detail=self.control.detail) if reason else ""
+        self.server_note.setText(note)
+        self.server_note.setVisible(bool(note))
+
+    # --- server -------------------------------------------------------------------
+    def use_token(self, token: str) -> None:
+        """Yadro ishga tushgach (yoki token qo'lda kiritilgach) API va hodisalar oqimini ulaydi."""
+        if not token:
+            return
+        changed = token != self._token
+        self._token = token
+        if changed:
+            self.api.set_token(token)
+            self.events.set_token(token)
+        if not self.events.running:
+            self.events.start()
+        elif changed or not self.events.connected:
+            self.events.restart()
+
+    def _on_server_changed(self) -> None:
+        state = self.control.state if self.control is not None else ""
+        if state == "stopped" and self._server_state != "stopped":
+            # To'xtatilgan serverning ma'lumoti eskirgan: plagin bo'limlari yopiladi, sahifalar
+            # noldan quriladi (eski raqamlar qolmaydi). Ulangach hammasi qaytadi.
+            self._panel_specs = {}
+            self._build_nav(self.current_key())
+        self._server_state = state
+        self._render_status(self.events.connected)
+
+    def _toggle_server(self) -> None:
+        if self.control is None or self.control.busy:
+            return
+        if self.control.state in ("stopped", "failed") and not self.events.connected:
+            self.control.start()
+        elif self.confirm_stop():
+            self.control.stop(self._token)
+
+    def _ask_stop(self) -> bool:
+        t = self.ctx.i18n.t
+        answer = QMessageBox.question(
+            self,
+            t("server.confirm.title"),
+            t("server.confirm.text"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        return answer == QMessageBox.StandardButton.Yes
 
     # --- bo'limlar ro'yxati va sahifalar ---------------------------------------
     def _build_nav(self, select: str) -> None:
@@ -295,7 +395,7 @@ class MainWindow(QMainWindow):
         self.language.setCurrentIndex(self.language.findData(language))
         self.language.blockSignals(False)
         self._build_nav(selected)
-        self._show_connection(self.events.connected)
+        self._render_status(self.events.connected)
         if self._on_language_changed is not None:
             self._on_language_changed(language)
 
@@ -310,6 +410,8 @@ class MainWindow(QMainWindow):
         self.notifier.close()
         self.events.stop()
         self.api.shutdown()
+        if self.control is not None:
+            self.control.shutdown()
 
     def showEvent(self, a0: QShowEvent | None) -> None:
         super().showEvent(a0)

@@ -16,6 +16,7 @@
 | 11 | `monitor` plagini (`hello` o'rniga) | ✅ tugadi | 2026-11-13 |
 | 12 | Reliz o'rnatuvchisi (`SRV_1-Setup-1.0.1.exe`, [reliz.md](reliz.md)) | ✅ tugadi (administrator rejimi va toza mashina sinalmagan) | 2026-11-13 |
 | 13 | Tarmoq kuzatuvi («Kuzatuv» ichida, [tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md)) | ✅ tugadi (katta yuk, Npcap'siz mashina va xizmat rejimi sinalmagan) | 2026-11-14 |
+| 14 | Serverni oynadan ishga tushirish/to'xtatish; imzolangan reliz `SRV_1-Setup-1.1.0.exe` ([shell.md](shell.md), [reliz.md](reliz.md)) | ✅ tugadi (boshqa kompyuter, xizmat/UAC yo'li va haqiqiy sichqoncha sinalmagan) | 2026-11-14 |
 | — | Uch kamchilik tuzatildi, reliz 1.0.1: javob vaqt chegarasi ([hosting.md](hosting.md)), Mosquitto'ni qayta ko'tarish ([iot.md](iot.md)), Windows bildirishnomasi ([monitor.md](monitor.md)) | ✅ (bildirishnomaning ekranda ko'rinishi avtomatik sinalmagan) | 2026-11-13 |
 | — | Keng sinov ([sinov-2026-11-13.md](sinov-2026-11-13.md)) | ✅ o'tkazildi (5 kamchilik topildi va tuzatildi) | 2026-11-13 |
 
@@ -814,6 +815,63 @@ to'xtatilgach 70,1–72,4 MB (ikki o'lchov).
 - Jadvallardagi holat va signal turlari tarjimasiz (`running`, `port_scan`).
 - Ishchi yiqilsa, o'zi qayta ko'tarilmaydi (holat `error`, bildirishnoma chiqadi).
 
+## 14-bosqich — Server tugmasi va imzolangan reliz 1.1.0
+
+Sabab: 1.0.x boshqa kompyuterga o'rnatilganda ishlamadi — oyna `auth.token` ni topmadi,
+token shu kompyuterdan ko'chirilganda ham yadroga ulanmadi. Koddan aniqlangan sabab:
+o'rnatilgan dastur yadroni **hech qachon ishga tushirmas edi** («SRV_1» yorlig'i faqat
+oynani ochardi; tokenni esa yadro birinchi ishga tushganda yaratadi). Boshqa kompyuterdan
+ko'chirilgan token yordam bermaydi: ulanadigan yadro yo'q edi.
+
+**Qilindi**
+
+- Yadro: `POST /api/v1/system/shutdown` (token, audit `core.shutdown`, xizmat ostida 409),
+  `GET /api/v1/system/server`; `python -m srv1_core --no-console`; manzil band bo'lsa yadro
+  plaginlarni ko'tarmasdan chiqadi (kod 3); ochiq WebSocket to'xtashni 10 s dan ortiq
+  ushlab turmaydi. Yangi modul: `core/srv1_core/lifecycle.py`.
+- Shell: `launcher.py` (Qt'siz: tekshirish, oynasiz ishga tushirish, to'xtatish, xizmat
+  holati) va `server_control.py` (fon oqimi, holat signallari). Oyna ochilganda yadro
+  ishlamayotgan bo'lsa o'zi ko'tariladi; sarlavhada «Serverni to'xtatish / ishga tushirish»
+  tugmasi; oyna yopilsa server ishlayveradi; xato sababi sarlavha ostidagi sariq satrda.
+  Token so'rash oynasi faqat zaxira yo'l bo'lib qoldi. Uch tilda.
+- Windows xizmati o'rnatilgan bo'lsa, tugma `sc start/stop SRV_1` ni administrator tasdig'i
+  (UAC) bilan chaqiradi; oyna ochilganda UAC so'ralmaydi.
+- O'rnatuvchi: `install\stop-core.ps1` (yangilash va olib tashlashdan oldin yadroni
+  tartibli to'xtatadi), «SRV_1 ni ochish» belgilangan holda.
+- Imzo: `packaging\sign.ps1` — o'zi imzolangan sertifikat (yopiq kalit eksport
+  qilinmaydi), `release\SRV_1-codesign.cer`. Versiya 1.0.1 → 1.1.0.
+- Testlar: `tests/test_server_control.py` (20 ta: yadro API'si, haqiqiy jarayonni
+  to'xtatish, `Launcher` toza papkadan, band port, vaqt chegarasi, xizmat qarorlari soxta
+  UAC bilan, oynadagi tugma, sarlavha kengligi haqiqiy shrift bilan, `stop-core.ps1`) va
+  `test_packaging.py` da 2 ta; jami 478 test o'tdi, `ruff` va `pyright` toza.
+
+**O'lchangan RAM** (o'rnatilgan nusxa, toza papka, bo'sh holat, private, bir marta):
+shell 74,4 MB + yadro 79,8 MB + yadroning ko'rinmas konsoli 6,2 MB = 160,4 MB (Caddy'siz).
+1.0.0 da 157,4 MB edi. Ishga tushish: 3,5–6,1 s; to'xtatish 4,0 s. Tafsiloti:
+[reliz.md](reliz.md).
+
+**Yo'lda topilgan va tuzatilgan**
+
+- O'chiq tugma yoniqdek ko'k ko'rinardi (`#Primary` uslubi `:disabled` dan ustun kelardi) —
+  suratda ko'rindi.
+- Server to'xtatilgach «Tizim» sahifasida eski raqamlar (yadro PID va xotirasi) qolardi —
+  suratda ko'rindi; endi sahifalar noldan quriladi.
+- Yorliq buyrug'i bilan birinchi sinovda yadro ko'tarilmadi: bu mashinada `SRV_1` xizmati
+  ishlab turibdi va shell (to'g'ri ravishda) uni kutdi. Sinovni ajratish uchun
+  `SRV1_SERVICE_NAME` qo'shildi.
+- Band portni test qilishda navbati to'lgan soket yadroni aldadi (port bo'sh ko'rindi) —
+  test tuzatildi; shu sabab xato izohi endi jurnallar papkasini ko'rsatadi.
+
+**Qilinmadi / sinalmadi**
+
+- **Boshqa (toza) kompyuterda tekshirilmagan** — sabab koddan aniqlangan va shu mashinada
+  toza ma'lumotlar papkasi bilan takrorlab sinalgan.
+- Xizmat yo'li (haqiqiy UAC), o'rnatuvchining yangilashdan oldin yadroni to'xtatishi
+  (xizmat ishlab turgani uchun bu mashinada o'tkazib yuborildi), haqiqiy sichqoncha.
+- `.cer` ni ishonchli omborga o'rnatish va undan keyingi UAC/SmartScreen ko'rinishi.
+- Shell va yadro portlari har xil bo'lsa, shell buni o'zi aniqlamaydi (90 s kutadi).
+- Oynasiz yadro tizimdan chiqilganda to'xtaydi (doimiy ish uchun — xizmat).
+
 ## Sinalmaganlar (butun loyiha bo'yicha, bitta joyda)
 
 2026-11-13 da bu jadvalning shu mashinada sinash mumkin bo'lgan har bandi
@@ -833,4 +891,5 @@ narsalar qoldi.
 | Shell'ni sichqoncha bilan to'liq aylanib chiqish | avtomatik testlar ko'rinmas oynada; haqiqiy ekranda faqat chizilishi tekshirilgan | qo'lda, har sahifa va tugma |
 | Toza mashinada Python va `uv` ni o'rnatish | ular oldindan bor edi (paketlar bo'sh keshdan qayta yuklab tekshirilgan) | yangi mashinada |
 | Haqiqiy foydalanuvchi sayti (framework, bog'liqliklar) | faqat sinov ilovalari | o'z loyihangizni joylab |
+| Reliz 1.1.0 boshqa (toza) kompyuterda; server tugmasi xizmat bilan (UAC); `.cer` o'rnatilgandagi ko'rinish | boshqa kompyuter yo'q; UAC va ishonchli omborni o'zgartirish foydalanuvchining ishi | `SRV_1-Setup-1.1.0.exe` ni o'rnatib, oynani ochish; [reliz.md](reliz.md#imzo) |
 | Tarmoq kuzatuvi: katta yuk, Npcap'siz mashina, xizmat rejimi, haqiqiy port skaner | loopback va Ethernet'da 20 s sinalgan ([tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md)) | «Kuzatuv» → «Tarmoq», boshqa kompyuterdan `nmap` |

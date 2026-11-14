@@ -12,14 +12,14 @@ powershell -ExecutionPolicy Bypass -File packaging\build.ps1
 Kerak: `uv`, Inno Setup 6, `tools\caddy.exe`, `tools\nssm.exe`, ~2 GB bo'sh joy.
 Natija: `release\SRV_1-Setup-<versiya>.exe` va yonida `.sha256` (ikkalasi gitga kirmaydi —
 fayl GitHub'ning 100 MB chegarasidan katta). Oraliq to'plam `dist\SRV_1\` da qoladi
-(685 MB, o'chirsa bo'ladi).
+(706 MB, o'chirsa bo'ladi). Keyin imzolanadi — pastdagi [Imzo](#imzo) bo'limi.
 
 | Qadam | Nima qiladi |
 |-------|-------------|
 | testlar | `uv run pytest`; o'tmasa o'rnatuvchi yig'ilmaydi (`-SkipTests` — o'tkazib yuborish) |
 | Python | `uv` boshqaradigan Python 3.12 nusxalanadi (testlar, IDLE, tkinter/Tcl, pip'siz) |
 | bog'liqliklar | `uv export --frozen --no-dev` → `uv pip install --require-hashes` (aynan `uv.lock` dagi versiyalar, xesh bilan) |
-| SRV_1 | `git ls-files` bo'yicha: `core`, `sdk`, `shell`, `plugins`, `install`, qo'llanma |
+| SRV_1 | `git ls-files` bo'yicha: `core`, `sdk`, `shell`, `plugins`, `install`, qo'llanma (`git add` qilinmagan fayl bo'lsa yig'ish to'xtaydi) |
 | tashqi dastur | `tools\caddy.exe`, `tools\nssm.exe` (NSSM xeshi tekshiriladi) |
 | sinash | to'plamdagi Python bilan asosiy modullar import qilinadi, versiya solishtiriladi |
 | `.pyc` | hammasi oldindan kompilyatsiya qilinadi (`unchecked-hash`) — `Program Files` yozishga yopiq |
@@ -27,6 +27,52 @@ fayl GitHub'ning 100 MB chegarasidan katta). Oraliq to'plam `dist\SRV_1\` da qol
 
 Versiya `pyproject.toml` dan olinadi; u `srv1_core`, `srv1_sdk`, `srv1_shell` dagi
 `__version__` bilan bir xil bo'lishi shart (test bor).
+
+## Imzo
+
+```powershell
+powershell -ExecutionPolicy Bypass -File packaging\sign.ps1
+```
+
+`packaging\sign.ps1` o'rnatuvchini **o'zi imzolangan** (self-signed) kod imzosi sertifikati
+bilan imzolaydi (Authenticode, SHA-256):
+
+- sertifikat `CN=SRV_1 Release (self-signed)`, RSA 3072, 5 yil; birinchi yugurishda joriy
+  foydalanuvchining shaxsiy omborida (`Cert:\CurrentUser\My`) yaratiladi, keyingi safar
+  o'shasi ishlatiladi;
+- yopiq kalit eksport qilinmaydigan qilib yaratiladi: faylga ham, gitga ham tushmaydi.
+  Shu Windows hisobi yo'qolsa, kalit ham yo'qoladi — yangi sertifikat yaratiladi va boshqa
+  kompyuterlarga `.cer` qayta o'rnatiladi;
+- ochiq qismi `release\SRV_1-codesign.cer` ga yoziladi (maxfiy emas);
+- vaqt tamg'asi qo'yilmaydi (tashqi serverga so'rov yo'q): imzo sertifikat muddati
+  tugaguncha (2031-11-14) amal qiladi;
+- imzodan keyin fayl o'zgaradi — `.sha256` qayta yoziladi.
+
+**Imzo nima beradi, nima bermaydi.** Imzo fayl yig'ilgandan keyin o'zgarmaganini ko'rsatadi
+(fayl xususiyatlari → «Raqamli imzolar»). Lekin sertifikatni hech qaysi sertifikatlash
+markazi tasdiqlamagan, shuning uchun **boshqa kompyuterda Windows baribir «Noma'lum
+noshir» deb ogohlantiradi** — toki shu `.cer` o'sha kompyuterga o'rnatilmaguncha. Hamma
+kompyuterda ogohlantirishsiz ishlashi uchun pullik (sertifikatlash markazi bergan) kod
+imzosi sertifikati kerak.
+
+**`.cer` ni boshqa kompyuterga o'rnatish** (ixtiyoriy; administrator PowerShell oynasida,
+`.cer` turgan papkadan):
+
+```powershell
+Import-Certificate -FilePath SRV_1-codesign.cer -CertStoreLocation Cert:\LocalMachine\Root
+Import-Certificate -FilePath SRV_1-codesign.cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher
+```
+
+Diqqat: bundan keyin o'sha kompyuter shu kalit bilan imzolangan **har qanday** dasturga
+ishonadi. Buni faqat o'z kompyuterlaringizda qiling va `.cer` barmoq izi kutilganiga teng
+ekanini tekshiring (`Get-PfxCertificate SRV_1-codesign.cer | Format-List Thumbprint`).
+Bekor qilish: `certlm.msc` da ikkala ombordan «SRV_1 Release (self-signed)» ni o'chiring.
+
+Sinalgani: imzo qo'yildi, `Get-AuthenticodeSignature` imzolovchini to'g'ri ko'rsatadi, holat
+`UnknownError` («zanjir ishonchsiz ildizda tugadi») — sertifikat ishonchli omborga
+o'rnatilmagani uchun kutilgan holat. **Sinalmagan:** `.cer` ni ishonchli omborga o'rnatish
+va undan keyin UAC hamda SmartScreen qanday ko'rinishi (bu kompyuterning xavfsizlik
+sozlamalarini o'zgartirish bo'lardi — ataylab qilinmadi).
 
 ## O'rnatilgan papka
 
@@ -53,7 +99,12 @@ plaginlar esa `python -m ...` bilan ishga tushadi — oddiy Python bilan bu hozi
 - O'rnatish turi: hamma uchun (administrator, `Program Files`) yoki faqat joriy
   foydalanuvchi uchun (UAC'siz).
 - Bosh menyu: «SRV_1», «SRV_1 yadro (konsol)», «Qo'llanma», «SRV_1 ni olib tashlash»;
-  ixtiyoriy Ish stoli yorlig'i.
+  ixtiyoriy Ish stoli yorlig'i. «SRV_1» oynasi yadroni o'zi ko'taradi (1.1.0 dan);
+  «yadro (konsol)» faqat nosozlikni aniqlash uchun qoldi.
+- Oxirgi sahifada «SRV_1 ni ochish» belgilangan holda turadi (1.1.0 dan).
+- Yangilash va olib tashlashdan oldin oynasiz ishlayotgan yadro `install\stop-core.ps1`
+  bilan tartibli to'xtatiladi (1.1.0 dan; `SRV_1` xizmati ishlab turgan bo'lsa bu qadam
+  o'tkazib yuboriladi — xizmat pastdagi qoidaga ko'ra boshqariladi).
 - `install\install.ps1 -SkipSync -NoShortcut` ni **o'rnatayotgan foydalanuvchi nomidan**
   yuritadi: `%PROGRAMDATA%\SRV_1` yo'q bo'lsa yaratiladi va faqat unga, SYSTEM va
   administratorlarga ochiladi; bor bo'lsa — tegilmaydi.
@@ -66,6 +117,58 @@ plaginlar esa `python -m ...` bilan ishga tushadi — oddiy Python bilan bu hozi
   tashlaydi. Boshqa papkadan (masalan, ishlab chiqish nusxasidan) o'rnatilgan xizmatga
   tegilmaydi.
 - Olib tashlashda ma'lumotlar papkasi va `%APPDATA%\SRV_1\shell.json` qoladi.
+
+## 1.1.0 (2026-11-14)
+
+Ikki yangilik: tarmoq kuzatuvi ([tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md)) va serverni
+oynadan ishga tushirish/to'xtatish ([shell.md](shell.md#server-yadroni-ishga-tushirish-va-toxtatish)).
+Ikkinchisi 1.0.x dagi jiddiy kamchilikni tuzatadi: o'rnatilgan dastur yadroni o'zi ishga
+tushirmas edi — yangi kompyuterda oyna token so'rar, token ko'chirilganda ham ulanadigan
+narsa bo'lmas edi.
+
+| Ko'rsatkich | Qiymat |
+|-------------|--------|
+| `SRV_1-Setup-1.1.0.exe` | 157,6 MB, imzolangan (o'zi imzolangan sertifikat) |
+| SHA-256 (imzolangan fayl) | `6bf8dce4e25a82b469ec653717f79b0fdc0f3c0480ba69d9da6f9c4a790046eb` |
+| sertifikat barmoq izi (SHA-1) | `0134A8B5752CD8EDBD0CFAAD27F644238E63BC3F`, 2031-11-14 gacha |
+| to'plam hajmi | 706 MB (scapy qo'shildi) |
+| yig'ishdan oldingi testlar | 478 test o'tdi |
+
+**Sinalgani** — o'rnatuvchi jim rejimda (`/VERYSILENT /CURRENTUSER /TASKS=""`) vaqtinchalik
+papkaga o'rnatildi; ma'lumotlar papkasi **yo'q** edi (boshqa kompyuterdagi holat), port 8719:
+
+- yorliqdagi buyruqning o'zi (`python\pythonw.exe -m srv1_shell`): yadro 6,1 s da javob
+  berdi, papka va `auth.token` yaratildi, oyna yadroga ulandi; yadro
+  `python\python.exe -m srv1_core --no-console` bo'lib, oynasiz ishlaydi;
+- oyna yopilgach yadro ishlashda davom etdi; oyna qayta ochilganda yangi yadro ochilmadi,
+  o'shasiga ulandi;
+- oyna ichidan (tugmani dastur bosdi, oyna ekranga chiqarilmadi, suratlar ko'zdan
+  kechirildi): ishga tushish 3,5 s → «Serverni to'xtatish» 4,0 s, yadro jarayoni tugadi,
+  plagin bo'limlari yopildi → «Serverni ishga tushirish» 4,5 s, bo'limlar qaytdi;
+- `electronics`, `files`, `iot`, `itops`, `monitor` — `running`; tarmoq kuzatuvi moduli
+  (scapy) to'plamdagi Python'da import bo'ladi;
+- `install\stop-core.ps1` o'rnatilgan nusxadagi yadroni to'xtatdi (kod 0); auditda
+  `core.shutdown` yozuvi bor;
+- olib tashlash toza; mashinadagi mavjud `SRV_1` xizmati (ishlab chiqish nusxasidan)
+  butun sinov davomida `Running` holatida qoldi.
+
+Xotira (private, bo'sh holat, bir marta o'lchangan, ishga tushgandan ~45 s o'tib):
+shell 74,4 MB + yadro 79,8 MB + yadroning ko'rinmas konsoli 6,2 MB = **160,4 MB**
+(Caddy'siz — `hosting` bu sinovda ham port to'qnashuvi sabab `error` edi).
+
+**Sinalmagan:**
+
+- **boshqa (toza) kompyuter** — eng muhimi. Sinov shu mashinada, toza ma'lumotlar papkasi
+  bilan o'tkazildi; boshqa kompyuterdagi nosozlik koddan aniqlangan va shu yerda
+  takrorlangan holatda tuzatilgan, lekin o'sha kompyuterning o'zida tekshirilmagan;
+- Windows xizmati yo'li: tugma `sc start/stop SRV_1` ni UAC bilan chaqirishi (administrator
+  tasdig'i kerak; qaror mantiqi soxta UAC bilan sinalgan, haqiqiy UAC — yo'q);
+- o'rnatuvchining yangilashdan oldin yadroni to'xtatishi (bu mashinada `SRV_1` xizmati
+  ishlab turgani uchun o'rnatuvchi bu qadamni o'tkazib yubordi; skriptning o'zi sinalgan);
+- haqiqiy sichqoncha bilan tugmani bosish va tasdiq oynasi (tugma dastur orqali bosilgan);
+- `.cer` o'rnatilgandan keyingi UAC/SmartScreen ko'rinishi; sekin (HDD, 4 GB) mashinada
+  ishga tushish vaqti (kutish chegarasi 90 s);
+- 1.0.0 dagi «Sinalmagan» ro'yxatining qolgani (administrator rejimi, sehrgar sahifalari).
 
 ## 1.0.1 (2026-11-13)
 
@@ -129,7 +232,10 @@ Shu (ishlab chiqish) mashinasida sinalgani — o'rnatuvchi jim rejimda (`/VERYSI
 
 ## Ma'lum cheklovlar
 
-- O'rnatuvchi **imzolanmagan** — Windows «Noma'lum nashriyotchi» deb ogohlantiradi.
+- 1.1.0 **o'zi imzolangan** sertifikat bilan imzolangan: `.cer` o'rnatilmagan kompyuterda
+  Windows baribir «Noma'lum nashriyotchi» deb ogohlantiradi ([Imzo](#imzo)). 1.0.x imzolanmagan.
+- Npcap o'rnatuvchiga kirmaydi (litsenziyasi qayta tarqatishga ruxsat bermaydi): tarmoq
+  kuzatuvi uchun uni alohida o'rnatish kerak ([tools/README.md](../tools/README.md)).
 - **PyQt6 GPL v3** da: o'rnatuvchini boshqalarga tarqatganda GPL shartlari amal qiladi
   (`licenses\THIRD-PARTY.md`).
 - Hajm kattaligi: Qt'ning ishlatilmaydigan qismlari (Quick/QML, ~60 MB) ataylab

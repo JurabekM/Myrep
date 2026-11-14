@@ -19,19 +19,20 @@ ochiladi (`127.0.0.1`). Tashqariga ochish — faqat siz ataylab yoqsangiz
 Kerak: Windows 10 x64 (yoki yangisi), taxminan 0,8 GB bo'sh joy. Python, `uv` va
 boshqa narsa kerak emas — hammasi o'rnatuvchi ichida (Caddy va NSSM ham).
 
-1. `SRV_1-Setup-<versiya>.exe` ni oching. Fayl imzolanmagan, shuning uchun
-   Windows «Noma'lum nashriyotchi» deb ogohlantiradi: «Batafsil» → «Baribir
-   ishga tushirish».
+1. `SRV_1-Setup-<versiya>.exe` ni oching. Fayl o'zi imzolangan sertifikat bilan
+   imzolangan: Windows uni tanimaydi va «Noma'lum nashriyotchi» deb ogohlantiradi:
+   «Batafsil» → «Baribir ishga tushirish». Ogohlantirish chiqmasligi uchun
+   o'rnatuvchi yonidagi `SRV_1-codesign.cer` ni shu kompyuterga o'rnatish mumkin
+   ([reliz.md](reliz.md#imzo)); bu ixtiyoriy.
 2. O'rnatish turini tanlang: «Hamma foydalanuvchilar uchun» (administrator
    huquqi so'raladi, `C:\Program Files\SRV_1`) yoki «Faqat men uchun».
 3. Oxirgi sahifada ikki belgi bor:
    - **«Windows xizmati sifatida o'rnatish»** — belgilasangiz, administrator
      oynasi ochiladi va Windows parolingiz so'raladi; yadro kompyuter yonganda
      o'zi ishga tushadigan bo'ladi ([2-bo'lim](#2-yadroni-ishga-tushirish)).
-   - «SRV_1 ni ochish» — boshqaruv oynasini ochadi.
-4. Xizmatni o'rnatmagan bo'lsangiz, yadroni Bosh menyudagi **«SRV_1 yadro
-   (konsol)»** yorlig'i bilan ishga tushiring (oyna yopilsa, yadro to'xtaydi),
-   keyin «SRV_1» ni oching.
+   - «SRV_1 ni ochish» (belgilangan) — boshqaruv oynasini ochadi.
+4. Boshqa hech narsa kerak emas: «SRV_1» oynasi ochilganda server (yadro) o'zi
+   ishga tushadi ([2-bo'lim](#2-yadroni-ishga-tushirish)).
 
 Quyidagi bo'limlardagi `install\service.ps1` kabi buyruqlar o'rnatilgan
 papkadan (`C:\Program Files\SRV_1`) bajariladi; `uv run python` o'rniga
@@ -66,7 +67,25 @@ kirish tokeni, bazalar va loyihalaringiz turadi.
 
 ## 2. Yadroni ishga tushirish
 
-**Sinab ko'rish uchun** — PowerShell oynasida:
+**Odatiy yo'l — hech narsa qilmaysiz.** «SRV_1» oynasini ochasiz; server ishlamayotgan
+bo'lsa, oyna uni o'zi (alohida oynasiz) ishga tushiradi va 5–30 soniyada ulanadi.
+Yuqori o'ng tomonda holat va bitta tugma turadi:
+
+| Tugma | Nima qiladi |
+|-------|-------------|
+| «Serverni to'xtatish» | tasdiq so'raydi va serverni vaqtincha o'chiradi: joylangan saytlar, IoT va rejalashtirilgan vazifalar ham to'xtaydi. Ma'lumotlarga tegilmaydi |
+| «Serverni ishga tushirish» | to'xtatilgan serverni qayta yoqadi |
+
+Oynani yopsangiz, server **ishlashda davom etadi** — to'xtatish uchun avval tugmani bosing.
+Kompyuter o'chib yonsa yoki tizimdan chiqsangiz, server to'xtaydi; oynani ochganingizda
+yana ko'tariladi. Kompyuter yonishi bilan oynasiz ham ishlashi kerak bo'lsa — pastdagi
+Windows xizmati.
+
+Server ishga tushmasa, sabab oynaning yuqorisidagi sariq satrda yoziladi
+([Nosozliklar](#8-nosozliklar)).
+
+**Qo'lda, nosozlikni aniqlash uchun** — PowerShell oynasida (o'rnatilgan nusxada: Bosh
+menyudagi «SRV_1 yadro (konsol)»):
 
 ```powershell
 uv run python -m srv1_core
@@ -94,8 +113,10 @@ Parol hech qayerga yozilmaydi — uni Windows o'zi saqlaydi.
 | `install`, `remove` | o'rnatish, olib tashlash (administrator) |
 | `start`, `stop`, `restart` | boshqarish (administrator) |
 
-Xizmat ishlayotganda yadroni qo'lda ikkinchi marta ishga tushirmang — port
-band bo'ladi. Xizmat jurnali: `C:\ProgramData\SRV_1\logs\service.log`.
+Xizmat o'rnatilgan bo'lsa, oynadagi tugma xizmatni to'xtatadi va yoqadi — har safar
+Windows administrator tasdig'ini (UAC) so'raydi. Xizmat ishlayotganda yadroni qo'lda
+ikkinchi marta ishga tushirsangiz, u «manzil band» deb darhol chiqadi.
+Xizmat jurnali: `C:\ProgramData\SRV_1\logs\service.log`.
 Windows parolingizni almashtirsangiz, xizmatni `remove` va `install` qiling.
 
 ## 3. Shell oynasi
@@ -112,8 +133,9 @@ Windows parolingizni almashtirsangiz, xizmatni `remove` va `install` qiling.
 
 Til (o'zbekcha, ruscha, inglizcha) yuqori o'ng burchakdan almashtiriladi.
 
-Agar oyna **token so'rasa** — yadro hali biror marta ishga tushmagan yoki
-boshqa ma'lumotlar papkasi bilan ishlayapti ([Nosozliklar](#8-nosozliklar)).
+Agar oyna **token so'rasa** — server ishlayapti, lekin uning token faylini o'qib
+bo'lmadi: odatda server boshqa Windows hisobi nomidan yoki boshqa ma'lumotlar papkasi
+bilan ishlayapti ([Nosozliklar](#8-nosozliklar)).
 
 ## 4. Plaginlar
 
@@ -205,7 +227,11 @@ Tiklash:
 
 ## 7. Yangilash va olib tashlash
 
-Yangilash: yadroni to'xtating, loyiha papkasini yangilang, `install\install.ps1`
+O'rnatuvchi bilan: yangi `SRV_1-Setup-<versiya>.exe` ni ustidan o'rnating. U ishlab turgan
+serverni o'zi tartibli to'xtatadi (xizmat bo'lsa — to'xtatib, keyin qayta yoqadi);
+ma'lumotlarga tegmaydi.
+
+Manba koddan: yadroni to'xtating, loyiha papkasini yangilang, `install\install.ps1`
 ni qayta yuguring (ma'lumotlarga tegmaydi), yadroni ishga tushiring.
 
 Olib tashlash:
@@ -223,8 +249,11 @@ o'chirasiz.
 
 | Belgi | Sabab va yechim |
 |-------|-----------------|
-| Shell token so'rayapti | Yadro ishlamayapti yoki boshqa papka bilan ishlayapti. `service.ps1 -Action status` ni ko'ring; `SRV1_DATA_DIR` o'zgaruvchisi yadro va shell uchun bir xil bo'lsin. |
-| Shell «Ulanmagan» deb turibdi | Yadro to'xtagan. Xizmat: `logs\service.log` ning oxirini o'qing. |
+| Shell token so'rayapti | Server boshqa hisob nomidan yoki boshqa papka bilan ishlayapti. `service.ps1 -Action status` ni ko'ring; `SRV1_DATA_DIR` o'zgaruvchisi yadro va shell uchun bir xil bo'lsin. Boshqa kompyuterdan `auth.token` ko'chirish **yordam bermaydi**: token har kompyuterda o'ziniki. |
+| «Server ishga tushmadi», sariq satrda «manzil band» | 8710-portni boshqa dastur egallagan. Uni yoping yoki `config.toml` va `%APPDATA%\SRV_1\shell.json` da portni bir xil qilib o'zgartiring. |
+| «Server ishga tushmadi», «javob bermadi» | Sariq satrdagi papkada `core-launch.log` va `srv1.log` ning oxirini o'qing. Ko'p uchraydi: `config.toml` da xato; `config.toml` va `shell.json` da port har xil. |
+| «Server to'xtatilgan» | Server tugma bilan to'xtatilgan yoki o'zi to'xtagan. «Serverni ishga tushirish» ni bosing; xizmat bo'lsa `logs\service.log` ning oxirini o'qing. |
+| Tugma bosilganda Windows tasdiq so'raydi | Server Windows xizmati sifatida o'rnatilgan: uni to'xtatish va yoqish administrator huquqini talab qiladi. |
 | Xizmat ishga tushib, darhol to'xtaydi | Odatda `config.toml` yoki plagin sozlamasida xato; sabab `logs\service.log` da. Sozlama xatosida xizmat ataylab qayta urinmaydi. |
 | «Hosting» da `Caddy: missing` | `tools\caddy.exe` yo'q. |
 | Sayt ochilmaydi, 8080 band | Boshqa dastur 8080 ni egallagan. `hosting.json` da `listen_port` ni va manifestdagi `ports` ni o'zgartiring. |

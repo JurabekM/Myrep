@@ -146,7 +146,8 @@ Set-Content -LiteralPath (Join-Path $Stage 'VERSION') -Encoding ASCII -Value $Ve
 # --- 3. sinash va kompilyatsiya --------------------------------------------------------------
 Write-Step "To'plamni sinash"
 $check = "import srv1_core, srv1_sdk, srv1_shell, PyQt6.QtWidgets, pyqtgraph, polars, duckdb, " +
-    "win32job, serial, pymodbus, paho.mqtt.client, esptool, watchdog, apscheduler; print(srv1_core.__version__)"
+    "win32job, serial, pymodbus, paho.mqtt.client, esptool, watchdog, apscheduler, scapy.layers.inet; " +
+    "print(srv1_core.__version__)"
 $reported = (& $py -I -c $check)
 if ($LASTEXITCODE -ne 0) { Stop-Build "to'plamdagi Python modullarni import qila olmadi" }
 if ("$reported".Trim() -ne $Version) { Stop-Build "versiya mos emas: paket '$reported', pyproject '$Version'" }
