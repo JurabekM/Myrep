@@ -1,0 +1,28 @@
+[package]
+name = "aq-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "AETHER-Q v5.1 protokol yadrosi (handshake, transport, identity)"
+
+[dependencies]
+# Hash / KDF / XOF (FIPS 202, SP 800-185): HKDF-SHA3-256 = HMAC-SHA3-256, KMAC256 = cSHAKE256.
+sha3 = "0.10"
+hmac = "0.12"
+# Klassik ECDH (X25519, RFC 7748).
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+# Transport AEAD (RFC 8439).
+chacha20poly1305 = "0.10"
+# Post-kvant KEM / imzo (FIPS 203 / FIPS 204). Sof Rust, audit qilinmagan — KAT bilan tekshiriladi.
+ml-kem = "0.3"
+ml-dsa = "0.1"
+# Konstant-vaqt taqqoslash (MAC tekshiruvi).
+subtle = "2"
+# Maxfiy material tozalash (S8).
+zeroize = "1"
+# Tasodifiy sonlar (OS entropiyasi).
+getrandom = "0.2"
+
+[dev-dependencies]
+serde_json = "1"
