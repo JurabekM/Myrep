@@ -15,6 +15,7 @@
 | 10 | Yakun | ✅ tugadi (xizmat 2026-11-13 da o'rnatildi; avtostart sinalmagan) | 2026-11-12 |
 | 11 | `monitor` plagini (`hello` o'rniga) | ✅ tugadi | 2026-11-13 |
 | 12 | Reliz o'rnatuvchisi (`SRV_1-Setup-1.0.1.exe`, [reliz.md](reliz.md)) | ✅ tugadi (administrator rejimi va toza mashina sinalmagan) | 2026-11-13 |
+| 13 | Tarmoq kuzatuvi («Kuzatuv» ichida, [tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md)) | ✅ tugadi (katta yuk, Npcap'siz mashina va xizmat rejimi sinalmagan) | 2026-11-14 |
 | — | Uch kamchilik tuzatildi, reliz 1.0.1: javob vaqt chegarasi ([hosting.md](hosting.md)), Mosquitto'ni qayta ko'tarish ([iot.md](iot.md)), Windows bildirishnomasi ([monitor.md](monitor.md)) | ✅ (bildirishnomaning ekranda ko'rinishi avtomatik sinalmagan) | 2026-11-13 |
 | — | Keng sinov ([sinov-2026-11-13.md](sinov-2026-11-13.md)) | ✅ o'tkazildi (5 kamchilik topildi va tuzatildi) | 2026-11-13 |
 
@@ -770,6 +771,49 @@ shell 72,4 MB + konsol 6,6 MB = 157,4 MB (Caddy'siz). To'liq jadval va sinov:
   yangilash va xizmatli olib tashlash; toza Windows 10 / 4 GB mashina.
 - Kod imzosi yo'q. PyQt6 GPL v3 ekanini tarqatishda hisobga olish kerak.
 
+## 13-bosqich — Tarmoq kuzatuvi
+
+`netmonitor_new_v3_9.py` skripti tahlil qilindi, kamchiliklari tuzatildi va u `monitor`
+plaginiga («Kuzatuv») qo'shildi. To'liq tavsif: [tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md).
+
+**Qilindi**
+
+- `plugins/monitor/netcap/`: ushlash ishchisi (`worker`, `parse`, `engine`, `detect`,
+  `geo`, `text` — scapy faqat shu yerda) va plagin tomoni (`service`, `store`, `models`,
+  `ifaces`, `api`, `panel`, `notices`). Ishchi `ctx.spawn` bilan, faqat so'ralganda,
+  200 MB limitli Job Object ichida ishga tushadi.
+- Xavf tekshiruvlari: port skan (faqat SYN, manba–manzil juftligi, qat'iy oyna),
+  NULL/FIN/Xmas, shubhali port, ochiq matndagi sir (turi ko'rsatiladi, qiymati emas).
+  Takror signallar 60 s bostiriladi; signal — jurnal, hodisa, Windows bildirishnomasi.
+- Paket matni va geolokatsiya standart holatda o'chiq; IPv4, IPv6, ARP, ICMP.
+- API `/net/...` (16 yo'l) va panelda «Tarmoq» bo'limi (uz/ru/en).
+- SDK: `ctx.spawn(..., accept_input=True)` va `ManagedProcess.send_line` (bola
+  jarayonga buyruq yuborish); plagin yuklovchisi endi plagin ichidagi quyi paketlarni
+  import qila oladi (`srv1_plugins` ota nomi ro'yxatga qo'yiladi).
+- Yangi kutubxona: `scapy` 2.8.0 (so'rab qo'shildi; GPL v2). Tizim talabi: Npcap.
+- Testlar: `tests/test_monitor_netcap.py` (34) va `test_sdk_process.py` da 1 ta; jami
+  435 test o'tdi, `ruff` va `pyright` toza.
+
+**O'lchangan RAM** (yadro faqat `monitor` bilan, private, bir marta): bo'sh holat
+69,3 → 69,7 MB (+0,4 MB); ushlash paytida +51 MB (ishchi 44,1 MB + konsol xosti 6,3 MB);
+to'xtatilgach 70,1–72,4 MB (ikki o'lchov).
+
+**Yo'lda topilgan va tuzatilgan**
+
+- Multicast manzillar (`224.0.0.251`) `is_global` bo'lib, geolokatsiyaga ketardi.
+- To'rtta tugma bir qatorda va uzun filtr yozuvi tor oynada panelni gorizontal
+  aylantirishga majbur qilardi (mavjud `test_window_is_usable_at_minimum_size` ushladi).
+- Holat va interfeys nomi kartochkada edi: uzun matn kesilardi (o'sha test ushladi) —
+  jadvalga ko'chirildi.
+
+**Qilinmadi / sinalmadi**
+
+- Katta yuk; drayver buferida yo'qolgan paketlar sanalmaydi.
+- Npcap'siz yoki «faqat administratorlar» rejimidagi mashina; yadro xizmat sifatida.
+- Geolokatsiya haqiqiy xizmat bilan; haqiqiy port skaner bilan detektor.
+- Jadvallardagi holat va signal turlari tarjimasiz (`running`, `port_scan`).
+- Ishchi yiqilsa, o'zi qayta ko'tarilmaydi (holat `error`, bildirishnoma chiqadi).
+
 ## Sinalmaganlar (butun loyiha bo'yicha, bitta joyda)
 
 2026-11-13 da bu jadvalning shu mashinada sinash mumkin bo'lgan har bandi
@@ -789,3 +833,4 @@ narsalar qoldi.
 | Shell'ni sichqoncha bilan to'liq aylanib chiqish | avtomatik testlar ko'rinmas oynada; haqiqiy ekranda faqat chizilishi tekshirilgan | qo'lda, har sahifa va tugma |
 | Toza mashinada Python va `uv` ni o'rnatish | ular oldindan bor edi (paketlar bo'sh keshdan qayta yuklab tekshirilgan) | yangi mashinada |
 | Haqiqiy foydalanuvchi sayti (framework, bog'liqliklar) | faqat sinov ilovalari | o'z loyihangizni joylab |
+| Tarmoq kuzatuvi: katta yuk, Npcap'siz mashina, xizmat rejimi, haqiqiy port skaner | loopback va Ethernet'da 20 s sinalgan ([tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md)) | «Kuzatuv» → «Tarmoq», boshqa kompyuterdan `nmap` |

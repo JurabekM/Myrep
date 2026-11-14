@@ -124,11 +124,13 @@ class PluginContext:
         env: Mapping[str, str],
         memory_limit_mb: int,
         on_line: Callable[[str], None],
+        accept_input: bool = False,
     ) -> ManagedProcess:
         """Jarayonni xotira limiti bilan ishga tushiradi (`shell`siz) va auditga yozadi.
 
         Manifestda `permissions.spawn = true` bo'lishi shart; `cwd` ruxsat etilgan
-        papkalardan birida bo'lishi kerak.
+        papkalardan birida bo'lishi kerak. `accept_input=True` bo'lsa, jarayonga
+        `ManagedProcess.send_line` bilan satr yuborish mumkin (aks holda stdin yopiq).
         """
         if not self.manifest.permissions.spawn:
             raise self._denied("spawn", args[0] if args else "")
@@ -137,7 +139,12 @@ class PluginContext:
 
         workdir = self.resolve_path(cwd)
         process = ManagedProcess(
-            args, cwd=workdir, env=env, memory_limit_mb=memory_limit_mb, on_line=on_line
+            args,
+            cwd=workdir,
+            env=env,
+            memory_limit_mb=memory_limit_mb,
+            on_line=on_line,
+            accept_input=accept_input,
         )
         detail = {"argv": list(args), "cwd": str(workdir), "limit_mb": memory_limit_mb}
         try:

@@ -129,7 +129,12 @@ ishlaydi; ish tugagach o'chirib qo'ying.
 | `data` | CSV/Parquet/Excel import, SQL so'rovlar, hisobot | [data.md](data.md) |
 | `electronics` | serial monitor, ESP va Arduino'ga proshivka yozish | [elektronika.md](elektronika.md) |
 | `itops` | jarayonlar, Windows xizmatlari, tarmoq skaneri, zaxira | [itops.md](itops.md) |
-| `monitor` | CPU, RAM va disk tarixi, chegaradan oshsa ogohlantirish | [monitor.md](monitor.md) |
+| `monitor` | CPU, RAM va disk tarixi, chegaradan oshsa ogohlantirish; tarmoq paketlarini ushlash va xavf belgilarini tekshirish | [monitor.md](monitor.md), [tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md) |
+
+**Tarmoq kuzatuvi** («Kuzatuv» sahifasining pastida) uchun Npcap drayveri kerak
+(<https://npcap.com/#download>; o'rnatuvchiga kirmaydi). «Interfeyslar» jadvalidan
+qatorni tanlab, «Ushlashni boshlash» ni bosing. Paket matni standart holatda
+saqlanmaydi. Faqat o'z tarmog'ingizda yoki ruxsat bilan ishlating.
 
 Plagin faqat o'z manifestida (`plugins\<nom>\plugin.toml`) ruxsat etilgan
 papka, port va COM portlarga tegadi. Masalan, `files` yangi papkani kuzatishi

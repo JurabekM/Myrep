@@ -22,6 +22,7 @@ from .models import (
     load_store,
     save_store,
 )
+from .netcap.service import NetService
 from .notices import notice
 from .probe import measure
 from .store import History
@@ -46,6 +47,8 @@ class MonitorService:
         self._evaluator = Evaluator()
         self._lock = asyncio.Lock()
         self._last: Sample | None = None
+        # Tarmoq kuzatuvi: ushlash jarayoni faqat so'ralganda ishga tushadi.
+        self.net = NetService(ctx)
         # SRV_1 jarayonlar daraxtining ildizi: alohida jarayonda plaginning otasi — yadro.
         subprocess_mode = ctx.manifest.mode == "subprocess"
         self._root_pid = os.getppid() if subprocess_mode else os.getpid()
@@ -65,10 +68,12 @@ class MonitorService:
         self._history = await self._run(History, self.ctx.data_path(HISTORY_FILE))
         self._evaluator = Evaluator(await self._run(self.history.active_keys))
         await self.purge()
+        await self.net.open()
         # Birinchi o'lchov darhol: panel bo'sh turmasin. CPU qisqa oraliqda o'lchanadi.
         await self.sample(cpu_interval_s=FIRST_CPU_INTERVAL_S)
 
     async def stop(self) -> None:
+        await self.net.close()
         if self._history is not None:
             await self._run(self._history.close)
             self._history = None

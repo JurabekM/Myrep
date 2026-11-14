@@ -12,6 +12,8 @@ from srv1_sdk.panel import (
     ValueWidget,
 )
 
+from .netcap.panel import net_widgets
+
 # 240 nuqta: standart 15 soniyalik oraliqda bir soat.
 CHART_WINDOW = 240
 
@@ -133,5 +135,6 @@ def build_panel() -> PanelSpec:
                     TableColumn(key="note", title=_t("Izoh", "Примечание", "Note")),
                 ),
             ),
+            *net_widgets(),
         ),
     )

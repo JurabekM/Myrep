@@ -15,6 +15,10 @@ Alohida e'tibor:
   alohida olinadi). SRV_1 shell'i PyQt6'dan foydalanadi, shuning uchun bu o'rnatuvchini
   tarqatganda GPL v3 shartlari amal qiladi.
 - **Qt 6** kutubxonalari (PyQt6 ichida) LGPL v3 da.
+- **scapy** GPL v2 da. Uni faqat tarmoq kuzatuvining ushlash jarayoni ishlatadi
+  (`plugins\monitor\netcap\worker.py`, alohida jarayon); yadro va shell uni yuklamaydi.
 
 O'rnatuvchiga kirmaydi va kerak bo'lsa alohida qo'yiladi (`tools\README.md`):
-cloudflared, Mosquitto, avrdude.
+cloudflared, Mosquitto, avrdude, **Npcap** (tarmoq kuzatuvi uchun; litsenziyasi uni boshqa
+o'rnatuvchiga qo'shib tarqatishga ruxsat bermaydi — <https://npcap.com/#download> dan
+alohida o'rnatiladi).

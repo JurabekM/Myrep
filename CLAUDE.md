@@ -33,6 +33,7 @@ administrlash va sayt/loyihalarni joylash (hosting).
 - Reverse proxy: Caddy (`.exe`, admin API `127.0.0.1:2019`)
 - IoT: Mosquitto, `paho-mqtt`, `pymodbus`, `pyserial`
 - Elektronika: `esptool`, `avrdude` (subprocess o'rami)
+- Tarmoq kuzatuvi: `scapy` + Npcap drayveri (faqat alohida ishchi jarayonda)
 - Fayllar: `watchdog`
 - GUI: PyQt6, `httpx`, `pyqtgraph`; uslub bitta `theme.qss` faylida
 - Sifat: `pytest`, `pytest-asyncio`, `ruff`, `pyright`, `structlog`

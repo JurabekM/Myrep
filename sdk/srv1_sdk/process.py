@@ -76,12 +76,14 @@ class ManagedProcess:
         env: Mapping[str, str],
         memory_limit_mb: int,
         on_line: LineSink,
+        accept_input: bool = False,
     ) -> None:
         self.args = tuple(args)
         self._cwd = cwd
         self._env = env
         self._limit_mb = memory_limit_mb
         self._on_line = on_line
+        self._accept_input = accept_input
         self._job: MemoryJob | None = None
         self._process: asyncio.subprocess.Process | None = None
         self._reader: asyncio.Task[None] | None = None
@@ -103,13 +105,14 @@ class ManagedProcess:
 
     async def start(self) -> None:
         self._job = MemoryJob(self._limit_mb * 1024 * 1024)
+        stdin = asyncio.subprocess.PIPE if self._accept_input else asyncio.subprocess.DEVNULL
         try:
             self._process = await spawn_in_job(
                 self.args,
                 self._job,
                 cwd=self._cwd,
                 env=self._env,
-                stdin=asyncio.subprocess.DEVNULL,
+                stdin=stdin,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.STDOUT,
                 limit=1024 * 1024,
@@ -132,6 +135,21 @@ class ManagedProcess:
             if not line:
                 break
             self._on_line(line.decode("utf-8", "replace").rstrip("\r\n"))
+
+    async def send_line(self, line: str) -> bool:
+        """Jarayonning stdin'iga bitta satr yozadi (`accept_input=True` bo'lsa).
+
+        Jarayon tugagan yoki quvur yopilgan bo'lsa `False` qaytadi.
+        """
+        process = self._process
+        if process is None or process.stdin is None or process.returncode is not None:
+            return False
+        try:
+            process.stdin.write(line.encode("utf-8") + b"\n")
+            await process.stdin.drain()
+        except (OSError, RuntimeError):
+            return False
+        return True
 
     async def wait(self) -> int:
         """Jarayon tugashini kutadi va chiqish kodini qaytaradi."""
