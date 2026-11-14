@@ -1,0 +1,4 @@
+# Ishlash uchun kerakli kutubxonalar. O'zgartirgach requirements*.txt ni qayta yarating (README, "Yig'ish").
+scapy==2.8.0
+colorama==0.4.6
+psutil==7.2.2

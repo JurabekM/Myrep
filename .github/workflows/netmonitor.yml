@@ -1,0 +1,121 @@
+# NetMonitor CI. Faqat netmonitor/ o'zgarganda ishlaydi.
+# Windows ishi imzolangan NetMonitor.exe ni yig'adi va artefakt qilib yuklaydi. Imzo — o'zi imzolangan,
+# bir martalik kalit bilan: kalit shu ishning o'zida yaratiladi va imzodan keyin o'chiriladi
+# (netmonitor/README.md, «Imzo»). Sir (secret) kerak emas.
+name: netmonitor
+
+on:
+  push:
+    paths: ["netmonitor/**", ".github/workflows/netmonitor.yml"]
+  pull_request:
+    paths: ["netmonitor/**", ".github/workflows/netmonitor.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: netmonitor-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: netmonitor
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Kutubxonalar (xesh bilan)
+        run: python -m pip install --disable-pip-version-check --quiet --require-hashes -r requirements-dev.txt
+      - name: ruff
+        run: python -m ruff check .
+      - name: pytest
+        run: python -W error::DeprecationWarning -m pytest tests -q -p no:cacheprovider
+      - name: O'zini sinash
+        run: python netmonitor.py --self-test
+      - name: Jonli sinov (haqiqiy interfeysda ushlash)
+        run: |
+          sudo apt-get install -y -q libpcap-dev > /dev/null
+          sudo "$(which python)" tests/live_smoke.py "$(which python)" netmonitor.py
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: netmonitor
+        shell: powershell
+    outputs:
+      version: ${{ steps.build.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Yig'ish (testlar, PyInstaller, exe ni sinash)
+        id: build
+        run: .\packaging\build.ps1
+      - name: Imzolash (bir martalik o'zi imzolangan sertifikat)
+        id: sign
+        run: .\packaging\sign.ps1 -Ephemeral
+      - name: Imzolangan exe ni tekshirish
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = 'release\NetMonitor.exe'
+          $signature = Get-AuthenticodeSignature -FilePath $exe
+          $signature | Format-List Status, StatusMessage, @{ n = 'Signer'; e = { $_.SignerCertificate.Subject } }
+          if ($signature.SignerCertificate.Thumbprint -ne '${{ steps.sign.outputs.thumbprint }}') { throw 'imzolovchi mos emas' }
+          if ($signature.Status -notin @('Valid', 'UnknownError')) { throw "imzo yaroqsiz: $($signature.Status)" }
+          if (Test-Path "Cert:\CurrentUser\My\${{ steps.sign.outputs.thumbprint }}") { throw 'kalit o''chirilmagan' }
+          & $exe --version
+          if ($LASTEXITCODE -ne 0) { throw '--version' }
+          & $exe --self-test
+          if ($LASTEXITCODE -ne 0) { throw '--self-test' }
+          $hash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLower()
+          if ($hash -ne '${{ steps.sign.outputs.sha256 }}') { throw 'SHA-256 mos emas' }
+          Get-Content "$exe.sha256"
+          Get-ChildItem release | Format-Table Name, Length
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NetMonitor-${{ steps.build.outputs.version }}-signed
+          path: netmonitor/release/
+          if-no-files-found: error
+
+  # Imzolangan exe ni haqiqiy Npcap drayveri bilan sinaydi. Npcap'ning bepul nashri jim
+  # o'rnatishni faqat eski 0.96 versiyada qo'llaydi, shuning uchun bu ish majburiy emas.
+  windows-live:
+    needs: windows
+    runs-on: windows-latest
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: netmonitor
+        shell: powershell
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: NetMonitor-${{ needs.windows.outputs.version }}-signed
+          path: netmonitor/release
+      - name: Npcap 0.96 (jim o'rnatish)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = Join-Path $env:RUNNER_TEMP 'npcap-0.96.exe'
+          Invoke-WebRequest -Uri 'https://npcap.com/dist/npcap-0.96.exe' -OutFile $installer
+          $signature = Get-AuthenticodeSignature -FilePath $installer
+          if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Insecure\.Com LLC') {
+            throw "Npcap o'rnatuvchisining imzosi kutilganidek emas: $($signature.Status) $($signature.SignerCertificate.Subject)"
+          }
+          Start-Process -FilePath $installer -ArgumentList '/S', '/winpcap_mode=yes' -Wait
+          if (-not (Test-Path "$env:WINDIR\System32\Npcap\wpcap.dll")) { throw 'Npcap o''rnatilmadi' }
+      - name: Jonli sinov (imzolangan exe, haqiqiy interfeys)
+        run: |
+          python tests\live_smoke.py release\NetMonitor.exe
+          if ($LASTEXITCODE -ne 0) { throw 'jonli sinov' }

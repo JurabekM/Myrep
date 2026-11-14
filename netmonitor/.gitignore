@@ -1,0 +1,8 @@
+# Ish paytida paydo bo'ladigan fayllar (ichida ushlangan trafik bo'lishi mumkin)
+/config.json
+/netmonitor_state.json
+/logs_pro/
+/release/
+/build/
+/dist/
+*.spec

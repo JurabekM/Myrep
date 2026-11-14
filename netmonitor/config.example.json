@@ -1,0 +1,63 @@
+{
+  "log_folder": "logs_pro",
+  "packet_log_filename": "captured_packets.json",
+  "log_rotation_lines": 10000,
+  "max_packet_log_files": 50,
+  "system_metrics_interval_sec": 120,
+  "capture_filter": null,
+  "excluded_ips": [],
+  "console": {
+    "show_packets": true,
+    "max_lines_per_sec": 50,
+    "payload_preview_bytes": 150
+  },
+  "payload": {
+    "mask_sensitive_values": true,
+    "log_max_bytes": 2048,
+    "sensitive_keywords": [
+      "password",
+      "pass",
+      "passwd",
+      "pwd",
+      "login",
+      "user",
+      "username",
+      "auth",
+      "authorization",
+      "admin",
+      "root",
+      "administrator",
+      "token",
+      "session",
+      "cookie",
+      "key",
+      "secret",
+      "private",
+      "confidential"
+    ]
+  },
+  "geolocation": {
+    "enabled": false
+  },
+  "security_monitoring": {
+    "suspicious_ports_enabled": true,
+    "suspicious_ports": [
+      23,
+      4444,
+      5555,
+      6667,
+      31337
+    ],
+    "suspicious_tcp_flags_enabled": true,
+    "port_scan_detection_enabled": true,
+    "port_scan_time_window_sec": 10,
+    "port_scan_threshold_ports": 15,
+    "suspicious_payload_enabled": true,
+    "suspicious_payload_keywords": [
+      "cmd.exe",
+      "/etc/passwd",
+      "union select"
+    ],
+    "alert_quiet_sec": 60
+  }
+}

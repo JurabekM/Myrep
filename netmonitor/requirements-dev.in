@@ -1,0 +1,4 @@
+-r requirements.in
+pytest==9.2.0
+ruff==0.17.5
+pyinstaller==6.22.3
