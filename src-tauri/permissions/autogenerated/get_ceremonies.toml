@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-ceremonies"
+description = "Enables the get_ceremonies command without any pre-configured scope."
+commands.allow = ["get_ceremonies"]
+
+[[permission]]
+identifier = "deny-get-ceremonies"
+description = "Denies the get_ceremonies command without any pre-configured scope."
+commands.deny = ["get_ceremonies"]

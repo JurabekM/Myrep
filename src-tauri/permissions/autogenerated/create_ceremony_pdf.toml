@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-create-ceremony-pdf"
+description = "Enables the create_ceremony_pdf command without any pre-configured scope."
+commands.allow = ["create_ceremony_pdf"]
+
+[[permission]]
+identifier = "deny-create-ceremony-pdf"
+description = "Denies the create_ceremony_pdf command without any pre-configured scope."
+commands.deny = ["create_ceremony_pdf"]

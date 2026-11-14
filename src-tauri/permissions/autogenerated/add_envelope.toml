@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-add-envelope"
+description = "Enables the add_envelope command without any pre-configured scope."
+commands.allow = ["add_envelope"]
+
+[[permission]]
+identifier = "deny-add-envelope"
+description = "Denies the add_envelope command without any pre-configured scope."
+commands.deny = ["add_envelope"]

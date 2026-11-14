@@ -1,0 +1,102 @@
+{
+  "suite": "money_parse",
+  "version": 1,
+  "description": "Foydalanuvchi kiritgan summa matnini minor birlikka aylantirish. Bo'sh joy, '_' va apostroflar e'tiborsiz; valyuta belgisi/so'z (so'm, soʻm, сум, $, €, ₽) olib tashlanadi. Kasr qismi valyuta aniqligidan (UZS/USD: 2 xona) ko'p bo'lsa — xato. Xato natija: {\"error\": \"PARSE_ERROR\"}. Manba: mobil money_format.dart (MoneyParser) va money_test.dart.",
+  "cases": [
+    {
+      "id": "parse-001",
+      "input": { "text": "8 000 000", "currency": "UZS" },
+      "expected": { "minor": "800000000" }
+    },
+    {
+      "id": "parse-002",
+      "description": "o'zbekcha belgi bilan (U+02BB)",
+      "input": { "text": "8 000 000 soʻm", "currency": "UZS" },
+      "expected": { "minor": "800000000" }
+    },
+    {
+      "id": "parse-003",
+      "description": "apostrof: '",
+      "input": { "text": "1 500 so'm", "currency": "UZS" },
+      "expected": { "minor": "150000" }
+    },
+    {
+      "id": "parse-004",
+      "description": "apostrof: ‘ (U+2018)",
+      "input": { "text": "1 500 so‘m", "currency": "UZS" },
+      "expected": { "minor": "150000" }
+    },
+    {
+      "id": "parse-005",
+      "description": "apostrof: ’ (U+2019)",
+      "input": { "text": "1 500 so’m", "currency": "UZS" },
+      "expected": { "minor": "150000" }
+    },
+    {
+      "id": "parse-006",
+      "description": "apostrof: ʼ (U+02BC)",
+      "input": { "text": "1 500 soʼm", "currency": "UZS" },
+      "expected": { "minor": "150000" }
+    },
+    {
+      "id": "parse-007",
+      "description": "apostrof: ` (backtick)",
+      "input": { "text": "1 500 so`m", "currency": "UZS" },
+      "expected": { "minor": "150000" }
+    },
+    {
+      "id": "parse-008",
+      "description": "so'zsiz: som",
+      "input": { "text": "1 500 som", "currency": "UZS" },
+      "expected": { "minor": "150000" }
+    },
+    {
+      "id": "parse-009",
+      "description": "ruscha belgi: сум",
+      "input": { "text": "150 000 сум", "currency": "UZS" },
+      "expected": { "minor": "15000000" }
+    },
+    {
+      "id": "parse-010",
+      "description": "vergul — kasr qismi (tiyin)",
+      "input": { "text": "8000000,5", "currency": "UZS" },
+      "expected": { "minor": "800000050" }
+    },
+    {
+      "id": "parse-011",
+      "description": "nuqta, USD (2 xona)",
+      "input": { "text": "12.50", "currency": "USD" },
+      "expected": { "minor": "1250" }
+    },
+    {
+      "id": "parse-012",
+      "description": "manfiy qiymat",
+      "input": { "text": "-300", "currency": "UZS" },
+      "expected": { "minor": "-30000" }
+    },
+    {
+      "id": "parse-013",
+      "description": "bo'sh matn — xato",
+      "input": { "text": "", "currency": "UZS" },
+      "expected": { "error": "PARSE_ERROR" }
+    },
+    {
+      "id": "parse-014",
+      "description": "raqam emas — xato",
+      "input": { "text": "abc", "currency": "UZS" },
+      "expected": { "error": "PARSE_ERROR" }
+    },
+    {
+      "id": "parse-015",
+      "description": "3 ta kasr raqami, UZS 2 xona — xato",
+      "input": { "text": "1,234", "currency": "UZS" },
+      "expected": { "error": "PARSE_ERROR" }
+    },
+    {
+      "id": "parse-016",
+      "description": "16 xonali butun qism — toshishdan himoya, xato",
+      "input": { "text": "1111111111111111", "currency": "UZS" },
+      "expected": { "error": "PARSE_ERROR" }
+    }
+  ]
+}

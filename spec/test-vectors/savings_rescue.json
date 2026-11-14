@@ -1,0 +1,85 @@
+{
+  "suite": "savings_rescue",
+  "version": 1,
+  "description": "«Qutqarilgan pul» (SPEC 2B.7, MVP_PLAN VAZIFA 8). Ikki operatsiya: compute — havas kamayishi, qutqarilgan jami, qolgan qism (manfiy holat → 0); subscription — bekor qilingan obunalar tejami (oylik × kunlar / 30, butun so'mgacha). Summalar minor birlikda (UZS: 1 so'm = 100 tiyin). Qiymatlar mobil formulaga (rescue.dart) mos qo'lda hisoblangan. Desktop'da mobil bilan sinxronlash — OPEN_QUESTIONS.",
+  "cases": [
+    {
+      "id": "rsc-001",
+      "description": "10 kun o'tdi, havas bazaviydan kam: tejamkorlik ko'rsatiladi",
+      "input": { "op": "compute", "currency": "UZS", "elapsedDays": 10, "currentHavasMinor": 60000000, "baselineHavasMinor": 300000000, "baselineDays": 30, "subscriptionsMinor": 0, "envelopesMinor": 0, "transferredMinor": 0 },
+      "expected": { "havas_delta_minor": 40000000, "havas_shown_minor": 40000000, "total_minor": 40000000, "available_minor": 40000000, "spent_more": false, "has_baseline": true }
+    },
+    {
+      "id": "rsc-002",
+      "description": "ko'proq sarflangan: delta manfiy, ko'rsatishda 0, ayblov yo'q",
+      "input": { "op": "compute", "currency": "UZS", "elapsedDays": 10, "currentHavasMinor": 150000000, "baselineHavasMinor": 300000000, "baselineDays": 30, "subscriptionsMinor": 0, "envelopesMinor": 0, "transferredMinor": 0 },
+      "expected": { "havas_delta_minor": -50000000, "havas_shown_minor": 0, "total_minor": 0, "available_minor": 0, "spent_more": true, "has_baseline": true }
+    },
+    {
+      "id": "rsc-003",
+      "description": "bazaviy oy yo'q: havas qismi 0; obuna va konvert qo'shiladi; qoldiq = jami − o'tkazilgan",
+      "input": { "op": "compute", "currency": "UZS", "elapsedDays": 5, "currentHavasMinor": 0, "baselineHavasMinor": null, "baselineDays": 30, "subscriptionsMinor": 10000000, "envelopesMinor": 5000000, "transferredMinor": 12000000 },
+      "expected": { "havas_delta_minor": 0, "havas_shown_minor": 0, "total_minor": 15000000, "available_minor": 3000000, "spent_more": false, "has_baseline": false }
+    },
+    {
+      "id": "rsc-004",
+      "description": "o'tkazish jamidan katta: qoldiq 0 (manfiy bo'lmaydi)",
+      "input": { "op": "compute", "currency": "UZS", "elapsedDays": 5, "currentHavasMinor": 0, "baselineHavasMinor": null, "baselineDays": 30, "subscriptionsMinor": 10000000, "envelopesMinor": 5000000, "transferredMinor": 20000000 },
+      "expected": { "havas_delta_minor": 0, "havas_shown_minor": 0, "total_minor": 15000000, "available_minor": 0, "spent_more": false, "has_baseline": false }
+    },
+    {
+      "id": "rsc-005",
+      "description": "yaxlitlash yarmidan boshlab yuqoriga: 5 × 1 / 2 = 2,5 → 3",
+      "input": { "op": "compute", "currency": "UZS", "elapsedDays": 1, "currentHavasMinor": 0, "baselineHavasMinor": 5, "baselineDays": 2, "subscriptionsMinor": 0, "envelopesMinor": 0, "transferredMinor": 0 },
+      "expected": { "havas_delta_minor": 3, "havas_shown_minor": 3, "total_minor": 3, "available_minor": 3, "spent_more": false, "has_baseline": true }
+    },
+    {
+      "id": "rsc-006",
+      "description": "davr boshi (0 kun o'tgan) hisoblanmaydi",
+      "input": { "op": "compute", "currency": "UZS", "elapsedDays": 0, "currentHavasMinor": 0, "baselineHavasMinor": 300000000, "baselineDays": 30, "subscriptionsMinor": 0, "envelopesMinor": 0, "transferredMinor": 0 },
+      "expected": { "error": "INVALID_DAY" }
+    },
+    {
+      "id": "rsc-007",
+      "description": "to'liq davr, havas bazaviyga teng: delta 0",
+      "input": { "op": "compute", "currency": "UZS", "elapsedDays": 30, "currentHavasMinor": 100000000, "baselineHavasMinor": 100000000, "baselineDays": 30, "subscriptionsMinor": 0, "envelopesMinor": 0, "transferredMinor": 0 },
+      "expected": { "havas_delta_minor": 0, "havas_shown_minor": 0, "total_minor": 0, "available_minor": 0, "spent_more": false, "has_baseline": true }
+    },
+    {
+      "id": "sub-001",
+      "description": "1-oktabrda bekor qilingan obuna, davr to'liq: 30 kun × oylik / 30",
+      "input": { "op": "subscription", "currency": "UZS", "cancelled": [ { "monthlyMinor": 30000000, "on": "2026-10-01" } ], "periodStart": "2026-10-01", "periodEnd": "2026-11-01", "today": "2026-10-30" },
+      "expected": { "savings_minor": 30000000 }
+    },
+    {
+      "id": "sub-002",
+      "description": "davrdan oldin bekor qilingan: davr boshidan hisoblanadi",
+      "input": { "op": "subscription", "currency": "UZS", "cancelled": [ { "monthlyMinor": 30000000, "on": "2026-09-15" } ], "periodStart": "2026-10-01", "periodEnd": "2026-11-01", "today": "2026-10-30" },
+      "expected": { "savings_minor": 30000000 }
+    },
+    {
+      "id": "sub-003",
+      "description": "20-oktabrdan: 11 kun × oylik / 30",
+      "input": { "op": "subscription", "currency": "UZS", "cancelled": [ { "monthlyMinor": 30000000, "on": "2026-10-20" } ], "periodStart": "2026-10-01", "periodEnd": "2026-11-01", "today": "2026-10-30" },
+      "expected": { "savings_minor": 11000000 }
+    },
+    {
+      "id": "sub-004",
+      "description": "bugundan keyin bekor qilingan: hali tejam yo'q",
+      "input": { "op": "subscription", "currency": "UZS", "cancelled": [ { "monthlyMinor": 30000000, "on": "2026-10-31" } ], "periodStart": "2026-10-01", "periodEnd": "2026-11-01", "today": "2026-10-30" },
+      "expected": { "savings_minor": 0 }
+    },
+    {
+      "id": "sub-005",
+      "description": "bir kun: 1 000 000 / 30 = 33 333,33 tiyin → butun so'mgacha: 333 so'm",
+      "input": { "op": "subscription", "currency": "UZS", "cancelled": [ { "monthlyMinor": 1000000, "on": "2026-10-30" } ], "periodStart": "2026-10-01", "periodEnd": "2026-11-01", "today": "2026-10-30" },
+      "expected": { "savings_minor": 33300 }
+    },
+    {
+      "id": "sub-006",
+      "description": "ikki obuna yig'indisi, yakuniy yaxlitlash bir marta",
+      "input": { "op": "subscription", "currency": "UZS", "cancelled": [ { "monthlyMinor": 30000000, "on": "2026-10-01" }, { "monthlyMinor": 1000000, "on": "2026-10-30" } ], "periodStart": "2026-10-01", "periodEnd": "2026-11-01", "today": "2026-10-30" },
+      "expected": { "savings_minor": 30033300 }
+    }
+  ]
+}

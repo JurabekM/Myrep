@@ -1,0 +1,54 @@
+{
+ "suite": "emergency_target",
+ "version": 1,
+ "description": "round_half_up(sum(ZARUR+KERAK, oxirgi k oy) * N / k); ma'lumotli oy 3 tadan kam — null",
+ "cases": [
+  {
+   "id": "et-001",
+   "input": {
+    "months": [
+     "520000000",
+     "500000000",
+     "530000000"
+    ],
+    "currency": "UZS",
+    "n": 6
+   },
+   "expected": {
+    "target": "3100000000"
+   }
+  },
+  {
+   "id": "et-002",
+   "description": "yarim tiyin — yuqoriga",
+   "input": {
+    "months": [
+     "100000001",
+     "100000000",
+     "100000000"
+    ],
+    "currency": "UZS",
+    "n": 3
+   },
+   "expected": {
+    "target": "300000001"
+   }
+  },
+  {
+   "id": "et-003",
+   "description": "bo'sh oy hisobga olinmaydi — 2 oy, maqsad yo'q",
+   "input": {
+    "months": [
+     "200000000",
+     "0",
+     "100"
+    ],
+    "currency": "UZS",
+    "n": 6
+   },
+   "expected": {
+    "target": null
+   }
+  }
+ ]
+}

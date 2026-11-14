@@ -1,0 +1,4 @@
+# Testlarda unwrap/expect ruxsat etiladi; production kodda taqiq (Cargo.toml [workspace.lints]).
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-dbg-in-tests = true

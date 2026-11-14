@@ -1,0 +1,63 @@
+{
+ "suite": "pyramid_levels",
+ "version": 1,
+ "description": "Qavat i da k^i kishi (i=0 dan). Qavat to'liq sig'masa, qolgan aholi to'lmagan oxirgi qavat. lastLevelShareBp = half_up(lastLevel*10000/participants).",
+ "cases": [
+  {
+   "id": "py-001",
+   "input": {
+    "recruitsPerPerson": 5,
+    "population": 1000000
+   },
+   "expected": {
+    "levels": 10,
+    "participants": 1000000,
+    "lastLevel": 511719,
+    "lastLevelShareBp": 5117,
+    "lastLevelFull": false
+   }
+  },
+  {
+   "id": "py-002",
+   "input": {
+    "recruitsPerPerson": 2,
+    "population": 7
+   },
+   "expected": {
+    "levels": 3,
+    "participants": 7,
+    "lastLevel": 4,
+    "lastLevelShareBp": 5714,
+    "lastLevelFull": true
+   }
+  },
+  {
+   "id": "py-003",
+   "input": {
+    "recruitsPerPerson": 3,
+    "population": 100
+   },
+   "expected": {
+    "levels": 5,
+    "participants": 100,
+    "lastLevel": 60,
+    "lastLevelShareBp": 6000,
+    "lastLevelFull": false
+   }
+  },
+  {
+   "id": "py-004",
+   "input": {
+    "recruitsPerPerson": 10,
+    "population": 36000000
+   },
+   "expected": {
+    "levels": 9,
+    "participants": 36000000,
+    "lastLevel": 24888889,
+    "lastLevelShareBp": 6914,
+    "lastLevelFull": false
+   }
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+[package]
+name = "baraka-pdf"
+description = "Baraka Dastur — PDF bayonnoma: typst shabloni va renderer (DESKTOP_PROMPT.md 2 va 7-bo'lim)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Kod ichida import nomi: `pdf`.
+[lib]
+name = "pdf"
+
+[dependencies]
+# Chop etish va bayonnoma uchun typst (ADR: typst, DESKTOP_PROMPT.md 2-bo'lim). Versiya 0.13.x: API barqaror.
+typst = "0.13"
+typst-pdf = "0.13"
+# Shriftlar ilova ichiga joylanadi (Libertinus Serif — o'zbekcha ʻ va ʼ belgilari bilan).
+typst-assets = { version = "0.13", features = ["fonts"] }
+# Xatolar (ADR: thiserror).
+thiserror = "2"
+
+[lints]
+workspace = true

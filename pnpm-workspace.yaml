@@ -1,0 +1,7 @@
+packages:
+  - ui
+minimumReleaseAgeExclude:
+  - "@testing-library/user-event@14.6.8"
+  - lucide-react@1.56.0
+patchedDependencies:
+  echarts@6.1.0: patches/echarts@6.1.0.patch

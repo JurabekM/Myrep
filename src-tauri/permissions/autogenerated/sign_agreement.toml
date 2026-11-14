@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-sign-agreement"
+description = "Enables the sign_agreement command without any pre-configured scope."
+commands.allow = ["sign_agreement"]
+
+[[permission]]
+identifier = "deny-sign-agreement"
+description = "Denies the sign_agreement command without any pre-configured scope."
+commands.deny = ["sign_agreement"]

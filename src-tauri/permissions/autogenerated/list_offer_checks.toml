@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-offer-checks"
+description = "Enables the list_offer_checks command without any pre-configured scope."
+commands.allow = ["list_offer_checks"]
+
+[[permission]]
+identifier = "deny-list-offer-checks"
+description = "Denies the list_offer_checks command without any pre-configured scope."
+commands.deny = ["list_offer_checks"]

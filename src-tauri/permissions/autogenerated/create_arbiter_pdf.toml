@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-create-arbiter-pdf"
+description = "Enables the create_arbiter_pdf command without any pre-configured scope."
+commands.allow = ["create_arbiter_pdf"]
+
+[[permission]]
+identifier = "deny-create-arbiter-pdf"
+description = "Denies the create_arbiter_pdf command without any pre-configured scope."
+commands.deny = ["create_arbiter_pdf"]

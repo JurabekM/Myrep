@@ -1,0 +1,50 @@
+{
+  "suite": "payoff_strategy",
+  "version": 1,
+  "status": "PROPOSED",
+  "description": "DESKTOP TAKLIFI. Yopish tartibi (SPEC 2D.6): SNOWBALL — eng kichik qoldiq avval; AVALANCHE — ustamali (hasMarkup) qarz avval, so'ng katta qoldiq. Oyma-oy simulyatsiya: har qarz o'z oylik to'lovini oladi; `extra` fokus qarzga, fokus yopilsa ortgani keyingisiga; yopilgan qarzning to'lovi keyingi oydan fokusga qo'shiladi. Summalar minor (satr). monthsToClear — kirish tartibidagi har qarz uchun.",
+  "cases": [
+    {
+      "id": "payoff-001",
+      "description": "SNOWBALL: A 1 200 000 (100 000/oy), B 500 000 ustamali (50 000/oy), qo'shimcha 100 000",
+      "input": {
+        "strategy": "SNOWBALL",
+        "currency": "UZS",
+        "extra": "10000000",
+        "loans": [
+          { "outstanding": "120000000", "installment": "10000000", "hasMarkup": false },
+          { "outstanding": "50000000", "installment": "5000000", "hasMarkup": true }
+        ]
+      },
+      "expected": { "order": [1, 0], "monthsToClear": [7, 4], "totalMonths": 7 }
+    },
+    {
+      "id": "payoff-002",
+      "description": "AVALANCHE: A 1 200 000 ustamali (100 000/oy), B 500 000 (50 000/oy), qo'shimcha 100 000",
+      "input": {
+        "strategy": "AVALANCHE",
+        "currency": "UZS",
+        "extra": "10000000",
+        "loans": [
+          { "outstanding": "120000000", "installment": "10000000", "hasMarkup": true },
+          { "outstanding": "50000000", "installment": "5000000", "hasMarkup": false }
+        ]
+      },
+      "expected": { "order": [0, 1], "monthsToClear": [6, 7], "totalMonths": 7 }
+    },
+    {
+      "id": "payoff-003",
+      "description": "SNOWBALL, qo'shimchasiz: har qarz faqat o'z rejasi bilan; yopilgan B to'lovi A ga o'tadi (A: 10 oy 1 000 000, keyin 150 000/oy → 12-oy)",
+      "input": {
+        "strategy": "SNOWBALL",
+        "currency": "UZS",
+        "extra": "0",
+        "loans": [
+          { "outstanding": "120000000", "installment": "10000000", "hasMarkup": false },
+          { "outstanding": "50000000", "installment": "5000000", "hasMarkup": false }
+        ]
+      },
+      "expected": { "order": [1, 0], "monthsToClear": [12, 10], "totalMonths": 12 }
+    }
+  ]
+}

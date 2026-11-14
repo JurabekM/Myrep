@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-pay-loan"
+description = "Enables the pay_loan command without any pre-configured scope."
+commands.allow = ["pay_loan"]
+
+[[permission]]
+identifier = "deny-pay-loan"
+description = "Denies the pay_loan command without any pre-configured scope."
+commands.deny = ["pay_loan"]

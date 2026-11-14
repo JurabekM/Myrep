@@ -1,0 +1,77 @@
+{
+ "suite": "fx_convert",
+ "version": 1,
+ "description": "minor * rate_num / rate_den (ikkala valyuta 2 xonali), half-up",
+ "cases": [
+  {
+   "id": "fx-001",
+   "input": {
+    "amount": "1000",
+    "from": "USD",
+    "to": "UZS",
+    "rateNum": 1265050,
+    "rateDen": 100
+   },
+   "expected": {
+    "result": "12650500"
+   }
+  },
+  {
+   "id": "fx-002",
+   "description": "0,01 USD = 12650,5 tiyin → 12651",
+   "input": {
+    "amount": "1",
+    "from": "USD",
+    "to": "UZS",
+    "rateNum": 1265050,
+    "rateDen": 100
+   },
+   "expected": {
+    "result": "12651"
+   }
+  },
+  {
+   "id": "fx-003",
+   "description": "teskari kurs",
+   "input": {
+    "amount": "12650500",
+    "from": "UZS",
+    "to": "USD",
+    "rateNum": 100,
+    "rateDen": 1265050
+   },
+   "expected": {
+    "result": "1000"
+   }
+  },
+  {
+   "id": "fx-004",
+   "description": "manfiy summa simmetrik",
+   "input": {
+    "amount": "-1",
+    "from": "USD",
+    "to": "UZS",
+    "rateNum": 1265050,
+    "rateDen": 100
+   },
+   "expected": {
+    "result": "-12651"
+   }
+  },
+  {
+   "id": "fx-005",
+   "description": "valyuta mos emas",
+   "input": {
+    "amount": "1000",
+    "from": "EUR",
+    "to": "UZS",
+    "rateFrom": "USD",
+    "rateNum": 1265050,
+    "rateDen": 100
+   },
+   "expected": {
+    "error": "CURRENCY_MISMATCH"
+   }
+  }
+ ]
+}

@@ -1,0 +1,34 @@
+{
+ "suite": "unexplained_gap",
+ "version": 1,
+ "description": "izohsiz = daromad - (majburiyatlar + xarajatlar + jamg'arma); manfiy bo'lishi mumkin",
+ "cases": [
+  {
+   "id": "gap-001",
+   "input": {
+    "currency": "UZS",
+    "income": "800000000",
+    "obligations": "535000000",
+    "expenses": "165000000",
+    "savings": "0"
+   },
+   "expected": {
+    "gap": "100000000"
+   }
+  },
+  {
+   "id": "gap-002",
+   "description": "manfiy: chiqim kirimdan ko'p yozilgan",
+   "input": {
+    "currency": "UZS",
+    "income": "500000000",
+    "obligations": "300000000",
+    "expenses": "250000000",
+    "savings": "0"
+   },
+   "expected": {
+    "gap": "-50000000"
+   }
+  }
+ ]
+}

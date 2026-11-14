@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-loans"
+description = "Enables the get_loans command without any pre-configured scope."
+commands.allow = ["get_loans"]
+
+[[permission]]
+identifier = "deny-get-loans"
+description = "Denies the get_loans command without any pre-configured scope."
+commands.deny = ["get_loans"]

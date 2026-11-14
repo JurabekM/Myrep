@@ -1,0 +1,15 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "quick-window",
+  "description": "«Tez xarajat» mini oynasi (Ctrl+Alt+B): faqat holat, kategoriyalar, xarajat qo'shish va oyna boshqaruvi. Qulf holatida frontend summa ko'rsatmaydi.",
+  "windows": ["quick"],
+  "permissions": [
+    "core:default",
+    "allow-get-app-info",
+    "allow-get-security-status",
+    "allow-list-categories",
+    "allow-add-expense",
+    "allow-show-main-window",
+    "allow-hide-quick-window"
+  ]
+}

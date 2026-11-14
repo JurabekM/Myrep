@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-treats"
+description = "Enables the list_treats command without any pre-configured scope."
+commands.allow = ["list_treats"]
+
+[[permission]]
+identifier = "deny-list-treats"
+description = "Denies the list_treats command without any pre-configured scope."
+commands.deny = ["list_treats"]

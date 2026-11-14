@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-consent-ceremony-discussion"
+description = "Enables the consent_ceremony_discussion command without any pre-configured scope."
+commands.allow = ["consent_ceremony_discussion"]
+
+[[permission]]
+identifier = "deny-consent-ceremony-discussion"
+description = "Denies the consent_ceremony_discussion command without any pre-configured scope."
+commands.deny = ["consent_ceremony_discussion"]

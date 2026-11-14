@@ -1,0 +1,61 @@
+{
+  "suite": "amortization_extended",
+  "version": 1,
+  "status": "PROPOSED",
+  "description": "DESKTOP TAKLIFI (mobil tasdiqlamagan, OPEN_QUESTIONS «Vektorsiz formulalar uchun tartib»). DIFFERENTIATED: asosiy = allocate(P, N ta teng), foiz = round_half_up(qoldiq × annualBp / 120000) har oy; to'lov kamayadi; qo'shimcha to'lov qoldiqni kamaytiradi. FIXED_MARKUP: asosiy va ustama alohida allocate(N), foiz stavkasi yo'q, totalInterest = ustama. Summalar minor birlikda (satr). Faqat birinchi va oxirgi qator solishtiriladi.",
+  "cases": [
+    {
+      "id": "diff-001",
+      "description": "1 200 000 so'm, 24 %, 12 oy, qo'shimcha to'lov yo'q",
+      "input": {
+        "type": "DIFFERENTIATED",
+        "principal": "120000000",
+        "currency": "UZS",
+        "annualBp": 2400,
+        "termMonths": 12,
+        "extraPerMonth": "0"
+      },
+      "expected": {
+        "months": 12,
+        "totalInterest": "15600000",
+        "first": { "month": 1, "interest": "2400000", "principal": "10000000", "extra": "0", "balance": "110000000" },
+        "last": { "month": 12, "interest": "200000", "principal": "10000000", "extra": "0", "balance": "0" }
+      }
+    },
+    {
+      "id": "diff-002",
+      "description": "qo'shimcha 20 000 so'm/oy — muddat qisqaradi (10 oy)",
+      "input": {
+        "type": "DIFFERENTIATED",
+        "principal": "120000000",
+        "currency": "UZS",
+        "annualBp": 2400,
+        "termMonths": 12,
+        "extraPerMonth": "2000000"
+      },
+      "expected": {
+        "months": 10,
+        "totalInterest": "13200000",
+        "first": { "month": 1, "interest": "2400000", "principal": "10000000", "extra": "2000000", "balance": "108000000" },
+        "last": { "month": 10, "interest": "240000", "principal": "10000000", "extra": "2000000", "balance": "0" }
+      }
+    },
+    {
+      "id": "fixed-001",
+      "description": "100 so'm + 10 so'm ustama, 3 oy: eng katta qoldiq usuli",
+      "input": {
+        "type": "FIXED_MARKUP",
+        "principal": "10000",
+        "currency": "UZS",
+        "markup": "1000",
+        "termMonths": 3
+      },
+      "expected": {
+        "months": 3,
+        "totalInterest": "1000",
+        "first": { "month": 1, "interest": "334", "principal": "3334", "extra": "0", "balance": "6666" },
+        "last": { "month": 3, "interest": "333", "principal": "3333", "extra": "0", "balance": "0" }
+      }
+    }
+  ]
+}

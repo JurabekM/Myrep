@@ -1,0 +1,199 @@
+{
+ "suite": "scam_signals",
+ "version": 1,
+ "description": "SPEC 2G.1: besh belgi javoblardan; level: 0 NONE, 1 CAUTION, 2+ FLEE; verdict = max(2E.5 bayroqlari, level); javob yo'q = UNKNOWN (sariq). categories: RIBO (kafolat), GHARAR (NO_REAL_BUSINESS), QIMOR (RECRUITMENT_INCOME).",
+ "cases": [
+  {
+   "id": "sc-001",
+   "input": {
+    "answers": {
+     "guaranteed": "NO",
+     "lossShared": "YES",
+     "realGoods": "YES",
+     "recruitment": "NO",
+     "pressure": "NO",
+     "writtenContract": "YES",
+     "exitEasy": "YES",
+     "license": "YES",
+     "verifiedInPerson": "YES"
+    }
+   },
+   "expected": {
+    "signs": [],
+    "level": "NONE",
+    "verdict": "GREEN",
+    "categories": []
+   }
+  },
+  {
+   "id": "sc-002",
+   "input": {
+    "answers": {
+     "guaranteed": "NO",
+     "lossShared": "YES",
+     "realGoods": "YES",
+     "recruitment": "NO",
+     "pressure": "YES",
+     "writtenContract": "YES",
+     "exitEasy": "YES",
+     "license": "YES",
+     "verifiedInPerson": "YES"
+    }
+   },
+   "expected": {
+    "signs": [
+     "URGENCY"
+    ],
+    "level": "CAUTION",
+    "verdict": "YELLOW",
+    "categories": []
+   }
+  },
+  {
+   "id": "sc-003",
+   "input": {
+    "answers": {
+     "guaranteed": "NO",
+     "lossShared": "YES",
+     "realGoods": "YES",
+     "recruitment": "NO",
+     "pressure": "YES",
+     "writtenContract": "YES",
+     "exitEasy": "NO",
+     "license": "YES",
+     "verifiedInPerson": "YES"
+    }
+   },
+   "expected": {
+    "signs": [
+     "URGENCY",
+     "HARD_EXIT"
+    ],
+    "level": "FLEE",
+    "verdict": "RED",
+    "categories": []
+   }
+  },
+  {
+   "id": "sc-004",
+   "input": {
+    "answers": {
+     "guaranteed": "YES",
+     "lossShared": "NO",
+     "realGoods": "UNKNOWN",
+     "recruitment": "YES",
+     "pressure": "YES",
+     "writtenContract": "YES",
+     "exitEasy": "UNKNOWN",
+     "license": "UNKNOWN",
+     "verifiedInPerson": "NO"
+    }
+   },
+   "expected": {
+    "signs": [
+     "GUARANTEED_HIGH_RETURN",
+     "URGENCY",
+     "RECRUITMENT_INCOME",
+     "NO_REAL_BUSINESS"
+    ],
+    "level": "FLEE",
+    "verdict": "RED",
+    "categories": [
+     "RIBO",
+     "GHARAR",
+     "QIMOR"
+    ]
+   }
+  },
+  {
+   "id": "sc-005",
+   "input": {
+    "answers": {
+     "guaranteed": "NO",
+     "lossShared": "YES",
+     "realGoods": "YES",
+     "recruitment": "NO",
+     "pressure": "NO",
+     "writtenContract": "YES",
+     "exitEasy": "YES",
+     "license": "NO",
+     "verifiedInPerson": "YES"
+    }
+   },
+   "expected": {
+    "signs": [
+     "NO_REAL_BUSINESS"
+    ],
+    "level": "CAUTION",
+    "verdict": "YELLOW",
+    "categories": [
+     "GHARAR"
+    ]
+   }
+  },
+  {
+   "id": "sc-006",
+   "input": {
+    "answers": {
+     "guaranteed": "YES",
+     "lossShared": "YES",
+     "realGoods": "YES",
+     "recruitment": "NO",
+     "pressure": "NO",
+     "writtenContract": "YES",
+     "exitEasy": "YES",
+     "license": "YES",
+     "verifiedInPerson": "YES"
+    }
+   },
+   "expected": {
+    "signs": [
+     "GUARANTEED_HIGH_RETURN"
+    ],
+    "level": "CAUTION",
+    "verdict": "RED",
+    "categories": [
+     "RIBO"
+    ]
+   }
+  },
+  {
+   "id": "sc-007",
+   "input": {
+    "answers": {}
+   },
+   "expected": {
+    "signs": [],
+    "level": "NONE",
+    "verdict": "YELLOW",
+    "categories": []
+   }
+  },
+  {
+   "id": "sc-008",
+   "input": {
+    "answers": {
+     "guaranteed": "NO",
+     "lossShared": "YES",
+     "realGoods": "NO",
+     "recruitment": "NO",
+     "pressure": "NO",
+     "writtenContract": "YES",
+     "exitEasy": "YES",
+     "license": "YES",
+     "verifiedInPerson": "NO"
+    }
+   },
+   "expected": {
+    "signs": [
+     "NO_REAL_BUSINESS"
+    ],
+    "level": "CAUTION",
+    "verdict": "RED",
+    "categories": [
+     "GHARAR"
+    ]
+   }
+  }
+ ]
+}

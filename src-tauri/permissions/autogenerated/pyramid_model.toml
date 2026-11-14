@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-pyramid-model"
+description = "Enables the pyramid_model command without any pre-configured scope."
+commands.allow = ["pyramid_model"]
+
+[[permission]]
+identifier = "deny-pyramid-model"
+description = "Denies the pyramid_model command without any pre-configured scope."
+commands.deny = ["pyramid_model"]

@@ -1,0 +1,109 @@
+{
+ "suite": "debt_recovery_split",
+ "version": 1,
+ "description": "70/20/10: allocate(daromad, [needs, debt, savings]); yig'indi 10000, jamg'arma >= 100 bp",
+ "cases": [
+  {
+   "id": "drs-001",
+   "input": {
+    "income": "1000000000",
+    "currency": "UZS",
+    "split": [
+     7000,
+     2000,
+     1000
+    ]
+   },
+   "expected": {
+    "parts": [
+     "700000000",
+     "200000000",
+     "100000000"
+    ]
+   }
+  },
+  {
+   "id": "drs-002",
+   "input": {
+    "income": "12345",
+    "currency": "UZS",
+    "split": [
+     7000,
+     2000,
+     1000
+    ]
+   },
+   "expected": {
+    "parts": [
+     "8642",
+     "2469",
+     "1234"
+    ]
+   }
+  },
+  {
+   "id": "drs-003",
+   "input": {
+    "income": "1000000000",
+    "currency": "UZS",
+    "split": [
+     8000,
+     2000,
+     0
+    ]
+   },
+   "expected": {
+    "error": "SAVINGS_BELOW_MINIMUM"
+   }
+  },
+  {
+   "id": "drs-004",
+   "input": {
+    "income": "1000000000",
+    "currency": "UZS",
+    "split": [
+     7950,
+     2000,
+     50
+    ]
+   },
+   "expected": {
+    "error": "SAVINGS_BELOW_MINIMUM"
+   }
+  },
+  {
+   "id": "drs-005",
+   "input": {
+    "income": "1000000000",
+    "currency": "UZS",
+    "split": [
+     7000,
+     2000,
+     900
+    ]
+   },
+   "expected": {
+    "error": "SPLIT_NOT_100_PERCENT"
+   }
+  },
+  {
+   "id": "drs-006",
+   "input": {
+    "income": "1000000000",
+    "currency": "UZS",
+    "split": [
+     7900,
+     2000,
+     100
+    ]
+   },
+   "expected": {
+    "parts": [
+     "790000000",
+     "200000000",
+     "10000000"
+    ]
+   }
+  }
+ ]
+}

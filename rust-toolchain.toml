@@ -1,0 +1,6 @@
+# Rust versiyasi qotirilgan (DESKTOP_PROMPT.md 2-bo'lim, ADR).
+# Versiyani o'zgartirish — ADR o'zgarishi: avval sabab yoziladi.
+[toolchain]
+channel = "1.97.1"
+profile = "minimal"
+components = ["rustfmt", "clippy"]

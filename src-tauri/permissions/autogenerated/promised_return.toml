@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-promised-return"
+description = "Enables the promised_return command without any pre-configured scope."
+commands.allow = ["promised_return"]
+
+[[permission]]
+identifier = "deny-promised-return"
+description = "Denies the promised_return command without any pre-configured scope."
+commands.deny = ["promised_return"]

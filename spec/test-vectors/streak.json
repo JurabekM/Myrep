@@ -1,0 +1,63 @@
+{
+  "suite": "streak",
+  "version": 1,
+  "description": "«Kelajagim» odati: haftalar jumadan boshlanadi (Toshkent sanasi). Joriy hafta hali bo'sh bo'lsa, streak o'tgan haftadan sanaladi. since — progressiv taklif uchun: shu sananing haftasi hisobga olinmaydi. Manba: mobil habit.dart / vault_domain_test.dart; desktop'da sana darajasida (vaqt zonasi konvertatsiyasi Rust unit testida).",
+  "cases": [
+    {
+      "id": "streak-001",
+      "description": "payshanba va juma — ikki xil hafta",
+      "input": { "saving_dates": ["2026-10-08", "2026-10-09"], "today": "2026-10-09", "since": null },
+      "expected": { "current_streak_weeks": 2, "total_weeks": 2, "this_week_done": true, "since_streak_weeks": 2 }
+    },
+    {
+      "id": "streak-002",
+      "description": "bir haftadagi bir nechta ajratish bitta hafta",
+      "input": { "saving_dates": ["2026-10-09", "2026-10-12", "2026-10-15"], "today": "2026-10-15", "since": null },
+      "expected": { "current_streak_weeks": 1, "total_weeks": 1, "this_week_done": true, "since_streak_weeks": 1 }
+    },
+    {
+      "id": "streak-003",
+      "description": "joriy hafta hali bo'sh — streak uzilmaydi",
+      "input": { "saving_dates": ["2026-09-25", "2026-10-02"], "today": "2026-10-10", "since": null },
+      "expected": { "current_streak_weeks": 2, "total_weeks": 2, "this_week_done": false, "since_streak_weeks": 2 }
+    },
+    {
+      "id": "streak-004",
+      "description": "bir hafta tushib qolsa streak uziladi, jami saqlanadi",
+      "input": { "saving_dates": ["2026-09-18", "2026-10-02", "2026-10-09"], "today": "2026-10-09", "since": null },
+      "expected": { "current_streak_weeks": 2, "total_weeks": 3, "this_week_done": true, "since_streak_weeks": 2 }
+    },
+    {
+      "id": "streak-005",
+      "description": "joriy va o'tgan hafta bo'sh — streak 0",
+      "input": { "saving_dates": ["2026-09-25"], "today": "2026-10-09", "since": null },
+      "expected": { "current_streak_weeks": 0, "total_weeks": 1, "this_week_done": false, "since_streak_weeks": 0 }
+    },
+    {
+      "id": "streak-006",
+      "description": "kelajakdagi yozuv hisobga olinmaydi",
+      "input": { "saving_dates": ["2026-10-20"], "today": "2026-10-09", "since": null },
+      "expected": { "current_streak_weeks": 0, "total_weeks": 0, "this_week_done": false, "since_streak_weeks": 0 }
+    },
+    {
+      "id": "streak-007",
+      "description": "olti hafta ketma-ket; since yo'q — hammasi sanaladi",
+      "input": {
+        "saving_dates": ["2026-09-04", "2026-09-11", "2026-09-18", "2026-09-25", "2026-10-02", "2026-10-09"],
+        "today": "2026-10-09",
+        "since": null
+      },
+      "expected": { "current_streak_weeks": 6, "total_weeks": 6, "this_week_done": true, "since_streak_weeks": 6 }
+    },
+    {
+      "id": "streak-008",
+      "description": "since 2026-09-19 (shu hafta — 09-18) hisobga olinmaydi: 3 hafta",
+      "input": {
+        "saving_dates": ["2026-09-04", "2026-09-11", "2026-09-18", "2026-09-25", "2026-10-02", "2026-10-09"],
+        "today": "2026-10-09",
+        "since": "2026-09-19"
+      },
+      "expected": { "current_streak_weeks": 6, "total_weeks": 6, "this_week_done": true, "since_streak_weeks": 3 }
+    }
+  ]
+}

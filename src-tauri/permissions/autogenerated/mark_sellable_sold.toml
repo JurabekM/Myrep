@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mark-sellable-sold"
+description = "Enables the mark_sellable_sold command without any pre-configured scope."
+commands.allow = ["mark_sellable_sold"]
+
+[[permission]]
+identifier = "deny-mark-sellable-sold"
+description = "Denies the mark_sellable_sold command without any pre-configured scope."
+commands.deny = ["mark_sellable_sold"]

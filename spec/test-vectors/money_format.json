@@ -1,0 +1,103 @@
+{
+ "suite": "money_format",
+ "version": 1,
+ "description": "Guruhlash va valyuta oldidan bo'linmas bo'sh joy (U+00A0); kasr ajratgichi vergul, kasr faqat tiyin bo'lsa; uz — «soʻm» (U+02BB), ru — «сум»",
+ "cases": [
+  {
+   "id": "fmt-001",
+   "description": "8 mln soʻm",
+   "input": {
+    "amount": "800000000",
+    "currency": "UZS",
+    "locale": "uz"
+   },
+   "expected": {
+    "text": "8 000 000 soʻm"
+   }
+  },
+  {
+   "id": "fmt-002",
+   "description": "tiyin bilan",
+   "input": {
+    "amount": "800000050",
+    "currency": "UZS",
+    "locale": "uz"
+   },
+   "expected": {
+    "text": "8 000 000,50 soʻm"
+   }
+  },
+  {
+   "id": "fmt-003",
+   "description": "manfiy",
+   "input": {
+    "amount": "-150000000",
+    "currency": "UZS",
+    "locale": "uz"
+   },
+   "expected": {
+    "text": "-1 500 000 soʻm"
+   }
+  },
+  {
+   "id": "fmt-004",
+   "description": "nol",
+   "input": {
+    "amount": "0",
+    "currency": "UZS",
+    "locale": "uz"
+   },
+   "expected": {
+    "text": "0 soʻm"
+   }
+  },
+  {
+   "id": "fmt-005",
+   "description": "ru lokali",
+   "input": {
+    "amount": "800000000",
+    "currency": "UZS",
+    "locale": "ru"
+   },
+   "expected": {
+    "text": "8 000 000 сум"
+   }
+  },
+  {
+   "id": "fmt-006",
+   "description": "USD",
+   "input": {
+    "amount": "1250",
+    "currency": "USD",
+    "locale": "uz"
+   },
+   "expected": {
+    "text": "12,50 $"
+   }
+  },
+  {
+   "id": "fmt-007",
+   "description": "1 so'mdan kam",
+   "input": {
+    "amount": "99",
+    "currency": "UZS",
+    "locale": "uz"
+   },
+   "expected": {
+    "text": "0,99 soʻm"
+   }
+  },
+  {
+   "id": "fmt-008",
+   "description": "katta summa, ru",
+   "input": {
+    "amount": "123456789012",
+    "currency": "UZS",
+    "locale": "ru"
+   },
+   "expected": {
+    "text": "1 234 567 890,12 сум"
+   }
+  }
+ ]
+}

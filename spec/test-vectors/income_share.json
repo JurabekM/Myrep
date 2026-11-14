@@ -1,0 +1,67 @@
+{
+  "suite": "income_share",
+  "version": 1,
+  "description": "Daromaddan «Kelajagim»ga ulush taklifi. Foiz: percent_of(daromad, bp), so'ng 1 000 so'mgacha (kichik summada — butun so'mgacha) YUQORIGA yaxlitlanadi, lekin daromaddan oshmaydi. Qat'iy oylik summa: oy maqsadidan qolgani (daromaddan oshmaydi). Taklif yo'q bo'lsa — null. Manba: mobil vault_service.dart suggestShare; vault_domain_test.dart.",
+  "cases": [
+    {
+      "id": "share-001",
+      "description": "5 %: 150 000 so'm → 7 500 → 1 000 so'mgacha yuqoriga = 8 000",
+      "input": { "mode": "PERCENT", "basis_points": 500, "income": "15000000", "currency": "UZS" },
+      "expected": { "share": "800000" }
+    },
+    {
+      "id": "share-002",
+      "description": "10 %: 8 000 000 so'm → 800 000 so'm (aniq)",
+      "input": { "mode": "PERCENT", "basis_points": 1000, "income": "800000000", "currency": "UZS" },
+      "expected": { "share": "80000000" }
+    },
+    {
+      "id": "share-003",
+      "description": "kichik daromad: 500 so'm, 5 % = 25 so'm (butun so'mgacha)",
+      "input": { "mode": "PERCENT", "basis_points": 500, "income": "50000", "currency": "UZS" },
+      "expected": { "share": "2500" }
+    },
+    {
+      "id": "share-004",
+      "description": "1 so'm, 5 % = 5 tiyin → butun so'mgacha = 1 so'm, daromaddan oshmaydi",
+      "input": { "mode": "PERCENT", "basis_points": 500, "income": "100", "currency": "UZS" },
+      "expected": { "share": "100" }
+    },
+    {
+      "id": "share-005",
+      "description": "1 tiyin, 5 % = 0 → taklif yo'q",
+      "input": { "mode": "PERCENT", "basis_points": 500, "income": "1", "currency": "UZS" },
+      "expected": { "share": null }
+    },
+    {
+      "id": "share-006",
+      "description": "yuqoriga yaxlitlash daromaddan oshsa — daromad bilan cheklanadi",
+      "input": { "mode": "PERCENT", "basis_points": 9999, "income": "150", "currency": "UZS" },
+      "expected": { "share": "150" }
+    },
+    {
+      "id": "share-007",
+      "description": "daromad 0 — taklif yo'q",
+      "input": { "mode": "PERCENT", "basis_points": 500, "income": "0", "currency": "UZS" },
+      "expected": { "share": null }
+    },
+    {
+      "id": "share-008",
+      "description": "qat'iy oylik 300 000 so'm, oy boshida 200 000 ajratilgan, daromad 200 000 — qolgan 100 000",
+      "input": { "mode": "FIXED", "monthly_target": "30000000", "saved_this_month": "20000000", "income": "20000000", "currency": "UZS" },
+      "expected": { "share": "10000000" }
+    },
+    {
+      "id": "share-009",
+      "description": "qat'iy oylik: maqsad bajarilgan — taklif yo'q",
+      "input": { "mode": "FIXED", "monthly_target": "30000000", "saved_this_month": "30000000", "income": "5000000", "currency": "UZS" },
+      "expected": { "share": null }
+    },
+    {
+      "id": "share-010",
+      "description": "qat'iy oylik: qolgan summa daromaddan katta — daromad bilan cheklanadi",
+      "input": { "mode": "FIXED", "monthly_target": "30000000", "saved_this_month": "0", "income": "2000000", "currency": "UZS" },
+      "expected": { "share": "2000000" }
+    }
+  ]
+}

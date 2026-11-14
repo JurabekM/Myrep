@@ -1,0 +1,62 @@
+{
+ "suite": "promised_return",
+ "version": 1,
+ "description": "Oddiy: 10000 + months*monthlyBp. Murakkab: x=10000; har oy x = half_up(x*(10000+monthlyBp)/10000). Natija bp (10000 = 1 barobar).",
+ "cases": [
+  {
+   "id": "pr-001",
+   "input": {
+    "monthlyBp": 3500,
+    "months": 12
+   },
+   "expected": {
+    "simpleMultipleBp": 52000,
+    "compoundMultipleBp": 366439
+   }
+  },
+  {
+   "id": "pr-002",
+   "input": {
+    "monthlyBp": 1000,
+    "months": 12
+   },
+   "expected": {
+    "simpleMultipleBp": 22000,
+    "compoundMultipleBp": 31386
+   }
+  },
+  {
+   "id": "pr-003",
+   "input": {
+    "monthlyBp": 200,
+    "months": 12
+   },
+   "expected": {
+    "simpleMultipleBp": 12400,
+    "compoundMultipleBp": 12682
+   }
+  },
+  {
+   "id": "pr-004",
+   "input": {
+    "monthlyBp": 0,
+    "months": 12
+   },
+   "expected": {
+    "simpleMultipleBp": 10000,
+    "compoundMultipleBp": 10000
+   }
+  },
+  {
+   "id": "pr-005",
+   "input": {
+    "monthlyBp": 3500,
+    "months": 3
+   },
+   "expected": {
+    "simpleMultipleBp": 20500,
+    "compoundMultipleBp": 24604
+   }
+  }
+ ]
+}

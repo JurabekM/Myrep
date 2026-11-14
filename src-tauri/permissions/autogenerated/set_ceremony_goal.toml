@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-ceremony-goal"
+description = "Enables the set_ceremony_goal command without any pre-configured scope."
+commands.allow = ["set_ceremony_goal"]
+
+[[permission]]
+identifier = "deny-set-ceremony-goal"
+description = "Denies the set_ceremony_goal command without any pre-configured scope."
+commands.deny = ["set_ceremony_goal"]

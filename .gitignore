@@ -1,3 +1,38 @@
+# Repo ildizida ikki mustaqil loyiha bor (CLAUDE.md ga qarang): «Baraka Dastur» desktop (Rust/Tauri/React)
+# va SRV_1 (Python). Har bo'lim o'z loyihasiniki.
+
+# ===== Baraka Dastur desktop =====
+# Bog'liqliklar va yig'ish natijalari.
+# Qoidalar ildizga anchorlangan (/), shuning uchun manba kod hech qachon yutilmaydi.
+/node_modules/
+/ui/node_modules/
+/ui/dist/
+/target/
+/src-tauri/gen/schemas/
+
+# Qamrov (coverage) hisobotlari
+/coverage/
+/ui/coverage/
+
+# Muhit va sirlar: haqiqiy qiymatlar repoga tushmasin
+.env
+.env.*
+!.env.example
+
+# Loglar
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Muharrir va operatsion tizim fayllari
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== SRV_1 =====
 # Python
 __pycache__/
 *.py[cod]

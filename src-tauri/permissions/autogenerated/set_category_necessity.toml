@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-category-necessity"
+description = "Enables the set_category_necessity command without any pre-configured scope."
+commands.allow = ["set_category_necessity"]
+
+[[permission]]
+identifier = "deny-set-category-necessity"
+description = "Denies the set_category_necessity command without any pre-configured scope."
+commands.deny = ["set_category_necessity"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-initial-balance"
+description = "Enables the set_initial_balance command without any pre-configured scope."
+commands.allow = ["set_initial_balance"]
+
+[[permission]]
+identifier = "deny-set-initial-balance"
+description = "Denies the set_initial_balance command without any pre-configured scope."
+commands.deny = ["set_initial_balance"]
