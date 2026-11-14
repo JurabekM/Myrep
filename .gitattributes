@@ -1,1 +1,3 @@
 * text=auto eol=lf
+# cmd.exe .bat fayllarni faqat CRLF bilan ishonchli o'qiydi (gradlew.bat)
+*.bat text eol=crlf

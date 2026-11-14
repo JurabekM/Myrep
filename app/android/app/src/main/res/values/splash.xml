@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ishga tushish foni ilova mavzusi (RColors.bg) bilan bir xil — oq chaqnash bo'lmasin.
+     colors.xml ni tools/make_icon.py qayta yozadi, shuning uchun alohida faylda. -->
+<resources>
+    <color name="rostor_bg">#0B1D33</color>
+</resources>
