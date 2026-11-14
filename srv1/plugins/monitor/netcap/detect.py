@@ -67,18 +67,26 @@ class Detector:
         self.suppressed = 0
 
     def check(self, record: Record) -> list[Alert]:
-        """Paketni tekshiradi; `record.mark` ga topilgan sir turini yozadi."""
+        """Paketni tekshiradi va `record.mark` ni to'ldiradi.
+
+        Belgi — topilgan sir turi va/yoki signal turlari (`port`, `xmas_scan`, ...), vergul
+        bilan. Signal `quiet_s` sabab bostirilgan bo'lsa ham paketning o'zi belgilanadi:
+        jadval va jurnalda shubhali paketlarning har biri ko'rinadi.
+        """
         found: list[Alert] = []
         if record.proto == "TCP":
             self._flags(record, found)
             if _is_syn(record):
                 self._port_scan(record, found)
         self._suspicious_port(record, found)
+        marks = [alert.kind for alert in found]
         if record.payload:
-            record.mark = find_secret(record.payload)
-            if record.mark:
-                note = record.mark if record.dport is None else f"{record.mark} → :{record.dport}"
+            secret = find_secret(record.payload)
+            if secret:
+                marks.insert(0, secret)
+                note = secret if record.dport is None else f"{secret} → :{record.dport}"
                 found.append(Alert(record.ts, "secret", record.src, record.dst, note))
+        record.mark = ",".join(dict.fromkeys(marks))
         return [alert for alert in found if self._allow(alert)]
 
     def _flags(self, record: Record, found: list[Alert]) -> None:

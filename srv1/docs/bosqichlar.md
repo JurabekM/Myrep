@@ -17,6 +17,7 @@
 | 12 | Reliz o'rnatuvchisi (`SRV_1-Setup-1.0.1.exe`, [reliz.md](reliz.md)) | ✅ tugadi (administrator rejimi va toza mashina sinalmagan) | 2026-11-13 |
 | 13 | Tarmoq kuzatuvi («Kuzatuv» ichida, [tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md)) | ✅ tugadi (katta yuk, Npcap'siz mashina va xizmat rejimi sinalmagan) | 2026-11-14 |
 | 14 | Serverni oynadan ishga tushirish/to'xtatish; imzolangan reliz `SRV_1-Setup-1.1.0.exe` ([shell.md](shell.md), [reliz.md](reliz.md)) | ✅ tugadi (boshqa kompyuter, xizmat/UAC yo'li va haqiqiy sichqoncha sinalmagan) | 2026-11-14 |
+| — | «Jurnal» da tarmoq paketlari: davriy xulosa va belgilangan paketlar; reliz 1.1.1 ([tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md), [reliz.md](reliz.md)) | ✅ (haqiqiy aralash trafikda uzoq vaqt sinalmagan) | 2026-11-14 |
 | — | Uch kamchilik tuzatildi, reliz 1.0.1: javob vaqt chegarasi ([hosting.md](hosting.md)), Mosquitto'ni qayta ko'tarish ([iot.md](iot.md)), Windows bildirishnomasi ([monitor.md](monitor.md)) | ✅ (bildirishnomaning ekranda ko'rinishi avtomatik sinalmagan) | 2026-11-13 |
 | — | Keng sinov ([sinov-2026-11-13.md](sinov-2026-11-13.md)) | ✅ o'tkazildi (5 kamchilik topildi va tuzatildi) | 2026-11-13 |
 
@@ -871,6 +872,52 @@ shell 74,4 MB + yadro 79,8 MB + yadroning ko'rinmas konsoli 6,2 MB = 160,4 MB (C
 - `.cer` ni ishonchli omborga o'rnatish va undan keyingi UAC/SmartScreen ko'rinishi.
 - Shell va yadro portlari har xil bo'lsa, shell buni o'zi aniqlamaydi (90 s kutadi).
 - Oynasiz yadro tizimdan chiqilganda to'xtaydi (doimiy ish uchun — xizmat).
+
+## «Jurnal» da tarmoq paketlari (reliz 1.1.1)
+
+Talab: «Jurnal» sahifasida tarmoq kuzatuvidagi paketlar haqida ma'lumot ko'rinsin.
+Tanlangan variant: davriy xulosa + belgilangan paketlar (har bir paket emas — jurnal fayli
+cheklangan).
+
+**Qilindi**
+
+- `plugins/monitor/netcap/journal.py` (yangi): har `log_interval_s` soniyada `netcap_stats`
+  (oraliqdagi paketlar, tezlik, hajm, protokollar bo'yicha taqsimot, eng faol manzil,
+  belgilanganlar va signallar soni) va har belgilangan paket uchun `netcap_packet`.
+  Toshqindan himoya (oraliqda 20 ta paket satri), jim tarmoqda sukut, pauza hisobga kirmaydi.
+- Ishchi: protokollar bo'yicha hisob (`protos`), belgilangan paketlar soni (`marked`);
+  belgilangan paketlar oqimi endi cheklangan (ilgari cheklanmagan edi — pastga qarang).
+- Detektor: paket belgisi (`mark`) endi signal turlarini ham oladi va signal bostirilganda
+  ham qo'yiladi.
+- Sozlama `log_interval_s` (standart 10; 0 — o'chiq), panelda maydon va holat jadvalida
+  «Jurnal» ustuni. Bu sozlama ushlashni qayta boshlamaydi.
+- Shell «Jurnal» sahifasi: vaqt mahalliy (ilgari UTC edi), plagin maydonlaridan `p_`
+  qo'shimchasi olib tashlandi. Plaginga xos mantiq yo'q.
+- `monitor` plagini 0.2.0 → 0.3.0; loyiha 1.1.0 → 1.1.1.
+- Testlar: 7 ta yangi (`tests/test_monitor_netcap.py`: belgi, protokollar va toshqin,
+  jurnal birlik testlari, soxta ishchi bilan to'liq yo'l); jami 485 test o'tdi,
+  `ruff` va `pyright` toza.
+
+**O'lchangan RAM** (yadro faqat `monitor` bilan, private, uch o'lchov): bo'sh 68,3–68,8 MB;
+ushlashda jami 119,8–120,8 MB; to'xtatilgach 69,8–70,6 MB — 13-bosqichdagi bilan bir xil.
+
+**Yo'lda topilgan va tuzatilgan**
+
+- Belgilangan paketlar soniyalik chegaradan mustasno edi: belgi kengaygach, skan paytida
+  ishchi bir soniyada minglab qator yuborishi mumkin bo'lardi — alohida chegara qo'yildi.
+- Xabardagi vaqt 0 bo'lsa, jurnal xulosa yozmasdi (birlik testi ushladi).
+- `POST /net/settings` o'z tekshiruvimizdagi xatoda 422 o'rniga 500 qaytarardi (xato
+  obyektini JSON'ga o'tkazib bo'lmasdi) — to'liq yo'l testi ushladi.
+- «Jurnal» sahifasida vaqt UTC'da ko'rinardi (mahalliydan 5 soat orqada) — suratda ko'rindi.
+
+**Qilinmadi / sinalmadi**
+
+- Haqiqiy aralash trafikda (Ethernet/Wi-Fi) uzoq vaqt; jonli sinov loopback'da, faqat UDP.
+- Kunlik jurnal hajmi (~2,6 MB, 10 s oraliqda) hisoblangan, o'lchanmagan.
+- Jurnal satrlari tarjimasiz; `top` va `total` oraliqqa emas, ushlash boshidan beri.
+- Belgilangan paketlarning IP manzillari diskdagi `srv1.log` da qoladi (paket matni — yo'q).
+- «Jurnal» sahifasida qidiruv yoki «faqat tarmoq» filtri yo'q (daraja filtri bor:
+  WARNING tanlansa, faqat belgilangan paketlar va signallar qoladi).
 
 ## Sinalmaganlar (butun loyiha bo'yicha, bitta joyda)
 

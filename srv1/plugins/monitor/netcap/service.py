@@ -18,6 +18,7 @@ from srv1_sdk.process import ManagedProcess
 from ..models import MB, MonitorError
 from .engine import normalize_ip
 from .ifaces import NPCAP_URL, list_interfaces, npcap_installed
+from .journal import Journal
 from .models import CONFIG_FILE, MAX_EXCLUDED, NetConfig, load_config, save_config
 from .notices import STOPPED_TITLE, net_notice
 from .store import NetStore
@@ -84,6 +85,7 @@ class NetService:
         self._hosts: list[dict[str, Any]] = []
         self._lost_ticks = 0
         self._last_notify = 0.0
+        self._journal = Journal(ctx.log, 0, "")
 
     # --- hayot sikli ------------------------------------------------------
     async def _run[T](self, func: Callable[..., T], *args: Any) -> T:  # noqa: ANN401
@@ -136,6 +138,7 @@ class NetService:
         self._state, self._error, self._last_text = "starting", "", ""
         self._interface, self._stats, self._hosts, self._lost_ticks = name, {}, [], 0
         self._ready = asyncio.Event()
+        self._journal = Journal(self.ctx.log, self.config.log_interval_s, name)
         queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue(maxsize=QUEUE_MAX)
         self._queue = queue
         try:
@@ -260,6 +263,7 @@ class NetService:
         )
         for alert in alerts:
             self._announce(alert)
+        self._journal.feed(message, packets, len(alerts))
 
     def _announce(self, alert: Mapping[str, Any]) -> None:
         fields = {key: str(alert.get(key, ""))[:200] for key in ("kind", "src", "dst", "note")}
@@ -336,19 +340,31 @@ class NetService:
         return [{"ip": item} for item in self.config.excluded]
 
     async def update_settings(self, changes: Mapping[str, Any]) -> dict[str, Any]:
-        """Sozlamani almashtiradi; ushlash ishlab turgan bo'lsa, yangisi bilan qayta boshlanadi."""
+        """Sozlamani almashtiradi.
+
+        Ishchiga tegishli sozlama o'zgarsa, ushlash yangisi bilan qayta boshlanadi. Faqat
+        plagin tomoni (jurnal oralig'i, saqlanadigan paketlar soni) o'zgarsa — to'xtamaydi.
+        """
         merged = self.config.model_dump() | dict(changes)
         config = NetConfig.model_validate(merged)
-        payload_enabled = config.store_payload and not self.config.store_payload
+        previous = self.config
+        payload_enabled = config.store_payload and not previous.store_payload
+        name = self._interface
+        restart = (
+            config.worker_options(name) != previous.worker_options(name)
+            or config.worker_memory_mb != previous.worker_memory_mb
+        )
         async with self._lock:
             await self._save(config)
             if payload_enabled:
                 await self._audit("net.payload_store", "on")
             process = self._process
-            if process is not None:
+            if process is not None and restart:
                 await self._shutdown(process)
                 self._state = "stopped"
-                await self._launch(self._interface)
+                await self._launch(name)
+            elif config.log_interval_s != previous.log_interval_s:
+                self._journal = Journal(self.ctx.log, config.log_interval_s, name)
         return self.settings()
 
     def settings(self) -> dict[str, Any]:
@@ -361,6 +377,7 @@ class NetService:
             "scan_ports": config.scan_ports,
             "scan_window_s": config.scan_window_s,
             "max_packets": config.max_packets,
+            "log_interval_s": config.log_interval_s,
         }
 
     # --- o'qish -----------------------------------------------------------
@@ -389,10 +406,13 @@ class NetService:
             "excluded": len(self.config.excluded),
             "store_payload": "on" if self.config.store_payload else "off",
             "geo": "on" if self.config.geo else "off",
+            "marked": stats.get("marked", 0),
+            "log_interval_s": self.config.log_interval_s,
         }
 
     def summary(self) -> list[dict[str, str]]:
         """Bitta qatorli jadval: holat va matnli qiymatlar (panel uchun)."""
+        interval = self.config.log_interval_s
         return [
             {
                 "state": self._state,
@@ -400,6 +420,7 @@ class NetService:
                 "npcap": "ok" if npcap_installed() else "—",
                 "store_payload": "on" if self.config.store_payload else "off",
                 "geo": "on" if self.config.geo else "off",
+                "journal": f"{interval} s" if interval else "off",
                 "error": self._error,
             }
         ]

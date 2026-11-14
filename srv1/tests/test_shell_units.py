@@ -1,6 +1,7 @@
 """Shell birlik testlari: tarjimalar, formatlash, sozlama, uslub fayli (oynasiz)."""
 
 import re
+from datetime import UTC, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -157,8 +158,27 @@ def test_format_log_entry() -> None:
         "event": "plugin_crashed",
         "plugin": "iot",
     }
-    assert format_entry(entry) == "08:05:07 WARNING srv1.plugins  plugin_crashed  plugin=iot"
+    assert format_entry(entry, UTC) == "08:05:07 WARNING srv1.plugins  plugin_crashed  plugin=iot"
+    # yadro UTC'da yozadi, sahifa mahalliy vaqtni ko'rsatadi (bu yerda: Toshkent, UTC+5)
+    tashkent = timezone(timedelta(hours=5))
+    assert format_entry(entry, tashkent).startswith("13:05:07 WARNING")
+    late = entry | {"timestamp": "2026-11-11T21:30:00Z"}
+    assert format_entry(late, tashkent).startswith("02:30:00 ")  # kun almashadi
+    assert format_entry(entry | {"timestamp": "buzuq"}, UTC).startswith("buzuq WARNING")
     assert format_entry({"event": "x"}).strip() == "x"
+    # plagin maydonlari: yadro qo'shgan `p_` ko'rsatilmaydi
+    stats = {
+        "timestamp": "2026-11-14T15:04:10.000000Z",
+        "level": "info",
+        "logger": "srv1.plugin.monitor",
+        "event": "netcap_stats",
+        "p_packets": 110,
+        "p_pps": 11.0,
+        "p_tcp": 80,
+    }
+    assert format_entry(stats, UTC) == (
+        "15:04:10 INFO    srv1.plugin.monitor  netcap_stats  packets=110 pps=11.0 tcp=80"
+    )
 
 
 def test_level_thresholds() -> None:

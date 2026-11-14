@@ -1,5 +1,6 @@
 """Jonli jurnal: oxirgi yozuvlar + `log` hodisalari, daraja filtri bilan."""
 
+from datetime import datetime, tzinfo
 from typing import Any
 
 from PyQt6.QtGui import QFontDatabase
@@ -13,14 +14,31 @@ MAX_LINES = 2000
 _LEVELS = ("info", "warning", "error")
 _RANK = {"debug": 0, "info": 1, "warning": 2, "error": 3, "critical": 4}
 _HIDDEN_KEYS = frozenset({"timestamp", "level", "logger", "event"})
+PLUGIN_FIELD_PREFIX = "p_"
 
 
-def format_entry(entry: dict[str, Any]) -> str:
-    """`12:34:56 INFO    srv1.core  core_started  version=1.0.0`."""
-    timestamp = str(entry.get("timestamp", ""))
-    clock = timestamp[11:19] if len(timestamp) >= 19 else timestamp
+def _clock(timestamp: str, zone: tzinfo | None) -> str:
+    """Yadro vaqtni UTC'da yozadi; sahifada mahalliy vaqt ko'rsatiladi (`zone=None`)."""
+    try:
+        moment = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError:
+        return timestamp[11:19] if len(timestamp) >= 19 else timestamp
+    if moment.tzinfo is None:
+        return moment.strftime("%H:%M:%S")
+    return moment.astimezone(zone).strftime("%H:%M:%S")
+
+
+def format_entry(entry: dict[str, Any], zone: tzinfo | None = None) -> str:
+    """`12:34:56 INFO    srv1.core  core_started  version=1.0.0` (vaqt — mahalliy)."""
+    clock = _clock(str(entry.get("timestamp", "")), zone)
     level = str(entry.get("level", "")).upper()
-    extras = " ".join(f"{key}={value}" for key, value in entry.items() if key not in _HIDDEN_KEYS)
+    # Yadro plagin maydonlariga `p_` qo'shadi (o'z maydonlari bilan to'qnashmasin); ko'rsatishda
+    # u olib tashlanadi: `p_packets=110` emas, `packets=110`.
+    extras = " ".join(
+        f"{key.removeprefix(PLUGIN_FIELD_PREFIX)}={value}"
+        for key, value in entry.items()
+        if key not in _HIDDEN_KEYS
+    )
     line = f"{clock} {level:<8}{entry.get('logger', '')}  {entry.get('event', '')}"
     return f"{line}  {extras}" if extras else line
 

@@ -4,12 +4,13 @@ import json
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validator
 
 from .engine import normalize_ip
 
 CONFIG_FILE = "netcap.json"
 MAX_EXCLUDED = 500
+LOG_INTERVAL_MIN_S = 5
 
 # BPF ifodasi ushlash kutubxonasiga (libpcap) beriladi, buyruq qatoriga emas; baribir
 # faqat ifodada uchraydigan belgilar qabul qilinadi.
@@ -42,6 +43,16 @@ class NetConfig(BaseModel):
     # Bazada saqlanadigan paket yozuvlari soni (eskilari o'chiriladi).
     max_packets: int = Field(default=20_000, ge=100, le=200_000)
     worker_memory_mb: int = Field(default=200, ge=96, le=1024)
+    # «Jurnal» sahifasiga (va `srv1.log` ga) xulosa satri shuncha soniyada bir marta yoziladi;
+    # belgilangan paketlar ham shu bilan birga yoqiladi. 0 — jurnalga hech narsa yozilmaydi.
+    log_interval_s: int = Field(default=10, ge=0, le=3600)
+
+    @field_validator("log_interval_s")
+    @classmethod
+    def _check_log_interval(cls, value: int) -> int:
+        if 0 < value < LOG_INTERVAL_MIN_S:
+            raise ValueError(f"0 (o'chiq) yoki {LOG_INTERVAL_MIN_S}-3600 soniya bo'lishi kerak")
+        return value
 
     def worker_options(self, interface: str) -> dict[str, object]:
         """Ishchi jarayonga beriladigan sozlama (`engine.Options.from_json`)."""

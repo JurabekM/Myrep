@@ -1,5 +1,5 @@
 name = "monitor"
-version = "0.2.0"
+version = "0.3.0"
 description = "Kuzatuv: CPU, RAM va disk tarixi, ogohlantirishlar, tarmoq paketlari tahlili."
 mode = "inprocess"
 heavy = false
