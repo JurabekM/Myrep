@@ -2,7 +2,8 @@
  * aesgcm — ESP32 uchun AES-256-GCM (autentifikatsiyali shifrlash).
  *
  * mbedTLS ustiga yupqa qatlam. mbedTLS ESP32 da apparat AES tezlatgichini
- * o'zi ishlatadi. Arduino-ESP32 va ESP-IDF da bir xil ishlaydi.
+ * o'zi ishlatadi. Arduino-ESP32 da yig'ib tekshirilgan; ESP-IDF da ham shu
+ * mbedTLS API bor, lekin u yerda sinalmagan.
  *
  * Paket formati (bitta uzluksiz bufer):
  *
@@ -40,7 +41,8 @@ extern "C" {
  *   pt       — ochiq matn (pt_len == 0 bo'lsa NULL bo'lishi mumkin)
  *   aad      — shifrlanmaydigan, lekin teg bilan himoyalanadigan sarlavha
  *              (masalan, qurilma ID si); kerak bo'lmasa NULL, 0
- *   out      — paket yoziladigan bufer, kamida pt_len + AESGCM_OVERHEAD bayt
+ *   out      — paket yoziladigan bufer, kamida pt_len + AESGCM_OVERHEAD bayt;
+ *              pt bilan ustma-ust tushmasin
  *   out_len  — yozilgan paket uzunligi
  *
  * Bitta kalit bilan 2^32 dan ortiq xabar shifrlamang — undan oldin kalitni
@@ -67,7 +69,8 @@ int aesgcm_encrypt_with_nonce(const uint8_t key[AESGCM_KEY_LEN],
  *
  *   in       — aesgcm_encrypt hosil qilgan paket
  *   aad      — shifrlashda berilgan AAD ning aynan o'zi
- *   out      — ochiq matn yoziladigan bufer, kamida in_len - AESGCM_OVERHEAD bayt
+ *   out      — ochiq matn yoziladigan bufer, kamida in_len - AESGCM_OVERHEAD bayt;
+ *              in bilan ustma-ust tushmasin (ochiq matn bo'sh bo'lsa NULL mumkin)
  *
  * AESGCM_ERR_AUTH qaytsa, out nollanadi — undagi ma'lumotni ishlatmang.
  */

@@ -51,8 +51,16 @@ static bool selfTest() {
     return false;
   }
   packet[AESGCM_NONCE_LEN] ^= 0x01;  // bitta bit buzilsa, rad etilishi shart
-  return aesgcm_decrypt(key, packet, sizeof packet, nullptr, 0,
-                        back, sizeof back, &n) == AESGCM_ERR_AUTH;
+  if (aesgcm_decrypt(key, packet, sizeof packet, nullptr, 0,
+                     back, sizeof back, &n) != AESGCM_ERR_AUTH) {
+    return false;
+  }
+  // Bo'sh xabar (faqat teg): ESP-IDF dagi GCM porti NULL buferga sezgir.
+  if (aesgcm_encrypt(key, nullptr, 0, nullptr, 0, packet, sizeof packet, &n) != AESGCM_OK ||
+      n != AESGCM_OVERHEAD) {
+    return false;
+  }
+  return aesgcm_decrypt(key, packet, n, nullptr, 0, nullptr, 0, &n) == AESGCM_OK && n == 0;
 }
 
 static void handleLine(const String &line) {

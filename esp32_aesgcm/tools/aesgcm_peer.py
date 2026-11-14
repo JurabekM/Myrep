@@ -64,7 +64,15 @@ def main() -> int:
         return 0
 
     try:
-        print(decrypt(args.key, bytes.fromhex(args.data), aad).decode("utf-8", "replace"))
+        packet = bytes.fromhex(args.data)
+    except ValueError:
+        print("XATO: paket hex ko'rinishida emas", file=sys.stderr)
+        return 1
+    try:
+        print(decrypt(args.key, packet, aad).decode("utf-8", "replace"))
+    except ValueError as exc:
+        print(f"XATO: {exc}", file=sys.stderr)
+        return 1
     except InvalidTag:
         print("XATO: teg mos kelmadi (kalit/AAD noto'g'ri yoki paket o'zgartirilgan)",
               file=sys.stderr)

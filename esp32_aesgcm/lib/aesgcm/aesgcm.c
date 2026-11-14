@@ -5,11 +5,12 @@
 #include "mbedtls/gcm.h"
 
 #if defined(ESP_PLATFORM)
-#  if defined(__has_include) && __has_include("esp_random.h")
-#    include "esp_random.h"
-#  else
-#    include "esp_system.h" /* eski ESP-IDF: esp_fill_random shu yerda */
+#  if defined(__has_include)
+#    if __has_include("esp_random.h")
+#      include "esp_random.h"
+#    endif
 #  endif
+#  include "esp_system.h" /* eski ESP-IDF: esp_fill_random shu yerda */
 
 void aesgcm_random(uint8_t *buf, size_t len)
 {
@@ -33,6 +34,12 @@ int aesgcm_encrypt_with_nonce(const uint8_t key[AESGCM_KEY_LEN],
 
     uint8_t *ct = out + AESGCM_NONCE_LEN;
     uint8_t *tag = ct + pt_len;
+
+    /* ESP-IDF dagi GCM porti uzunlik 0 bo'lsa ham NULL kirishni rad etadi. */
+    static const uint8_t empty = 0;
+    if (pt == NULL) {
+        pt = &empty;
+    }
 
     /* out va nonce bir joyni ko'rsatsa ham to'g'ri ishlashi uchun memmove. */
     memmove(out, nonce, AESGCM_NONCE_LEN);
@@ -88,6 +95,12 @@ int aesgcm_decrypt(const uint8_t key[AESGCM_KEY_LEN],
     const uint8_t *nonce = in;
     const uint8_t *ct = in + AESGCM_NONCE_LEN;
     const uint8_t *tag = ct + ct_len;
+
+    /* ESP-IDF dagi GCM porti uzunlik 0 bo'lsa ham NULL chiqishni rad etadi. */
+    uint8_t unused = 0;
+    if (out == NULL) {
+        out = &unused;
+    }
 
     mbedtls_gcm_context ctx;
     mbedtls_gcm_init(&ctx);

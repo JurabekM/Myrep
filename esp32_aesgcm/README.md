@@ -9,7 +9,7 @@ Paket formati: `nonce (12 bayt) | shifrmatn | teg (16 bayt)` — ochiq matndan 2
 
 | Fayl | Vazifasi |
 |---|---|
-| `lib/aesgcm/aesgcm.h`, `aesgcm.c` | Modulning o'zi (C; Arduino va ESP-IDF da ishlaydi) |
+| `lib/aesgcm/aesgcm.h`, `aesgcm.c` | Modulning o'zi (C; Arduino-ESP32 da yig'ib tekshirilgan) |
 | `src/main.cpp` | Demo: Serial'dan kelgan satrni shifrlaydi va qayta ochadi |
 | `include/secrets.example.h` | Kalit namunasi — `secrets.h` deb nusxalanadi |
 | `tools/aesgcm_peer.py` | PC/server tomoni: kalit yaratish, shifrlash, ochish |
