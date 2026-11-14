@@ -1,0 +1,37 @@
+[package]
+name = "mpay-crypto"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mpay-common.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+subtle.workspace = true
+getrandom.workspace = true
+aes.workspace = true
+aes-gcm.workspace = true
+cmac.workspace = true
+hkdf.workspace = true
+hmac.workspace = true
+sha2.workspace = true
+ed25519-dalek.workspace = true
+hex.workspace = true
+serde.workspace = true
+cryptoki = { workspace = true, optional = true }
+tracing.workspace = true
+
+[features]
+default = []
+pkcs11 = ["dep:cryptoki"]
+
+[dev-dependencies]
+proptest.workspace = true
+hex-literal.workspace = true
+serde_json.workspace = true

@@ -1,0 +1,33 @@
+[package]
+name = "mpay-e2e"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mpay-server.workspace = true
+mpay-terminal-sim.workspace = true
+mpay-common.workspace = true
+mpay-pqlink = { workspace = true, features = ["sandbox-attestation"] }
+tokio.workspace = true
+tempfile.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+serde_json.workspace = true
+zeroize.workspace = true
+mpay-issuer.workspace = true
+mpay-crypto.workspace = true
+hex.workspace = true
+clap.workspace = true
+
+[[bin]]
+name = "mpay-load"
+path = "src/bin/mpay_load.rs"
+
+[features]
+pkcs11 = ["mpay-server/pkcs11"]

@@ -1,0 +1,30 @@
+[package]
+name = "mpay-issuer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mpay-common.workspace = true
+mpay-crypto.workspace = true
+sqlx.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+time.workspace = true
+hex.workspace = true
+zeroize.workspace = true
+
+[dev-dependencies]
+mpay-vault.workspace = true
+mpay-shield.workspace = true
+tempfile.workspace = true
+async-trait.workspace = true
+proptest.workspace = true

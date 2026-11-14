@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ekran yoniq bo'lishi talabi ilova darajasida tekshiriladi (CdcvmState) — qulf ekranida emas. -->
+<host-apdu-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/mpay_hce_description"
+    android:requireDeviceUnlock="false">
+    <aid-group
+        android:category="payment"
+        android:description="@string/mpay_hce_aid_group">
+        <!-- 2PAY.SYS.DDF01 (PPSE) -->
+        <aid-filter android:name="325041592E5359532E4444463031" />
+        <!-- M-Pay Test Scheme -->
+        <aid-filter android:name="F04D50415901" />
+    </aid-group>
+</host-apdu-service>

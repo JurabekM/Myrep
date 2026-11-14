@@ -1,0 +1,133 @@
+# M-Pay Shield v0 — standart qoidalar. Belgilar ro'yxati: crates/mpay-shield/src/features.rs.
+# Ballar ML ballari bilan qo'shiladi: skor = min(1000, ML × 1000 × ml_weight + Σ qoida ballari).
+# Chegaralar va ballar shield-ml sintetik baholashi asosida sozlangan (docs/shield-report.md).
+version = "shield-rules-v0"
+
+[thresholds]
+review_at = 500
+decline_at = 800
+idv_yellow_at = 400
+idv_red_at = 750
+ml_weight = 1.0
+
+[merchants]
+# Sandbox: P2P o'tkazma "merchant"lari prefiks bo'yicha (production'da MCC 4829/6538).
+p2p_prefixes = ["P2P"]
+
+# ------------------------------------------------------------------ tranzaksiya qoidalari
+
+[[txn_rule]]
+id = "CARD_VELOCITY_1M"
+reason = "Karta bo'yicha 1 daqiqada 6+ tranzaksiya"
+points = 500
+action = "DECLINE"
+all = [{ feature = "card_txn_count_1m", op = ">=", value = 6 }]
+
+[[txn_rule]]
+id = "CARD_TESTING_SMALL"
+reason = "10 daqiqada 4+ kichik summa (karta testlash)"
+points = 350
+action = "REVIEW"
+all = [{ feature = "card_small_txn_count_10m", op = ">=", value = 4 }]
+
+[[txn_rule]]
+id = "DEVICE_MANY_CARDS"
+reason = "Qurilmada 4+ turli karta"
+points = 350
+action = "REVIEW"
+all = [{ feature = "device_card_count", op = ">=", value = 4 }]
+
+[[txn_rule]]
+id = "MULE_COMPONENT"
+reason = "Qurilma–karta grafida katta bog'langan komponent (mule tarmog'i)"
+points = 300
+all = [{ feature = "component_size", op = ">=", value = 8 }]
+
+[[txn_rule]]
+id = "ATO_NEW_DEVICE_HIGH_AMOUNT"
+reason = "Kartaga yaqinda yangi qurilma bog'langan va summa odatdagidan 5× katta"
+points = 450
+all = [
+  { feature = "new_device_for_card", op = "==", value = 1 },
+  { feature = "amount_to_card_mean_ratio", op = ">=", value = 5 },
+]
+
+[[txn_rule]]
+id = "P2P_WAVE"
+reason = "P2P o'tkazma va 10 daqiqada 15+ P2P to'lqini"
+points = 300
+all = [
+  { feature = "is_p2p", op = "==", value = 1 },
+  { feature = "global_p2p_count_10m", op = ">=", value = 15 },
+]
+
+[[txn_rule]]
+id = "AMOUNT_OUTLIER"
+reason = "Summa karta tarixiga nisbatan anomal (z ≥ 4)"
+points = 250
+all = [
+  { feature = "amount_zscore", op = ">=", value = 4 },
+  { feature = "card_history_count", op = ">=", value = 5 },
+]
+
+[[txn_rule]]
+id = "FOREIGN_NEW_DEVICE"
+reason = "Xorijiy terminal va kartaga yaqinda bog'langan yangi qurilma"
+points = 300
+all = [
+  { feature = "foreign_country", op = "==", value = 1 },
+  { feature = "new_device_for_card", op = "==", value = 1 },
+]
+
+# ------------------------------------------------------------------ ID&V (provisioning) qoidalari
+
+[[idv_rule]]
+id = "IDV_DEVICE_FARM"
+reason = "Qurilmada 6+ karta tokenlashtirilgan (qurilma fermasi)"
+points = 800
+all = [{ feature = "device_card_count", op = ">=", value = 6 }]
+
+[[idv_rule]]
+id = "IDV_DEVICE_MANY_CARDS"
+reason = "Qurilmada 4+ karta"
+points = 450
+all = [{ feature = "device_card_count", op = ">=", value = 4 }]
+
+[[idv_rule]]
+id = "IDV_DEVICE_PROV_VELOCITY"
+reason = "Qurilmadan 24 soatda 5+ provisioning urinishi"
+points = 300
+all = [{ feature = "device_prov_count_24h", op = ">=", value = 5 }]
+
+[[idv_rule]]
+id = "IDV_CARD_MULTI_DEVICE"
+reason = "Karta 3+ qurilmada"
+points = 450
+all = [{ feature = "card_device_count", op = ">=", value = 3 }]
+
+[[idv_rule]]
+id = "IDV_CARD_PROV_VELOCITY"
+reason = "Karta uchun 24 soatda 3+ provisioning urinishi"
+points = 300
+all = [{ feature = "card_prov_count_24h", op = ">=", value = 3 }]
+
+[[idv_rule]]
+id = "IDV_WEAK_ATTESTATION"
+reason = "Attestatsiya StrongBox'dan past"
+points = 450
+all = [{ feature = "attestation_level", op = "<=", value = 1 }]
+
+[[idv_rule]]
+id = "IDV_MULE_COMPONENT"
+reason = "Katta qurilma–karta komponenti"
+points = 400
+all = [{ feature = "component_size", op = ">=", value = 10 }]
+
+[[idv_rule]]
+id = "IDV_NEW_DEVICE_EXISTING_CARD"
+reason = "Karta boshqa qurilmada bor, yangi qurilma 1 soatdan yosh (step-up OTP)"
+points = 450
+all = [
+  { feature = "card_device_count", op = ">=", value = 2 },
+  { feature = "device_age_secs_log", op = "<=", value = 8.19 },
+]

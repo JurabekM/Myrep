@@ -1,0 +1,65 @@
+[package]
+name = "mpay-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4.13"
+mpay-common = { path = "../crates/mpay-common" }
+mpay-pqlink = { path = "../crates/mpay-pqlink", features = ["sandbox-attestation"] }
+mpay-crypto = { path = "../crates/mpay-crypto" }
+mpay-issuer = { path = "../crates/mpay-issuer" }
+mpay-terminal-sim = { path = "../crates/mpay-terminal-sim" }
+
+[[bin]]
+name = "tlv_parse"
+path = "fuzz_targets/tlv_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "iso8583_unpack"
+path = "fuzz_targets/iso8583_unpack.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "emv_parse"
+path = "fuzz_targets/emv_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "pqlink_decode"
+path = "fuzz_targets/pqlink_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "apdu_card"
+path = "fuzz_targets/apdu_card.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "issuer_parse"
+path = "fuzz_targets/issuer_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "pqlink_session"
+path = "fuzz_targets/pqlink_session.rs"
+test = false
+doc = false
+bench = false

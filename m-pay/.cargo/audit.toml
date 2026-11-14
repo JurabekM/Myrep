@@ -1,0 +1,4 @@
+# cargo-audit: deny.toml dagi asoslangan istisnolar bilan bir xil.
+[advisories]
+# RUSTSEC-2023-0071 (Marvin): `rsa` faqat attestatsiya zanjirida ochiq kalit bilan imzo tekshiruvi.
+ignore = ["RUSTSEC-2023-0071"]
