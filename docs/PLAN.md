@@ -1,0 +1,388 @@
+# TAMGA — AI agentlar uchun "qora quti"
+
+> **Tamga** — turkiy xalqlarda urug' muhri, egalik va haqiqiylik belgisi.
+> Bu loyihada u AI agent bajargan har bir harakatga bosiladigan, o'zgartirib bo'lmaydigan muhrni bildiradi.
+
+**Bir jumlada:** TAMGA AI agentning har bir harakatini bajarilishidan **oldin** siyosat bo'yicha
+tekshiradi, **keyin** esa xesh-zanjirli, post-kvant imzoli jurnalga yozadi. Bu jurnalni
+uchinchi tomon auditor manba koddan mustaqil ravishda tekshira oladi.
+
+**Asosiy talab (foydalanuvchidan):** GUI foni Claude Code desktop ilovasining **dark theme**
+ko'rinishida bo'ladi (6-bo'lim).
+
+---
+
+## 1. Muammo va yangilik
+
+| Hozir bor | Yetishmaydi (TAMGA yopadigan bo'shliq) |
+|---|---|
+| Tracing/observability (LangSmith, OTel GenAI) — dasturchi uchun | **Dalil darajasidagi** jurnal: o'chirilgan yoki o'zgartirilgan yozuv aniqlanadi |
+| Agentning o'z ruxsat tizimi (allow/deny) | Agentdan **tashqaridagi** mustaqil siyosat va mustaqil guvoh |
+| Log fayllar | Ochiq format + mustaqil verifikator + test vektorlari (standart) |
+| — | **"Aytdi va qildi" solishtiruvi**: agent xabar bergan harakat bilan OS haqiqatda ko'rgan harakat farqi |
+| — | GDPR bilan mos: yuklama (payload) o'chirilsa ham zanjir tekshiriladi (crypto-shredding) |
+
+**Yangilik da'vosi** (F0 raqobatchilar tahlili, 2026-10-17: [COMPETITORS.md](COMPETITORS.md)):
+ochiq format, bajarilishdan oldin to'xtatish, gibrid post-kvant imzo, mustaqil
+verifikator, OS bilan solishtirish va crypto-shredding bitta lokal, serversiz vositada birlashgan.
+Bu **kombinatsiya** hech qayerda topilmadi. **Alohida elementlarning har biri esa allaqachon bor**,
+shuning uchun ularning birortasi uchun "birinchi" deb aytilmaydi.
+Eng yaqin raqobatchilar: AgentProvenance (5 mezonning hammasi qisman, faqat Linux), Pipelock va
+Microsoft AGT. Haqiqiy farqlar: Windows-native "aytdi va qildi", Ed25519+ML-DSA-65 gibrid imzo,
+test vektorli shredding. Format nomi Pipelock'ning "Agent Action Receipt" (AARP) bilan to'qnashmasligi uchun
+"AAR" dan **TAMGA Record** ga o'zgartirildi. draft-sharif-agent-audit-trail-08 bilan bayt-darajada mos emas
+(sabablari asosli), lekin unga yo'qotishsiz proyeksiya qilinadi — spec §11.
+
+## 2. Tahdid modeli (halol chegaralar)
+
+- **Himoya qiladi:** jurnaldagi yozuvni jim o'zgartirish, o'chirish yoki tartibini almashtirish;
+  agentning ruxsatsiz xavfli harakati; agentning "men buni qilmadim" degan tarixni qayta yozishi.
+- **Qisman:** mashinaning administratori butun jurnalni o'chirishi mumkin. Bunga qarshi
+  imzolangan **checkpoint**lar tashqi guvohga yuboriladi (boshqa mashina, git remote, RFC 3161 TSA).
+  Shundan keyin o'chirish *aniqlanadi*, lekin *oldi olinmaydi*.
+- **Himoya qilmaydi (v1):** buzilgan OS yadrosi, xotiradan imzo kalitini o'g'irlash
+  (kalit v1 da Windows DPAPI ostida turadi, TPM esa v2 da).
+
+## 3. Arxitektura
+
+```
+ Claude Code ──hook──┐
+ MCP mijoz ──proxy───┤                    ┌─────────── tamgad (daemon, Rust) ───────────┐
+ SDK (keyin) ────────┼── named pipe/UDS ─▶│ normalize → redact → POLICY → decision     │
+ OS sensor ──────────┘                    │        ↓                                    │
+                                          │ TR record → hash chain   → Merkle → sign     │
+                                          │        ↓                         ↓          │
+                                          │ segment files (JSONL)   checkpoint → witness│
+                                          │ SQLite index            payload vault (enc) │
+                                          └───────────────▲─────────────────────────────┘
+                                                          │ IPC (read + approve)
+                                          TAMGA Studio (Tauri 2 + React) — dark GUI
+                                          tamga-verify (mustaqil CLI, auditor uchun)
+```
+
+### Texnologiya qarorlari
+
+| Qism | Tanlov | Sabab |
+|---|---|---|
+| Yadro, daemon, CLI | **Rust** (workspace) | xavfsizlik, tezlik; mashinada Rust muhiti tayyor |
+| GUI | **Tauri 2 + React + TypeScript + Vite** | Claude Code ko'rinishini CSS'da piksel aniqligida takrorlash; Tauri bu mashinada sinalgan |
+| Yozuv formati | **JSON + RFC 8785 (JCS)** kanonikalashtirish | auditor o'qiy oladi, xesh deterministik |
+| Xesh | **SHA-256** (zanjir va Merkle, RFC 9162 uslubi) | standart, FIPS |
+| Imzo | **Gibrid Ed25519 + ML-DSA-65 (FIPS 204)** | post-kvant + klassik; ikkalasi ham haqiqiy bo'lishi shart |
+| Siyosat | **Cedar** (`cedar-policy` crate) | Rust-native, formal tahlil qilinadi, deklarativ |
+| Saqlash | append-only segment fayllar + **SQLite** indeks | segment haqiqat manbai, indeks esa qayta quriladi |
+| Yuklama maxfiyligi | XChaCha20-Poly1305, har sessiyaga alohida kalit | kalitni o'chirish = unutish; zanjir buzilmaydi |
+| IPC | Windows named pipe / Unix domain socket | lokal, serversiz |
+
+### Repo tuzilmasi
+
+```
+tamga/
+  spec/                 TAMGA-RECORD-0.1.md (ochiq standart) + test-vectors/
+  crates/
+    tamga-core/         TAMGA Record turlari, JCS, hash chain, Merkle, gibrid imzo
+    tamga-store/        segmentlar, SQLite indeks, payload vault
+    tamga-policy/       Cedar bilan baholash, standart siyosatlar to'plami
+    tamga-redact/       sirlarni topish (API kalit, token, .env)
+    tamgad/             daemon: IPC, quvur, checkpoint, guvoh
+    tamga-hook/         Claude Code hook binari (stdin JSON → qaror)
+    tamga-mcp-proxy/    stdio MCP proxy (istalgan agent uchun)
+    tamga-verify/       mustaqil verifikator CLI (faqat tamga-core'ga bog'liq)
+    tamga-cli/          `tamga` — boshqaruv, eksport, kalitlar
+  studio/               Tauri 2 + React GUI
+  verify-py/            ikkinchi, mustaqil Python verifikator (cross-impl)
+  docs/
+```
+
+## 4. TAMGA Record (ochiq format, v0.1)
+
+```json
+{
+  "tamga": "0.1",
+  "seq": 1842,
+  "ts": "2026-10-17T10:41:07.118Z",
+  "session": "cc_7f3a…",
+  "agent": {"kind": "claude-code", "version": "…", "model": "…"},
+  "actor": {"user": "…", "host": "…"},
+  "event": "tool.pre",
+  "tool": {"name": "Bash", "input_digest": "sha256:…"},
+  "decision": {"verdict": "deny", "policy": "no-secret-exfil", "by": "policy"},
+  "payload_ref": {"vault": "v1", "salt_digest": "sha256:…"},
+  "prev": "sha256:…",
+  "hash": "sha256:…"
+}
+```
+
+- `hash = SHA-256(JCS(record without "hash"))`. `prev` maydoni oldingi yozuvga bog'laydi.
+- Har N yozuvda yoki T soniyada **Signed Tree Head** yaratiladi: Merkle ildizi, seq va vaqt
+  gibrid imzo bilan muhrlanadi.
+- Yuklama (buyruq matni, fayl diff'i) zanjirga **tuzlangan xesh** sifatida kiradi.
+  Ochiq matn esa shifrlangan vault'da saqlanadi.
+- Hodisalar: `session.start/end`, `prompt`, `tool.pre`, `tool.post`, `decision.human`,
+  `os.observed`, `checkpoint`.
+
+## 5. Siyosat va qaror oqimi
+
+1. Agent harakatni e'lon qiladi. Masalan, Claude Code `PreToolUse` hook'i `tamga-hook`ni chaqiradi.
+2. Daemon hodisani normallashtiradi, sirlarni yashiradi, keyin Cedar'da baholaydi.
+3. Qaror: **allow** / **deny** / **ask**. "Ask" bo'lsa, Studio'da tasdiqlash navbati ochiladi.
+4. Qaror hook'ka qaytadi (`permissionDecision` + sabab). Rad etish sababi agentga ko'rsatiladi.
+5. `PostToolUse` natijasi `tool.post` sifatida yoziladi.
+6. **Daemon ishlamasa:** hook yozuvni lokal spool faylga yozadi, shu bilan hech narsa yo'qolmaydi.
+   Rejim `strict` bo'lsa, harakat bloklanadi (fail-closed). Rejim `dev` bo'lsa, ruxsat beriladi
+   va bu holat belgilanadi.
+
+**F2 da aniqlangan qoidalar (2026-10-17):**
+
+- **`allow` agentga qaytarilmaydi.** Claude Code hook'i `permissionDecision: "allow"` qaytarsa,
+  Claude Code'ning o'z ruxsat so'rovlari chetlab o'tiladi. Shuning uchun TAMGA faqat `deny` yoki
+  `ask` qaytaradi. `allow` holatida hook hech narsa chiqarmaydi va agentning ruxsat tizimi o'z
+  holicha ishlaydi. TAMGA o'z ruxsat qatlamini qo'shadi, mavjudini almashtirmaydi.
+- **Hook daemon'ni merossiz ishga tushiradi.** Rust std bola jarayonga barcha meros qilinadigan
+  handle'larni beradi (`inherit_handles(false)` hali barqaror emas). Shu sabab daemon hook'ning
+  stdout pipe'ini ushlab qolib, Claude Code'ni 10 soniyalik timeout'gacha kutdirardi. Yechim:
+  `tamga-win` crate'i spawn'dan oldin std handle'lardan `HANDLE_FLAG_INHERIT` bayrog'ini oladi.
+  Bu workspace'dagi yagona `unsafe` joy.
+- **O'lchangan kechikish (release, 200 ta `PreToolUse`):** p50 9.1 ms, p99 10.8 ms. Bu Windows
+  jarayon yaratish (~4 ms) va diskka `fsync`ni o'z ichiga oladi. Maqsad < 20 ms bajarildi.
+
+**F2 qabul sinovi (2026-10-17, haqiqiy Claude Code 2.1.233, `claude -p`, haiku):** alohida sinov
+loyihasida sessiya Read va `Bash(ls -la)` ishlatdi. Jurnalga 7 hodisa yozildi: `session.start`, `prompt`,
+2 × (`tool.pre` → `tool.post`, `ref` `tool_use_id` orqali to'g'ri bog'langan) va `session.end`. Sessiya
+oxirida checkpoint imzolandi. `tamga verify` va mustaqil `tamga-verify` OK chiqdi. Jurnalda ochiq matn yo'q;
+`tamga show` payload'ni vault'dan ochib digest bilan solishtirdi. `tamga shred`'dan keyin payload ochilmaydi,
+jurnal esa baribir tasdiqlanadi.
+Eslatma: Claude desktop ichidan ichki `claude` ishga tushirilsa, `CLAUDE_*` va `ANTHROPIC_*` muhit
+o'zgaruvchilari olib tashlanishi kerak, aks holda CLI o'z login'ini ishlatmaydi.
+
+**F3 — siyosat dvigateli (2026-10-17):** `tamga-policy` crate'i. Buyruq va yo'l tahlili Rust'da bajariladi
+(`facts.rs`), Cedar esa faqat mantiqiy faktlar ustida mulohaza qiladi (`policies/schema.cedarschema`,
+`policies/default.cedar`). Uch xil qaror `forbid` siyosatlaridagi `@verdict` annotatsiyasidan olinadi,
+ustunlik tartibi `deny > ask > allow`. Foydalanuvchi siyosatlari `<TAMGA_HOME>/policies/*.cedar` da
+turadi va sxema bo'yicha qat'iy tekshiriladi. Bitta fayl xato bo'lsa, faqat standart to'plam ishlaydi
+va sabab `tamga status` dagi `policy_error` maydonida ko'rsatiladi.
+**Sessiya taint'i:** maxfiy fayldan o'qilgan qiymatlar faqat daemon xotirasida saqlanadi. Keyin shu qiymat
+fayl nomisiz tarmoq buyrug'ida paydo bo'lsa ham, buyruq bloklanadi (`sends_tainted_secret`).
+**Qabul sinovi (haqiqiy Claude Code 2.1.233, haiku):** `curl --data-binary @.env` va ikki bosqichli
+"`.env`ni o'qib, kalitni API'da tekshirish" stsenariylari ikkalasi ham `deny / no-secret-exfil` bilan
+bajarilishidan oldin to'xtatildi. Model TAMGA sababini ko'rdi. Jurnalda faqat fakt nomlari bor, sir yo'q;
+verify OK. Hook p99 = 12.9 ms (Cedar bilan).
+**Halol chegara:** buyruq tahlili evristik, ya'ni base64, o'zgaruvchi yoki skript fayli orqali yashirilgan
+chaqiruvni o'tkazib yuborishi mumkin. Shuning uchun u qiymat darajasidagi taint va F7 dagi OS kuzatuvi
+bilan birga ishlaydi. Shuningdek, haiku ochiq exfil so'rovini ko'pincha o'zi rad etadi: TAMGA esa model
+rad etmagan holatlar uchun mustaqil qatlam.
+
+**F4 — Studio va tasdiqlash navbati (2026-10-17):** `ask_route` config'i. `agent` qiymatida (standart) `ask`
+qarorini Claude Code oynasi so'raydi. `studio` qiymatida daemon hook javobini ushlab turadi, kutilayotgan so'rov
+Studio'da (yoki `tamga pending`/`decide` orqali) ko'rinadi. Qaror `decision.human` (`ref` → `tool.pre`) bo'lib
+zanjirga yoziladi. Javob kelmasa `ask_timeout_secs` (standart 120) o'tgach rad etiladi (`by: default`). "Shu
+sessiyada doim" faqat (sessiya, siyosat) juftligiga taalluqli va sessiya oxirida o'chadi. Shu sabab PreToolUse
+hook timeout'i 180 s qilindi.
+**Qabul sinovi:** haqiqiy headless `claude -p` ishchi papkadan tashqariga Write qilmoqchi bo'ldi. Studio'da
+so'rov paydo bo'ldi, "Ruxsat" bosildi va Claude faylni yaratdi. Jurnalda `tool.pre ask → decision.human allow
+(24 s) → tool.post` ketma-ketligi bor, verify OK. Jurnaldagi bitta yozuv diskda o'zgartirilganda Studio
+`E_HASH, indeks 14` ni ko'rsatdi. Barcha ekran va tugmalar UI Automation orqali bosib sinaldi.
+
+**F5 — MCP proxy (2026-10-17):** `tamga-mcp-proxy [--name] [--session] -- <server buyrug'i>`. Proxy
+JSON-RPC qatorlarini o'zgarishsiz uzatadi va faqat `tools/call`ni ushlaydi. MCP tool nomi `mcp:<server>/<tool>`
+ko'rinishida yoziladi. Faktlar argument kalitlari (`path`, `url`, `command`...) va tool nomidagi so'zlardan
+chiqariladi (`facts::generic`). `ask` qarori: MCP'da agent ruxsat oynasi yo'q, shuning uchun `ask_route: studio`
+bo'lmasa chaqiruv tushuntirish bilan bloklanadi.
+**Xavfsizlik tartibi:** `tool.post` (taint) daemon'ga javob mijozga uzatilishidan oldin yetkaziladi, shuning
+uchun agent sirni keyingi so'rovga qo'ygan paytda taint allaqachon daemon'da bo'ladi. Sinovda pipelined
+mijoz sirni oldindan bilganda bu kafolat qo'llanilmasligi ko'rindi; haqiqiy agentda sirni oldindan bilish
+imkoni yo'q.
+**Sessiya sanog'i:** Claude Code MCP serverlarni ikki marta ishga tushiradi. Bitta proxy yopilganda
+umumiy sessiya taint'i o'chib ketmasligi uchun daemon ishtirokchilarni sanaydi.
+**Qabul sinovi (haqiqiy Claude Code 2.1.233, haiku, hook'larsiz):** rasmiy `server-filesystem` va
+`mcp-server-fetch` proxy orqali bitta sessiyada ishladi. Sir filesystem'dan o'qildi, fetch orqali yuborish
+`deny / no-secret-exfil (sends_tainted_secret)` bilan to'xtatildi. Sir token shakliga o'xshamaydi,
+ya'ni blok faqat taint orqali bo'ldi.
+
+**F6 — verifikator va dalil (2026-10-17):** `verify-py` haqiqatan mustaqil: Ed25519 va ML-DSA-65 sof
+Python'da noldan yozilgan va Rust, RustCrypto hamda liboqs imzolarini tasdiqlaydi. Spec vektorlari bo'yicha
+11 test (16 buzilish holati va har bir bayt testi) o'tdi. Haqiqiy jurnallar va ularning tasodifiy buzilgan
+variantlarida 45/45 holatda Rust bilan bir xil hukm chiqdi. Dalil to'plami (`tamga export`, Studio
+Hisobotlar ekrani) buzilgan jurnal bo'lsa ham yaratiladi, natija `MANIFEST.json` ga yoziladi. Payload'lar
+ochiq matnda (tuz bilan) qo'shiladi, chunki aks holda auditor majburiyatni tekshira olmaydi; Studio buni
+ogohlantirish bilan ko'rsatadi. Auditor sifatida sinaldi: to'plam ichidagi verifikator OK berdi;
+o'zgartirilgan payload `PAYLOAD ... mos emas`, o'zgartirilgan inson qarori `E_HASH indeks 25` bilan ushlandi.
+**Taint'ni saqlash (2026-10-17, tuzatildi):** taint holati (qiymatlar, `secret_read`, ishtirokchilar soni)
+sessiyaning vault kaliti bilan XChaCha20-Poly1305 da shifrlanib `vault/<sessiya>.state` ga atomar yoziladi
+va daemon ishga tushganda tiklanadi. Yopilmay qolgan sessiyalar holati 7 kundan keyin o'chiriladi.
+Sinov: `.env` o'qilgach daemon majburan o'ldirildi, qayta ishga tushgach sirni fayl nomisiz yuborish
+baribir `sends_tainted_secret` bilan bloklandi; holat faylida sir ochiq ko'rinmaydi.
+"Shu sessiyada doim" ruxsatlari ataylab saqlanmaydi: qayta ishga tushgandan keyin qayta so'rash xavfsizroq.
+**Shred va avlodlar:** shred joriy sessiya kaliti avlodini yo'q qiladi. Eski payload'lar va taint ochilmaydi,
+lekin sessiyaning keyingi hodisalari yangi avlod kaliti bilan yozilishda davom etadi. Avval shred qilingan
+faol sessiyaning yangi hodisalari yozilmay, spool'da yiqilib qolardi; bu xato shu yerda tuzatildi.
+
+**F7 — "aytdi va qildi" (2026-10-17):** `tamga-sensor` (admin'siz, yangi `unsafe` yo'q) har 200 ms da
+jarayonlar snapshot'ini (`sysinfo`) va TCP jadvalini PID bilan (`netstat2`) oladi, fayl o'zgarishlarini
+`ReadDirectoryChangesW` (`notify`) orqali kuzatadi: sessiyaning ishchi papkasi va `~/.ssh`, `.aws`,
+`.azure`, `.kube`, `.gnupg`, `.docker`. Hook va proxy o'z PID'ini yuboradi, sensor undan yuqoriga
+`claude*` agent ildizini topadi va faqat uning avlodlarini kuzatadi. Ildizning o'zi (API trafigi),
+TAMGA vositalari va MCP proxy ostidagi serverlar kuzatilmaydi.
+Korrelyatsiya (`tamgad/src/observe.rs`, vaqtga bog'liq bo'lmagan testlar bilan): kuzatuv faol chaqiruv
+oynasiga (pre − 0,3 s … post + 1,5 s) tushsa, unga bog'lanadi (`ref`). Nomuvofiqlik uch xil:
+`network_egress` e'lon qilinmagan chaqiruv paytidagi tashqi ulanish (warn); maxfiy papkadagi o'zgarish
+(warn); chaqiruvdan tashqaridagi jarayon, ulanish yoki fayl o'zgarishi. Shell va konsol jarayonlari
+chaqiruv ichida bo'lsa yozilmaydi; buyruq satri esa vault'ga, jurnalga faqat digest tushadi.
+**Qabul sinovi (haqiqiy Claude Code, haiku):** agent `py -3.14 check.py` ni e'lon qildi va faktlarda
+tarmoq yo'q edi. Sensor `python.exe → example.com:80` ni "e'lon qilinmagan tarmoq ulanishi" deb `ref=2`
+bilan ushladi. Skript yozgan `hisobot.txt` shell chaqiruvi doirasida "aytilgan" deb to'g'ri bog'landi.
+Ikkita xato topilib tuzatildi: qisqa yashovchi hook PID'i snapshot'da bo'lmagani uchun ildiz
+topilmagan edi (endi shu zahoti yangi snapshot olinadi); dastlab bitta buyruqqa 15 ta shell/conhost
+yozuvi tushgan edi (filtrdan keyin 4 ta).
+**Ko'r nuqtalar (halol):** admin'siz fayl *o'qishlari* ko'rinmaydi; 200 ms dan qisqa jarayon yoki
+ulanish o'tkazib yuborilishi mumkin; UDP/DNS kuzatilmaydi; fayl o'zgarishini qaysi jarayon qilgani
+noma'lum, u vaqt bo'yicha bog'lanadi. Nomuvofiqlik bloklamaydi (harakat allaqachon bo'lgan), u dalil va
+ogohlantirish sifatida yoziladi.
+
+**F8 — reliz (2026-10-17):** `TAMGA Studio_0.1.0_x64-setup.exe` (NSIS, 5,1 MB, `currentUser` —
+administrator kerak emas, `%LOCALAPPDATA%\TAMGA Studio`). Studio bilan birga 5 ta sidecar
+(`externalBin`): `tamgad`, `tamga-hook`, `tamga-mcp-proxy`, `tamga`, `tamga-verify`. Yig'ish:
+`scripts/build-installer.ps1`. Claude Code integratsiyasi `tamga-store::integrate` ga ko'chdi: CLI va
+Studio'dagi «Claude Code'ga ulash / Ajratish» bitta koddan foydalanadi.
+O'rnatuvchi hook'lari (`installer-hooks.nsh`): yangilash va o'chirishdan oldin `tamga stop` (yangi
+buyruq: daemon kutilayotgan `ask` larni rad etadi, oxirgi checkpoint'ni yozadi, CLI jarayon haqiqatan
+chiqquncha kutadi — aks holda `tamgad.exe` band bo'lib qoladi); to'liq o'chirishda (yangilashda emas)
+`tamga uninstall claude-code --user`. Jurnal va kalitlar o'chirilmaydi — bu dalil. Tauri'ning o'zbekcha
+xabarlari yo'q edi (bo'sh qolardi): `nsis/Uzbek.nsh` (27 kalit; Tauri BOM'ni o'zi qo'shadi, manbada BOM
+bo'lsa makensis yiqiladi).
+**Qabul sinovi:** (1) jim toza o'rnatish — 1 s, 7 fayl, HKCU yozuvi; (2) daemon ishlab turganda ustidan
+o'rnatish — hook daemon'ni to'xtatdi, fayllar almashtirildi; (3) o'rnatilgan Studio'da «ulash» → 5 hook
+qo'shildi, foydalanuvchining hook'i va `model` saqlandi, «Ajratish» → asl holat (soxta `USERPROFILE` da);
+(4) o'chirish: ishlab turgan daemon to'xtatildi, hook'lar olib tashlandi, yorliq/papka/registr qolmadi,
+jurnal qoldi. Haqiqiy `~/.claude/settings.json` xeshi butun sinov davomida o'zgarmadi.
+**Demo:** `demo/run-demo.ps1` (7 parda, [DEMO.md](DEMO.md)) o'rnatilgan build'da haqiqiy Claude Code
+(haiku) bilan **9/9 PASS**: bir bosqichli va taint'li ikki bosqichli sizdirish bloklandi, `check.py` ning
+aytilmagan ulanishi `ref` bilan ushlandi, tashqariga yozish `ask` → inson qarori → bajarildi, Rust va
+Python verifikatorlari tahrir/o'chirish/kesishni aynan bir xil kod va indeks bilan topdi.
+**Sinovda topilgan va tuzatilgan xatolar:** (a) `spawn_detached` faqat std handle'larni xususiy qilardi:
+PowerShell orqali chaqirilganda boshqa meros handle'lar daemon'ga o'tib, chaqiruvchi pipe EOF'ini
+cheksiz kutardi — endi `CreateProcessW(bInheritHandles = FALSE)`; (b) `uninstall claude-code` hook
+bo'lmasa ham faylni qayta yozardi va `settings.json` yo'q bo'lsa uni yaratardi — endi tegmaydi (test);
+(c) soxta `USERPROFILE` bilan o'chirishda yorliq qoldi — Windows `User Shell Folders` ni jarayon
+muhitidan kengaytiradi; bu sinov artefakti, oddiy muhitda yorliq o'chadi (tekshirildi).
+
+**Production tayyorgarligi (2026-10-18):**
+(1) *Kod imzosi:* `scripts/sign.ps1` (sertifikat ombori/USB token, `.pfx` yoki Azure Trusted Signing;
+RFC 3161 vaqt tamg'asi), Tauri `signCommand` orqali ulanadi; sidecar'lar bundle'dan oldin imzolanadi;
+`SHA256SUMS.txt`; `TAMGA_SIGN_REQUIRED=1`. Bir martalik o'z-o'zini imzolagan sertifikat (fayl,
+omborga qo'shilmagan) bilan sinaldi: o'rnatuvchi va o'rnatilgan 7 ta exe imzolangan. Haqiqiy
+sertifikat yo'q — u sotib olinishi kerak.
+(2) *Kalitlar:* spec §7.5 `key.rotate` (yangi kalit egalik isboti `TAMGA-ROTATE-v1`, ML-DSA konteksti
+`tamga-rotate`; eski kalit checkpoint'i bilan tasdiqlanadi), `E_KEY_ROTATE`, `rotation.json` vektorlari
+(5 holat, Rust va Python bir xil). Daemon: `rotate` op, yiqilishga chidamli bosqichlash
+(`signing-seed-next-v1`), ishga tushishda tiklash, ombordagi kalit jurnalga mos kelmasa imzolamaydi.
+`tamga key show|rotate|backup|restore`: zaxira Argon2id (64 MiB, t=3) + XChaCha20-Poly1305, sarlavha
+AAD. Studio: Sozlamalar → «Imzo kalitlari» (almashtirish, tasdiq bilan), Yaxlitlik → kalitlar zanjiri.
+E2E: 2 almashtirish (biri `compromise`) → uchala verifikator bir xil zanjir; zaxira → yangi papka →
+imzolash davom etdi; noto'g'ri parol va boshqa kalit rad etildi.
+(3) *Audit:* [AUDIT-GUIDE.md](AUDIT-GUIDE.md) — AI/inson auditor uchun. Tayyorlash paytida ochiq
+zaif nuqta topildi: pipe boshqaruv buyruqlari chaqiruvchini tekshirmaydi (K1).
+(4) *K1/K2 tuzatildi:* `tamga-win::pipe_client_pid` (`GetNamedPipeClientProcessId`) +
+`tamga-sensor::identify` (exe va ajdodlar) → `tamgad/src/control.rs`: `decide`/`shutdown`/`rotate` faqat
+daemon papkasidagi `tamga.exe`/`tamga-studio.exe` dan, agent daraxtidan tashqarida; har urinish `control`
+yozuvi (rad etilganlar daqiqasiga 20 tagacha). Config o'zgarishi va foydalanuvchi Claude Code hook'lari
+olib tashlanishi ham `control` yozuvi. Siyosat: `tamper_with_tamga` fakti + `no-tamga-tamper` deny.
+O'chiruvchi: `stop` rad etilsa faqat shu papkadagi `tamgad.exe` majburan yopiladi. Qum qutisi sinovi: agent
+daraxtidan `stop`/`decide` rad etildi, `explorer` orqali ochilgan `tamga.exe` va Studio «Ruxsat» qabul qilindi,
+jurnal ikkala verifikatordan o'tdi. Qoldiq chegaralar AUDIT-GUIDE §4 da.
+
+**Standart siyosatlar to'plami (v1):** `.env` yoki kalit fayllarni o'qib tashqariga yuborish;
+`rm -rf` loyiha tashqarisida; `git push --force` asosiy branchga; tarmoqqa noma'lum domenga
+`curl | sh`; tizim sozlamalarini o'zgartirish; ishchi papkadan tashqariga yozish.
+
+## 6. Dizayn: Claude Code dark theme ⭐
+
+**Qoida:** barcha ranglar faqat `studio/src/theme/tokens.css` dagi tokenlardan olinadi.
+Komponentda hex qiymat yozilmaydi.
+**F0 natijasi (2026-10-17):** tokenlar Claude desktop oynasining skrinshotidan piksel bo'yicha
+o'lchandi. Haqiqiy tema boshlang'ich taxmindan (`#262624` iliq-kulrang) ancha to'q va neytral chiqdi.
+Studio skrinshotida 7 ta nazorat nuqtasining hammasi Claude bilan piksel-bir-xil.
+
+| Token | Qiymat | Manba | Qayerda |
+|---|---|---|---|
+| `--bg-app` | `#151515` | o'lchangan | asosiy fon, sarlavha paneli |
+| `--bg-sidebar` | `#111111` | o'lchangan | chap panel |
+| `--bg-field` | `#1D1D1D` | o'lchangan | qidiruv maydoni |
+| `--bg-input` | `#20201F` | o'lchangan | kiritish qutisi |
+| `--bg-bubble` | `#1C1C1C` | o'lchangan | banner, tanlangan qator |
+| `--bg-selected` | `#343434` | o'lchangan | tanlangan navigatsiya bandi |
+| `--bg-code` | `#0E0E0E` | hosila | kod/terminal bloklari |
+| `--border` | `#292929` | o'lchangan | panel ajratuvchisi |
+| `--border-strong` | `#373736` | o'lchangan | input chegarasi |
+| `--text-primary` | `#F0EFEC` | o'lchangan | asosiy matn |
+| `--text-secondary` | `#C3C2B7` | o'lchangan | ikkilamchi matn |
+| `--text-muted` | `#898781` | o'lchangan | izoh, placeholder |
+| `--text-faint` | `#5A5955` | o'lchangan | eng past darajadagi matn |
+| `--accent` | `#D97757` | Claude clay | asosiy tugma |
+| `--success` | `#4EBA65` | Claude Code CLI | allow, zanjir butun |
+| `--danger` | `#FF6B80` | Claude Code CLI | deny, buzilish aniqlandi |
+| `--warning` | `#FFC107` | Claude Code CLI | ogohlantirish |
+| `--ask` | `#B1B9F9` | Claude Code CLI | inson tasdig'ini kutayotgan harakat |
+
+- **Shrift:** UI uchun Segoe UI Variable (Inter zaxira), kod va xeshlar uchun JetBrains Mono.
+- **Uslub:** 8–12 px radius, soya o'rniga ingichka chegara. Sessiya qayta o'ynatilganda
+  harakatlar **Claude Code transkriptiga o'xshab** ko'rsatiladi: yig'iladigan tool-bloklar,
+  har birining yonida muhr belgisi (✓ imzolangan / ⚠ buzilgan).
+- **Ikonka:** loyihaga xos tamga belgisi, `scripts/make_icon.py`. F0 da vaqtincha A varianti (Muhr); foydalanuvchi A/B/C dan birini tanlaydi.
+- **Oyna:** native sarlavha o'chirilgan (`decorations: false`), o'z sarlavha paneli va Windows uslubidagi oyna tugmalari bor.
+
+### Studio ekranlari
+
+1. **Jonli** — harakatlar oqimi real vaqtda, filtr bo'yicha (agent, tool, qaror).
+2. **Tasdiqlash** — "ask" navbati: Ruxsat / Rad / Har doim ruxsat (siyosatga yoziladi).
+3. **Sessiyalar** — ro'yxat va transkript uslubidagi qayta o'ynatish.
+4. **Harakat tafsiloti** — kirish, natija, diff, xesh, imzo holati, qaysi siyosat ishlagani.
+5. **Yaxlitlik** — zanjirni tekshirish, checkpoint'lar, guvoh holati, buzilish xaritasi.
+6. **Siyosatlar** — Cedar muharriri va "agar shu harakat bo'lsa nima bo'ladi" sinovi.
+7. **Hisobotlar** — dalil to'plami eksporti (ZIP: yozuvlar, STH, verifikator yo'riqnomasi, PDF xulosa).
+8. **Sozlamalar** — rejim (strict/dev), integratsiyalar, kalitlar, guvoh manzili.
+
+## 7. Bosqichlar
+
+Har bosqich **qabul mezoni** bilan yopiladi. Testlarning o'tishi yetarli emas:
+natija haqiqiy ishga tushirib ko'rsatiladi.
+
+| # | Bosqich | Natija | Qabul mezoni |
+|---|---|---|---|
+| **F0** | Poydevor (1–2 kun) | workspace, Tauri skeleti, `tokens.css`, CI, raqobatchilar tahlili | bo'sh Studio ochiladi; foni skrinshotda Claude Code bilan yonma-yon solishtiriladi |
+| **F1** | TAMGA Record yadrosi | `spec/TAMGA-RECORD-0.1.md`, `tamga-core`, test vektorlari | JCS va xesh vektorlari o'tadi; ML-DSA-65 NIST vektorlari bilan mos; 1 baytni o'zgartirish aniq seq'da aniqlanadi |
+| **F2** | Daemon + Claude Code hook | `tamgad`, `tamga-store`, `tamga-hook`, `tamga install claude-code` | **haqiqiy** Claude Code sessiyasi to'liq yoziladi; daemon o'chiq bo'lsa spool ishlaydi |
+| **F3** | Siyosat va bloklash | `tamga-policy`, standart to'plam, "ask" oqimi | agent `.env`ni o'qib `curl` qilmoqchi bo'lsa bloklanadi, sababi agentga ko'rinadi |
+| **F4** | Studio GUI | 8 ekran, jonli oqim, qayta o'ynatish | har bir tugma bosib sinaladi; skrinshotlar ko'z bilan tekshiriladi |
+| **F5** | MCP proxy | `tamga-mcp-proxy` | istalgan MCP serverni o'rab, chaqiruvlarni yozadi va bloklaydi |
+| **F6** | Verifikator va dalil | `tamga-verify`, `verify-py`, eksport ZIP | ikki mustaqil implementatsiya bir xil hukm beradi; o'chirilgan oraliq checkpoint orqali aniqlanadi |
+| **F7** | "Aytdi va qildi" | Windows OS sensori (QARCHIG'AY tajribasi) | agent e'lon qilmagan fayl yoki jarayon harakati `os.observed` + ogohlantirish sifatida chiqadi |
+| **F8** | Reliz | o'rnatuvchi (Setup.exe), README, demo | toza mashinaga o'rnatilib, demo stsenariy boshidan oxirigacha o'tadi |
+
+**Demo stsenariy (F8):** agent "loyihani tozalash" niyatida `.env`ni tashqariga
+yubormoqchi bo'ladi → TAMGA bloklaydi. Keyin kimdir jurnaldan bitta yozuvni o'chiradi →
+`tamga-verify` aniq qaysi joy buzilganini qizil bilan ko'rsatadi.
+
+**Tashqi audit (2026-10-18):** mustaqil AI auditor (Antigravity) `e8ba44c9` ustida 11 ta topilma
+berdi (0 Critical, 3 High, 4 Medium, 3 Low, 1 Info). Barchasi tuzatildi va regressiya testi bilan
+yopildi: H-1 (fakt tahlili chetlab o'tilishi — izoh, subshell, MCP massiv), H-2 (SessionEnd/`--resume`
+da taint yo'qolishi), H-3 (boshqaruv avtorizatsiyasini double-fork/`node` bilan chetlab o'tish),
+M-1..M-4, L-1..L-3, I-1. Tafsilot: [AUDIT-GUIDE.md](AUDIT-GUIDE.md) §4. Commit'lar `e3d56561`
+(M/L/I), `4321b6b2` (H). Qoldiq ochiq savol: bir foydalanuvchi ichida boshqaruv avtorizatsiyasini
+mutlaq qilish uchun `tamgad` ni alohida foydalanuvchi/Windows xizmati sifatida ishga tushirish.
+
+## 8. Sifat qoidalari
+
+- Kriptografiya: faqat tekshirilgan crate'lar. O'z primitivlarimizni yozmaymiz.
+  Har bir algoritm rasmiy test vektorlari bilan tekshiriladi.
+- `unsafe` kod bo'lmaydi. Agar zarur bo'lsa, faqat Miri bilan tekshiriladi.
+- Daemon hook'ka qaror qaytarishi **< 20 ms (p99)** bo'lishi shart, aks holda agent sekinlashadi.
+  Bu o'lchab tekshiriladi.
+- Sirlar hech qachon ochiq matnda zanjirga, log'ga yoki GUI eksportiga tushmaydi.
+- Barcha vaqtlar UTC, tz-aware.
+
+## 9. Ochiq savollar (keyinroq qaror qilinadi)
+
+- Litsenziya: spec uchun CC-BY, kod uchun Apache-2.0 (taklif).
+- Tashqi guvoh standart sifatida: git remote, RFC 3161 TSA yoki boshqa TAMGA tuguni.
+- v2: TPM'dagi kalit, Python/TS SDK, OpenTelemetry GenAI'dan import, jamoaviy (ko'p mashinali) rejim.

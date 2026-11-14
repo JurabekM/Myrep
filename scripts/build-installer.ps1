@@ -1,0 +1,95 @@
+# TAMGA o'rnatuvchisini (NSIS Setup.exe) yig'ish va imzolash.
+# Barcha vositalar release'da yig'iladi va Studio yoniga sidecar sifatida qo'shiladi
+# (hook daemon'ni, Studio esa hook'ni o'z papkasidan qidiradi).
+#
+# Ishga tushirish (repo ildizidan):  powershell -ExecutionPolicy Bypass -File scripts/build-installer.ps1
+#
+# Kod imzosi: scripts/sign.ps1 dagi TAMGA_SIGN_* o'zgaruvchilari (sertifikat ombori, .pfx yoki
+# Azure Trusted Signing). Sozlanmagan bo'lsa — imzosiz dev build. Reliz uchun TAMGA_SIGN_REQUIRED=1.
+# Imzolanadi: 5 ta sidecar (bundle'dan oldin), Studio exe, o'chiruvchi va o'rnatuvchining o'zi.
+$ErrorActionPreference = "Stop"
+$root = Split-Path -Parent $PSScriptRoot
+$target = if ($env:CARGO_TARGET_DIR) { $env:CARGO_TARGET_DIR } else { Join-Path $root "target" }
+$triple = "x86_64-pc-windows-msvc"
+$bins = "tamgad", "tamga-hook", "tamga-mcp-proxy", "tamga", "tamga-verify"
+$crates = "tamgad", "tamga-hook", "tamga-mcp-proxy", "tamga-cli", "tamga-verify"
+$sign = Join-Path $PSScriptRoot "sign.ps1"
+$signing = [bool]($env:TAMGA_SIGN_THUMBPRINT -or $env:TAMGA_SIGN_PFX -or ($env:TAMGA_SIGN_AZURE_DLIB -and $env:TAMGA_SIGN_AZURE_METADATA))
+
+# Binarlarga yig'uvchi kompyuterning yo'llari (foydalanuvchi nomi bilan) yozilmasin: panic va
+# bog'liqliklar manbasi yo'llari `~` va `tamga` ga almashtiriladi. Mavjud bayroqlar saqlanadi.
+$sep = [char]0x1f
+$remap = "--remap-path-prefix=$($env:USERPROFILE)=~" + $sep + "--remap-path-prefix=$root=tamga"
+$env:CARGO_ENCODED_RUSTFLAGS = if ($env:CARGO_ENCODED_RUSTFLAGS) { $env:CARGO_ENCODED_RUSTFLAGS + $sep + $remap } else { $remap }
+
+Push-Location $root
+try {
+    cargo build --release @($crates | ForEach-Object { "-p", $_ })
+    if ($LASTEXITCODE -ne 0) { throw "cargo build yiqildi" }
+    $dest = Join-Path $root "studio/src-tauri/binaries"
+    New-Item -ItemType Directory -Force $dest | Out-Null
+    foreach ($b in $bins) {
+        $out = Join-Path $dest "$b-$triple.exe"
+        Copy-Item (Join-Path $target "release/$b.exe") $out -Force
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $sign $out
+        if ($LASTEXITCODE -ne 0) { throw "imzolash yiqildi: $out" }
+    }
+
+    # Tauri har bir o'zi yaratgan faylni (Studio exe, uninstall.exe, Setup.exe) shu buyruq bilan imzolaydi.
+    $signCfg = Join-Path ([IO.Path]::GetTempPath()) "tamga-sign-config.json"
+    $cfg = @{ bundle = @{ windows = @{ signCommand = @{
+        cmd = "powershell"; args = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $sign, "%1") } } } }
+    [IO.File]::WriteAllText($signCfg, ($cfg | ConvertTo-Json -Depth 6), (New-Object Text.UTF8Encoding $false))
+
+    # Sertifikat bo'lmasa signCommand ulanmaydi: Tauri imzosiz fayllarni tekshirib, chalg'ituvchi xato yozadi.
+    $configs = @("--config", "src-tauri/tauri.bundle.json")
+    if ($signing) { $configs += @("--config", $signCfg) }
+
+    # Ikki o'rnatuvchi (docs/SERVICE-DESIGN.md): oddiy (currentUser, admin'siz) va himoyalangan
+    # (perMachine, administrator, Windows xizmati). Tauri ikkalasiga bir xil fayl nomi beradi —
+    # har biri yig'ilgach ko'chiriladi.
+    $nsis = Join-Path $target "release/bundle/nsis"
+    $outDir = Join-Path $nsis "out"
+    Remove-Item -Recurse -Force $outDir -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force $outDir | Out-Null
+    $protCfg = Join-Path ([IO.Path]::GetTempPath()) "tamga-protected-config.json"
+    $prot = @{ bundle = @{ windows = @{ nsis = @{ installMode = "perMachine" } } } }
+    [IO.File]::WriteAllText($protCfg, ($prot | ConvertTo-Json -Depth 6), (New-Object Text.UTF8Encoding $false))
+
+    Push-Location (Join-Path $root "studio")
+    pnpm install --frozen-lockfile
+    $built = @()
+    foreach ($variant in @(
+            @{ name = "TAMGA Studio"; extra = @() },
+            @{ name = "TAMGA Studio Protected"; extra = @("--config", $protCfg) })) {
+        Remove-Item (Join-Path $nsis "*-setup.exe") -ErrorAction SilentlyContinue
+        $buildArgs = @($configs) + @($variant.extra)
+        pnpm tauri build @buildArgs
+        if ($LASTEXITCODE -ne 0) { throw "tauri build yiqildi ($($variant.name))" }
+        $out = Get-ChildItem (Join-Path $nsis "*-setup.exe") | Sort-Object LastWriteTime | Select-Object -Last 1
+        $dest = Join-Path $outDir ($out.Name -replace '^TAMGA Studio', $variant.name)
+        Move-Item $out.FullName $dest -Force
+        $built += Get-Item $dest
+    }
+    Pop-Location
+
+    $sums = Join-Path $outDir "SHA256SUMS.txt"
+    $lines = $built | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name }
+    [IO.File]::WriteAllText($sums, ($lines -join "`n") + "`n", (New-Object Text.UTF8Encoding $false))
+
+    Write-Host ""
+    foreach ($setup in $built) {
+        Write-Host "O'rnatuvchi: $($setup.FullName)" -ForegroundColor Green
+        $sig = Get-AuthenticodeSignature $setup.FullName
+        if ($sig.SignerCertificate) {
+            Write-Host ("Imzo       : {0} | {1} | vaqt tamg'asi: {2}" -f $sig.Status, $sig.SignerCertificate.Subject, [bool]$sig.TimeStamperCertificate)
+        } elseif ($signing) {
+            throw "sertifikat sozlangan, lekin o'rnatuvchi imzolanmagan: $($setup.Name)"
+        } else {
+            Write-Host "Imzo       : YO'Q (dev build; SmartScreen 'noma'lum nashriyotchi' deydi)" -ForegroundColor Yellow
+        }
+    }
+    Write-Host "SHA-256    : $sums"
+} finally {
+    Pop-Location
+}

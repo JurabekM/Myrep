@@ -1,1 +1,5 @@
 * text=auto eol=lf
+
+# Test vektorlari va jurnallar baytma-bayt solishtiriladi — har doim LF.
+spec/test-vectors/** text eol=lf
+*.jsonl text eol=lf

@@ -1,0 +1,33 @@
+{
+  "name": "tamga-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TAMGA Studio — AI agent qora qutisining GUI'si (Tauri 2 + React)",
+  "packageManager": "pnpm@12.11.2",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "typecheck": "tsc -p tsconfig.json",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@tauri-apps/api": "~2.12.3",
+    "lucide-react": "^1.56.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "~2.12.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.4"
+  }
+}

@@ -1,12 +1,17 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyc
 /.venv/
 /.pytest_cache/
 /.ruff_cache/
 /dist/
 /release/
 *.egg-info/
+
+# Rust / Tauri
+/target/
+**/node_modules/
 
 # Tashqi binarlar (caddy.exe, mosquitto va h.k.) gitga kirmaydi
 /tools/*
@@ -16,3 +21,7 @@ __pycache__/
 /.srv1-data/
 *.token
 .env
+
+# TAMGA: auditorga beriladigan paket va yig'ilgan o'rnatuvchilar (repo'ga kirmaydi)
+/audit-package/
+scripts/icon_preview.png
