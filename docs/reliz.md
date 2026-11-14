@@ -118,6 +118,27 @@ plaginlar esa `python -m ...` bilan ishga tushadi — oddiy Python bilan bu hozi
   tegilmaydi.
 - Olib tashlashda ma'lumotlar papkasi va `%APPDATA%\SRV_1\shell.json` qoladi.
 
+## 1.1.1 (2026-11-14)
+
+1.1.0 dan farqi — «Jurnal» sahifasida tarmoq paketlari: ushlash paytida davriy xulosa
+(`netcap_stats`) va har bir belgilangan paket (`netcap_packet`); jurnal vaqti mahalliy;
+plagin maydonlari `p_` qo'shimchasisiz ko'rinadi
+([tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md#jurnalga-chiqish-jurnal-sahifasi)).
+
+| Ko'rsatkich | Qiymat |
+|-------------|--------|
+| `SRV_1-Setup-1.1.1.exe` | 157,8 MB, imzolangan (1.1.0 dagi sertifikat bilan) |
+| SHA-256 (imzolangan fayl) | `3202fb5b7396ec185cfbadf712e3b369e79d765ab355ce15c4acdc482202c1d2` |
+| sertifikat barmoq izi (SHA-1) | `0134A8B5752CD8EDBD0CFAAD27F644238E63BC3F` |
+| yig'ishdan oldingi testlar | 485 test o'tdi |
+
+Sinalgani (jim rejimda vaqtinchalik papkaga o'rnatib, toza ma'lumotlar papkasi, port 8719):
+yorliq buyrug'i bilan yadro o'zi ko'tarildi (`/health` → `1.1.1`); o'rnatilgan nusxada
+loopback'da ushlash boshlandi va `/api/v1/logs` da `netcap_stats` hamda `netcap_packet`
+satrlari paydo bo'ldi; `stop-core.ps1` yadroni to'xtatdi; olib tashlash toza. 1.1.0 dagi
+to'liq tekshiruv (oynadagi tugma, xotira o'lchovi) 1.1.1 uchun **takrorlanmagan**; uning
+«Sinalmagan» ro'yxati 1.1.1 ga ham tegishli.
+
 ## 1.1.0 (2026-11-14)
 
 Ikki yangilik: tarmoq kuzatuvi ([tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md)) va serverni

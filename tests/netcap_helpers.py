@@ -11,9 +11,10 @@ from srv1_core.plugins.registry import BUILTIN_DIR
 # Sozlama faylini o'qiydi, `ready` yuboradi, so'ng har 0,1 s da `tick`. Birinchi tick'da
 # ikkita paket va bitta signal bor. Buyruqlarni stdin'dan oladi va holatini tick'da qaytaradi.
 # `bpf_filter` `crash` bo'lsa — boshlanmay xato bilan chiqadi; `die` bo'lsa — bitta
-# tick'dan so'ng o'ladi.
+# tick'dan so'ng o'ladi. `NETCAP_FAKE_STEP` berilsa, tick'dagi vaqt har safar shuncha
+# soniyaga sakraydi (jurnal oralig'ini kutmasdan sinash uchun).
 FAKE_WORKER = r"""
-import json, sys, threading, time
+import json, os, sys, threading, time
 
 options = json.load(open(sys.argv[1], encoding="utf-8"))
 state = {"paused": False, "excluded": list(options.get("excluded", [])), "stop": False}
@@ -47,7 +48,17 @@ threading.Thread(target=commands, daemon=True).start()
 emit({"t": "ready", "interface": options["interface"]})
 total = 0
 first = True
+step = float(os.environ.get("NETCAP_FAKE_STEP", "0"))
+ticks = 0
+started = time.time()
+
+
+def clock():
+    return started + ticks * step if step else time.time()
+
+
 while not state["stop"]:
+    ticks += 1
     packets, alerts = [], []
     if first:
         first = False
@@ -62,9 +73,10 @@ while not state["stop"]:
         alerts = [{"ts": now, "kind": "secret", "src": "10.0.0.5", "dst": "10.0.0.9",
                    "note": "password -> :80"}]
         total = 2
-    emit({"t": "tick", "ts": time.time(), "paused": state["paused"], "total": total,
+    emit({"t": "tick", "ts": clock(), "paused": state["paused"], "total": total,
           "ignored": len(state["excluded"]), "skipped": 0, "errors": 0, "last_error": "",
           "suppressed": 0, "bytes": 190, "pps": 2.0 if packets else 0.0,
+          "marked": 1, "protos": {"TCP": 1, "UDP": 1},
           "packets": packets, "alerts": alerts,
           "hosts": [{"ip": "10.0.0.5", "packets": 2, "bytes": 190, "where": ""}]})
     if options.get("bpf_filter") == "die":

@@ -16,6 +16,8 @@ from .text import printable
 MAX_HOSTS = 2000
 TOP_HOSTS = 20
 MAX_PENDING_ALERTS = 500
+# Protokol nomlari soni cheklangan; kutilmagan ko'p nom kelsa, ortiqchasi `other` ga yig'iladi.
+MAX_PROTOS = 24
 
 
 @dataclass(slots=True, frozen=True)
@@ -77,12 +79,16 @@ class Engine:
         self.skipped = 0
         self.errors = 0
         self.bytes = 0
+        # Belgilangan (shubhali) paketlar soni, ushlash boshidan beri.
+        self.marked = 0
         self.last_error = ""
         self._geo = geo
         self._lock = threading.Lock()
         self._rows: list[dict[str, Any]] = []
         self._alerts: list[Alert] = []
         self._hosts: dict[str, list[int]] = {}
+        self._protos: dict[str, int] = {}
+        self._marked_rows = 0
         self._ticked_total = 0
 
     # --- ushlash oqimi ----------------------------------------------------
@@ -96,16 +102,23 @@ class Engine:
         self.total += 1
         self.bytes += record.length
         alerts = self.detector.check(record)
+        marked = bool(record.mark)
+        limit = self.options.rows_per_tick
         with self._lock:
             if alerts and len(self._alerts) < MAX_PENDING_ALERTS:
                 self._alerts.extend(alerts)
-            # Belgilangan paket jadvalga har doim tushadi; oddiylari — chegara ichida.
-            if len(self._rows) < self.options.rows_per_tick or record.mark or alerts:
+            if marked:
+                self.marked += 1
+            # Belgilangan paket oddiylaridan ustun: jadval to'lgan bo'lsa ham tushadi. Lekin
+            # toshqinda (skan, hujum) uning o'zi ham cheklanadi — tick cheksiz kattalashmasin.
+            if len(self._rows) < limit or (marked and self._marked_rows < limit):
                 self._rows.append(self._row(record))
+                self._marked_rows += marked
             else:
                 self.skipped += 1
             for address in (record.src, record.dst):
                 self._count_host(address, record.length)
+            self._count_proto(record.proto)
 
     def failed(self, error: BaseException) -> None:
         """Bitta paketni tahlil qilib bo'lmadi: sanaladi, ushlash davom etadi."""
@@ -127,6 +140,10 @@ class Engine:
         if self.options.store_payload and record.payload:
             row["payload"] = printable(record.payload, self.options.payload_chars)
         return row
+
+    def _count_proto(self, proto: str) -> None:
+        name = proto if proto in self._protos or len(self._protos) < MAX_PROTOS else "other"
+        self._protos[name] = self._protos.get(name, 0) + 1
 
     def _count_host(self, address: str, length: int) -> None:
         entry = self._hosts.get(address)
@@ -155,10 +172,11 @@ class Engine:
     def tick(self, now: float, elapsed_s: float) -> dict[str, Any]:
         """Oxirgi `tick`dan beri to'planganini bo'shatib, plaginga yuboriladigan xabarni tuzadi."""
         with self._lock:
-            rows, self._rows = self._rows, []
+            rows, self._rows, self._marked_rows = self._rows, [], 0
             alerts, self._alerts = self._alerts, []
             top = sorted(self._hosts.items(), key=lambda item: item[1][1], reverse=True)
             top = top[:TOP_HOSTS]
+            protos = dict(self._protos)
         delta, self._ticked_total = self.total - self._ticked_total, self.total
         geo = self._geo
         return {
@@ -172,7 +190,10 @@ class Engine:
             "last_error": self.last_error,
             "suppressed": self.detector.suppressed,
             "bytes": self.bytes,
+            "marked": self.marked,
             "pps": round(delta / elapsed_s, 1) if elapsed_s > 0 else 0.0,
+            # Ushlash boshidan beri protokollar bo'yicha paketlar soni.
+            "protos": protos,
             "packets": rows,
             "alerts": [
                 {"ts": round(a.ts, 3), "kind": a.kind, "src": a.src, "dst": a.dst, "note": a.note}
