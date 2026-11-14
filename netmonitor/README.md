@@ -170,6 +170,19 @@ CI: `.github/workflows/netmonitor.yml` — Linux'da `ruff`, `pytest`, jonli ushl
 yig'ish, imzolash va imzolangan exe ni sinash. Tayyor fayllar ish sahifasida
 `NetMonitor-<versiya>-signed` artefakti bo'lib turadi.
 
+## Nima sinalgan
+
+| Qayerda | Nima |
+|---------|------|
+| Linux va Windows (CI) | 54 ta test (`pytest`), `ruff` |
+| Linux (CI) | jonli ushlash haqiqiy interfeysda: paketlar ushlandi, parol yashirildi, `exclude` va `pause` ishladi, `exit` toza chiqdi (`tests/live_smoke.py`) |
+| Windows (CI), imzolangan exe | `--version`; `--self-test` (50 ta sun'iy paket fayldan o'qilib butun zanjirdan o'tadi); `--list-ifaces` (Windows interfeyslari ro'yxati); Npcap yo'q mashinada tushunarli xabar va 3-kod; imzo va SHA-256 |
+
+**Sinalmagan:** Windows'da haqiqiy Npcap drayveri bilan jonli ushlash — CI mashinasiga Npcap'ni
+jim o'rnatib bo'lmaydi. Ushlash chaqiruvi v3.9 dagi bilan bir xil (`sniff(iface="\Device\NPF_{GUID}")`),
+lekin 4.0.0 ning o'zi Npcap bilan faqat sizning kompyuteringizda tekshiriladi. SmartScreen va
+antiviruslarning munosabati ham sinalmagan.
+
 ## Ma'lum cheklovlar
 
 - TCP oqimi yig'ilmaydi: bir nechta paketga bo'lingan matn bo'lak-bo'lak tekshiriladi.

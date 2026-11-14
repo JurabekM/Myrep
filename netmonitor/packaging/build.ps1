@@ -72,6 +72,7 @@ $pyinstallerArgs = @(
     '--collect-submodules', 'scapy.layers',
     '--collect-submodules', 'scapy.arch',
     '--collect-submodules', 'scapy.libs',
+    '--collect-data', 'scapy',
     '--exclude-module', 'tkinter',
     '--log-level', 'WARN',
     (Join-Path $Root 'netmonitor.py')
@@ -86,14 +87,26 @@ $reported = (& $Exe --version | Select-Object -Last 1).Trim()
 Assert-Ok '--version'
 if ($reported -ne "NetMonitor $Version") { throw "versiya mos emas: '$reported'" }
 Write-Note $reported
-& $Exe --self-test
+$selfTest = (& $Exe --self-test | Select-Object -Last 1)
 Assert-Ok '--self-test'
+Write-Note $selfTest
+# scapy o'z versiyasini topa olmasa (VERSION fayli to'plamga tushmagan), har ishga tushishda git qidiradi.
+if ($selfTest -notmatch 'scapy \d+\.\d+\.\d+\)$' -or $selfTest -match 'scapy 0\.0\.0') {
+    throw "to'plamda scapy versiyasi aniqlanmadi: $selfTest"
+}
 # Interfeyslar ro'yxati Npcap'siz ham chiqadi: Windows'ga xos qism yig'ilganini tekshiradi.
 $probe = Join-Path $Build 'probe'
 New-Item -ItemType Directory -Force -Path $probe | Out-Null
 '{"log_folder": "logs"}' | Set-Content -LiteralPath (Join-Path $probe 'config.json') -Encoding ASCII
 & $Exe --config (Join-Path $probe 'config.json') --list-ifaces
 Assert-Ok '--list-ifaces'
+$npcap = @("$env:WINDIR\System32\Npcap\wpcap.dll", "$env:WINDIR\System32\wpcap.dll") | Where-Object { Test-Path -LiteralPath $_ }
+if (-not $npcap) {
+    # Npcap yo'q mashina: dastur tushunarli xabar va 3-kod bilan chiqishi kerak (kutib qolmasdan).
+    '' | & $Exe --config (Join-Path $probe 'config.json') --iface 0
+    if ($LASTEXITCODE -ne 3) { throw "Npcap'siz chiqish kodi 3 bo'lishi kerak edi, keldi: $LASTEXITCODE" }
+    Write-Note "Npcap'siz holat: 3-kod bilan chiqdi (kutilgan)"
+}
 
 Write-Step 'release\'
 if (Test-Path -LiteralPath $Release) { Remove-Item -LiteralPath $Release -Recurse -Force }

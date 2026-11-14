@@ -2,6 +2,8 @@
 # Windows ishi imzolangan NetMonitor.exe ni yig'adi va artefakt qilib yuklaydi. Imzo — o'zi imzolangan,
 # bir martalik kalit bilan: kalit shu ishning o'zida yaratiladi va imzodan keyin o'chiriladi
 # (netmonitor/README.md, «Imzo»). Sir (secret) kerak emas.
+# Windows'da haqiqiy drayver bilan ushlash bu yerda sinalmaydi: Npcap'ning bepul nashri jim
+# o'rnatilmaydi. Jonli ushlash Linux ishida sinaladi (tests/live_smoke.py).
 name: netmonitor
 
 on:
@@ -49,8 +51,6 @@ jobs:
       run:
         working-directory: netmonitor
         shell: powershell
-    outputs:
-      version: ${{ steps.build.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -84,38 +84,3 @@ jobs:
           name: NetMonitor-${{ steps.build.outputs.version }}-signed
           path: netmonitor/release/
           if-no-files-found: error
-
-  # Imzolangan exe ni haqiqiy Npcap drayveri bilan sinaydi. Npcap'ning bepul nashri jim
-  # o'rnatishni faqat eski 0.96 versiyada qo'llaydi, shuning uchun bu ish majburiy emas.
-  windows-live:
-    needs: windows
-    runs-on: windows-latest
-    continue-on-error: true
-    defaults:
-      run:
-        working-directory: netmonitor
-        shell: powershell
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - uses: actions/download-artifact@v4
-        with:
-          name: NetMonitor-${{ needs.windows.outputs.version }}-signed
-          path: netmonitor/release
-      - name: Npcap 0.96 (jim o'rnatish)
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $installer = Join-Path $env:RUNNER_TEMP 'npcap-0.96.exe'
-          Invoke-WebRequest -Uri 'https://npcap.com/dist/npcap-0.96.exe' -OutFile $installer
-          $signature = Get-AuthenticodeSignature -FilePath $installer
-          if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Insecure\.Com LLC') {
-            throw "Npcap o'rnatuvchisining imzosi kutilganidek emas: $($signature.Status) $($signature.SignerCertificate.Subject)"
-          }
-          Start-Process -FilePath $installer -ArgumentList '/S', '/winpcap_mode=yes' -Wait
-          if (-not (Test-Path "$env:WINDIR\System32\Npcap\wpcap.dll")) { throw 'Npcap o''rnatilmadi' }
-      - name: Jonli sinov (imzolangan exe, haqiqiy interfeys)
-        run: |
-          python tests\live_smoke.py release\NetMonitor.exe
-          if ($LASTEXITCODE -ne 0) { throw 'jonli sinov' }
