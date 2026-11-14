@@ -7,14 +7,15 @@ amal yadro API'siga boradi.
 
 ## Ishga tushirish
 
-Avval yadro ishlab turgan bo'lsin, so'ng:
-
 ```powershell
 uv run python -m srv1_shell
 ```
 
-Token `SRV1_DATA_DIR` (yoki `%PROGRAMDATA%\SRV_1`) ichidagi `auth.token` dan
-o'qiladi. Fayl topilmasa, tokenni qo'lda kiritish oynasi chiqadi (saqlanmaydi).
+Yadro ishlamayotgan bo'lsa, shell uni o'zi ko'taradi (pastdagi «Server» bo'limi). Token
+`SRV1_DATA_DIR` (yoki `%PROGRAMDATA%\SRV_1`) ichidagi `auth.token` dan o'qiladi — yadro
+birinchi marta ishga tushganda yaratadi, shell uni kutib oladi. Yadro ishlab turib, token
+faylini o'qib bo'lmasagina (masalan, yadro boshqa hisob nomidan ishlayapti) tokenni qo'lda
+kiritish oynasi chiqadi (saqlanmaydi).
 
 Sozlamalar `%APPDATA%\SRV_1\shell.json` da (`SRV1_SHELL_CONFIG` bilan
 o'zgartiriladi): `language`, `host`, `port`. Token u yerga yozilmaydi.
@@ -76,12 +77,54 @@ Bir xil `source` ga qaragan vidjetlar bitta so'rovni bo'lishadi. Har
 muvaffaqiyatli amaldan keyin barcha manbalar darhol yangilanadi. Majburiy
 maydon bo'sh yoki son maydonida matn bo'lsa, so'rov yuborilmaydi.
 
+## Server: yadroni ishga tushirish va to'xtatish
+
+Sarlavhada ulanish holati yonida bitta tugma bor: «Serverni to'xtatish» yoki «Serverni
+ishga tushirish».
+
+| Holat | Nima bo'ladi |
+|-------|--------------|
+| oyna ochildi, yadro javob beryapti | ulanadi, boshqa hech narsa qilmaydi |
+| oyna ochildi, yadro yo'q, xizmat o'rnatilmagan | yadroni **oynasiz** ishga tushiradi (`python.exe -m srv1_core --no-console`), 90 s gacha kutadi, tokenni o'qib ulanadi |
+| oyna ochildi, yadro yo'q, `SRV_1` xizmati o'rnatilgan, lekin to'xtatilgan | hech narsani ishga tushirmaydi (UAC so'ramaydi), sariq satrda tushuntiradi; tugma bosilsa — `sc start SRV_1` administrator tasdig'i bilan |
+| «Serverni to'xtatish» | tasdiq so'raydi → `POST /system/shutdown` → yadro **jarayoni tugaguncha** kutadi (45 s gacha). Yadro xizmat ostida bo'lsa — `sc stop SRV_1` (UAC) |
+| oyna yopildi | yadro ishlashda davom etadi |
+| yadro o'zi o'ldi yoki tashqaridan to'xtatildi | holat «Server to'xtatilgan», sariq satrda jurnallar papkasi; tugma bilan qayta yoqiladi |
+| yadro tashqaridan ko'tarildi (konsol, xizmat) | hodisalar oqimi 2 s da qayta ulanadi, holat o'zi to'g'rilanadi |
+
+![Server to'xtatilgan holat](img/shell-server-uz.png)
+
+Ishga tushmasa, sabab oynaning o'zida, sarlavha ostidagi sariq satrda chiqadi (matnni
+belgilab nusxalasa bo'ladi): yadroning oxirgi xabari va jurnallar papkasi
+(`logs\core-launch.log` — ishga tushish paytidagi chiqish, `logs\srv1.log` — asosiy jurnal).
+
+Tuzilishi: `launcher.py` — Qt'siz, bloklovchi funksiyalar (tekshirish, ishga tushirish,
+to'xtatish, xizmat holati); `server_control.py` — ularni fon oqimida yuritib, natijani
+signal bilan beradi; `main_window.py` faqat ko'rsatadi. Bu biznes-mantiq emas — yadro
+jarayonining hayot sikli; to'xtatishning o'zi yadro API'si orqali.
+
+Cheklovlar:
+
+- Shell yadroni `shell.json` dagi manzilda kutadi (standart `127.0.0.1:8710`). Yadroning
+  `config.toml` da boshqa port turgan bo'lsa, yadro ko'tariladi, lekin shell uni ko'rmaydi
+  va 90 s dan keyin «javob bermadi» deydi — ikkala faylda port bir xil bo'lsin.
+- Oynasiz ishga tushgan yadro foydalanuvchi seansiga tegishli: tizimdan chiqilsa to'xtaydi.
+  Kompyuter yonishi bilan ishlashi kerak bo'lsa — Windows xizmati ([ornatish.md](ornatish.md)).
+- Xizmat nomi standart `SRV_1`; `service.ps1 -Name` bilan boshqa nom berilgan bo'lsa,
+  shell uchun `SRV1_SERVICE_NAME` muhit o'zgaruvchisida ko'rsatiladi.
+- Xizmat `Running`, lekin yadro shell kutgan manzilda javob bermasa (masalan, port boshqa),
+  shell alohida yadro ochmaydi: 90 s kutib, `service.log` yo'lini ko'rsatadi.
+- Ikki oyna bir vaqtda ochilsa, ikkalasi ham yadroni ishga tushirishga urinishi mumkin:
+  ikkinchi yadro portni band ko'rib darhol chiqadi (kod 3), ikkala oyna ham birinchisiga ulanadi.
+
 ## Tuzilma
 
 | Fayl | Vazifa |
 |------|--------|
-| `app.py` | `QApplication`, uslub, shrift, token |
-| `main_window.py` | oyna, bo'limlar ro'yxati, til, panellarni sinxronlash |
+| `app.py` | `QApplication`, uslub, shrift, yadroni ko'tarish, token |
+| `main_window.py` | oyna, bo'limlar ro'yxati, server tugmasi, til, panellarni sinxronlash |
+| `launcher.py` | yadro jarayoni: tekshirish, oynasiz ishga tushirish, to'xtatish (Qt'siz) |
+| `server_control.py` | `launcher` amallari fon oqimida, holat signallari |
 | `api.py` | `httpx` fon oqimida; javob GUI oqimiga signal bilan qaytadi |
 | `events.py` | `QWebSocket`; uzilsa 2 s da qayta ulanadi |
 | `i18n.py`, `translations.py` | tarjima, son va hajm formatlash |

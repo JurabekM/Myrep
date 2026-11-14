@@ -1,8 +1,11 @@
-"""`monitor` plagini: CPU, RAM va disk tarixi, chegaradan oshganda ogohlantirish.
+"""`monitor` plagini: CPU, RAM va disk tarixi, ogohlantirishlar va tarmoq kuzatuvi.
 
 Har `interval_s` soniyada tizim holatini o'lchab, o'z SQLite bazasiga yozadi,
 qoidalarni tekshiradi va holat o'zgarsa `plugin.monitor.alert` hodisasini
 chiqaradi. Boshqa plagin yiqilsa ham ogohlantirish yoziladi.
+
+Tarmoq kuzatuvi (`netcap/`): paketlarni ushlash alohida jarayonda, faqat so'ralganda
+ishga tushadi — plagin bo'sh turganda xotira sarfi o'zgarmaydi.
 
 Yangi plagin yozishda andoza sifatida ham qulay: API router, davriy vazifa,
 hodisa nashri va obunasi, o'z papkasiga yozish, audit va panel shu yerda bor.
@@ -21,6 +24,7 @@ from srv1_sdk.panel import PanelSpec
 from srv1_sdk.types import EventHandler, Job
 
 from .models import MonitorError
+from .netcap.api import build_net_router
 from .panel import build_panel
 from .service import MonitorService
 
@@ -139,4 +143,5 @@ def srv1_router(ctx: PluginContext) -> APIRouter:
     ) -> list[dict[str, Any]]:
         return await _run(service.alerts(limit))
 
+    router.include_router(build_net_router(service.net), prefix="/net")
     return router

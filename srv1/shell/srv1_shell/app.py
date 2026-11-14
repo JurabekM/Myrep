@@ -1,4 +1,4 @@
-"""Shell'ni ishga tushirish: uslub, shrift, token, asosiy oyna."""
+"""Shell'ni ishga tushirish: uslub, shrift, yadroni ko'tarish, token, asosiy oyna."""
 
 import sys
 from pathlib import Path
@@ -15,7 +15,9 @@ from srv1_shell.config import (
 )
 from srv1_shell.i18n import I18n
 from srv1_shell.icon import app_icon
+from srv1_shell.launcher import Launcher, service_name
 from srv1_shell.main_window import MainWindow
+from srv1_shell.server_control import ServerControl
 
 THEME_FILE = Path(__file__).with_name("theme.qss")
 # Shrift QSS orqali emas: bir nechta zaxira oilasi faqat QFont bilan to'g'ri ishlaydi.
@@ -39,7 +41,7 @@ def ask_token(config: ShellConfig, token_file: Path) -> str | None:
         QLineEdit.EchoMode.Password,
     )
     token = text.strip()
-    return token if accepted and token else None
+    return token if accepted and token and token.isascii() else None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -49,15 +51,34 @@ def main(argv: list[str] | None = None) -> int:
     apply_theme(app)
     config = load_config()
     token_file = default_token_file()
-    token = read_token(token_file) or ask_token(config, token_file)
-    if token is None:
-        return 1
+    launcher = Launcher(config.http_url, token_file.parent, service_name=service_name())
+    control = ServerControl(launcher)
 
     def remember_language(_language: str) -> None:
         save_config(config)
 
-    window = MainWindow(config, token, on_language_changed=remember_language)
+    window = MainWindow(
+        config,
+        read_token(token_file) or "",
+        on_language_changed=remember_language,
+        control=control,
+    )
+    asked = False
+
+    def offer_manual_token() -> None:
+        """Zaxira yo'l: yadro ishlayapti, lekin token fayli o'qilmadi (boshqa hisobniki)."""
+        nonlocal asked
+        if asked or control.reason != "no_token":
+            return
+        asked = True
+        token = ask_token(config, token_file)
+        if token is not None:
+            window.use_token(token)
+
+    control.changed.connect(offer_manual_token)
     window.show()
+    # Yadro ishlamayotgan bo'lsa, oynasiz ko'tariladi; oyna yopilganda u ishlashda davom etadi.
+    control.ensure()
     code = app.exec()
     window.shutdown()
     return code

@@ -31,6 +31,89 @@ TEXTS: dict[str, dict[str, str]] = {
         "Файл токена не найден:\n{path}\n\nВведите токен вручную:",
         "Token file not found:\n{path}\n\nEnter the token manually:",
     ),
+    # --- server (yadroni ishga tushirish va to'xtatish) -------------------
+    "server.start": _t("Serverni ishga tushirish", "Запустить сервер", "Start server"),
+    "server.stop": _t("Serverni toʻxtatish", "Остановить сервер", "Stop server"),
+    "server.state.checking": _t(
+        "Server tekshirilmoqda…", "Проверка сервера…", "Checking the server…"
+    ),
+    "server.state.starting": _t(
+        "Server ishga tushmoqda…", "Сервер запускается…", "Server is starting…"
+    ),
+    "server.state.stopping": _t(
+        "Server toʻxtatilmoqda…", "Сервер останавливается…", "Server is stopping…"
+    ),
+    "server.state.stopped": _t("Server toʻxtatilgan", "Сервер остановлен", "Server is stopped"),
+    "server.state.failed": _t(
+        "Server ishga tushmadi", "Сервер не запустился", "Server failed to start"
+    ),
+    "server.confirm.title": _t("Serverni toʻxtatish", "Остановка сервера", "Stop server"),
+    "server.confirm.text": _t(
+        "Server toʻxtatilsa, joylangan saytlar, IoT va rejalashtirilgan vazifalar ham "
+        "toʻxtaydi. Qayta yoqish uchun «Serverni ishga tushirish» ni bosing.\n\nToʻxtatilsinmi?",
+        "После остановки сервера перестанут работать размещённые сайты, IoT и задачи по "
+        "расписанию. Чтобы включить снова, нажмите «Запустить сервер».\n\nОстановить?",
+        "Stopping the server also stops hosted sites, IoT and scheduled jobs. "
+        "Press “Start server” to turn it back on.\n\nStop it?",
+    ),
+    "server.reason.no_token": _t(
+        "Yadro ishlayapti, lekin token faylini oʻqib boʻlmadi: {detail}",
+        "Ядро работает, но файл токена прочитать не удалось: {detail}",
+        "The core is running, but the token file could not be read: {detail}",
+    ),
+    "server.reason.service_stopped": _t(
+        "SRV_1 Windows xizmati toʻxtatilgan. Yoqish uchun «Serverni ishga tushirish» ni "
+        "bosing (administrator tasdigʻi soʻraladi).",
+        "Служба Windows SRV_1 остановлена. Нажмите «Запустить сервер» "
+        "(потребуется подтверждение администратора).",
+        "The SRV_1 Windows service is stopped. Press “Start server” "
+        "(administrator approval is required).",
+    ),
+    "server.reason.uac_declined": _t(
+        "Administrator tasdigʻi berilmadi — amal bajarilmadi.",
+        "Подтверждение администратора не получено — действие не выполнено.",
+        "Administrator approval was not given — nothing was done.",
+    ),
+    "server.reason.start_timeout": _t(
+        "Yadro belgilangan vaqtda javob bermadi. Jurnal: {detail}",
+        "Ядро не ответило за отведённое время. Журнал: {detail}",
+        "The core did not respond in time. Log: {detail}",
+    ),
+    "server.reason.exited": _t(
+        "Yadro ishga tushmay toʻxtadi: {detail}",
+        "Ядро завершилось, не запустившись: {detail}",
+        "The core exited before it started: {detail}",
+    ),
+    "server.reason.no_python": _t(
+        "Yadroni ishga tushiradigan Python topilmadi: {detail}",
+        "Не найден Python для запуска ядра: {detail}",
+        "Python to run the core was not found: {detail}",
+    ),
+    "server.reason.launch_error": _t(
+        "Yadroni ishga tushirib boʻlmadi: {detail}",
+        "Не удалось запустить ядро: {detail}",
+        "Could not start the core: {detail}",
+    ),
+    "server.reason.stop_timeout": _t(
+        "Yadro belgilangan vaqtda toʻxtamadi.",
+        "Ядро не остановилось за отведённое время.",
+        "The core did not stop in time.",
+    ),
+    "server.reason.stop_refused": _t(
+        "Yadro toʻxtatishni rad etdi: {detail}",
+        "Ядро отклонило остановку: {detail}",
+        "The core refused to stop: {detail}",
+    ),
+    "server.reason.unsupported": _t(
+        "Bu yadro eski versiya: uni oynadan toʻxtatib boʻlmaydi. Yadro oynasini yoping.",
+        "Это ядро старой версии: остановить его из окна нельзя. Закройте окно ядра.",
+        "This core is an old version and cannot be stopped from here. Close its window.",
+    ),
+    "server.reason.lost": _t(
+        "Yadro bilan aloqa uzildi. Jurnallar: {detail}",
+        "Связь с ядром потеряна. Журналы: {detail}",
+        "Connection to the core was lost. Logs: {detail}",
+    ),
     # --- navigatsiya ------------------------------------------------------
     "nav.system": _t("Tizim", "Система", "System"),
     "nav.plugins": _t("Plaginlar", "Плагины", "Plugins"),

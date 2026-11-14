@@ -7,6 +7,16 @@ $env:SRV1_DATA_DIR = "$PWD\.srv1-data"   # ishlab chiqishda; berilmasa %PROGRAMD
 uv run python -m srv1_core
 ```
 
+Odatda yadroni qo'lda ishga tushirish shart emas: shell oynasi ochilganda uni o'zi
+ko'taradi ([shell.md](shell.md#server-yadroni-ishga-tushirish-va-toxtatish)).
+
+| Parametr / chiqish kodi | Ma'nosi |
+|-------------------------|---------|
+| `--no-console` | jurnal konsolga chiqmaydi, faqat `logs/srv1.log` ga (shell yadroni oynasiz shu bilan ishga tushiradi) |
+| kod 0 | tartibli to'xtadi (Ctrl+C, xizmat to'xtashi yoki `POST /system/shutdown`) |
+| kod 2 | `config.toml` ni o'qib bo'lmadi |
+| kod 3 | manzil band — yadro allaqachon ishlayapti. Tekshiruv bazani ochishdan va plaginlarni ishga tushirishdan **oldin**: ikkinchi nusxa Caddy yoki Mosquitto'ni ko'tarib, birinchisiga xalaqit bermaydi |
+
 Birinchi ishga tushishda ma'lumotlar papkasida yaratiladi:
 
 | Fayl | Vazifa |
@@ -47,12 +57,21 @@ Hamma so'rovda `Authorization: Bearer <token>` (faqat `/health` tokensiz).
 | `GET /api/v1/health` | yo'q | `{status, version, uptime_s}` |
 | `GET /api/v1/system` | token | `{ts, cpu, memory, disks[], process}` |
 | `GET /api/v1/system/processes` | token | yadro va bola plaginlar xotirasi, 350 MB chegarasi |
+| `GET /api/v1/system/server` | token | `{version, pid, uptime_s, managed_by, can_shutdown}`; `managed_by` — `service` (NSSM ostida) yoki `standalone` |
+| `POST /api/v1/system/shutdown` | token | 202 `{status: "stopping"}` — yadro tartibli to'xtaydi; xizmat ostida 409 |
 | `GET /api/v1/logs?tail=N` | token | oxirgi log yozuvlari (1–500, INFO va yuqori) |
 | `WS /ws/events?topics=a.*,b` | token (sarlavhada) | hodisalar oqimi |
 | `/api/v1/plugins...` | token | [plaginlar.md](plaginlar.md) |
 
 `/system`: `disks` faqat qattiq disklar (tarmoq/olinadigan disklar so'rovni osib
 qo'ymasligi uchun); `process` — yadro jarayonining `rss`, `private`, `threads`.
+
+`/system/shutdown`: javob qaytgach 0,3 s dan keyin server yopiladi — plaginlar, ularning
+jarayonlari (Caddy, loyihalar, Mosquitto), rejalashtiruvchi va baza odatdagi tartibda
+to'xtaydi (Ctrl+C dagi bilan bir xil yo'l). Ochiq WebSocket ulanishlari 10 s kutiladi, keyin
+uziladi. Yadro Windows xizmati sifatida ishlayotgan bo'lsa (ota jarayoni `nssm.exe`), so'rov
+409 bilan rad etiladi: NSSM yadroni baribir qayta ko'tarardi — xizmatning o'zini to'xtatish
+kerak (`sc stop SRV_1` yoki `install\service.ps1 -Action stop`).
 
 `/docs`, `/redoc`, `/openapi.json` yopiq.
 
@@ -84,7 +103,8 @@ Hozirgi mavzular:
 
 `AuditLogger.record(action, target, actor=, ok=, detail=)` — bazaga
 (`audit_log`), log fayliga va `audit` mavzusiga yozadi. Vaqt har doim UTC,
-naive `datetime` rad etiladi. Hozircha yagona yozuv: `auth.token_created`.
+naive `datetime` rad etiladi. Yadroning o'z yozuvlari: `auth.token_created` va
+`core.shutdown` (rad etilgan urinish ham, `ok = false` bilan).
 
 ## Yo'l xavfsizligi
 

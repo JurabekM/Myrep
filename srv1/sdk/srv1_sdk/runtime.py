@@ -24,9 +24,23 @@ class PluginLoadError(RuntimeError):
     """Plagin kodi import bo'lmadi yoki hook noto'g'ri qiymat qaytardi."""
 
 
+def _ensure_namespace() -> None:
+    """`srv1_plugins` nomli bo'sh ota paketni ro'yxatga qo'yadi.
+
+    Busiz plagin ichidagi quyi paket (`srv1_plugins.<nom>.<quyi>.<modul>`) import
+    bo'lmaydi: import tizimi zanjirning eng yuqori nomini ham `sys.modules` dan qidiradi.
+    """
+    root = MODULE_PREFIX.rstrip(".")
+    if root not in sys.modules:
+        namespace = ModuleType(root)
+        namespace.__path__ = []
+        sys.modules[root] = namespace
+
+
 def _import_plugin(plugin_dir: Path, name: str) -> ModuleType:
     init_file = plugin_dir / "__init__.py"
     module_name = MODULE_PREFIX + name
+    _ensure_namespace()
     spec = importlib.util.spec_from_file_location(
         module_name, init_file, submodule_search_locations=[str(plugin_dir)]
     )

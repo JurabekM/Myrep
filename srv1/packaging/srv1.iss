@@ -142,11 +142,13 @@ uz.LaunchProgram=%1 ni ochish
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
+; Yangilashdan oldin oynasiz ishlayotgan yadroni to'xtatish uchun (PrepareToInstall).
+Source: "{#StageDir}\install\stop-core.ps1"; Flags: dontcopy
 Source: "{#StageDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Icons]
 Name: "{autoprograms}\SRV_1\SRV_1"; Filename: "{app}\python\pythonw.exe"; Parameters: "-m srv1_shell"; WorkingDir: "{app}"; IconFilename: "{app}\shell\srv1_shell\srv1.ico"; Comment: "SRV_1 boshqaruv oynasi"
-Name: "{autoprograms}\SRV_1\SRV_1 yadro (konsol)"; Filename: "{app}\python\python.exe"; Parameters: "-m srv1_core"; WorkingDir: "{app}"; IconFilename: "{app}\shell\srv1_shell\srv1.ico"; Comment: "Yadroni oynada ishga tushirish (oyna yopilsa, yadro to'xtaydi)"
+Name: "{autoprograms}\SRV_1\SRV_1 yadro (konsol)"; Filename: "{app}\python\python.exe"; Parameters: "-m srv1_core"; WorkingDir: "{app}"; IconFilename: "{app}\shell\srv1_shell\srv1.ico"; Comment: "Yadroni oynada ishga tushirish (nosozlikni aniqlash uchun; oyna yopilsa, yadro to'xtaydi)"
 Name: "{autoprograms}\SRV_1\Qo'llanma"; Filename: "{app}\docs\qollanma.md"
 Name: "{autoprograms}\SRV_1\{cm:UninstallProgram,SRV_1}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\SRV_1"; Filename: "{app}\python\pythonw.exe"; Parameters: "-m srv1_shell"; WorkingDir: "{app}"; IconFilename: "{app}\shell\srv1_shell\srv1.ico"; Comment: "SRV_1 boshqaruv oynasi"; Tasks: desktopicon
@@ -157,7 +159,7 @@ Name: "{autodesktop}\SRV_1"; Filename: "{app}\python\pythonw.exe"; Parameters: "
 Filename: "{#PowerShellExe}"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\install\install.ps1"" -SkipSync -NoShortcut"; Flags: runhidden runasoriginaluser; StatusMsg: "Ma'lumotlar papkasi tayyorlanmoqda..."
 ; Windows xizmati: alohida administrator oynasida, parolni Windows'ning o'zi so'raydi.
 Filename: "{#PowerShellExe}"; Parameters: "-NoProfile -NoExit -ExecutionPolicy Bypass -File ""{app}\install\service.ps1"" -Action install"; Verb: "runas"; Description: "Windows xizmati sifatida o'rnatish (kompyuter yonganda o'zi ishga tushadi; parol so'raladi)"; Flags: postinstall shellexec nowait skipifsilent unchecked
-Filename: "{app}\python\pythonw.exe"; Parameters: "-m srv1_shell"; WorkingDir: "{app}"; Description: "{cm:LaunchProgram,SRV_1}"; Flags: postinstall nowait skipifsilent unchecked
+Filename: "{app}\python\pythonw.exe"; Parameters: "-m srv1_shell"; WorkingDir: "{app}"; Description: "{cm:LaunchProgram,SRV_1}"; Flags: postinstall nowait skipifsilent
 
 [UninstallDelete]
 ; Ishlash paytida paydo bo'lishi mumkin bo'lgan .pyc fayllar (faqat dastur papkasi ichida).
@@ -202,10 +204,26 @@ begin
     ' -ErrorAction SilentlyContinue).Status -eq ''Running'') { exit 7 }; exit 0') = 7;
 end;
 
+{ Oynasiz (shell ishga tushirgan) yadroni API orqali tartibli to'xtatadi. Natijaga qaralmaydi:
+  yadro ishlamayotgan yoki eski bo'lsa va fayllar band bo'lsa, buni o'rnatuvchining o'zi aytadi. }
+procedure StopStandaloneCore(Script: String);
+var
+  Code: Integer;
+begin
+  Exec(ExpandConstant('{#PowerShellExe}'),
+    '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "' + Script + '"',
+    '', SW_HIDE, ewWaitUntilTerminated, Code);
+end;
+
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   Result := '';
   ServiceWasStopped := False;
+  if not ServiceIsRunning() then
+  begin
+    ExtractTemporaryFile('stop-core.ps1');
+    StopStandaloneCore(ExpandConstant('{tmp}\stop-core.ps1'));
+  end;
   if ServiceIsOurs() and ServiceIsRunning() then
   begin
     RunPowerShell('Stop-Service ' + ServiceName + ' -ErrorAction SilentlyContinue');
@@ -239,4 +257,6 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   if (CurUninstallStep = usUninstall) and ServiceIsOurs() then
     RunPowerShell('& ''' + ExpandConstant('{app}') + '\install\service.ps1'' -Action remove');
+  if (CurUninstallStep = usUninstall) and not ServiceIsRunning() then
+    StopStandaloneCore(ExpandConstant('{app}\install\stop-core.ps1'));
 end;
