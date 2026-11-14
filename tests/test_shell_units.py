@@ -56,6 +56,16 @@ def test_every_key_used_in_code_exists() -> None:
         f"plugins.col.{c}" for c in ("name", "version", "mode", "status", "description", "action")
     ]
     dynamic += [f"memory.col.{c}" for c in ("process", "pid", "ws", "private")]
+    dynamic += [
+        f"server.state.{s}" for s in ("checking", "starting", "stopping", "stopped", "failed")
+    ]
+    # `Launcher` qaytaradigan har sabab uchun tarjima bo'lishi shart.
+    launcher = (_SOURCE_DIR / "launcher.py").read_text(encoding="utf-8")
+    control = (_SOURCE_DIR / "server_control.py").read_text(encoding="utf-8")
+    reasons = set(re.findall(r'Outcome\(\s*"\w+",\s*"(\w+)"', launcher))
+    reasons |= set(re.findall(r'reason, detail = "(\w+)"', control))
+    assert len(reasons) >= 10, sorted(reasons)
+    dynamic += [f"server.reason.{reason}" for reason in sorted(reasons)]
     assert set(dynamic) <= set(TEXTS)
 
 

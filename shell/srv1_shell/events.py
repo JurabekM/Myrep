@@ -35,9 +35,23 @@ class EventStream(QObject):
     def connected(self) -> bool:
         return self._connected
 
+    @property
+    def running(self) -> bool:
+        return self._running
+
+    def set_token(self, token: str) -> None:
+        """Yangi token keyingi ulanishdan boshlab ishlatiladi (`restart()` darhol qayta ulaydi)."""
+        self._token = token.encode("ascii")
+
     def start(self) -> None:
         self._running = True
         self._open()
+
+    def restart(self) -> None:
+        """Joriy ulanishni uzib, kutmasdan qayta ulanadi."""
+        self._retry.stop()
+        self._socket.abort()
+        self.start()
 
     def stop(self) -> None:
         self._running = False

@@ -104,6 +104,37 @@ async def test_spawn_runs_in_job_captures_output_and_audits(tmp_path: Path) -> N
     assert isinstance(detail["pid"], int)
 
 
+async def test_send_line_reaches_stdin_only_when_enabled(tmp_path: Path) -> None:
+    ctx, _ = _context(tmp_path, spawn=True)
+    lines: list[str] = []
+    code = "import sys\nfor line in sys.stdin:\n    print('keldi', line.strip(), flush=True)"
+    env = {"SYSTEMROOT": "C:\\Windows"}
+    process = await ctx.spawn(
+        [PYTHON, "-c", code],
+        cwd=ctx.data_dir,
+        env=env,
+        memory_limit_mb=128,
+        on_line=lines.append,
+        accept_input=True,
+    )
+    assert await process.send_line("salom")
+    assert await process.send_line('{"c": "pause"}')
+    async with asyncio.timeout(10):
+        while len(lines) < 2:
+            await asyncio.sleep(0.02)
+    assert lines == ["keldi salom", 'keldi {"c": "pause"}']
+    await process.stop()
+    assert await process.send_line("kech") is False
+    # standart holatda stdin yopiq: bola darhol EOF oladi, yozish esa rad etiladi
+    closed = await ctx.spawn(
+        [PYTHON, "-c", code], cwd=ctx.data_dir, env=env, memory_limit_mb=128, on_line=lines.append
+    )
+    assert await closed.send_line("yo'q") is False
+    assert await closed.wait() == 0
+    await closed.stop()
+    assert len(lines) == 2
+
+
 async def test_stop_kills_whole_process_tree(tmp_path: Path) -> None:
     """Bola o'zi yana jarayon tug'dirsa ham, `stop()` hammasini o'ldiradi (job yopiladi)."""
     ctx, _ = _context(tmp_path, spawn=True)

@@ -68,7 +68,7 @@ Hammasi ixtiyoriy; `ctx` — `PluginContext`.
 | `ctx.projects_dir` | umumiy loyihalar papkasi (`permissions.projects`) |
 | `ctx.data_root` | butun ma'lumotlar papkasi, faqat o'qish uchun (`permissions.data_root`) |
 | `ctx.require_system(action)` | tizimni boshqarish amali oldidan tekshiruv (`permissions.system`) |
-| `await ctx.spawn(args, cwd=, env=, memory_limit_mb=, on_line=)` | jarayonni `shell`siz, Job Object ichida ishga tushiradi; auditga yozadi (`permissions.spawn`) |
+| `await ctx.spawn(args, cwd=, env=, memory_limit_mb=, on_line=, accept_input=False)` | jarayonni `shell`siz, Job Object ichida ishga tushiradi; auditga yozadi (`permissions.spawn`). `accept_input=True` bo'lsa, qaytgan obyektning `await process.send_line(matn)` usuli bilan jarayonning stdin'iga satr yuboriladi (aks holda stdin yopiq) |
 | `ctx.publish(topic, data)` | `plugin.<nom>.<topic>` ga nashr; boshqa mavzuga yoza olmaydi |
 | `ctx.notify(title, message="", level="warning")` | foydalanuvchiga bildirishnoma: `plugin.<nom>.notify` hodisasi, ochiq shell uni Windows bildirishnomasi qilib ko'rsatadi. Matn — satr yoki `{uz, ru, en}`; sarlavha 80, matn 300 belgigacha. Kam va faqat muhim holatda |
 | `await ctx.audit(action, target, ok=, detail=)` | audit jurnali, `actor = plugin:<nom>` |
@@ -106,6 +106,13 @@ shunday qiladi).
 
 Plagin kodi ikkala rejimda bir xil: `monitor` ni `mode = "subprocess"` ga
 o'zgartirish kifoya (testda tekshirilgan).
+
+**Yengil plagin ichida og'ir ish.** Og'ir kutubxona faqat ba'zan kerak bo'lsa, butun
+plaginni `heavy` qilish shart emas: plagin o'z ishchi skriptini `ctx.spawn` bilan talab
+bo'lganda ishga tushiradi va u bilan satrlar orqali gaplashadi (`on_line` — undan,
+`send_line` — unga). `monitor` ning tarmoq kuzatuvi shunday qurilgan: scapy faqat
+ishchi jarayonda yuklanadi ([tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md)). Plagin ichida
+quyi paket (`plugins/<nom>/<quyi>/`) ham bo'lishi mumkin — nisbiy import ishlaydi.
 
 ### Subprocess cheklovlari
 

@@ -41,6 +41,7 @@ def test_scripts_exist_and_are_ascii() -> None:
         "common.ps1",
         "install.ps1",
         "service.ps1",
+        "stop-core.ps1",
         "uninstall.ps1",
     ]
     for path in SCRIPTS:

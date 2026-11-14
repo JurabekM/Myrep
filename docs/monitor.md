@@ -4,6 +4,10 @@ CPU, RAM va disk holatini davriy o'lchab, tarixga yozadi; chegaradan oshsa
 ogohlantiradi. Yadro ichida ishlaydi, hech narsani boshqarmaydi — faqat o'qiydi
 va o'z papkasiga yozadi.
 
+Panelning pastki qismida **tarmoq kuzatuvi** bor: paketlarni ushlash, tahlil va xavf
+tekshiruvlari. U alohida jarayonda, faqat so'ralganda ishlaydi va alohida hujjatda
+tasvirlangan: [tarmoq-kuzatuvi.md](tarmoq-kuzatuvi.md). Quyidagilar — tizim holati haqida.
+
 ![Kuzatuv paneli](img/shell-monitor-uz.png)
 
 (Skrinshot uchun o'lchov oralig'i 1 soniya, disk chegarasi esa ataylab baland
