@@ -6,6 +6,7 @@ import shutil
 import sqlite3
 import sys
 import threading
+import time
 from collections.abc import Awaitable, Callable
 from contextlib import closing
 from pathlib import Path
@@ -493,6 +494,9 @@ def test_proxy_route_retries_refused_connections() -> None:
     handler = route["handle"][0]
     assert handler["upstreams"] == [{"dial": "127.0.0.1:9001"}]
     assert handler["load_balancing"] == {"try_duration": "2s", "try_interval": "50ms"}
+    assert "transport" not in handler  # 0 - chegara yo'q
+    limited = caddy.proxy_route("api.localhost", 9001, 1.5)["handle"][0]
+    assert limited["transport"] == {"protocol": "http", "response_header_timeout": "1500ms"}
 
 
 def _burst(url: str, headers: dict[str, str], total: int, parallel: int) -> dict[str, int]:
@@ -537,3 +541,30 @@ async def test_parallel_burst_gets_no_bad_gateway(paths: DataPaths, ports: Hosti
         url = f"http://127.0.0.1:{ports.listen}/"
         codes = await asyncio.to_thread(_burst, url, ports.host_header("api"), 2000, 50)
         assert codes == {"200": 2000}
+
+
+async def test_frozen_project_request_times_out(
+    paths: DataPaths, plugin_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Muzlab qolgan loyiha so'rovni cheksiz ushlab turmaydi; sekin, lekin tirik javob o'tadi."""
+    monkeypatch.setenv("SRV1_CADDY_EXE", str(CADDY_EXE))
+    ports = install_hosting(plugin_root, paths.plugin_data_dir("hosting"), response_timeout_s=2)
+    write_app(paths.projects_dir, "api")
+    async with serve_app(paths) as served, served.client() as client:
+        hosting = Hosting(client, ports)
+        created = await hosting.post(
+            "/projects", name="api", kind="python", command="python app.py", idle_minutes=0
+        )
+        assert created.status_code == 201, created.text
+        base = f"http://127.0.0.1:{ports.listen}"
+        async with httpx.AsyncClient(headers=ports.host_header("api"), timeout=30) as web:
+            assert (await web.get(f"{base}/slow")).status_code == 200
+            started = time.perf_counter()
+            hung = await web.get(f"{base}/hang")
+            elapsed = time.perf_counter() - started
+            assert hung.status_code in (502, 504), hung.text
+            assert 1.5 < elapsed < 8, elapsed
+            # loyiha tirik: keyingi so'rov odatdagidek o'tadi, holati o'zgarmagan
+            assert (await web.get(f"{base}/")).status_code == 200
+        assert (await hosting.project("api"))["state"] == "running"
+        print(f"muzlagan so'rov: {hung.status_code}, {elapsed:.2f} s")

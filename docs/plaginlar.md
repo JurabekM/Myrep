@@ -70,6 +70,7 @@ Hammasi ixtiyoriy; `ctx` — `PluginContext`.
 | `ctx.require_system(action)` | tizimni boshqarish amali oldidan tekshiruv (`permissions.system`) |
 | `await ctx.spawn(args, cwd=, env=, memory_limit_mb=, on_line=)` | jarayonni `shell`siz, Job Object ichida ishga tushiradi; auditga yozadi (`permissions.spawn`) |
 | `ctx.publish(topic, data)` | `plugin.<nom>.<topic>` ga nashr; boshqa mavzuga yoza olmaydi |
+| `ctx.notify(title, message="", level="warning")` | foydalanuvchiga bildirishnoma: `plugin.<nom>.notify` hodisasi, ochiq shell uni Windows bildirishnomasi qilib ko'rsatadi. Matn — satr yoki `{uz, ru, en}`; sarlavha 80, matn 300 belgigacha. Kam va faqat muhim holatda |
 | `await ctx.audit(action, target, ok=, detail=)` | audit jurnali, `actor = plugin:<nom>` |
 | `ctx.log(level, event, **fields)` | yadro jurnaliga |
 
