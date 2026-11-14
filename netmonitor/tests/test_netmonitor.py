@@ -64,8 +64,13 @@ def read_log(processor: nm.PacketProcessor) -> list[dict[str, Any]]:
     return [json.loads(line) for line in processor.packet_log.path.read_text(encoding="utf-8").splitlines()]
 
 
+def frame(**fields: Any) -> Any:
+    """MAC manzillari aniq berilgan kadr: scapy ularni tizim marshrutlaridan qidirmaydi."""
+    return Ether(src="02:00:00:00:00:01", dst="02:00:00:00:00:02", **fields)
+
+
 def tcp(src: str, dst: str, dport: int, flags: str | int = "PA", payload: bytes = b"", sport: int = 40000) -> Any:
-    packet = Ether() / IP(src=src, dst=dst) / TCP(sport=sport, dport=dport, flags=flags)
+    packet = frame() / IP(src=src, dst=dst) / TCP(sport=sport, dport=dport, flags=flags)
     return Ether(bytes(packet / Raw(payload) if payload else packet))
 
 
@@ -401,7 +406,7 @@ def test_broken_packet_does_not_stop_capture(
 
 def test_dns_name_is_sanitized(tmp_path: Path, clock: Clock, printed: list[str]) -> None:
     processor = make_processor(tmp_path, clock)
-    packet = Ether() / IP(src="192.168.1.10", dst="8.8.8.8") / UDP(sport=40000, dport=53)
+    packet = frame() / IP(src="192.168.1.10", dst="8.8.8.8") / UDP(sport=40000, dport=53)
     packet /= DNS(rd=1, qd=DNSQR(qname="evil\x1b[31m.example.com"))
     processor.process_packet(Ether(bytes(packet)))
     output = "\n".join(printed)
@@ -454,7 +459,7 @@ def test_pause_and_quiet(tmp_path: Path, clock: Clock, printed: list[str]) -> No
 
 def test_ipv6_packets_are_processed(tmp_path: Path, clock: Clock, printed: list[str]) -> None:
     processor = make_processor(tmp_path, clock)
-    packet = Ether() / IPv6(src="2001:db8::1", dst="2001:db8::2") / TCP(sport=40000, dport=443, flags="S")
+    packet = frame() / IPv6(src="2001:db8::1", dst="2001:db8::2") / TCP(sport=40000, dport=443, flags="S")
     processor.process_packet(Ether(bytes(packet)))
     record = read_log(processor)[0]
     assert record["ip"]["version"] == 6
@@ -508,7 +513,7 @@ def test_console_rate_limit_keeps_important_lines(tmp_path: Path, clock: Clock, 
 
 def test_non_ip_frames_are_counted(tmp_path: Path, clock: Clock, printed: list[str]) -> None:
     processor = make_processor(tmp_path, clock)
-    processor.process_packet(Ether(bytes(Ether(type=0x0806) / Raw(b"\x00" * 28))))
+    processor.process_packet(Ether(bytes(frame(type=0x0806) / Raw(b"\x00" * 28))))
     assert processor.stats.non_ip == 1 and processor.stats.errors == 0
 
 
