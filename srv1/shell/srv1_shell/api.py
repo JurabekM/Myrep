@@ -108,6 +108,10 @@ class Api(QObject):
         self._worker.finished.connect(self._on_finished)
         self._thread.start()
 
+    def set_token(self, token: str) -> None:
+        """Yadro shell ochilgandan keyin ishga tushsa, token keyinroq ma'lum bo'ladi."""
+        self._headers = {"Authorization": f"Bearer {token}"}
+
     def request(
         self,
         method: str,

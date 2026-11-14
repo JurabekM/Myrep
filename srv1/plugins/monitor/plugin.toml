@@ -1,6 +1,6 @@
 name = "monitor"
-version = "0.1.0"
-description = "Kuzatuv: CPU, RAM va disk tarixi, chegaradan oshganda ogohlantirish."
+version = "0.2.0"
+description = "Kuzatuv: CPU, RAM va disk tarixi, ogohlantirishlar, tarmoq paketlari tahlili."
 mode = "inprocess"
 heavy = false
 
@@ -9,3 +9,5 @@ heavy = false
 paths = []
 ports = []
 serial = []
+# Tarmoq kuzatuvi: paketlarni ushlaydigan ishchi jarayon (faqat so'ralganda, RAM limiti bilan).
+spawn = true

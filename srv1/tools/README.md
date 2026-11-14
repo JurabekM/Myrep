@@ -10,6 +10,11 @@ Tashqi binarlar shu yerga qo'yiladi va **gitga kirmaydi** (`.gitignore`).
 | `nssm.exe` | 10 | Windows xizmati | 2.24 (64-bit) |
 | `cloudflared.exe` | 10 (`hosting`) | internetga ochish (tunnel) | 2026.10.7 |
 
+Bu papkaga qo'yilmaydigan, lekin tizimga o'rnatiladigan dastur: **Npcap** (13-bosqich,
+`monitor` ning tarmoq kuzatuvi) — <https://npcap.com/#download>, sinalgan muhitda
+`C:\Windows\System32\Npcap\wpcap.dll`. Litsenziyasi uni boshqa o'rnatuvchiga qo'shib
+tarqatishga ruxsat bermaydi, shuning uchun har kompyuterga alohida o'rnatiladi.
+
 ## Caddy
 
 Rasmiy manba: <https://github.com/caddyserver/caddy/releases> →

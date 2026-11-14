@@ -8,6 +8,7 @@ nima qilishi va nima sinalgani.
 | `install/install.ps1` | oddiy | `uv sync --no-dev`, `tools/` tekshiruvi, ma'lumotlar papkasi, yorliqlar |
 | `install/service.ps1` | `install/remove/start/stop/restart` — administrator; `plan/status` — oddiy | NSSM xizmati |
 | `install/uninstall.ps1` | oddiy | yorliqlarni o'chiradi; ma'lumotlarga tegmaydi |
+| `install/stop-core.ps1` | oddiy (token faylini o'qiy oladigan hisob) | xizmat bo'lmagan, ishlab turgan yadroni API orqali tartibli to'xtatadi va jarayoni tugaguncha kutadi; o'rnatuvchi yangilash va olib tashlashdan oldin chaqiradi. Portni `config.toml` dan oladi. Kod 0 — yadro yo'q yoki to'xtadi, 1 — hali ishlayapti |
 | `install/common.ps1` | — | umumiy funksiyalar |
 
 Skriptlar faqat ASCII: Windows PowerShell 5.1 BOM'siz UTF-8 faylni ANSI deb
@@ -68,7 +69,10 @@ va faylni NSSM'dan **oldin** tekshiradi, testlar esa NSSM'ni umuman chaqirmaydi.
 
 **Sinalgan** (`tests/test_install_scripts.py`, `tests/test_service_stop.py`):
 
-- to'rt skript ham xatosiz tahlil qilinadi (PowerShell parser);
+- besh skript ham xatosiz tahlil qilinadi (PowerShell parser);
+- `stop-core.ps1` haqiqiy yadroni to'xtatadi (`tests/test_server_control.py`): yadro yo'q
+  bo'lsa kod 0; token noto'g'ri bo'lsa kod 1 va yadro ishlayveradi; to'g'ri token bilan
+  kod 0 va skript qaytganda yadro jarayoni tugagan;
 - `install.ps1` haqiqatan yuguradi (vaqtinchalik papkada): papkalar, uch
   yozuvli ruxsat ro'yxati, yorliq nishoni va belgisi; qayta yugurganda mavjud
   fayl va ruxsatlarga tegmaydi; `uninstall.ps1` yorliqni o'chiradi;

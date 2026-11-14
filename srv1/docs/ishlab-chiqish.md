@@ -14,9 +14,13 @@ uv run ruff format .    # formatlash
 uv run pyright          # tip tekshiruvi (strict)
 
 $env:SRV1_DATA_DIR = "$PWD\.srv1-data"
-uv run python -m srv1_core   # yadro: http://127.0.0.1:8710
-uv run python -m srv1_shell  # shell (boshqa oynada; SRV1_DATA_DIR bir xil bo'lsin)
+uv run python -m srv1_shell  # shell; yadro ishlamayotgan bo'lsa, o'zi oynasiz ko'taradi
+uv run python -m srv1_core   # yadroni qo'lda, jurnali konsolda (shell'dan oldin, boshqa oynada)
 ```
+
+Shell ko'targan yadro oyna yopilgach ham ishlayveradi: to'xtatish — oynadagi «Serverni
+to'xtatish» tugmasi yoki `powershell -File install\stop-core.ps1` (`SRV1_DATA_DIR` bir xil
+bo'lsin). Diqqat: `SRV1_DATA_DIR` berilmasa shell haqiqiy `%PROGRAMDATA%\SRV_1` bilan ishlaydi.
 
 Testlarni **PowerShell'dan** yuriting. Git Bash ostida
 `test_service_stop.py` yiqiladi: bola jarayon «Ctrl+C ni e'tiborsiz qoldirish»
@@ -26,6 +30,7 @@ Reliz o'rnatuvchisi (`release\SRV_1-Setup-<versiya>.exe`; Inno Setup 6 kerak):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File packaging\build.ps1
+powershell -ExecutionPolicy Bypass -File packaging\sign.ps1    # o'zi imzolangan sertifikat bilan imzo
 ```
 
 Tafsiloti: [reliz.md](reliz.md).
