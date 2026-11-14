@@ -67,6 +67,27 @@ plaginlar esa `python -m ...` bilan ishga tushadi — oddiy Python bilan bu hozi
   tegilmaydi.
 - Olib tashlashda ma'lumotlar papkasi va `%APPDATA%\SRV_1\shell.json` qoladi.
 
+## 1.0.1 (2026-11-13)
+
+1.0.0 dan farqi — uch tuzatish: muzlab qolgan loyihaga so'rov 120 s da 504 oladi
+([hosting.md](hosting.md)), o'lgan Mosquitto o'zi qayta ko'tariladi ([iot.md](iot.md)),
+`monitor` ogohlantirishlari Windows bildirishnomasi bo'lib chiqadi ([monitor.md](monitor.md)).
+
+| Ko'rsatkich | Qiymat |
+|-------------|--------|
+| `SRV_1-Setup-1.0.1.exe` | 153,2 MB |
+| SHA-256 | `46984484c2707bffc3b51615e10a808694845eb5ba74211fef081d6a8d500e35` |
+| yig'ishdan oldingi testlar | 400 test o'tdi |
+
+Sinalgani (jim rejimda vaqtinchalik papkaga o'rnatib): yadro ishga tushdi (`/health` →
+`1.0.1`), yangi modullar import qilinadi, `monitor` chegarasi pasaytirilganda
+ogohlantirish ko'tarildi; olib tashlash toza. 1.0.0 dagi to'liq tekshiruv (shell oynasi,
+`data` plagini, xotira o'lchovi) 1.0.1 uchun **takrorlanmagan**; quyidagi «Sinalmagan»
+ro'yxati 1.0.1 ga ham tegishli.
+
+Yig'ish skripti endi `git add` qilinmagan fayl bo'lsa to'xtaydi: to'plamga faqat git
+biladigan fayllar tushadi.
+
 ## 1.0.0 (2026-11-13) — o'lchangan va sinalgan
 
 | Ko'rsatkich | Qiymat |

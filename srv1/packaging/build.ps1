@@ -124,6 +124,9 @@ Set-Content -LiteralPath (Join-Path $site 'srv1.pth') -Encoding ASCII `
 Write-Step "SRV_1 fayllari"
 $tracked = & git -C $Repo ls-files -- core sdk shell plugins install docs/qollanma.md docs/img tools/README.md
 if ($LASTEXITCODE -ne 0 -or -not $tracked) { Stop-Build "git ls-files ishlamadi" }
+# To'plamga faqat git biladigan fayllar tushadi: `git add` qilinmagan yangi modul jim tushib qolardi.
+$untracked = & git -C $Repo ls-files --others --exclude-standard -- core sdk shell plugins install
+if ($untracked) { Stop-Build ("gitga qo'shilmagan fayllar bor (avval git add): " + ($untracked -join ', ')) }
 foreach ($relative in $tracked) {
     $target = Join-Path $Stage ($relative -replace '/', '\')
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $target) | Out-Null

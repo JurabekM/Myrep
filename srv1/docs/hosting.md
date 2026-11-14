@@ -68,6 +68,12 @@ Loyiha ulanishni rad etsa (navbati to'lgan yoki endi ishga tushyapti), Caddy 2 s
 davomida har 50 ms da qayta ulanib ko'radi; shundan keyingina klient 502 oladi. Faqat
 ulanish o'rnatilmagan so'rov qayta yuboriladi, ya'ni `POST` ikki marta bajarilmaydi.
 
+Loyiha ulanishni qabul qilib, javob bermay qolsa (muzlab qolgan), klient
+`response_timeout_s` (standart 120 s) o'tgach **504** oladi; loyihaning holati
+o'zgarmaydi va keyingi so'rovlar odatdagidek o'tadi. Chegara faqat javob
+**sarlavhalari** kelguncha amal qiladi: uzoq yuklab olish, SSE va WebSocket
+uzilmaydi. `0` — chegara yo'q. O'lchangan (chegara 2 s): 504, 2,02 s.
+
 ## Uxlatish va uyg'otish
 
 `idle_minutes` (standart 15) davomida so'rov kelmasa, jarayon to'xtatiladi va
@@ -95,7 +101,8 @@ Foydalanuvchi uchun bu birinchi so'rovning sekinroq ochilishi, xolos.
 
 Sozlama: `<ma'lumotlar>/plugins/hosting/data/hosting.json` → `config`
 (`listen_host`, `listen_port`, `admin_port`, `wake_port`, `port_first`,
-`port_last`, `domain`, `ready_timeout_s`, `tunnel_max`, `tunnel_timeout_s`). Portlar manifestdagi
+`port_last`, `domain`, `ready_timeout_s`, `response_timeout_s`, `tunnel_max`,
+`tunnel_timeout_s`). Portlar manifestdagi
 `permissions.ports` ichida bo'lishi shart.
 
 **Standart holatda saytlar faqat shu kompyuterdan ochiladi.** Mahalliy

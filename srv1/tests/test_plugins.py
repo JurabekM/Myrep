@@ -123,6 +123,13 @@ async def test_monitor_full_cycle(paths: DataPaths, plugin_root: Path, mode: str
             await until(lambda: served.core.bus.has_subscribers("plugin.monitor.x"))
             assert (await client.post(f"{base}/sample")).json()["samples"] == 2
             first, second = json.loads(await ws.recv()), json.loads(await ws.recv())
+            third = json.loads(await ws.recv())
+        # bildirishnoma (shell uni Windows bildirishnomasi qilib ko'rsatadi)
+        assert third["topic"] == "plugin.monitor.notify"
+        assert third["data"]["level"] == "warning"
+        assert third["data"]["title"]["uz"] == "Xotira chegaradan oshdi"
+        assert set(third["data"]["title"]) == set(third["data"]["message"]) == {"uz", "ru", "en"}
+        assert third["data"]["message"]["en"].endswith("limit 1 %")
         assert first["topic"] == "plugin.monitor.sample"
         assert set(first["data"]) == {"ts", "cpu", "memory", "srv1_mb"}
         assert second["topic"] == "plugin.monitor.alert"

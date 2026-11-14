@@ -88,6 +88,7 @@ class Broker:
         return self._process.pid if self._process is not None and self.running else None
 
     async def start(self) -> None:
+        await self.stop()  # qayta ishga tushirishda o'lgan jarayonning job'i va o'quvchisi yopiladi
         self._ctx.check_port(self._cfg.port)
         config_file = self._ctx.data_path("mosquitto.conf")
         password_file = self._ctx.data_path("mosquitto.passwd")

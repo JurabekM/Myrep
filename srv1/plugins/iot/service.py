@@ -41,6 +41,13 @@ def check_topic(topic: str, *, wildcards: bool) -> str:
     return cleaned
 
 
+# Boshqariladigan broker o'lsa, qayta ko'tariladi. Tekshiruv oralig'i va urinishlar orasidagi
+# kutish (ketma-ket yiqilishda uzayadi; broker shuncha vaqt ishlab tursa, hisob nolga qaytadi).
+BROKER_WATCH_S = 2.0
+BROKER_BACKOFF_S = (2.0, 5.0, 15.0, 30.0, 60.0)
+BROKER_STABLE_S = 60.0
+
+
 class IotService:
     def __init__(self, ctx: PluginContext) -> None:
         self.ctx = ctx
@@ -53,6 +60,7 @@ class IotService:
         self.samples_written = 0
         self.broker: Broker | None = None
         self.broker_error: str | None = None
+        self.broker_restarts = 0
         self.mqtt: MqttClient | None = None
         self.messages: deque[dict[str, Any]] = deque(maxlen=MESSAGES_KEPT)
         self.message_count = 0
@@ -158,8 +166,37 @@ class IotService:
                 except (OSError, RuntimeError) as exc:
                     self.broker_error = str(exc)
                     self.ctx.log("error", "mosquitto_start_failed", error=str(exc))
+                self._tasks.append(asyncio.create_task(self._watch_broker(self.broker)))
         self.mqtt = MqttClient(cfg, self._on_mqtt_message, self._on_mqtt_state)
         self.mqtt.start()
+
+    async def _watch_broker(self, broker: Broker) -> None:
+        """Broker o'zi to'xtab qolsa (yiqildi, o'ldirildi), uni qayta ishga tushiradi."""
+        loop = asyncio.get_running_loop()
+        failures, up_since = 0, loop.time()
+        while True:
+            await asyncio.sleep(BROKER_WATCH_S)
+            if broker.running:
+                if loop.time() - up_since >= BROKER_STABLE_S:
+                    failures = 0
+                continue
+            delay = BROKER_BACKOFF_S[min(failures, len(BROKER_BACKOFF_S) - 1)]
+            failures += 1
+            self.broker_error = "broker to'xtab qoldi; qayta ishga tushirilmoqda"
+            self.ctx.log("warning", "mosquitto_down", retry_in_s=delay, attempt=failures)
+            await asyncio.sleep(delay)
+            try:
+                await broker.start()
+            except (OSError, RuntimeError) as exc:
+                self.broker_error = str(exc)
+                self.ctx.log("error", "mosquitto_start_failed", error=str(exc))
+                continue
+            up_since = loop.time()
+            self.broker_restarts += 1
+            self.broker_error = None
+            self.ctx.log(
+                "info", "mosquitto_restarted", pid=broker.pid, restarts=self.broker_restarts
+            )
 
     def mqtt_state(self) -> str:
         if not self.store.mqtt.enabled or self.mqtt is None:
@@ -357,6 +394,7 @@ class IotService:
             "broker": broker_state,
             "broker_error": self.broker_error,
             "broker_pid": broker.pid if broker is not None else None,
+            "broker_restarts": self.broker_restarts,
             "samples": self.samples_written + len(self._buffer),
             "serial_open": sum(port.is_open for port in self.serial.values()),
             "modbus_devices": len(self.pollers),

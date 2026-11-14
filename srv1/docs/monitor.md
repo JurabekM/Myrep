@@ -39,7 +39,12 @@ O'lchovlar `<ma'lumotlar>/plugins/monitor/data/monitor.db` (SQLite) ga yoziladi.
 - Faol holatlar qayta ishga tushganda bazadan tiklanadi.
 - Ogohlantirish — bu **hodisa va jadvaldagi yozuv**: `plugin.monitor.alert`
   hodisasi (shell'ning «Jurnal» sahifasida ham ko'rinadi) va yadro jurnalidagi
-  `monitor_alert` satri. Windows bildirishnomasi, tovush yoki email **yo'q**.
+  `monitor_alert` satri.
+- Har ko'tarilish va tinchlanishda **Windows bildirishnomasi** ham chiqadi
+  (`ctx.notify` → `plugin.monitor.notify`), masalan «SRV_1 · monitor: Xotira
+  chegaradan oshdi — Hozir 92,3 %, chegara 90 %». Uni ochiq turgan shell ko'rsatadi
+  (tizim tepsisidagi SRV_1 belgisi orqali); bosilsa, SRV_1 oynasi oldinga chiqadi.
+  Tovush va email yo'q.
 - Oxirgi 1000 ta yozuv saqlanadi.
 
 Chegaralar panelda o'zgartiriladi («Chegaralarni o'zgartirish»: bo'sh maydon
@@ -88,8 +93,11 @@ Audit (`actor = plugin:monitor`): `monitor.history_clear`.
 - Jadvallarda qoida nomi va holat tarjimasiz (`memory`, `raised`, `alert`);
   qoidalar jadvalidagi sonlar nuqta bilan yoziladi.
 - Grafikning gorizontal o'qi — o'lchov tartib raqami, vaqt emas.
-- Shell yopiq bo'lsa, ogohlantirishni hech kim ko'rmaydi: u faqat jurnal
-  va bazada qoladi.
+- Shell yopiq bo'lsa, bildirishnoma chiqmaydi (yadro xizmat sifatida ekransiz
+  sessiyada ishlaydi): ogohlantirish faqat jurnal va bazada qoladi.
+- Bildirishnomaning ekranda ko'rinishi avtomatik sinalmagan: testlar hodisa va
+  matnni tekshiradi; haqiqiy ish stolida `showMessage` chaqiruvi xatosiz o'tgani
+  bir marta tekshirilgan. Windows «Diqqatni jamlash» rejimi uni yashirishi mumkin.
 - Tarixda faqat umumiy qiymatlar: alohida jarayonlar bo'yicha tarix yo'q
   (jonli ro'yxat — `itops` da). Disklar tarixi yoziladi, lekin API orqali
   faqat oxirgi holati ko'rinadi.

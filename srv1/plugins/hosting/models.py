@@ -46,6 +46,9 @@ class HostingConfig(_Model):
     # Loopback bo'lmagan manzilda tinglash uchun ataylab true qilinadi.
     allow_non_loopback: bool = False
     ready_timeout_s: float = Field(default=20.0, ge=1, le=300)
+    # Loyiha javob sarlavhalarini shuncha vaqtda bermasa, klient 502/504 oladi (muzlab
+    # qolgan loyiha so'rovni cheksiz ushlab turmasin). 0 - chegara yo'q.
+    response_timeout_s: float = Field(default=120.0, ge=0, le=3600)
     idle_check_s: float = Field(default=10.0, ge=0.2, le=600)
     # Bir vaqtda ochiq tunnellar soni (har biri alohida cloudflared jarayoni).
     tunnel_max: int = Field(default=2, ge=0, le=8)

@@ -2,7 +2,7 @@
 
 import os
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 # pyqtgraph numpy'ni yuklaydi; numpy esa har protsessor yadrosi uchun BLAS oqim
 # havzasini ochadi (8 yadroda +230 MB xususiy xotira). Shell chiziqli algebra
