@@ -1,0 +1,311 @@
+import uuid
+from datetime import datetime
+from decimal import Decimal
+
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    UniqueConstraint,
+    Uuid,
+    func,
+    text,
+)
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class AuditMixin:
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+
+class Tenant(AuditMixin, Base):
+    """Do'kon egasining hisobi. Barcha biznes ma'lumotlar tenant_id bilan bog'lanadi."""
+
+    __tablename__ = "tenants"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(200))
+
+
+class User(AuditMixin, Base):
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String(320), unique=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    full_name: Mapped[str] = mapped_column(String(200))
+
+
+class Store(AuditMixin, Base):
+    """Filial / do'kon. RLS bilan tenant bo'yicha izolyatsiya qilinadi."""
+
+    __tablename__ = "stores"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    name: Mapped[str] = mapped_column(String(200))
+
+
+ROLES = ("owner", "manager", "cashier", "warehouse", "viewer")
+
+
+class Membership(AuditMixin, Base):
+    """Foydalanuvchining tenant ichidagi roli. store_id NULL bo'lsa, barcha filiallarga tegishli."""
+
+    __tablename__ = "memberships"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "user_id", "store_id", name="uq_membership"),
+        CheckConstraint(
+            "role IN ('owner', 'manager', 'cashier', 'warehouse', 'viewer')",
+            name="ck_membership_role",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), index=True)
+    store_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("stores.id"), nullable=True)
+    role: Mapped[str] = mapped_column(String(20))
+
+
+class RefreshToken(Base):
+    """Refresh token'lar faqat hash ko'rinishida saqlanadi. family_id orqali rotatsiya zanjiri kuzatiladi."""
+
+    __tablename__ = "refresh_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), index=True)
+    family_id: Mapped[uuid.UUID] = mapped_column(Uuid, index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+# ---------------------------------------------------------------------------
+# Faza 2: katalog, yetkazuvchilar, kirim va qoldiq ledger'i
+# ---------------------------------------------------------------------------
+
+UNITS = ("dona", "kg", "litr", "metr", "quti", "paket")
+MOVEMENT_KINDS = ("receipt", "sale", "sale_return", "adjustment", "writeoff")
+
+
+class Category(AuditMixin, Base):
+    __tablename__ = "categories"
+    __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_category_name"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    name: Mapped[str] = mapped_column(String(120))
+
+
+class Product(AuditMixin, Base):
+    """Tovar. Narxlar so'mda butun son (tiyinsiz), miqdor esa o'nlik kasr bo'lishi mumkin (kg, litr)."""
+
+    __tablename__ = "products"
+    __table_args__ = (
+        CheckConstraint("sale_price >= 0", name="ck_product_sale_price"),
+        CheckConstraint("cost_price >= 0", name="ck_product_cost_price"),
+        CheckConstraint("min_stock >= 0", name="ck_product_min_stock"),
+        CheckConstraint(f"unit IN {UNITS}", name="ck_product_unit"),
+        Index("ix_products_tenant_updated", "tenant_id", "updated_at", "id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    category_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("categories.id"), nullable=True)
+    name: Mapped[str] = mapped_column(String(200))
+    unit: Mapped[str] = mapped_column(String(10), default="dona", server_default="dona")
+    sale_price: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    cost_price: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    min_stock: Mapped[Decimal] = mapped_column(Numeric(14, 3), default=0, server_default="0")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+
+
+class ProductBarcode(AuditMixin, Base):
+    __tablename__ = "product_barcodes"
+    __table_args__ = (UniqueConstraint("tenant_id", "barcode", name="uq_barcode_per_tenant"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    product_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("products.id"), index=True)
+    barcode: Mapped[str] = mapped_column(String(64))
+
+
+class Supplier(AuditMixin, Base):
+    __tablename__ = "suppliers"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+
+class Purchase(AuditMixin, Base):
+    """Kirim hujjati (yetkazuvchidan qabul). Har bir qator uchun 'receipt' harakat yoziladi."""
+
+    __tablename__ = "purchases"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    store_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("stores.id"), index=True)
+    supplier_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("suppliers.id"), nullable=True)
+    created_by: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"))
+    note: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    total_cost: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+
+
+class PurchaseItem(Base):
+    __tablename__ = "purchase_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    purchase_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("purchases.id"), index=True)
+    product_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("products.id"))
+    qty: Mapped[Decimal] = mapped_column(Numeric(14, 3))
+    unit_cost: Mapped[int] = mapped_column(BigInteger)
+
+
+class StockMovement(Base):
+    """Qoldiq ledger'i. Faqat qo'shiladi: ilova roli UPDATE/DELETE huquqiga ega emas (0002 migratsiya).
+
+    Qoldiq = SUM(qty). qty ishorasi: kirim +, chiqim -.
+    """
+
+    __tablename__ = "stock_movements"
+    __table_args__ = (
+        CheckConstraint(f"kind IN {MOVEMENT_KINDS}", name="ck_movement_kind"),
+        CheckConstraint("qty <> 0", name="ck_movement_qty_nonzero"),
+        Index("ix_stock_movements_store_product", "store_id", "product_id"),
+        Index("ix_stock_movements_store_created", "store_id", "created_at", "id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    store_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("stores.id"))
+    product_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("products.id"))
+    qty: Mapped[Decimal] = mapped_column(Numeric(14, 3))
+    kind: Mapped[str] = mapped_column(String(20))
+    reference_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    reference_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
+    note: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    created_by: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# ---------------------------------------------------------------------------
+# Faza 3: kassa smenasi, savdo (chek), to'lovlar
+# ---------------------------------------------------------------------------
+
+PAYMENT_METHODS = ("cash", "card", "click", "payme")
+
+
+class Shift(AuditMixin, Base):
+    """Kassa smenasi. Bir do'konda bir vaqtda faqat bitta ochiq smena bo'ladi (partial unique index)."""
+
+    __tablename__ = "shifts"
+    __table_args__ = (
+        Index(
+            "uq_open_shift_per_store",
+            "store_id",
+            unique=True,
+            postgresql_where=text("closed_at IS NULL"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    store_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("stores.id"))
+    opened_by: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"))
+    closed_by: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("users.id"), nullable=True)
+    opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    opening_cash: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    closing_cash: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
+
+class Sale(Base):
+    """Chek. id klient tomonidan yaratiladi (UUID): offline yuborish va qayta urinishda dublikat bo'lmaydi.
+
+    Narxlar va jami summa faqat serverda hisoblanadi.
+    """
+
+    __tablename__ = "sales"
+    __table_args__ = (
+        CheckConstraint("status IN ('completed', 'refunded')", name="ck_sale_status"),
+        CheckConstraint("total >= 0", name="ck_sale_total"),
+        Index("ix_sales_store_updated", "store_id", "updated_at", "id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    store_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("stores.id"), index=True)
+    shift_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("shifts.id"), index=True)
+    number: Mapped[int] = mapped_column(BigInteger, server_default=text("nextval('sale_number_seq')"))
+    status: Mapped[str] = mapped_column(String(20), default="completed", server_default="completed")
+    subtotal: Mapped[int] = mapped_column(BigInteger)
+    discount: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    total: Mapped[int] = mapped_column(BigInteger)
+    created_by: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"))
+    client_created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class SaleItem(Base):
+    __tablename__ = "sale_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    sale_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("sales.id"), index=True)
+    product_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("products.id"))
+    product_name: Mapped[str] = mapped_column(String(200))  # tarixiy nom (tovar keyin o'zgarsa ham)
+    unit: Mapped[str] = mapped_column(String(10))
+    qty: Mapped[Decimal] = mapped_column(Numeric(14, 3))
+    unit_price: Mapped[int] = mapped_column(BigInteger)
+    line_total: Mapped[int] = mapped_column(BigInteger)
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+    __table_args__ = (
+        CheckConstraint("method IN ('cash', 'card', 'click', 'payme')", name="ck_payment_method"),
+        CheckConstraint("amount > 0", name="ck_payment_amount"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    sale_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("sales.id"), index=True)
+    method: Mapped[str] = mapped_column(String(20))
+    amount: Mapped[int] = mapped_column(BigInteger)
+
+
+class SyncOp(Base):
+    """Offline navbatdan kelgan operatsiya. op_id (klient UUID) qayta yuborishda dublikatni to'xtatadi."""
+
+    __tablename__ = "sync_ops"
+
+    op_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("tenants.id"), index=True)
+    op_type: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(20))  # applied | rejected
+    error_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    error_detail: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
