@@ -127,7 +127,7 @@ Windows parolingizni almashtirsangiz, xizmatni `remove` va `install` qiling.
 |--------|-----------------|
 | Tizim | protsessor, xotira, disklar — jonli |
 | Plaginlar | plaginlar ro'yxati; yoqish va o'chirish |
-| Jurnal | yadro hodisalari — jonli |
+| Jurnal | yadro va plaginlar hodisalari — jonli; tarmoq ushlanayotganda paketlar xulosasi va shubhali paketlar ham shu yerda |
 | Xotira | har jarayon qancha RAM olayotgani va 350 MB chegarasi |
 | plagin panellari | har yoqilgan plaginning o'z sahifasi |
 

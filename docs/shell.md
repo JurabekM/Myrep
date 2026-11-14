@@ -45,7 +45,7 @@ almashtiriladi; tanlov eslab qolinadi.
 |--------|-----------------|-------|
 | Tizim | CPU, RAM, yadro jarayoni, disklar, yuklama grafigi | `/system` + `system.stats` |
 | Plaginlar | ro'yxat, holat, xato matni, yoqish/o'chirish | `/plugins` + `plugins.state` |
-| Jurnal | oxirgi 200 yozuv + jonli oqim; daraja filtri, pauza, tozalash | `/logs` + `log` |
+| Jurnal | oxirgi 200 yozuv + jonli oqim; daraja filtri, pauza, tozalash. Vaqt mahalliy (yadro UTC'da yozadi); plagin maydonlaridagi `p_` qo'shimchasi ko'rsatilmaydi | `/logs` + `log` |
 | Xotira | har jarayon bo'yicha RAM, 350 MB chegarasiga nisbatan jami | `/system/processes` |
 | *plagin nomi* | plagin paneli | `/plugins/{nom}/panel` |
 
