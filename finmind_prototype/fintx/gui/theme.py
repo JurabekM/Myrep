@@ -8,9 +8,10 @@ ustida ≥ 4.5:1; `accent`, `fieldLine`, `chart` — ≥ 3:1.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
-from PySide6.QtGui import QColor, QFont, QFontDatabase, QPalette
+from PySide6.QtGui import QColor, QFont, QFontDatabase, QIcon, QPalette
 from PySide6.QtWidgets import QApplication
 
 PAPER = "#262624"
@@ -29,7 +30,9 @@ DANGER = "#E5786D"
 CHART = "#3987E5"
 
 FONT_FAMILY = "Noto Sans"
-_FONT_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+_ASSETS = Path(__file__).resolve().parent.parent / "assets"
+_FONT_DIR = _ASSETS / "fonts"
+_ICON_DIR = _ASSETS / "icons"
 
 STYLESHEET = f"""
 * {{
@@ -152,8 +155,21 @@ QCalendarWidget QAbstractItemView {{
 """
 
 
+def app_icon() -> QIcon:
+    """Ilova belgisi: har bir o'lcham alohida chizilgan (16 px da ham aniq)."""
+    icon = QIcon()
+    for path in sorted(_ICON_DIR.glob("fintx-*.png")):
+        icon.addFile(str(path))
+    return icon
+
+
 def apply_theme(app: QApplication) -> None:
-    """Shriftni yuklaydi va dark mavzuni butun ilovaga qo'llaydi."""
+    """Shriftni yuklaydi, oyna belgisini o'rnatadi va dark mavzuni butun ilovaga qo'llaydi."""
+    # Windows `.exe` ichidagi belgini oyna sarlavhasiga o'zi qo'ymaydi — uni ilova
+    # o'rnatishi kerak. macOS'da oyna sarlavhasida belgi bo'lmaydi, Dock belgisi esa
+    # `.app` paketidan olinadi; u yerda bu chaqiruv Dock belgisini almashtirib yuborardi.
+    if sys.platform != "darwin":
+        app.setWindowIcon(app_icon())
     for name in ("NotoSans-Regular.ttf", "NotoSans-Bold.ttf"):
         QFontDatabase.addApplicationFont(str(_FONT_DIR / name))
     app.setStyle("Fusion")

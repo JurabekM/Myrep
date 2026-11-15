@@ -93,7 +93,7 @@ yoki Homebrew'dan o'rnating (Xcode bilan keladigan 3.9 yetarli emas).
 python -m unittest discover -s tests -t .
 ```
 
-98 ta test. PySide6 o'rnatilmagan bo'lsa, 9 ta desktop testi o'tkazib yuboriladi,
+99 ta test. PySide6 o'rnatilmagan bo'lsa, 10 ta desktop testi o'tkazib yuboriladi,
 qolgani ishlayveradi. CI (`.github/workflows/finmind-prototype.yml`) testlarni
 Ubuntu, macOS va Windows'da, Python 3.10 va 3.13 bilan ishga tushiradi.
 

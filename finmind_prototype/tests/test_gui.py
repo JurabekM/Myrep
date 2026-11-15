@@ -7,6 +7,7 @@ terminal testlari PySide6'ga bog'liq emas.
 from __future__ import annotations
 
 import os
+import sys
 import unittest
 from unittest import mock
 
@@ -67,6 +68,19 @@ class GuiTests(unittest.TestCase):
         page.amount.setText(amount)
         page.note.setText(note)
         page.save()
+
+    def test_window_has_application_icon(self) -> None:
+        # Belgisiz oyna Windows sarlavhasida standart rasm bilan chiqadi.
+        from fintx.gui.theme import app_icon
+
+        sizes = sorted(size.width() for size in app_icon().availableSizes())
+        self.assertEqual(sizes, [16, 24, 32, 48, 64, 128, 256])
+        if sys.platform != "darwin":
+            self.assertFalse(self.qt.windowIcon().isNull())
+            self.assertFalse(self.window.windowIcon().isNull())
+            # Sarlavhadagi kichik o'lcham bo'sh (shaffof) rasm emas.
+            image = self.window.windowIcon().pixmap(16, 16).toImage()
+            self.assertGreater(image.pixelColor(8, 8).alpha(), 0)
 
     def test_register_login_and_record(self) -> None:
         self.register()

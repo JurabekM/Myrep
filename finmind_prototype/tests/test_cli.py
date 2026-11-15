@@ -10,6 +10,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from fintx import __version__
 from fintx.cli import Cli
 
 from .helpers import PASSWORD, FakeClock, make_app
@@ -220,7 +221,7 @@ class EntryPointTests(unittest.TestCase):
     def test_version(self) -> None:
         result = self.run_module("--version")
         self.assertEqual(result.returncode, 0)
-        self.assertIn("fintx 0.1.0", result.stdout)
+        self.assertIn(f"fintx {__version__}", result.stdout)
 
     def test_starts_and_exits_from_menu(self) -> None:
         with tempfile.TemporaryDirectory() as folder:

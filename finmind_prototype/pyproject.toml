@@ -1,6 +1,6 @@
 [project]
 name = "fintx"
-version = "0.1.0"
+version = "0.1.1"
 description = "Xavfsizlikni hisobga olgan moliyaviy tranzaksiyalar prototipi (terminal + desktop)"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -23,7 +23,7 @@ build-backend = "setuptools.build_meta"
 include = ["fintx*"]
 
 [tool.setuptools.package-data]
-fintx = ["assets/fonts/*"]
+fintx = ["assets/fonts/*", "assets/icons/*"]
 
 [tool.ruff]
 line-length = 100

@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
 def _self_test(qt_app: object) -> int:
     """Reliz tekshiruvi: yadro, shrift va asosiy oyna (CI ishlatadi).
 
-    Chiqish kodi: 0 — hammasi joyida; 3 — yadro; 4 — shrift; 5 — oyna.
+    Chiqish kodi: 0 — hammasi joyida; 3 — yadro; 4 — shrift; 5 — oyna; 6 — belgi.
     """
     from PySide6.QtGui import QFontDatabase
 
@@ -85,7 +85,7 @@ def _self_test(qt_app: object) -> int:
     from ..db import MEMORY
     from ..security import PasswordHasher
     from ..selftest import run_core_selftest
-    from .theme import FONT_FAMILY
+    from .theme import FONT_FAMILY, app_icon
     from .views import MainWindow
 
     def say(text: str) -> None:
@@ -102,11 +102,23 @@ def _self_test(qt_app: object) -> int:
         say("ilova ichidagi shrift yuklanmadi")
         return 4
     say("ok: shrift")
+    # Belgi fayllari paketga kirganmi (barcha tizimlarda) va oynaga o'rnatilganmi
+    # (macOS'dan tashqari — u yerda Dock belgisi `.app` paketidan olinadi).
+    icon_sizes = sorted(size.width() for size in app_icon().availableSizes())
+    if icon_sizes[:1] != [16] or 256 not in icon_sizes:
+        say(f"ilova belgisi fayllari topilmadi: {icon_sizes}")
+        return 6
+    if sys.platform != "darwin" and qt_app.windowIcon().isNull():  # type: ignore[attr-defined]
+        say("oyna belgisi o'rnatilmagan")
+        return 6
+    say("ok: belgi")
     try:
         core = App.open(MEMORY, hasher=PasswordHasher(scrypt_ln=8))
         window = MainWindow(core)
         window.show()
         qt_app.processEvents()  # type: ignore[attr-defined]
+        if sys.platform != "darwin" and window.windowIcon().isNull():
+            raise AssertionError("asosiy oynada belgi yo'q")
         password = secrets.token_urlsafe(18)
         core.auth.register("selftest", password)
         view = window.auth_view

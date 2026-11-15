@@ -28,8 +28,11 @@ ICON = str(ROOT / "packaging" / ("icon.ico" if IS_WIN else "icon.png"))
 IDENTITY = os.environ.get("MACOS_CODESIGN_IDENTITY") or None
 ENTITLEMENTS = str(ROOT / "packaging" / "macos" / "entitlements.plist") if IDENTITY else None
 
-# Ilova ichidagi shrift modul yonidan (`fintx/assets/fonts`) qidiriladi.
-DATAS = [(str(ROOT / "fintx" / "assets" / "fonts"), "fintx/assets/fonts")]
+# Shrift va oyna belgilari modul yonidan (`fintx/assets/...`) qidiriladi.
+DATAS = [
+    (str(ROOT / "fintx" / "assets" / "fonts"), "fintx/assets/fonts"),
+    (str(ROOT / "fintx" / "assets" / "icons"), "fintx/assets/icons"),
+]
 # Ilova ishlatmaydigan og'ir modullar paketga kirmasin.
 EXCLUDES = ["tkinter", "unittest", "pydoc", "PIL"]
 
