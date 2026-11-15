@@ -1,4 +1,4 @@
-# NetMonitor 4.0.1
+# NetMonitor 4.1.0
 
 Tanlangan tarmoq interfeysidagi IPv4/IPv6 paketlarni ushlaydi, har birini konsolga chiqaradi,
 JSON Lines faylga yozadi va oddiy xavf belgilarini tekshiradi. `netmonitor_new_v3_9.py`
@@ -20,8 +20,37 @@ NetMonitor.exe                      interfeysni so'raydi
 NetMonitor.exe --iface 0            ro'yxatdagi 0-interfeys (raqam, nom yoki IP manzil)
 NetMonitor.exe --list-ifaces        interfeyslar ro'yxati
 NetMonitor.exe --config D:\x.json   boshqa sozlamalar fayli (jurnal ham o'sha papkaga)
-NetMonitor.exe --self-test          drayversiz o'zini sinaydi (50 ta sun'iy paket)
+NetMonitor.exe --write-pcap a.pcap  paketlarni Wireshark ochadigan faylga ham yozadi
+NetMonitor.exe --read a.pcap        jonli ushlash o'rniga faylni tahlil qiladi (drayver kerak emas)
+NetMonitor.exe --self-test          drayversiz o'zini sinaydi (51 ta sun'iy paket)
 ```
+
+Ro'yxatda internet o'tadigan interfeys `<- asosiy` deb belgilanadi — odatda aynan shuni tanlash kerak.
+Boshqa interfeysda faqat o'sha interfeysning o'z trafigi va umumiy (broadcast) paketlar ko'rinadi.
+15 soniya davomida birorta paket kelmasa, dastur sababini tekshirish bo'yicha maslahat chiqaradi.
+
+### Sayt nomlari (TLS SNI, HTTP Host)
+
+Paket satrida ulanilayotgan sayt nomi ko'rinadi — shifrni ochmasdan:
+
+```
+[10:13:36] TCP: 192.168.8.171:56800 -> 160.79.104.10:443 [PA] | MAC: ... | TLS: api.anthropic.com
+[10:13:37] TCP: 192.168.8.171:42146 -> 104.20.23.154:80 [PA] | MAC: ... | HTTP: GET example.com/yol
+```
+
+- `TLS:` — HTTPS ulanishining birinchi paketidagi (ClientHello) server nomi.
+- `HTTP:` — ochiq HTTP so'rovining usuli, `Host` va yo'li. `?` dan keyingi qism (ko'pincha token
+  bo'ladi) olinmaydi.
+- Jurnalda: `"application": {"protocol": "TLS", "sni": "..."}`.
+
+### pcap fayllar
+
+- `--write-pcap fayl.pcap` — qayta ishlangan paketlar (pauzada va chiqarilgan manzillardan
+  tashqari) xom holda yoziladi. **Bu faylda parollar yashirilmaydi** — uni himoyalang. Hajm
+  chegarasi: `pcap_max_mb` (standart 500 MB); yetganda yozish to'xtaydi, monitoring davom etadi.
+- `--read fayl.pcap` — `.pcap` / `.pcapng` faylni jonli trafik kabi tahlil qiladi: bir xil
+  tekshiruvlar, bir xil jurnal. Vaqt paketlarning o'zidan olinadi (skanerlash oynasi yozuvdagi
+  vaqt bo'yicha sanaladi). `capture_filter` va geolokatsiya bu rejimda ishlamaydi.
 
 Manba koddan: `pip install --require-hashes -r requirements.txt`, keyin `python netmonitor.py`
 (Python 3.10+; Linux'da ham ishlaydi — root huquqi bilan).
@@ -53,6 +82,7 @@ yetarli. To'liq namuna: `config.example.json`. v3.9 ning `config.json` fayli o'z
 | `system_metrics_interval_sec` | 120 | holat xulosasi oralig'i (CPU, RAM, hisoblagichlar); 0 — o'chiq |
 | `capture_filter` | yo'q | BPF filtri, masalan `"tcp port 80"` |
 | `capture.promiscuous` | `"auto"` | `true` — tarmoqdagi begona trafik ham (adapter qo'llasa); `false` — faqat shu kompyuter trafigi; `"auto"` — avval `true`, `capture.probe_sec` (5 s) ichida paket kelmasa `false` |
+| `pcap_max_mb` | 500 | `--write-pcap` fayli uchun hajm chegarasi; 0 — cheksiz |
 | `excluded_ips` | `[]` | boshidanoq chiqariladigan manzillar |
 | `console.show_packets` | `true` | paket satrlarini ko'rsatish (`quiet` bilan bir xil) |
 | `console.max_lines_per_sec` | 50 | soniyasiga ko'pi bilan shuncha paket satri; 0 — cheksiz. Maxfiy maydonli va signal bergan paketlar har doim chiqadi; faylga hammasi yoziladi |
@@ -109,6 +139,9 @@ Bir xil signal (tur, manba, manzil) `alert_quiet_sec` (60 s) ichida takrorlanmay
 | 18 | `exit` jurnalni yopmasdan chiqardi | avval jurnal yopiladi va holat saqlanadi |
 | 19 | `scapy.arch.windows` importi boshqa tizimda yiqilardi | Windows'ga xos qism faqat Windows'da yuklanadi |
 | — | paket jurnali har paketda ochib-yopilardi | fayl ochiq turadi, har soniyada diskka tushiriladi |
+| — | interfeys nomi GUID'dan yasalardi | nomlar ushlash drayveri ko'radigan ro'yxatdan olinadi: ro'yxatda faqat haqiqatan ushlanadigan interfeyslar |
+| — | noto'g'ri interfeys tanlansa — jim ekran | «asosiy» belgisi, boshqa interfeys uchun ogohlantirish, 15 s jimlikda maslahat |
+| — | Wi-Fi'da promiscuous rejim paket bermasligi mumkin | `capture.promiscuous: "auto"` — 5 s paket kelmasa oddiy rejimga o'tadi |
 | — | Npcap yo'q bo'lsa tushunarsiz xato | aniq xabar va havola; oyna Enter bosilguncha yopilmaydi |
 
 Xulq-atvordagi o'zgarishlar (v3.9 ga o'rgangan bo'lsangiz):
@@ -171,22 +204,29 @@ CI: `.github/workflows/netmonitor.yml` — Linux'da `ruff`, `pytest`, jonli ushl
 yig'ish, imzolash va imzolangan exe ni sinash. Tayyor fayllar ish sahifasida
 `NetMonitor-<versiya>-signed` artefakti bo'lib turadi.
 
-## Nima sinalgan
+## Nima sinalgan (4.1.0)
 
 | Qayerda | Nima |
 |---------|------|
-| Linux va Windows (CI) | 54 ta test (`pytest`), `ruff` |
-| Linux (CI) | jonli ushlash haqiqiy interfeysda: paketlar ushlandi, parol yashirildi, `exclude` va `pause` ishladi, `exit` toza chiqdi (`tests/live_smoke.py`) |
-| Windows (CI), imzolangan exe | `--version`; `--self-test` (50 ta sun'iy paket fayldan o'qilib butun zanjirdan o'tadi); `--list-ifaces` (Windows interfeyslari ro'yxati); Npcap yo'q mashinada tushunarli xabar va 3-kod; imzo va SHA-256 |
+| Linux va Windows (CI) | 68 ta test (`pytest`), `ruff` |
+| Linux (CI) | jonli ushlash haqiqiy interfeysda (`tests/live_smoke.py`) |
+| Windows (CI), imzolangan exe, **haqiqiy ushlash drayveri bilan** | jonli ushlash uch rejimda (avto, oddiy, promiscuous): paketlar ushlandi, parol yashirildi, `exclude`, `pause`, `status`, `exit` ishladi; `--write-pcap` yozgan fayl `--read` bilan qayta tahlil qilindi |
+| Windows (CI), imzolangan exe | `--version`, `--self-test`, `--list-ifaces`; drayver yo'q mashinada tushunarli xabar va 3-kod; imzo va SHA-256 |
+| Linux, qo'lda | haqiqiy HTTPS va HTTP so'rovlarida `TLS:` va `HTTP:` satrlari |
 
-**Sinalmagan:** Windows'da haqiqiy Npcap drayveri bilan jonli ushlash — CI mashinasiga Npcap'ni
-jim o'rnatib bo'lmaydi. Ushlash chaqiruvi v3.9 dagi bilan bir xil (`sniff(iface="\Device\NPF_{GUID}")`),
-lekin 4.0.0 ning o'zi Npcap bilan faqat sizning kompyuteringizda tekshiriladi. SmartScreen va
-antiviruslarning munosabati ham sinalmagan.
+Windows'dagi jonli sinov **Win10Pcap** drayveri bilan o'tadi (WinPcap bilan mos, jim o'rnatiladi):
+Npcap'ning bepul nashrini CI mashinasiga jim o'rnatib bo'lmaydi. Ikkalasi scapy'ning bitta
+Windows ushlash kodi orqali ishlaydi, lekin drayverni ochish chaqiruvlari farq qiladi
+(Npcap — `pcap_create`, Win10Pcap — `pcap_open_live`).
+
+**Sinalmagan:** aynan Npcap drayveri bilan 4.1.0; Wi-Fi adapterda promiscuous rejimdan avtomatik
+qaytish haqiqiy qurilmada (mantiq soxta drayver bilan test qilingan); SmartScreen va antiviruslar.
 
 ## Ma'lum cheklovlar
 
 - TCP oqimi yig'ilmaydi: bir nechta paketga bo'lingan matn bo'lak-bo'lak tekshiriladi.
+- Sayt nomi (SNI) faqat ClientHello'ning birinchi paketida bo'lsa ko'rinadi. Yangi brauzerlarda
+  ClientHello ikki paketga bo'linishi mumkin; HTTP/3 (QUIC) va ECH ishlatadigan saytlar ko'rinmaydi.
 - HTTPS va boshqa shifrlangan trafik ichidan hech narsa ko'rinmaydi (faqat manzillar va portlar).
 - Windows'da loopback (`127.0.0.1`) interfeysi ro'yxatda yo'q; kerak bo'lsa `--iface` bilan nomini bering.
 - Bitta exe har ishga tushishda o'zini vaqtinchalik papkaga ochadi (1–2 s); ba'zi antiviruslar
