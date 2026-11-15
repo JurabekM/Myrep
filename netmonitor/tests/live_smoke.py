@@ -59,7 +59,7 @@ def main() -> int:
             settings["capture"] = {"promiscuous": mode == "true"}
         config.write_text(json.dumps(settings), encoding="utf-8")
         process = subprocess.Popen(
-            [*command, "--config", str(config), "--iface", address],
+            [*command, "--config", str(config), "--iface", address, "--write-pcap", str(folder / "live.pcap")],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, encoding="utf-8", errors="replace",
         )
@@ -111,6 +111,22 @@ def main() -> int:
             problems.append("chiqarilgan manzil jurnalga tushdi")
         if "JonliSinov77" in output or any("JonliSinov77" in json.dumps(r) for r in records):
             problems.append("parol qiymati yashirilmadi")
+        # Yozilgan .pcap ni xuddi shu dastur bilan qayta tahlil qilish (--read).
+        replay_config = folder / "replay.json"
+        replay_config.write_text(json.dumps({"log_folder": str(folder / "replay")}), encoding="utf-8")
+        replay = subprocess.run(
+            [*command, "--config", str(replay_config), "--read", str(folder / "live.pcap")],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120,
+        )
+        replayed = []
+        for path in sorted((folder / "replay").glob("captured_packets*.json")):
+            replayed += [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+        if replay.returncode != 0:
+            problems.append(f"--read chiqish kodi {replay.returncode}: {replay.stdout[-500:]}")
+        if len(replayed) != len(records) or sum(r["ip"]["dst_ip"] == TARGET[0] for r in replayed) != 5:
+            problems.append(f"--read: {len(replayed)} paket, jonli jurnalda {len(records)}")
+        if "pcap:" not in output:
+            problems.append("`status` pcap faylini ko'rsatmadi")
         if "Ushlash rejimi:" not in output or "hali birorta paket kelmadi" in output:
             problems.append("`status` ushlash rejimini yoki oxirgi paket vaqtini ko'rsatmadi")
         for expected in ("XAVFLI PAYLOAD", "Ochiq matnda maxfiy maydon (login, password)", "CHIQARILDI", "PAUZA"):
@@ -121,7 +137,8 @@ def main() -> int:
         for problem in problems:
             print(f"  - {problem}")
         return 1
-    print(f"JONLI SINOV MUVAFFAQIYATLI: interfeys {address}, 5 paket ushlandi, pauza va exclude ishladi")
+    print(f"JONLI SINOV MUVAFFAQIYATLI: interfeys {address}, 5 paket ushlandi, pauza va exclude ishladi, "
+          "pcap yozildi va qayta o'qildi")
     return 0
 
 

@@ -10,6 +10,7 @@
     "probe_sec": 5
   },
   "excluded_ips": [],
+  "pcap_max_mb": 500,
   "console": {
     "show_packets": true,
     "max_lines_per_sec": 50,

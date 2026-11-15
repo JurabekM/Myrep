@@ -517,6 +517,119 @@ def test_non_ip_frames_are_counted(tmp_path: Path, clock: Clock, printed: list[s
     assert processor.stats.non_ip == 1 and processor.stats.errors == 0
 
 
+# --- HTTP va TLS ---------------------------------------------------------------
+
+
+def test_tls_server_name_is_extracted() -> None:
+    hello = nm.build_client_hello(b"example.org")
+    assert nm.parse_tls_sni(hello) == "example.org"
+    assert nm.parse_tls_sni(nm.build_client_hello(b"evil\x1b[2J.example")) == "evil\\x1b[2J.example"
+    # ClientHello emas: boshqa handshake, ilova ma'lumoti, oddiy matn.
+    assert nm.parse_tls_sni(b"\x16\x03\x03\x00\x30\x02" + bytes(60)) is None
+    assert nm.parse_tls_sni(b"\x17\x03\x03\x00\x20" + bytes(40)) is None
+    assert nm.parse_tls_sni(b"GET / HTTP/1.1\r\n\r\n") is None
+    assert nm.parse_tls_sni(b"") is None
+
+
+def test_truncated_or_corrupt_client_hello_never_raises() -> None:
+    hello = nm.build_client_hello(b"example.org")
+    for cut in range(len(hello)):
+        assert nm.parse_tls_sni(hello[:cut]) in (None, "example.org")
+    for position in range(len(hello)):
+        for value in (0x00, 0xFF):
+            damaged = bytearray(hello)
+            damaged[position] = value
+            result = nm.parse_tls_sni(bytes(damaged))
+            assert result is None or isinstance(result, str)
+
+
+def test_http_request_is_parsed_without_query_string() -> None:
+    raw = b"GET /a/b?token=SIR&x=1 HTTP/1.1\r\nUser-Agent: x\r\nhost:  Example.org:8080 \r\n\r\n"
+    assert nm.parse_http_request(raw) == {
+        "protocol": "HTTP", "method": "GET", "host": "Example.org:8080", "path": "/a/b",
+    }
+    assert nm.parse_http_request(b"POST /x HTTP/1.1\r\n\r\n") == {"protocol": "HTTP", "method": "POST", "path": "/x"}
+    assert nm.parse_http_request(b"HTTP/1.1 200 OK\r\nHost: x\r\n\r\n") is None
+    assert nm.parse_http_request(b"GETX / HTTP/1.1\r\n") is None
+    escaped = nm.parse_http_request(b"GET /\x1b[2J HTTP/1.1\r\nHost: a\x07b\r\n\r\n")
+    assert escaped is not None and escaped["path"] == "/\\x1b[2J" and escaped["host"] == "a\\x07b"
+
+
+def test_application_info_reaches_console_and_log(tmp_path: Path, clock: Clock, printed: list[str]) -> None:
+    processor = make_processor(tmp_path, clock)
+    processor.process_packet(tcp("192.168.1.10", "93.184.216.34", 443, payload=nm.build_client_hello(b"example.org")))
+    processor.process_packet(
+        tcp("192.168.1.10", "93.184.216.34", 80, payload=b"GET /yangilik?id=5 HTTP/1.1\r\nHost: example.org\r\n\r\n")
+    )
+    records = read_log(processor)
+    assert records[0]["application"] == {"protocol": "TLS", "sni": "example.org"}
+    assert records[1]["application"]["host"] == "example.org"
+    assert "TLS: " in printed[0] and "example.org" in printed[0]
+    assert "HTTP: GET " in printed[1] and "example.org/yangilik" in printed[1]
+
+
+# --- pcap yozish va o'qish ------------------------------------------------------
+
+
+def test_pcap_output_round_trip_and_size_limit(
+    tmp_path: Path, clock: Clock, printed: list[str], caplog: pytest.LogCaptureFixture
+) -> None:
+    from scapy.utils import rdpcap
+
+    processor = make_processor(tmp_path, clock)
+    processor.pcap_output = nm.PcapOutput(tmp_path / "out.pcap", 0)
+    processor.state.exclude("10.0.0.1")
+    for index in range(5):
+        processor.process_packet(tcp("192.168.1.10", "192.168.1.1", 80, payload=b"password=Sir%d" % index))
+    processor.process_packet(tcp("10.0.0.1", "192.168.1.1", 80))  # chiqarilgan manzil faylga ham tushmaydi
+    processor.pcap_output.close()
+    saved = rdpcap(str(tmp_path / "out.pcap"))
+    assert len(saved) == 5
+    assert bytes(saved[4][Raw].load) == b"password=Sir4"  # pcap — xom nusxa: qiymat yashirilmaydi
+
+    small = nm.PcapOutput(tmp_path / "small.pcap", 24 + 2 * (16 + len(bytes(saved[0]))))
+    with caplog.at_level(logging.WARNING):
+        for packet in saved:
+            small.write(packet)
+    small.close()
+    assert small.written == 2 and small.full
+    assert len(rdpcap(str(tmp_path / "small.pcap"))) == 2
+    assert sum("chegaraga yetdi" in record.getMessage() for record in caplog.records) == 1
+
+
+def test_offline_read_uses_packet_time(tmp_path: Path, printed: list[str]) -> None:
+    from scapy.utils import wrpcap
+
+    def scan(start: float, step: float) -> list[Any]:
+        packets = []
+        for port in range(20):
+            packet = tcp("10.7.7.7", "192.168.1.10", 1000 + port, "S")
+            packet.time = start + port * step
+            packets.append(packet)
+        return packets
+
+    # Bir xil 20 port: 0,1 s oraliq bilan — skanerlash; 60 s oraliq bilan — yo'q (oyna 10 s).
+    for name, step, expected in (("tez", 0.1, 1), ("sekin", 60.0, 0)):
+        folder = tmp_path / name
+        folder.mkdir()
+        wrpcap(str(folder / "in.pcap"), scan(1_700_000_000.0, step))
+        code = nm.main(["--config", str(folder / "config.json"), "--read", str(folder / "in.pcap")])
+        assert code == nm.EXIT_OK
+        records = [
+            json.loads(line)
+            for line in (folder / "logs_pro" / "captured_packets.json").read_text(encoding="utf-8").splitlines()
+        ]
+        assert len(records) == 20
+        assert records[0]["timestamp"].startswith("2023-11-1")  # paketning o'z vaqti, hozirgi vaqt emas
+        events = (folder / "logs_pro" / "system_events.log").read_text(encoding="utf-8")
+        assert events.count("PORT SKANERLASH") == expected, name
+
+
+def test_offline_read_reports_missing_file(tmp_path: Path, printed: list[str]) -> None:
+    code = nm.main(["--config", str(tmp_path / "config.json"), "--read", str(tmp_path / "yoq.pcap")])
+    assert code == nm.EXIT_BAD_CONFIG
+
+
 # --- Ushlash rejimi -----------------------------------------------------------
 
 

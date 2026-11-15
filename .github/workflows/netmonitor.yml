@@ -2,8 +2,8 @@
 # Windows ishi imzolangan NetMonitor.exe ni yig'adi va artefakt qilib yuklaydi. Imzo — o'zi imzolangan,
 # bir martalik kalit bilan: kalit shu ishning o'zida yaratiladi va imzodan keyin o'chiriladi
 # (netmonitor/README.md, «Imzo»). Sir (secret) kerak emas.
-# Windows'da haqiqiy drayver bilan ushlash bu yerda sinalmaydi: Npcap'ning bepul nashri jim
-# o'rnatilmaydi. Jonli ushlash Linux ishida sinaladi (tests/live_smoke.py).
+# windows-live ishi imzolangan exe ni Windows'da haqiqiy ushlash drayveri bilan sinaydi. Npcap'ning
+# bepul nashri jim o'rnatilmaydi, shuning uchun u yerda Win10Pcap (WinPcap bilan mos, MSI) ishlatiladi.
 name: netmonitor
 
 on:
@@ -51,6 +51,8 @@ jobs:
       run:
         working-directory: netmonitor
         shell: powershell
+    outputs:
+      version: ${{ steps.build.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -84,3 +86,52 @@ jobs:
           name: NetMonitor-${{ steps.build.outputs.version }}-signed
           path: netmonitor/release/
           if-no-files-found: error
+
+  windows-live:
+    needs: windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: netmonitor
+        shell: powershell
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: NetMonitor-${{ needs.windows.outputs.version }}-signed
+          path: netmonitor/release
+      - name: Ushlash drayveri (Win10Pcap)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $msi = Join-Path $env:RUNNER_TEMP 'Win10Pcap.msi'
+          Invoke-WebRequest -Uri 'http://www.win10pcap.org/download/Win10Pcap-v10.2-5002.msi' -OutFile $msi
+          $hash = (Get-FileHash -LiteralPath $msi -Algorithm SHA256).Hash.ToLower()
+          if ($hash -ne 'ce1169c7cac4bc9bc45e159cec069f0ab57c42fc3f636456a2e404cc6b91e855') { throw "MSI xeshi mos emas: $hash" }
+          $install = Start-Process msiexec.exe -ArgumentList '/i', "`"$msi`"", '/qn', '/norestart', '/L*v', "`"$env:RUNNER_TEMP\w10pcap.log`"" -Wait -PassThru
+          Write-Host "msiexec: $($install.ExitCode)"
+          Get-Service | Where-Object { $_.Name -match 'pcap|npf' } | Format-Table Name, Status, DisplayName
+          Get-ChildItem "$env:WINDIR\System32\wpcap.dll", "$env:WINDIR\System32\Packet.dll" | Format-Table Name, Length
+          if ($install.ExitCode -notin @(0, 3010)) { Get-Content "$env:RUNNER_TEMP\w10pcap.log" -Tail 60; throw 'drayver o''rnatilmadi' }
+      - name: Interfeyslar
+        run: |
+          .\release\NetMonitor.exe --list-ifaces
+          if ($LASTEXITCODE -ne 0) { throw '--list-ifaces' }
+      - name: Jonli sinov — avto rejim
+        run: |
+          python tests\live_smoke.py release\NetMonitor.exe
+          if ($LASTEXITCODE -ne 0) { throw 'jonli sinov (avto)' }
+      - name: Jonli sinov — oddiy rejim
+        env:
+          NETMONITOR_SMOKE_PROMISCUOUS: "false"
+        run: |
+          python tests\live_smoke.py release\NetMonitor.exe
+          if ($LASTEXITCODE -ne 0) { throw 'jonli sinov (oddiy)' }
+      - name: Jonli sinov — promiscuous rejim
+        env:
+          NETMONITOR_SMOKE_PROMISCUOUS: "true"
+        run: |
+          python tests\live_smoke.py release\NetMonitor.exe
+          if ($LASTEXITCODE -ne 0) { throw 'jonli sinov (promiscuous)' }

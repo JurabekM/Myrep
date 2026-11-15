@@ -41,7 +41,7 @@ from scapy.layers.inet6 import IPv6
 from scapy.layers.l2 import Ether
 from scapy.packet import Raw
 from scapy.sendrecv import sniff
-from scapy.utils import wrpcap
+from scapy.utils import PcapWriter, wrpcap
 
 try:
     from colorama import Fore, Style
@@ -61,7 +61,7 @@ try:
 except ImportError:  # tizim ko'rsatkichlarisiz ham ishlaydi
     psutil = None  # type: ignore[assignment]
 
-__version__ = "4.0.1"
+__version__ = "4.1.0"
 
 APP_NAME = "NetMonitor"
 NPCAP_URL = "https://npcap.com/#download"
@@ -96,6 +96,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "probe_sec": 5,
     },
     "excluded_ips": [],
+    "pcap_max_mb": 500,
     "console": {
         "show_packets": True,
         "max_lines_per_sec": 50,
@@ -952,6 +953,132 @@ class PacketLog:
 
 
 # ---------------------------------------------------------------------------
+# Ilova darajasi: HTTP so'rovi va TLS ClientHello (shifrni ochmasdan sayt nomi)
+# ---------------------------------------------------------------------------
+
+_HTTP_REQUEST = re.compile(
+    rb"^(GET|POST|HEAD|PUT|DELETE|OPTIONS|PATCH|CONNECT|TRACE) ([^ \r\n]{1,2048}) HTTP/1\.[01]\r\n"
+)
+_HTTP_HOST = re.compile(rb"(?im)^Host:[ \t]*([^\r\n]{1,255})\r?$")
+MAX_NAME = 255
+
+
+def parse_http_request(raw: bytes) -> dict[str, str] | None:
+    """HTTP/1.x so'rovining usuli, `Host` sarlavhasi va yo'li. So'rov satri (`?` dan keyingisi) olinmaydi."""
+    found = _HTTP_REQUEST.match(raw)
+    if found is None:
+        return None
+    result = {"protocol": "HTTP", "method": found.group(1).decode("ascii")}
+    host = _HTTP_HOST.search(raw[:PAYLOAD_SCAN_BYTES])
+    if host is not None:
+        result["host"] = sanitize_bytes(host.group(1).strip())
+    # So'rov satrida ko'pincha token va parollar bo'ladi: faqat yo'lning o'zi saqlanadi.
+    result["path"] = sanitize_bytes(found.group(2).split(b"?", 1)[0][:200])
+    return result
+
+
+def parse_tls_sni(raw: bytes) -> str | None:
+    """TLS ClientHello ichidagi server nomi (SNI). ClientHello emas yoki nom yo'q bo'lsa `None`.
+
+    Har qadamda chegara tekshiriladi: buzuq yoki kesilgan paket shunchaki `None` beradi.
+    """
+    # Yozuv: tur 22 (handshake), versiya 3.x, uzunlik; handshake: tur 1 (ClientHello), uzunlik (3 bayt).
+    if len(raw) < 43 or raw[0] != 0x16 or raw[1] != 0x03 or raw[5] != 0x01:
+        return None
+    end = min(len(raw), 5 + int.from_bytes(raw[3:5], "big"))
+    position = 9 + 2 + 32  # handshake sarlavhasi, versiya, tasodifiy son
+    if position >= end:
+        return None
+    position += 1 + raw[position]  # sessiya identifikatori
+    if position + 2 > end:
+        return None
+    position += 2 + int.from_bytes(raw[position : position + 2], "big")  # shifrlar ro'yxati
+    if position + 1 > end:
+        return None
+    position += 1 + raw[position]  # siqish usullari
+    if position + 2 > end:
+        return None
+    end = min(end, position + 2 + int.from_bytes(raw[position : position + 2], "big"))
+    position += 2
+    while position + 4 <= end:
+        kind = int.from_bytes(raw[position : position + 2], "big")
+        size = int.from_bytes(raw[position + 2 : position + 4], "big")
+        position += 4
+        if kind == 0:  # server_name: ro'yxat uzunligi (2), nom turi (1), nom uzunligi (2), nom
+            if position + 5 > end or raw[position + 2] != 0:
+                return None
+            length = int.from_bytes(raw[position + 3 : position + 5], "big")
+            name = raw[position + 5 : position + 5 + length]
+            if not name or len(name) != length or length > MAX_NAME or position + 5 + length > end:
+                return None
+            return sanitize_bytes(name)
+        position += size
+    return None
+
+
+class PcapOutput:
+    """Qayta ishlangan paketlarni Wireshark ocha oladigan .pcap faylga yozadi (hajm chegarasi bilan)."""
+
+    def __init__(self, path: Path, max_bytes: int) -> None:
+        self.path = path
+        self.max_bytes = max_bytes
+        self.written = 0
+        self.size = 24  # fayl sarlavhasi
+        self.full = False
+        self._lock = threading.Lock()
+        self._writer: Any = PcapWriter(str(path), append=False, sync=False)
+        self._error_throttle = Throttle(30.0)
+
+    def write(self, packet: Any) -> None:
+        with self._lock:
+            if self._writer is None or self.full:
+                return
+            size = 16 + len(packet.original or b"")  # yozuv sarlavhasi + ushlangan baytlar
+            if self.max_bytes > 0 and self.size + size > self.max_bytes:
+                self.full = True
+                logging.warning(
+                    "pcap fayli chegaraga yetdi (%d MB): %s. Yozish to'xtatildi, monitoring davom etadi.",
+                    self.max_bytes // (1024 * 1024), self.path,
+                )
+                return
+            try:
+                self._writer.write(packet)
+            except Exception as exc:  # noqa: BLE001
+                if self._error_throttle.ready():
+                    logging.error("pcap yozishda xato: %s", exc)
+                return
+            self.size += size
+            self.written += 1
+
+    def flush(self) -> None:
+        with self._lock:
+            if self._writer is not None:
+                try:
+                    self._writer.flush()
+                except Exception:  # noqa: BLE001
+                    pass
+
+    def close(self) -> None:
+        with self._lock:
+            if self._writer is not None:
+                try:
+                    self._writer.close()
+                except Exception:  # noqa: BLE001
+                    pass
+                self._writer = None
+
+
+class PacketClock:
+    """Fayldan o'qishda vaqt — paketning o'z vaqti: skanerlash oynalari yozuvdagi vaqt bo'yicha sanaladi."""
+
+    def __init__(self) -> None:
+        self.now = 0.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+# ---------------------------------------------------------------------------
 # Paketlarni qayta ishlash
 # ---------------------------------------------------------------------------
 
@@ -1002,10 +1129,14 @@ class PacketProcessor:
         packet_log: PacketLog,
         geo: GeoResolver | None = None,
         clock: Callable[[], float] = time.monotonic,
+        pcap_output: PcapOutput | None = None,
     ) -> None:
         self.state = state
         self.packet_log = packet_log
         self.geo = geo
+        self.pcap_output = pcap_output
+        # Fayldan o'qishda `clock` — PacketClock: vaqt har paketning o'zidan olinadi.
+        self.packet_clock = clock if isinstance(clock, PacketClock) else None
         self.stats = Stats()
         self._clock = clock
         console_settings = _section(config, "console")
@@ -1041,6 +1172,8 @@ class PacketProcessor:
     def _process(self, packet: Any) -> None:
         stats = self.stats
         stats.seen += 1
+        if self.packet_clock is not None:
+            self.packet_clock.now = float(packet.time)
         stats.last_packet = self._clock()
         if not self.state.active:
             stats.paused += 1
@@ -1059,6 +1192,8 @@ class PacketProcessor:
             stats.geo_self += 1
             return
 
+        if self.pcap_output is not None:
+            self.pcap_output.write(packet)
         info, raw, findings = self._parse(packet, ip_layer, src, dst)
         stats.processed += 1
         transport = info.get("transport", {})
@@ -1089,7 +1224,8 @@ class PacketProcessor:
         return True
 
     def _parse(self, packet: Any, ip_layer: Any, src: str, dst: str) -> tuple[dict[str, Any], bytes, Findings]:
-        info: dict[str, Any] = {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S")}
+        moment = time.localtime(self.packet_clock.now) if self.packet_clock is not None else time.localtime()
+        info: dict[str, Any] = {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S", moment)}
         ether = packet.getlayer(Ether)
         if ether is not None:
             info["ethernet"] = {"src_mac": str(ether.src), "dst_mac": str(ether.dst)}
@@ -1120,6 +1256,14 @@ class PacketProcessor:
         raw_layer = packet.getlayer(Raw)
         if raw_layer is not None:
             raw = bytes(raw_layer.load)
+        if raw and tcp is not None and "application" not in info:
+            application = parse_http_request(raw)
+            if application is None:
+                name = parse_tls_sni(raw)
+                if name is not None:
+                    application = {"protocol": "TLS", "sni": name}
+            if application is not None:
+                info["application"] = application
         if raw:
             findings = self.scanner.scan(raw)
             text = ""
@@ -1151,6 +1295,11 @@ class PacketProcessor:
         application = info.get("application", {})
         if application.get("protocol") == "DNS":
             parts.append(f"DNS: {application.get('query')}")
+        elif application.get("protocol") == "TLS":
+            parts.append(f"TLS: {Fore.GREEN}{application.get('sni')}{reset}")
+        elif application.get("protocol") == "HTTP":
+            target = f"{application.get('host', '')}{application.get('path', '')}"
+            parts.append(f"HTTP: {application.get('method')} {Fore.GREEN}{target}{reset}")
         for label, key in (("manba", "src_geo"), ("manzil", "dst_geo")):
             place = ip_info.get(key)
             if place and place != GEO_PRIVATE:
@@ -1210,6 +1359,8 @@ class SystemMonitor(threading.Thread):
         next_report = time.monotonic() + self.interval_s
         while not self._stop_event.wait(1.0):
             self.processor.packet_log.flush()
+            if self.processor.pcap_output is not None:
+                self.processor.pcap_output.flush()
             if self.capture is not None:
                 self.capture.check_silence()
             if self.interval_s > 0 and time.monotonic() >= next_report:
@@ -1373,6 +1524,11 @@ class CommandHandler:
                 f"Konsolga sig'magan satrlar: {stats.console_skipped} | "
                 f"Faylga yozilgan: {self.processor.packet_log.written}"
             )
+            output = self.processor.pcap_output
+            if output is not None:
+                state = " (chegaraga yetdi, to'xtatilgan)" if output.full else ""
+                megabytes = output.size / (1024 * 1024)
+                text += f"\n        pcap: {output.written} paket, {megabytes:.1f} MB{state} -> {output.path}"
             if self.capture is not None:
                 if stats.last_packet:
                     age = f"oxirgi paket {max(0.0, time.monotonic() - stats.last_packet):.0f} s oldin"
@@ -1623,11 +1779,25 @@ class _Collector(logging.Handler):
         self.messages.append(record.getMessage())
 
 
+def build_client_hello(server_name: bytes) -> bytes:
+    """Sinov uchun eng kichik TLS 1.2 ClientHello (SNI kengaytmasi bilan)."""
+    sni = b"\x00" + len(server_name).to_bytes(2, "big") + server_name
+    extensions = b"\x00\x0b\x00\x02\x01\x00"  # ec_point_formats: SNI birinchi bo'lmasligi uchun
+    extensions += b"\x00\x00" + (len(sni) + 2).to_bytes(2, "big") + len(sni).to_bytes(2, "big") + sni
+    body = b"\x03\x03" + bytes(32) + b"\x00" + b"\x00\x02\x13\x01" + b"\x01\x00"
+    body += len(extensions).to_bytes(2, "big") + extensions
+    handshake = b"\x01" + len(body).to_bytes(3, "big") + body
+    return b"\x16\x03\x01" + len(handshake).to_bytes(2, "big") + handshake
+
+
 def _self_test_packets() -> list[Any]:
     mac = Ether(src="02:00:00:00:00:01", dst="02:00:00:00:00:02")
     packets: list[Any] = [
         mac / IP(src="192.168.1.10", dst="93.184.216.34") / TCP(sport=40000, dport=80, flags="PA")
-        / Raw(b"POST /login HTTP/1.1\r\nUser-Agent: test\r\n\r\nusername=ali&password=Maxfiy123"),
+        / Raw(b"POST /login?next=1 HTTP/1.1\r\nHost: sinov.example\r\nUser-Agent: test\r\n\r\n"
+              b"username=ali&password=Maxfiy123"),
+        mac / IP(src="192.168.1.10", dst="93.184.216.34") / TCP(sport=40006, dport=443, flags="PA")
+        / Raw(build_client_hello(b"maxfiy-sayt.example")),
         mac / IP(src="192.168.1.10", dst="8.8.8.8") / UDP(sport=40001, dport=53)
         / DNS(rd=1, qd=DNSQR(qname="exa\x1b[31mmple.com")),
         mac / IP(src="192.168.1.10", dst="192.168.1.1") / TCP(sport=40002, dport=4000, flags="A")
@@ -1670,16 +1840,19 @@ def self_test() -> int:
             config = copy.deepcopy(DEFAULT_CONFIG)
             config["console"]["max_lines_per_sec"] = 0
             packet_log = PacketLog(folder, "captured_packets.json", 20, 5)
-            processor = PacketProcessor(config, state, packet_log)
+            saved = folder / "saved.pcap"
+            pcap_output = PcapOutput(saved, 0)
+            processor = PacketProcessor(config, state, packet_log, pcap_output=pcap_output)
             capture = folder / "selftest.pcap"
             wrpcap(str(capture), _self_test_packets())
             sniff(offline=str(capture), prn=processor.process_packet, store=False)
             processor.process_packet(object())  # buzuq paket: xato sanaladi, ushlash to'xtamaydi
             CommandHandler(state, processor).handle("status")
             packet_log.close()
+            pcap_output.close()
 
             stats = processor.stats
-            expected = {"seen": 50, "processed": 48, "excluded": 1, "errors": 1}
+            expected = {"seen": 51, "processed": 49, "excluded": 1, "errors": 1}
             for name, value in expected.items():
                 if getattr(stats, name) != value:
                     problems.append(f"stats.{name} = {getattr(stats, name)}, kutilgan {value}")
@@ -1691,7 +1864,7 @@ def self_test() -> int:
             for kind in ("NULL Scan", "FIN Scan", "Xmas Scan", "Shubhali port 23", "Ochiq matnda maxfiy maydon"):
                 if not any(kind in message for message in collector.messages):
                     problems.append(f"signal chiqmadi: {kind}")
-            scans = [message for message in collector.messages if "PORT SKANERLASH" in message]
+            scans = [message for message in collector.messages if "PORT SKANERLASH" in message][:1]
             if len(scans) != 1 or "10.7.7.7" not in scans[0]:
                 problems.append(f"port skanerlash signali noto'g'ri: {scans}")
             lines = [
@@ -1699,8 +1872,8 @@ def self_test() -> int:
                 for path in sorted(folder.glob("captured_packets*.json"))
                 for line in path.read_text(encoding="utf-8").splitlines()
             ]
-            if len(lines) != 48:
-                problems.append(f"jurnalda {len(lines)} satr, kutilgan 48")
+            if len(lines) != 49:
+                problems.append(f"jurnalda {len(lines)} satr, kutilgan 49")
             if len(list(folder.glob("captured_packets_*.json"))) != 2:
                 problems.append("jurnal rotatsiyasi kutilganidek ishlamadi")
             records = [json.loads(line) for line in lines]
@@ -1708,6 +1881,21 @@ def self_test() -> int:
                 problems.append("parol qiymati jurnalda yashirilmadi")
             if not any(record["ip"]["version"] == 6 for record in records):
                 problems.append("IPv6 paket jurnalga tushmadi")
+            applications = [record.get("application", {}) for record in records]
+            if {"protocol": "TLS", "sni": "maxfiy-sayt.example"} not in applications:
+                problems.append("TLS server nomi (SNI) aniqlanmadi")
+            http = {"protocol": "HTTP", "method": "POST", "host": "sinov.example", "path": "/login"}
+            if http not in applications:
+                problems.append("HTTP so'rovi aniqlanmadi")
+            # Yozilgan .pcap ni qayta o'qish: --write-pcap va --read zanjiri.
+            replay_log = PacketLog(folder, "replay.json", 1000, 5)
+            replay = PacketProcessor(config, MonitorState(), replay_log, None, PacketClock())
+            sniff(offline=str(saved), prn=replay.process_packet, store=False)
+            replay_log.close()
+            if replay.stats.processed != 49 or replay.stats.errors:
+                problems.append(f"yozilgan pcap qayta o'qilganda {replay.stats.processed} paket, kutilgan 49")
+            if sum("PORT SKANERLASH" in message for message in collector.messages) != 2:
+                problems.append("qayta o'qishda port skanerlash signali chiqmadi")
         except Exception as exc:  # noqa: BLE001
             problems.append(f"{type(exc).__name__}: {exc}")
         finally:
@@ -1719,7 +1907,7 @@ def self_test() -> int:
         for problem in problems:
             console.write(f"  - {problem}")
         return EXIT_FAILED
-    console.write(f"{APP_NAME} {__version__}: o'zini sinash muvaffaqiyatli (50 paket, scapy {scapy_conf.version})")
+    console.write(f"{APP_NAME} {__version__}: o'zini sinash muvaffaqiyatli (51 paket, scapy {scapy_conf.version})")
     return EXIT_OK
 
 
@@ -1735,6 +1923,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--version", action="version", version=f"{APP_NAME} {__version__}")
     parser.add_argument("--config", metavar="FAYL", help="sozlamalar fayli (standart: dastur yonidagi config.json)")
     parser.add_argument("--iface", metavar="INTERFEYS", help="interfeys raqami yoki nomi (so'ralmasin)")
+    parser.add_argument("--read", metavar="PCAP", help="jonli ushlash o'rniga .pcap/.pcapng faylni tahlil qiladi")
+    parser.add_argument("--write-pcap", metavar="PCAP", help="qayta ishlangan paketlarni .pcap faylga ham yozadi")
     parser.add_argument("--list-ifaces", action="store_true", help="interfeyslar ro'yxatini chiqarib, tugatadi")
     parser.add_argument("--self-test", action="store_true", help="drayversiz o'zini sinaydi va tugatadi")
     return parser.parse_args(argv)
@@ -1785,23 +1975,32 @@ def run(args: argparse.Namespace) -> int:
         logging.info("Sozlamalar fayli topilmadi — standart qiymatlar bilan yaratildi: %s", config_path)
     logging.info("Jurnal papkasi: %s", log_folder)
 
-    interfaces = list_interfaces()
-    default = default_address()
-    if args.list_ifaces:
-        print_interfaces(interfaces, default)
-        return EXIT_OK
-    if not capture_available():
-        logging.critical(
-            "Npcap drayveri topilmadi. Uni %s dan o'rnating va dasturni qayta ishga tushiring.", NPCAP_URL
-        )
-        return _finish(EXIT_CAPTURE_FAILED)
-    if not interfaces and args.iface is None:
-        logging.critical("Hech qanday aktiv (IP manzilli) tarmoq interfeysi topilmadi.")
-        return _finish(EXIT_CAPTURE_FAILED)
-    interface = choose_interface(interfaces, args.iface, default)
-    if interface is None:
-        logging.critical("Interfeys tanlanmadi (kiritish yopiq). `--iface` bilan ko'rsating.")
-        return EXIT_CAPTURE_FAILED
+    offline = Path(args.read).expanduser() if args.read else None
+    interfaces: list[Interface] = []
+    interface: str | None = None
+    default = ""
+    if offline is not None:
+        if not offline.is_file():
+            logging.critical("Fayl topilmadi: %s", offline)
+            return _finish(EXIT_BAD_CONFIG)
+    else:
+        interfaces = list_interfaces()
+        default = default_address()
+        if args.list_ifaces:
+            print_interfaces(interfaces, default)
+            return EXIT_OK
+        if not capture_available():
+            logging.critical(
+                "Npcap drayveri topilmadi. Uni %s dan o'rnating va dasturni qayta ishga tushiring.", NPCAP_URL
+            )
+            return _finish(EXIT_CAPTURE_FAILED)
+        if not interfaces and args.iface is None:
+            logging.critical("Hech qanday aktiv (IP manzilli) tarmoq interfeysi topilmadi.")
+            return _finish(EXIT_CAPTURE_FAILED)
+        interface = choose_interface(interfaces, args.iface, default)
+        if interface is None:
+            logging.critical("Interfeys tanlanmadi (kiritish yopiq). `--iface` bilan ko'rsating.")
+            return EXIT_CAPTURE_FAILED
 
     state = MonitorState(base / "netmonitor_state.json")
     restored = state.load()
@@ -1813,11 +2012,21 @@ def run(args: argparse.Namespace) -> int:
         logging.info("Kuzatuvdan chiqarilgan manzillar: %d ta (oldingi safardan %d).", len(state.excluded()), restored)
     state.show_packets = bool(_section(config, "console").get("show_packets", True))
 
-    geo: GeoResolver | None = None
-    if _section(config, "geolocation").get("enabled"):
-        geo = GeoResolver()
-        geo.start()
-        logging.info("Geolokatsiya yoqilgan: tashqi IP manzillar %s ga (HTTP, ochiq) yuboriladi.", GEO_HOST)
+    pcap_output: PcapOutput | None = None
+    if args.write_pcap:
+        target = Path(args.write_pcap).expanduser()
+        try:
+            if offline is not None and target.resolve() == offline.resolve():
+                raise OSError("o'qilayotgan faylning o'ziga yozib bo'lmaydi")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            pcap_output = PcapOutput(target, int(_number(config.get("pcap_max_mb"), 500, 0)) * 1024 * 1024)
+        except OSError as exc:
+            logging.critical("pcap fayli ochilmadi: %s", exc)
+            return _finish(EXIT_BAD_CONFIG)
+        logging.warning(
+            "Paketlar %s ga to'liq yoziladi: unda parollar ham YASHIRILMAGAN holda bo'ladi. Faylni himoyalang.",
+            target,
+        )
 
     packet_log = PacketLog(
         log_folder,
@@ -1825,7 +2034,17 @@ def run(args: argparse.Namespace) -> int:
         int(_number(config.get("log_rotation_lines"), 10000, 1)),
         int(_number(config.get("max_packet_log_files"), 50, 1)),
     )
-    processor = PacketProcessor(config, state, packet_log, geo)
+    if offline is not None:
+        return _run_offline(config, offline, state, packet_log, pcap_output)
+
+    assert interface is not None
+    geo: GeoResolver | None = None
+    if _section(config, "geolocation").get("enabled"):
+        geo = GeoResolver()
+        geo.start()
+        logging.info("Geolokatsiya yoqilgan: tashqi IP manzillar %s ga (HTTP, ochiq) yuboriladi.", GEO_HOST)
+
+    processor = PacketProcessor(config, state, packet_log, geo, pcap_output=pcap_output)
     interval = _number(config.get("system_metrics_interval_sec"), 120, 0)
     monitor = SystemMonitor(processor, interval, state.stop)
     monitor.start()
@@ -1869,9 +2088,39 @@ def run(args: argparse.Namespace) -> int:
         code = EXIT_CAPTURE_FAILED
         logging.critical("Sniffing xatosi: %s", capture.failure[0])
     packet_log.close()
+    if pcap_output is not None:
+        pcap_output.close()
     state.save()
     logging.info("[TIZIM] Yakun: %s", SystemMonitor(processor, 0, state.stop).summary())
     return _finish(code, listener)
+
+
+def _run_offline(
+    config: dict[str, Any], source: Path, state: MonitorState, packet_log: PacketLog, pcap_output: PcapOutput | None
+) -> int:
+    """`--read`: faylni boshidan oxirigacha jonli trafik kabi tahlil qiladi (drayver kerak emas)."""
+    processor = PacketProcessor(config, state, packet_log, None, PacketClock(), pcap_output)
+    bpf_filter = config.get("capture_filter")
+    if isinstance(bpf_filter, str) and bpf_filter:
+        logging.warning("Fayldan o'qishda capture_filter qo'llanmaydi: hamma paket tahlil qilinadi.")
+    logging.info("Fayl tahlil qilinmoqda: %s", source)
+    code = EXIT_OK
+    try:
+        sniff(offline=str(source), prn=processor.process_packet, store=False)
+    except KeyboardInterrupt:
+        logging.info("[BOSHQARUV] Ctrl+C: tahlil to'xtatildi.")
+    except Exception as exc:  # noqa: BLE001
+        code = EXIT_CAPTURE_FAILED
+        logging.critical("Faylni o'qishda xato: %s: %s", type(exc).__name__, str(exc)[:300])
+    packet_log.close()
+    if pcap_output is not None:
+        pcap_output.close()
+    stats = processor.stats
+    logging.info(
+        "[TIZIM] Yakun: paketlar: o'qildi %d, qayta ishlandi %d, chiqarilgan %d, IP emas %d, xato %d, signal %d",
+        stats.seen, stats.processed, stats.excluded, stats.non_ip, stats.errors, stats.alerts,
+    )
+    return _finish(code)
 
 
 def main(argv: list[str] | None = None) -> int:
