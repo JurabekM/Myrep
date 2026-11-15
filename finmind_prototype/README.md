@@ -18,7 +18,50 @@ shuning uchun tekshiruv va xavfsizlik qoidalari ikkalasida aynan bir xil.
 ![Umumiy ko'rinish](docs/desktop-umumiy.png)
 ![Tranzaksiyalar](docs/desktop-tranzaksiyalar.png)
 
-## Ishga tushirish
+## O'rnatish (tayyor paketlar)
+
+Paketlar `.github/workflows/finmind-prototype-release.yml` orqali GitHub'ning macOS va
+Windows runner'larida yig'iladi; ichida Python ham, barcha kutubxonalar ham bor —
+foydalanuvchiga hech narsa o'rnatish kerak emas.
+
+| Tizim | Fayl | O'rnatish |
+|---|---|---|
+| Windows 10/11 (x64) | `FinTx-<versiya>-Windows-Setup.exe` | Ishga tushiring → "Keyingi" → "O'rnatish". Administrator huquqi kerak emas. Boshlash menyusida **FinTx** (desktop) va **FinTx (terminal)** paydo bo'ladi. |
+| macOS, Apple Silicon (M1+) | `FinTx-<versiya>-macOS-arm64.dmg` | Oching va **FinTx**'ni **Applications** papkasiga suring. |
+| macOS, Intel | `FinTx-<versiya>-macOS-x86_64.dmg` | Xuddi shunday. |
+
+Har bir fayl yonida `.sha256` nazorat yig'indisi bor. Dastur o'chirilganda
+foydalanuvchi ma'lumotlari (baza fayli) o'chirilmaydi.
+
+### Imzo holati — muhim
+
+Hozirgi paketlar **ishonchli nashriyotchi imzosisiz**: buning uchun Apple va
+Microsoft tan oladigan, pullik va shaxsni tasdiqlash orqali beriladigan
+sertifikatlar kerak, ularni dastur kodi bilan "yasab" bo'lmaydi.
+
+- **macOS:** ilova faqat ad-hoc imzolangan. Birinchi ishga tushirishda Gatekeeper
+  to'sadi: *System Settings → Privacy & Security → "Open Anyway"* (eski
+  versiyalarda: ilovaga o'ng tugma → *Open*).
+- **Windows:** o'rnatuvchi imzolanmagan. SmartScreen "Windows protected your PC"
+  deydi: *More info → Run anyway*.
+
+Haqiqiy imzo uchun repozitoriyga quyidagi sirlarni (Settings → Secrets and
+variables → Actions) qo'shish kifoya — workflow ularni ko'rsa, o'zi imzolaydi:
+
+| Sir | Nima |
+|---|---|
+| `FINTX_MACOS_CERT_P12_B64`, `FINTX_MACOS_CERT_PASSWORD` | Apple Developer Program'dagi "Developer ID Application" sertifikati (`.p12`, base64) |
+| `FINTX_APPLE_ID`, `FINTX_APPLE_TEAM_ID`, `FINTX_APPLE_APP_PASSWORD` | Notarizatsiya uchun Apple ID, jamoa ID'si va ilova paroli |
+| `FINTX_WINDOWS_CERT_PFX_B64`, `FINTX_WINDOWS_CERT_PASSWORD` | Authenticode kod-imzolash sertifikati (`.pfx`, base64) |
+
+Imzolash qadamlari sertifikat bo'lmagani uchun hali amalda sinalmagan. Yangi
+Windows sertifikatlari odatda `.pfx` fayl emas, apparat token yoki bulutli HSM
+ko'rinishida beriladi — unda Windows qadami o'sha provayderga moslanadi.
+
+Reliz chiqarish: `fintx-v0.1.0` kabi teg qo'yilsa, workflow paketlarni yig'ib,
+GitHub Release'ga biriktiradi.
+
+## Manba koddan ishga tushirish
 
 ### Windows — terminal
 
@@ -50,7 +93,7 @@ yoki Homebrew'dan o'rnating (Xcode bilan keladigan 3.9 yetarli emas).
 python -m unittest discover -s tests -t .
 ```
 
-96 ta test. PySide6 o'rnatilmagan bo'lsa, 9 ta desktop testi o'tkazib yuboriladi,
+98 ta test. PySide6 o'rnatilmagan bo'lsa, 9 ta desktop testi o'tkazib yuboriladi,
 qolgani ishlayveradi. CI (`.github/workflows/finmind-prototype.yml`) testlarni
 Ubuntu, macOS va Windows'da, Python 3.10 va 3.13 bilan ishga tushiradi.
 
@@ -135,7 +178,9 @@ fintx/
   app.py          xizmatlarni birlashtiruvchi yadro
   cli.py          terminal interfeysi
   gui/            desktop interfeys (PySide6)
+  selftest.py     yig'ilgan paketni tekshirish (`--self-test`)
 tests/            avtomatik testlar (unittest)
+packaging/        PyInstaller spetsifikatsiyasi, Inno Setup skripti, belgi
 ```
 
 Baza fayli: macOS — `~/Library/Application Support/FinTx/fintx.db`,
@@ -155,8 +200,10 @@ Bularni bilib qo'ygan ma'qul — ishlab chiqarishga chiqishdan oldin hal qilinad
 - **Ikki bosqichli kirish va parolni tiklash yo'q.** Parol unutilsa, hisobni
   tiklab bo'lmaydi.
 - **Parol xotirada** Python satri sifatida turadi va uni ishonchli nollab bo'lmaydi.
-- Desktop interfeys bu yerda Linux'da oynasiz rejimda ishga tushirilib tekshirilgan;
-  macOS va Windows'dagi sinov CI orqali o'tadi. `.app` paketi (PyInstaller) qilinmagan.
+- **Paketlar ishonchli imzosiz** (yuqoridagi "Imzo holati" bo'limiga qarang).
+- Desktop interfeys va paketlar avtomatik sinovdan o'tgan (CI: macOS va Windows
+  runner'larida yig'ish, o'rnatish, ishga tushirish), lekin haqiqiy ekranda
+  ko'z bilan tekshirilmagan.
 
 ## Litsenziyalar
 
