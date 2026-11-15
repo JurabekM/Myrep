@@ -6,6 +6,7 @@ Ushlash drayveri (Windows'da Npcap) va huquq (Linux'da root) kerak, shuning uchu
     python tests\\live_smoke.py release\\NetMonitor.exe
 
 `NETMONITOR_SMOKE_NO_FILTER=1` — ushlash filtrisiz (libpcap o'rnatilmagan Linux uchun).
+`NETMONITOR_SMOKE_PROMISCUOUS=true|false` — ushlash rejimi (berilmasa avto).
 """
 
 from __future__ import annotations
@@ -53,6 +54,9 @@ def main() -> int:
         settings = {"log_folder": str(folder / "logs"), "capture_filter": CAPTURE_FILTER}
         if os.environ.get("NETMONITOR_SMOKE_NO_FILTER"):  # libpcap yo'q tizim: filtr kompilyatsiya qilinmaydi
             del settings["capture_filter"]
+        mode = os.environ.get("NETMONITOR_SMOKE_PROMISCUOUS")  # "true" | "false"; berilmasa — avto
+        if mode:
+            settings["capture"] = {"promiscuous": mode == "true"}
         config.write_text(json.dumps(settings), encoding="utf-8")
         process = subprocess.Popen(
             [*command, "--config", str(config), "--iface", address],
@@ -69,7 +73,7 @@ def main() -> int:
             process.stdin.flush()
 
         try:
-            time.sleep(6.0)  # interfeys ochilishini kutish
+            time.sleep(9.0)  # interfeys ochilishi va avto rejimning sinov bosqichi (5 s)
             if process.poll() is not None:
                 problems.append(f"dastur erta tugadi (kod {process.returncode})")
             else:
@@ -107,6 +111,8 @@ def main() -> int:
             problems.append("chiqarilgan manzil jurnalga tushdi")
         if "JonliSinov77" in output or any("JonliSinov77" in json.dumps(r) for r in records):
             problems.append("parol qiymati yashirilmadi")
+        if "Ushlash rejimi:" not in output or "hali birorta paket kelmadi" in output:
+            problems.append("`status` ushlash rejimini yoki oxirgi paket vaqtini ko'rsatmadi")
         for expected in ("XAVFLI PAYLOAD", "Ochiq matnda maxfiy maydon (login, password)", "CHIQARILDI", "PAUZA"):
             if expected not in output:
                 problems.append(f"chiqishda yo'q: {expected}")

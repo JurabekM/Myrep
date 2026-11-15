@@ -33,6 +33,8 @@ from pathlib import Path
 from typing import Any
 
 from scapy.config import conf as scapy_conf
+from scapy.data import ETH_P_ALL
+from scapy.interfaces import resolve_iface
 from scapy.layers.dns import DNS, DNSQR
 from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.inet6 import IPv6
@@ -59,7 +61,7 @@ try:
 except ImportError:  # tizim ko'rsatkichlarisiz ham ishlaydi
     psutil = None  # type: ignore[assignment]
 
-__version__ = "4.0.0"
+__version__ = "4.0.1"
 
 APP_NAME = "NetMonitor"
 NPCAP_URL = "https://npcap.com/#download"
@@ -89,6 +91,10 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "max_packet_log_files": 50,
     "system_metrics_interval_sec": 120,
     "capture_filter": None,
+    "capture": {
+        "promiscuous": "auto",
+        "probe_sec": 5,
+    },
     "excluded_ips": [],
     "console": {
         "show_packets": True,
@@ -963,6 +969,7 @@ class Stats:
     errors: int = 0
     alerts: int = 0
     console_skipped: int = 0
+    last_packet: float = 0.0  # oxirgi paket vaqti (monotonic); 0 — hali kelmagan
 
 
 def _endpoint(ip: str, port: object) -> str:
@@ -1034,6 +1041,7 @@ class PacketProcessor:
     def _process(self, packet: Any) -> None:
         stats = self.stats
         stats.seen += 1
+        stats.last_packet = self._clock()
         if not self.state.active:
             stats.paused += 1
             return
@@ -1173,6 +1181,7 @@ class SystemMonitor(threading.Thread):
         self.processor = processor
         self.interval_s = interval_s
         self._stop_event = stop
+        self.capture: Capture | None = None
 
     def summary(self) -> str:
         stats = self.processor.stats
@@ -1201,6 +1210,8 @@ class SystemMonitor(threading.Thread):
         next_report = time.monotonic() + self.interval_s
         while not self._stop_event.wait(1.0):
             self.processor.packet_log.flush()
+            if self.capture is not None:
+                self.capture.check_silence()
             if self.interval_s > 0 and time.monotonic() >= next_report:
                 next_report = time.monotonic() + self.interval_s
                 logging.info("[TIZIM] %s", self.summary())
@@ -1235,9 +1246,12 @@ def show_help() -> None:
 class CommandHandler:
     """Buyruq satrini bajaradi. Konsoldan ham, testdan ham chaqiriladi."""
 
-    def __init__(self, state: MonitorState, processor: PacketProcessor | None = None) -> None:
+    def __init__(
+        self, state: MonitorState, processor: PacketProcessor | None = None, capture: Capture | None = None
+    ) -> None:
         self.state = state
         self.processor = processor
+        self.capture = capture
 
     def handle(self, line: str) -> bool:
         """`False` — dastur to'xtashi kerak."""
@@ -1359,6 +1373,12 @@ class CommandHandler:
                 f"Konsolga sig'magan satrlar: {stats.console_skipped} | "
                 f"Faylga yozilgan: {self.processor.packet_log.written}"
             )
+            if self.capture is not None:
+                if stats.last_packet:
+                    age = f"oxirgi paket {max(0.0, time.monotonic() - stats.last_packet):.0f} s oldin"
+                else:
+                    age = "hali birorta paket kelmadi"
+                text += f"\n        Ushlash rejimi: {self.capture.mode_label()} | {age}"
         console.write(text)
 
 
@@ -1430,16 +1450,18 @@ def list_interfaces() -> list[Interface]:
     return result
 
 
-def print_interfaces(interfaces: list[Interface]) -> None:
+def print_interfaces(interfaces: list[Interface], default: str = "") -> None:
     lines = [f"\n{Fore.CYAN}Monitoring uchun mavjud tarmoq interfeyslari:{Style.RESET_ALL}"]
-    lines.extend(
-        f"{Fore.YELLOW}{index}{Style.RESET_ALL}: {item.label} ({Fore.GREEN}{item.address}{Style.RESET_ALL})"
-        for index, item in enumerate(interfaces)
-    )
+    for index, item in enumerate(interfaces):
+        mark = f"  {Fore.MAGENTA}<- asosiy (internet shu orqali){Style.RESET_ALL}" if item.address == default else ""
+        lines.append(
+            f"{Fore.YELLOW}{index}{Style.RESET_ALL}: {item.label} "
+            f"({Fore.GREEN}{item.address}{Style.RESET_ALL}){mark}"
+        )
     console.write("\n".join(lines))
 
 
-def choose_interface(interfaces: list[Interface], requested: str | None) -> str | None:
+def choose_interface(interfaces: list[Interface], requested: str | None, default: str = "") -> str | None:
     """Tanlangan interfeysning ushlash nomi; kiritish yopilsa `None`."""
     if requested is not None:
         if requested.isdigit() and int(requested) < len(interfaces):
@@ -1448,7 +1470,7 @@ def choose_interface(interfaces: list[Interface], requested: str | None) -> str 
             if requested in (item.capture_name, item.label, item.address):
                 return item.capture_name
         return requested  # ro'yxatda ko'rinmaydigan nom (masalan, loopback)
-    print_interfaces(interfaces)
+    print_interfaces(interfaces, default)
     while True:
         try:
             answer = input(f"{Fore.CYAN}Monitoring uchun interfeys raqamini kiriting: {Style.RESET_ALL}")
@@ -1469,16 +1491,122 @@ def capture_available() -> bool:
     return sys.platform != "win32" or bool(scapy_conf.use_pcap)
 
 
-def capture_loop(
-    interface: str, bpf_filter: str | None, processor: PacketProcessor, stop: threading.Event, failure: list[str]
-) -> None:
+def open_capture_socket(interface: str, bpf_filter: str | None, promiscuous: bool) -> Any:
+    """Interfeysni ushlash uchun ochadi (sniff() ichkarida qiladigan ishning o'zi, rejimi aniq berilgan)."""
+    options: dict[str, Any] = {"type": ETH_P_ALL, "iface": interface, "promisc": promiscuous}
+    if bpf_filter:
+        options["filter"] = bpf_filter
+    return resolve_iface(interface).l2listen()(**options)
+
+
+NO_PACKETS_WARN_S = 15.0
+
+
+class Capture:
+    """Paketlarni ushlash oqimi.
+
+    `promiscuous` — `True`, `False` yoki `None` (avto). Ko'p Wi-Fi adapterlar Windows'da promiscuous
+    rejimda birorta ham paket bermaydi. Avto rejimda ushlash promiscuous holda boshlanadi; `probe_s`
+    ichida paket kelmasa, interfeys oddiy rejimda qayta ochiladi.
+    """
+
+    def __init__(
+        self,
+        interface: str,
+        bpf_filter: str | None,
+        promiscuous: bool | None,
+        processor: PacketProcessor,
+        stop: threading.Event,
+        probe_s: float = 5.0,
+        open_socket: Callable[[str, str | None, bool], Any] = open_capture_socket,
+        run_sniff: Callable[..., Any] = sniff,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        self.interface = interface
+        self.bpf_filter = bpf_filter
+        self.modes = [True, False] if promiscuous is None else [promiscuous]
+        self.processor = processor
+        self.stop = stop
+        self.probe_s = probe_s
+        self._open_socket = open_socket
+        self._run_sniff = run_sniff
+        self._clock = clock
+        self.failure: list[str] = []
+        self.promiscuous: bool | None = None  # hozirgi rejim; None — hali ochilmagan
+        self.fell_back = False
+        self.started_at = 0.0
+        self._warned = False
+
+    def mode_label(self) -> str:
+        if self.promiscuous is None:
+            return "ochilmoqda"
+        label = "promiscuous" if self.promiscuous else "oddiy (faqat shu kompyuter trafigi)"
+        return f"{label}, avtomatik almashgan" if self.fell_back else label
+
+    def run(self) -> None:
+        try:
+            self._capture()
+            if not self.stop.is_set():
+                self.failure.append("ushlash kutilmaganda tugadi")
+        except Exception as exc:  # noqa: BLE001
+            self.failure.append(f"{type(exc).__name__}: {exc}"[:300])
+        self.stop.set()
+
+    def _capture(self) -> None:
+        stats = self.processor.stats
+        for index, promiscuous in enumerate(self.modes):
+            last = index == len(self.modes) - 1
+            sock = self._open_socket(self.interface, self.bpf_filter, promiscuous)
+            self.promiscuous = promiscuous
+            self.started_at = self._clock()
+            try:
+                if not last:
+                    # Sinov bosqichi: shu rejimda paket keladimi?
+                    self._run_sniff(
+                        opened_socket=sock, prn=self.processor.process_packet, store=False, timeout=self.probe_s
+                    )
+                    if self.stop.is_set():
+                        return
+                    if stats.seen == 0:
+                        self.fell_back = True
+                        logging.warning(
+                            "Promiscuous rejimda %.0f s ichida birorta paket kelmadi (Wi-Fi adapterlarda "
+                            "odatiy holat). Interfeys oddiy rejimda qayta ochilmoqda.", self.probe_s,
+                        )
+                        continue
+                self._run_sniff(opened_socket=sock, prn=self.processor.process_packet, store=False)
+                return
+            finally:
+                try:
+                    sock.close()
+                except Exception:  # noqa: BLE001
+                    pass
+
+    def check_silence(self) -> None:
+        """Ushlash boshlanganidan beri paket kelmagan bo'lsa, bir marta ogohlantiradi."""
+        if self._warned or self.promiscuous is None or self.processor.stats.seen > 0:
+            return
+        if self.promiscuous and len(self.modes) > 1:  # hali sinov bosqichi
+            return
+        if self._clock() - self.started_at < NO_PACKETS_WARN_S:
+            return
+        self._warned = True
+        logging.warning(
+            "Bu interfeysdan %.0f s davomida birorta paket kelmadi. Tekshiring: (1) to'g'ri interfeys "
+            "tanlanganmi — internet o'tadigani ro'yxatda «asosiy» deb belgilangan; (2) Npcap «faqat "
+            "administratorlar uchun» o'rnatilgan bo'lsa, dasturni administrator nomidan oching; "
+            "(3) config.json dagi capture_filter juda tor emasmi.", NO_PACKETS_WARN_S,
+        )
+
+
+def default_address() -> str:
+    """Internetga chiqadigan interfeysning IPv4 manzili (paket yuborilmaydi); aniqlanmasa `""`."""
     try:
-        sniff(iface=interface, prn=processor.process_packet, filter=bpf_filter or None, store=False)
-        if not stop.is_set():
-            failure.append("ushlash kutilmaganda tugadi")
-    except Exception as exc:  # noqa: BLE001
-        failure.append(f"{type(exc).__name__}: {exc}"[:300])
-    stop.set()
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
+            probe.connect(("192.0.2.1", 9))
+            return str(probe.getsockname()[0])
+    except OSError:
+        return ""
 
 
 # ---------------------------------------------------------------------------
@@ -1658,8 +1786,9 @@ def run(args: argparse.Namespace) -> int:
     logging.info("Jurnal papkasi: %s", log_folder)
 
     interfaces = list_interfaces()
+    default = default_address()
     if args.list_ifaces:
-        print_interfaces(interfaces)
+        print_interfaces(interfaces, default)
         return EXIT_OK
     if not capture_available():
         logging.critical(
@@ -1669,7 +1798,7 @@ def run(args: argparse.Namespace) -> int:
     if not interfaces and args.iface is None:
         logging.critical("Hech qanday aktiv (IP manzilli) tarmoq interfeysi topilmadi.")
         return _finish(EXIT_CAPTURE_FAILED)
-    interface = choose_interface(interfaces, args.iface)
+    interface = choose_interface(interfaces, args.iface, default)
     if interface is None:
         logging.critical("Interfeys tanlanmadi (kiritish yopiq). `--iface` bilan ko'rsating.")
         return EXIT_CAPTURE_FAILED
@@ -1698,22 +1827,34 @@ def run(args: argparse.Namespace) -> int:
     )
     processor = PacketProcessor(config, state, packet_log, geo)
     interval = _number(config.get("system_metrics_interval_sec"), 120, 0)
-    SystemMonitor(processor, interval, state.stop).start()
+    monitor = SystemMonitor(processor, interval, state.stop)
+    monitor.start()
 
-    failure: list[str] = []
     bpf_filter = config.get("capture_filter")
-    capture = threading.Thread(
-        target=capture_loop,
-        args=(interface, bpf_filter if isinstance(bpf_filter, str) else None, processor, state.stop, failure),
-        daemon=True,
-        name="CaptureThread",
+    capture_settings = _section(config, "capture")
+    promiscuous = capture_settings.get("promiscuous", "auto")
+    capture = Capture(
+        interface,
+        bpf_filter if isinstance(bpf_filter, str) else None,
+        promiscuous if isinstance(promiscuous, bool) else None,
+        processor,
+        state.stop,
+        _number(capture_settings.get("probe_sec"), 5.0, 1.0),
     )
-    logging.info("Monitoring '%s' interfeysida boshlandi...", interface.split("_")[-1])
-    capture.start()
+    chosen = next((item for item in interfaces if item.capture_name == interface), None)
+    logging.info("Monitoring '%s' interfeysida boshlandi...", chosen.label if chosen else interface.split("_")[-1])
+    if chosen is not None and default and chosen.address != default:
+        logging.warning(
+            "Tanlangan interfeys (%s) asosiy emas: internet trafigi %s orqali o'tadi. Bu yerda faqat shu "
+            "interfeysning o'z trafigi va tarmoqdagi umumiy (broadcast) paketlar ko'rinadi.",
+            chosen.address, default,
+        )
+    threading.Thread(target=capture.run, daemon=True, name="CaptureThread").start()
+    monitor.capture = capture
 
     # Buyruqlar interfeys tanlangandan keyin tinglanadi: kiritish uchun poyga yo'q.
     show_help()
-    listener = CommandListener(CommandHandler(state, processor))
+    listener = CommandListener(CommandHandler(state, processor, capture))
     listener.start()
 
     try:
@@ -1724,9 +1865,9 @@ def run(args: argparse.Namespace) -> int:
         state.stop.set()
 
     code = EXIT_OK
-    if failure:
+    if capture.failure:
         code = EXIT_CAPTURE_FAILED
-        logging.critical("Sniffing xatosi: %s", failure[0])
+        logging.critical("Sniffing xatosi: %s", capture.failure[0])
     packet_log.close()
     state.save()
     logging.info("[TIZIM] Yakun: %s", SystemMonitor(processor, 0, state.stop).summary())

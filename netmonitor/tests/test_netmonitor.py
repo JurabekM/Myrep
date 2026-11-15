@@ -517,6 +517,112 @@ def test_non_ip_frames_are_counted(tmp_path: Path, clock: Clock, printed: list[s
     assert processor.stats.non_ip == 1 and processor.stats.errors == 0
 
 
+# --- Ushlash rejimi -----------------------------------------------------------
+
+
+class FakeSocket:
+    def __init__(self, promiscuous: bool) -> None:
+        self.promiscuous = promiscuous
+        self.closed = False
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def make_capture(
+    tmp_path: Path, clock: Clock, promiscuous: bool | None, delivers: dict[bool, int]
+) -> tuple[nm.Capture, list[FakeSocket], list[tuple[bool, object]]]:
+    """`delivers[rejim]` — shu rejimda nechta paket keladi."""
+    processor = make_processor(tmp_path, clock)
+    sockets: list[FakeSocket] = []
+    calls: list[tuple[bool, object]] = []
+
+    def open_socket(interface: str, bpf_filter: str | None, mode: bool) -> FakeSocket:
+        sockets.append(FakeSocket(mode))
+        return sockets[-1]
+
+    def run_sniff(opened_socket: FakeSocket, prn: Any, store: bool, timeout: float | None = None) -> None:
+        calls.append((opened_socket.promiscuous, timeout))
+        for _ in range(delivers.get(opened_socket.promiscuous, 0)):
+            prn(tcp("192.168.1.10", "192.168.1.1", 80))
+        if timeout is None:
+            processor.state.stop.set()  # haqiqiy sniff() to'xtatilguncha qaytmaydi
+
+    capture = nm.Capture("eth", None, promiscuous, processor, processor.state.stop, 5.0, open_socket, run_sniff, clock)
+    return capture, sockets, calls
+
+
+def test_auto_mode_falls_back_when_promiscuous_is_silent(
+    tmp_path: Path, clock: Clock, printed: list[str], caplog: pytest.LogCaptureFixture
+) -> None:
+    capture, sockets, calls = make_capture(tmp_path, clock, None, {True: 0, False: 3})
+    with caplog.at_level(logging.WARNING):
+        capture.run()
+    assert calls == [(True, 5.0), (False, None)]
+    assert [sock.closed for sock in sockets] == [True, True]
+    assert capture.promiscuous is False and capture.fell_back
+    assert capture.failure == []
+    assert capture.processor.stats.seen == 3
+    assert any("Promiscuous rejimda" in record.getMessage() for record in caplog.records)
+
+
+def test_auto_mode_keeps_promiscuous_when_packets_arrive(tmp_path: Path, clock: Clock, printed: list[str]) -> None:
+    capture, sockets, calls = make_capture(tmp_path, clock, None, {True: 2})
+    capture.run()
+    # Sinov bosqichidan keyin o'sha ochiq interfeysda davom etadi: orada paket yo'qolmaydi.
+    assert calls == [(True, 5.0), (True, None)]
+    assert len(sockets) == 1 and sockets[0].closed
+    assert capture.promiscuous is True and not capture.fell_back
+
+
+@pytest.mark.parametrize("mode", [True, False])
+def test_explicit_mode_is_not_probed(tmp_path: Path, clock: Clock, printed: list[str], mode: bool) -> None:
+    capture, sockets, calls = make_capture(tmp_path, clock, mode, {})
+    capture.run()
+    assert calls == [(mode, None)]
+
+
+def test_capture_failure_is_reported(tmp_path: Path, clock: Clock) -> None:
+    processor = make_processor(tmp_path, clock)
+
+    def refuse(interface: str, bpf_filter: str | None, mode: bool) -> None:
+        raise OSError("ochilmadi")
+
+    capture = nm.Capture("eth", None, None, processor, processor.state.stop, 5.0, refuse)
+    capture.run()
+    assert capture.failure == ["OSError: ochilmadi"]
+    assert processor.state.stop.is_set()
+
+
+def test_silence_is_reported_once(
+    tmp_path: Path, clock: Clock, printed: list[str], caplog: pytest.LogCaptureFixture
+) -> None:
+    capture, _, _ = make_capture(tmp_path, clock, False, {})
+    capture.run()
+    with caplog.at_level(logging.WARNING):
+        capture.check_silence()
+        assert caplog.records == []  # hali erta
+        clock.now += nm.NO_PACKETS_WARN_S + 1
+        capture.check_silence()
+        capture.check_silence()
+    assert sum("birorta paket kelmadi" in record.getMessage() for record in caplog.records) == 1
+    # Paket kelgan bo'lsa ogohlantirish yo'q.
+    busy, _, _ = make_capture(tmp_path, clock, False, {False: 1})
+    busy.run()
+    clock.now += 100
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        busy.check_silence()
+    assert caplog.records == []
+
+
+def test_default_interface_is_marked(printed: list[str]) -> None:
+    interfaces = [nm.Interface("a", "Ethernet", "192.168.8.171"), nm.Interface("b", "Wi-Fi", "192.168.8.177")]
+    nm.print_interfaces(interfaces, "192.168.8.171")
+    lines = printed[0].splitlines()
+    assert "asosiy" in lines[2] and "asosiy" not in lines[3]
+
+
 # --- Buyruqlar ----------------------------------------------------------------
 
 

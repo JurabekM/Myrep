@@ -1,4 +1,4 @@
-# NetMonitor 4.0.0
+# NetMonitor 4.0.1
 
 Tanlangan tarmoq interfeysidagi IPv4/IPv6 paketlarni ushlaydi, har birini konsolga chiqaradi,
 JSON Lines faylga yozadi va oddiy xavf belgilarini tekshiradi. `netmonitor_new_v3_9.py`
@@ -52,6 +52,7 @@ yetarli. To'liq namuna: `config.example.json`. v3.9 ning `config.json` fayli o'z
 | `log_rotation_lines`, `max_packet_log_files` | 10000, 50 | rotatsiya chegarasi va saqlanadigan arxivlar soni |
 | `system_metrics_interval_sec` | 120 | holat xulosasi oralig'i (CPU, RAM, hisoblagichlar); 0 — o'chiq |
 | `capture_filter` | yo'q | BPF filtri, masalan `"tcp port 80"` |
+| `capture.promiscuous` | `"auto"` | `true` — tarmoqdagi begona trafik ham (adapter qo'llasa); `false` — faqat shu kompyuter trafigi; `"auto"` — avval `true`, `capture.probe_sec` (5 s) ichida paket kelmasa `false` |
 | `excluded_ips` | `[]` | boshidanoq chiqariladigan manzillar |
 | `console.show_packets` | `true` | paket satrlarini ko'rsatish (`quiet` bilan bir xil) |
 | `console.max_lines_per_sec` | 50 | soniyasiga ko'pi bilan shuncha paket satri; 0 — cheksiz. Maxfiy maydonli va signal bergan paketlar har doim chiqadi; faylga hammasi yoziladi |
