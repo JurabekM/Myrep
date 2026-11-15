@@ -355,6 +355,22 @@ def _configure_stdio() -> None:
             reconfigure(encoding="utf-8", errors="replace")
 
 
+def _self_test() -> int:
+    """Reliz tekshiruvi: xotiradagi bazada yadroni to'liq yuritadi (CI ishlatadi)."""
+    from .selftest import run_core_selftest
+
+    try:
+        for step in run_core_selftest():
+            print(f"ok: {step}")
+    except Exception as exc:
+        print(
+            f"O'z-o'zini tekshirish muvaffaqiyatsiz: {type(exc).__name__}: {exc}", file=sys.stderr
+        )
+        return 3
+    print(f"fintx {__version__}: o'z-o'zini tekshirish muvaffaqiyatli")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="fintx",
@@ -366,8 +382,11 @@ def main(argv: list[str] | None = None) -> int:
         help="ma'lumotlar bazasi fayli (standart: foydalanuvchi papkasida)",
     )
     parser.add_argument("--version", action="version", version=f"fintx {__version__}")
+    parser.add_argument("--self-test", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     _configure_stdio()
+    if args.self_test:
+        return _self_test()
     try:
         app = App.open(args.db)
     except FinTxError as exc:
