@@ -1,0 +1,43 @@
+[project]
+name = "fintx"
+version = "0.1.0"
+description = "Xavfsizlikni hisobga olgan moliyaviy tranzaksiyalar prototipi (terminal + desktop)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []  # yadro va terminal interfeysi faqat standart kutubxonada ishlaydi
+
+[project.optional-dependencies]
+gui = ["PySide6-Essentials>=6.6,<7"]
+
+[project.scripts]
+fintx = "fintx.cli:main"
+
+[project.gui-scripts]
+fintx-desktop = "fintx.gui.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["fintx*"]
+
+[tool.setuptools.package-data]
+fintx = ["assets/fonts/*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+# S — xavfsizlik qoidalari (bandit): SQL yig'ish, subprocess, zaif xesh va h.k.
+select = ["E", "F", "W", "B", "UP", "I", "S", "SIM", "RUF"]
+ignore = [
+    "RUF001", "RUF002", "RUF003",  # o'zbekcha matndagi ʻ ’ — kabi belgilar ataylab
+    "SIM117",                      # testlarda ichma-ich `with` o'qishga qulayroq
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Testlarda assert, namunaviy parollar va o'z modulimizni jarayon sifatida ishga tushirish.
+"tests/*" = ["S101", "S105", "S106", "S603"]
+"fintx/cli.py" = ["S101"]  # assert — faqat turlarni toraytirish uchun
