@@ -42,6 +42,7 @@ def send(count: int, target: tuple[str, int]) -> None:
 
 
 def main() -> int:
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")  # type: ignore[union-attr]
     command = sys.argv[1:]
     if not command:
         print(__doc__)

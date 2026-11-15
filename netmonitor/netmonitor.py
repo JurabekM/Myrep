@@ -241,7 +241,10 @@ def configure_stdio() -> None:
         reconfigure = getattr(stream, "reconfigure", None)
         if reconfigure is not None:
             try:
-                reconfigure(errors="backslashreplace")
+                if stream.isatty():
+                    reconfigure(errors="backslashreplace")
+                else:  # faylga yoki boshqa dasturga yo'naltirilgan chiqish har doim UTF-8
+                    reconfigure(encoding="utf-8", errors="backslashreplace")
             except (OSError, ValueError):
                 pass
 
