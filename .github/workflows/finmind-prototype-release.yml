@@ -2,7 +2,9 @@
 #
 # Qachon ishlaydi:
 #   - `fintx-v0.1.0` kabi teg — yig'adi va GitHub Release yaratadi;
-#   - qo'lda (workflow_dispatch) yoki paketlash fayllari o'zgarganda — faqat yig'adi,
+#   - qo'lda (workflow_dispatch), `publish` belgilangan — yig'adi, `fintx-v<versiya>`
+#     tegini shu commit'ga o'zi qo'yadi va GitHub Release yaratadi;
+#   - qo'lda (`publish`siz) yoki paketlash fayllari o'zgarganda — faqat yig'adi,
 #     natija shu ishga tushirishning "Artifacts" bo'limida turadi.
 #
 # Imzolash ixtiyoriy sirlarga (repository secrets) bog'liq. Sir yo'q bo'lsa,
@@ -23,6 +25,11 @@ on:
       - ".github/workflows/finmind-prototype-release.yml"
     tags: ["fintx-v*"]
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "GitHub Release yaratilsin (fintx-v<versiya> tegi avtomatik qo'yiladi)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -270,7 +277,9 @@ jobs:
 
   release:
     name: GitHub Release
-    if: startsWith(github.ref, 'refs/tags/fintx-v')
+    if: >-
+      startsWith(github.ref, 'refs/tags/fintx-v') ||
+      (github.event_name == 'workflow_dispatch' && inputs.publish)
     needs: [macos, windows]
     runs-on: ubuntu-latest
     permissions:
@@ -281,14 +290,45 @@ jobs:
         with:
           path: release
           merge-multiple: true
-      - name: Teg va versiya mosligini tekshirish, reliz yaratish
+      - name: Reliz yaratish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=$(cd finmind_prototype && python3 -c "import fintx; print(fintx.__version__)")
-          test "$GITHUB_REF_NAME" = "fintx-v$VERSION" || {
-            echo "::error::Teg ($GITHUB_REF_NAME) va versiya ($VERSION) mos emas"; exit 1; }
+          TAG="fintx-v$VERSION"
+          if [[ "$GITHUB_REF" == refs/tags/* && "$GITHUB_REF_NAME" != "$TAG" ]]; then
+            echo "::error::Teg ($GITHUB_REF_NAME) va versiya ($VERSION) mos emas"; exit 1
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::$TAG relizi allaqachon mavjud. Yangi reliz uchun versiyani oshiring."; exit 1
+          fi
           ls -la release
-          gh release create "$GITHUB_REF_NAME" release/* \
+          (cd release && sha256sum -c *.sha256)
+          {
+            echo "## O'rnatish"
+            echo
+            echo "| Tizim | Fayl |"
+            echo "|---|---|"
+            echo "| Windows 10/11 (x64) | \`FinTx-$VERSION-Windows-Setup.exe\` |"
+            echo "| macOS, Apple Silicon (M1 va undan yangi) | \`FinTx-$VERSION-macOS-arm64.dmg\` |"
+            echo "| macOS, Intel | \`FinTx-$VERSION-macOS-x86_64.dmg\` |"
+            echo
+            echo "Windows: o'rnatuvchini ishga tushiring. macOS: \`.dmg\` ni ochib, FinTx'ni Applications papkasiga suring."
+            echo
+            echo "## Imzo holati"
+            echo
+            echo "Bu paketlar ishonchli nashriyotchi imzosisiz (macOS — faqat ad-hoc, Windows — imzolanmagan)."
+            echo
+            echo "- Windows: SmartScreen ogohlantirsa — *More info → Run anyway*."
+            echo "- macOS: birinchi ishga tushirishda — *System Settings → Privacy & Security → Open Anyway*."
+            echo
+            echo "## Nazorat yig'indilari (SHA-256)"
+            echo
+            echo '```'
+            cat release/*.sha256
+            echo '```'
+          } > notes.md
+          gh release create "$TAG" release/* \
+            --target "$GITHUB_SHA" \
             --title "FinTx $VERSION" \
-            --notes "O'rnatish bo'yicha yo'riqnoma: finmind_prototype/README.md"
+            --notes-file notes.md
