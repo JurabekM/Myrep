@@ -299,11 +299,13 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/* && "$GITHUB_REF_NAME" != "$TAG" ]]; then
             echo "::error::Teg ($GITHUB_REF_NAME) va versiya ($VERSION) mos emas"; exit 1
           fi
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "::error::$TAG relizi allaqachon mavjud. Yangi reliz uchun versiyani oshiring."; exit 1
-          fi
           ls -la release
           (cd release && sha256sum -c *.sha256)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            # Reliz GitHub veb-interfeysida (teg bilan birga) yaratilgan: fayllarni unga biriktiramiz.
+            gh release upload "$TAG" release/* --clobber
+            exit 0
+          fi
           {
             echo "## O'rnatish"
             echo
