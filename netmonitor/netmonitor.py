@@ -34,7 +34,7 @@ from typing import Any
 
 from scapy.config import conf as scapy_conf
 from scapy.data import ETH_P_ALL
-from scapy.interfaces import resolve_iface
+from scapy.interfaces import get_working_ifaces, resolve_iface
 from scapy.layers.dns import DNS, DNSQR
 from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.inet6 import IPv6
@@ -1029,12 +1029,14 @@ class PcapOutput:
         self.size = 24  # fayl sarlavhasi
         self.full = False
         self._lock = threading.Lock()
-        self._writer: Any = PcapWriter(str(path), append=False, sync=False)
+        self._closed = False
+        self._writer: Any = None  # birinchi paketda ochiladi: fayl turi (Ethernet va h.k.) paketdan olinadi
+        path.write_bytes(b"")  # yozib bo'lmaydigan yo'l darhol ma'lum bo'lsin
         self._error_throttle = Throttle(30.0)
 
     def write(self, packet: Any) -> None:
         with self._lock:
-            if self._writer is None or self.full:
+            if self._closed or self.full:
                 return
             size = 16 + len(packet.original or b"")  # yozuv sarlavhasi + ushlangan baytlar
             if self.max_bytes > 0 and self.size + size > self.max_bytes:
@@ -1045,6 +1047,8 @@ class PcapOutput:
                 )
                 return
             try:
+                if self._writer is None:
+                    self._writer = PcapWriter(str(self.path), append=False, sync=False)
                 self._writer.write(packet)
             except Exception as exc:  # noqa: BLE001
                 if self._error_throttle.ready():
@@ -1069,6 +1073,7 @@ class PcapOutput:
                 except Exception:  # noqa: BLE001
                     pass
                 self._writer = None
+            self._closed = True
 
 
 class PacketClock:
@@ -1587,25 +1592,17 @@ class Interface:
 
 
 def list_interfaces() -> list[Interface]:
-    """IPv4 manzili bor (loopback'dan tashqari) interfeyslar."""
+    """IPv4 manzili bor (loopback'dan tashqari) interfeyslar.
+
+    Ro'yxat va ushlash nomlari scapy'ning o'z jadvalidan olinadi: Windows'da u ushlash drayveri
+    (Npcap) haqiqatan ham ko'radigan qurilmalarni va ularning aniq nomlarini beradi.
+    """
     result: list[Interface] = []
-    if sys.platform == "win32":
-        from scapy.arch.windows import get_windows_if_list  # faqat Windows'da mavjud
-
-        for item in get_windows_if_list():
-            address = next((ip for ip in item.get("ips", []) if "." in ip and ip != "127.0.0.1"), None)
-            guid = item.get("guid")
-            if address and guid:
-                label = str(item.get("description") or item.get("name") or guid)
-                result.append(Interface(f"\\Device\\NPF_{guid}", label, address))
-    else:
-        from scapy.interfaces import get_working_ifaces
-
-        for item in get_working_ifaces():
-            address = str(getattr(item, "ip", "") or "")
-            if address and address != "127.0.0.1":
-                label = str(item.description or item.name)
-                result.append(Interface(str(item.network_name), label, address))
+    for item in get_working_ifaces():
+        address = str(getattr(item, "ip", "") or "")
+        if address and address != "127.0.0.1" and "." in address:
+            label = str(item.description or item.name)
+            result.append(Interface(str(item.network_name), label, address))
     return result
 
 
