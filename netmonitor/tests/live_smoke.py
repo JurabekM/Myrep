@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -34,8 +35,25 @@ def local_address() -> str:
         return str(probe.getsockname()[0])
 
 
-def send(count: int, target: tuple[str, int]) -> None:
+def listed_address(command: list[str]) -> str:
+    """Dastur ro'yxatidagi birinchi interfeysning manzili (drayver ko'radigan interfeys)."""
+    result = subprocess.run(
+        [*command, "--list-ifaces"], stdin=subprocess.DEVNULL, capture_output=True,
+        text=True, encoding="utf-8", errors="replace", timeout=120,
+    )
+    plain = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
+    found = re.search(r"^0: .*\((\d+\.\d+\.\d+\.\d+)\)", plain, re.MULTILINE)
+    if found is None:
+        raise SystemExit(f"interfeyslar ro'yxati bo'sh:\n{plain}")
+    return found.group(1)
+
+
+def send(count: int, target: tuple[str, int], source: str = "") -> None:
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sender:
+        if source:  # paket aynan shu interfeysdan chiqsin
+            sender.bind((source, 0))
+            sender.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            sender.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(source))
         for _ in range(count):
             sender.sendto(MARKER, target)
             time.sleep(0.05)
@@ -47,7 +65,17 @@ def main() -> int:
     if not command:
         print(__doc__)
         return 2
-    address = local_address()
+    global TARGET, EXCLUDED, CAPTURE_FILTER
+    source = ""
+    if os.environ.get("NETMONITOR_SMOKE_IFACE") == "listed":
+        # Asosiy interfeys drayverga ko'rinmaydigan mashina: ro'yxatdagi birinchi interfeys orqali
+        # ARP talab qilmaydigan manzillarga (broadcast va multicast) yuboriladi.
+        address = source = listed_address(command)
+        TARGET = ("255.255.255.255", 9)
+        EXCLUDED = "239.255.77.77"
+        CAPTURE_FILTER = "udp and (host 255.255.255.255 or host 239.255.77.77)"
+    else:
+        address = local_address()
     problems: list[str] = []
     with tempfile.TemporaryDirectory(prefix="netmonitor-live-") as folder_name:
         folder = Path(folder_name)
@@ -78,15 +106,15 @@ def main() -> int:
             if process.poll() is not None:
                 problems.append(f"dastur erta tugadi (kod {process.returncode})")
             else:
-                send(5, TARGET)
+                send(5, TARGET, source)
                 time.sleep(1.5)
                 say(f"exclude {EXCLUDED}")
                 time.sleep(0.5)
-                send(5, (EXCLUDED, 9))
+                send(5, (EXCLUDED, 9), source)
                 time.sleep(1.5)
                 say("pause")
                 time.sleep(0.5)
-                send(5, TARGET)
+                send(5, TARGET, source)
                 time.sleep(1.5)
                 say("status")
                 say("exit")

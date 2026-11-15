@@ -90,6 +90,9 @@ jobs:
   windows-live:
     needs: windows
     runs-on: windows-latest
+    env:
+      # Win10Pcap runner'ning asosiy (Azure) adapterini ko'rmaydi, faqat Hyper-V virtual adapterini.
+      NETMONITOR_SMOKE_IFACE: listed
     defaults:
       run:
         working-directory: netmonitor

@@ -1073,6 +1073,11 @@ class PcapOutput:
                 except Exception:  # noqa: BLE001
                     pass
                 self._writer = None
+            elif not self._closed and self.written == 0:
+                try:
+                    self.path.unlink()  # birorta paket yozilmadi: bo'sh (yaroqsiz) fayl qolmasin
+                except OSError:
+                    pass
             self._closed = True
 
 
