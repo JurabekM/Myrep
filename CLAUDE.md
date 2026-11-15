@@ -7,6 +7,19 @@ Bu fayl Myrep ichidagi **barcha** loyihalarga tegishli. Loyiha papkasidagi o'z `
 - Yo'nalish: vibe coding va mikrokontroller elektronikasi.
 - Har PR ochilgach Claude o'zi code review qiladi: haqiqiy xatolar shu PR'da tuzatiladi, qolganlari foydalanuvchiga aytiladi.
 
+## Topshirishdan oldin to'liq sinov — QAT'IY QOIDA (foydalanuvchi qarori, 2026-11-15)
+Har bir loyiha (yoki reliz) "tayyor" deyilishidan oldin **maqsadli muhitning o'zida** to'liq sinaladi:
+emulyator, virtual mashina yoki haqiqiy qurilma/OS — sessiya lokal yoki bulutda ekanidan qat'i nazar.
+- Faqat unit testlar va boshqa OS'dagi sinov yetarli emas: dastur foydalanuvchi ishlatadigan yo'l bilan
+  (o'rnatish → ishga tushirish → asosiy vazifa → chiqish) oxirigacha yuritib ko'riladi.
+  Android — emulyatorda; Windows exe — Windows'da haqiqiy drayver/xizmatlar bilan; proshivka — simulyator yoki platada.
+- Maqsadli muhit qo'l ostida bo'lmasa, uni topish ishning bir qismi (CI runner, emulyator, VM, o'rnini bosuvchi
+  drayver). "Sinalmagan" deb yozib topshirish mumkin emas: yo'l topilmasa, topshirishdan **oldin** to'xtab,
+  foydalanuvchidan muhit yoki ruxsat so'raladi.
+- Hisobotda nima, qayerda va qanday sinalgani aniq yoziladi.
+- Sabab: NetMonitor 4.0.0 Windows'da Npcap bilan jonli ushlash sinalmasdan topshirildi; nosozlik gumoni
+  paydo bo'lganda uni tasdiqlaydigan ham, rad etadigan ham sinov yo'q edi.
+
 ## Codex ishlatilmaydi — QAT'IY QOIDA (foydalanuvchi qarori, 2026-10-25, 2026-10-27 da kuchaytirildi)
 Bu repoda Codex (OpenAI Codex, `chatgpt-codex-connector[bot]` va boshqa OpenAI agentlari) **umuman kerak emas**.
 Barcha ishni — kod, code review, CI tuzatish, hujjat — **Claude o'zi bajaradi**.
