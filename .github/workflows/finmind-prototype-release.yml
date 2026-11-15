@@ -15,6 +15,9 @@ name: finmind-prototype-release
 
 on:
   push:
+    # `tags` berilganda `branches` ham yozilishi shart: aks holda GitHub branch
+    # push'larini bu workflow uchun umuman hisobga olmaydi.
+    branches: ["**"]
     paths:
       - "finmind_prototype/packaging/**"
       - ".github/workflows/finmind-prototype-release.yml"
